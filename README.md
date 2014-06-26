@@ -113,9 +113,9 @@ _[tagName] 방식으로 가능
 ```html
         <table>
             <tbody>
-                <tr><a>link1</a></tr>
-                <tr><a>link2</a></tr>
-                <tr><a>link3</a></tr>
+                <tr><td><a>link1</a></td></tr>
+                <tr><td><a>link2</a></td></tr>
+                <tr><td><a>link3</a></td></tr>
             </tbody>
         </table>
 ```
