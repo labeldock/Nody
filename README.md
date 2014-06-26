@@ -126,7 +126,8 @@ _[tagName] 방식으로 가능
 #### 선택방법 1 #
 ```javascript
         FIND("div.target");
-        //result=> [div.target,div.target...]
+        //result=> [div.target,div.target...]  <= native array
+        //
 ```
 
 #### 선택방법 2 #
