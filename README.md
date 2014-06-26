@@ -108,18 +108,38 @@ _[tagName] 방식으로 가능
             _A("::link1"),
             _A("::link2"),
             _A("::link3")
-        )
+        );
 ```
 ```html
         <table>
             <tbody>
                 <tr><a>link1</a></tr>
+                <tr><a>link2</a></tr>
+                <tr><a>link3</a></tr>
             </tbody>
         </table>
 ```
 
 
 ### 셀렉트 #
+
+#### 선택방법 1 #
 ```javascript
-        
+        FIND("div.target");
+        //result=> [div.target,div.target...]
 ```
+
+#### 선택방법 2 #
+```javascript
+        FIND("div.target",jQuery);
+        //result=> jQuery Object
+```
+응용
+```html
+        <div class="target" foo="bar"></div>
+        <script>
+            FIND("div.target",jQuery).attr("foo");
+            //result=> bar
+        </script>
+```
+
