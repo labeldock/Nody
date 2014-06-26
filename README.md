@@ -22,6 +22,7 @@ Nody.js는 DHTML 페이지를 만들기위한 라이브러리이다.
 ### 모듈생성 #
 Nody의 모듈은 클래스와 비슷한 개념이다.
 
+```javascript
         makeModule("Zombie",{
           run:function(){
             this.energy = this.energy - 5;
@@ -41,9 +42,12 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
         zombie.getEnergy(); // => 5
         zombie.walk();
         zombie.getEnergy(); // => 4
-        
+```
+
+
 ### 상속 #
         
+```javascript
         extendModule("Zombie","ZombieDog",{
           bark:function(){
             this.energy = this.energy - 2;
@@ -56,32 +60,50 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
         zombieDog.walk();
         zombieDog.bark();
         zombieDog.getEnergy(); // => 2
+```
         
 ### 태그생성 #
-        
-        // CASE1
-        _EL("div#hello.world[my=code]"); // => <div id="hello" class="world" my="code"></div>
-        
-        // CASE2
-        _LI(); // => <li></li>
-        
-        // CASE3
+
+#### 생성방법 1 #
+css 스타일로 구현 가능
+
+코드::
+```javascript
+        _EL("div#hello.world[my=code]"); 
+```
+결과::
+```html
+        <div id="hello" class="world" my="code"></div>
+```
+
+#### 생성방법 2 #        
+_[tagName] 방식으로 가능
+
+코드::
+```javascript
+        _LI("::helloWorld");
+```
+
+결과::
+```html
+        <li>helloWorld</li>
+``` 
+
+#### 생성방법 3 #
+파라메터를 중첩하여 생성가능
+
+코드::
+```javascript
         _UL(
           _LI(".item::list1"),
           _LI(".item::list2")
         );
-        // =>
-        // <ul>
-        //   <li class="item">list1</li>
-        //   <li class="item">list2</li>
-        // </ul>
-        //
-        
+```
 
-        
-
-
-
-
-
-
+결과::
+```html
+        <ul>
+           <li class="item">list1</li>
+           <li class="item">list2</li>
+        </ul>
+``` 
