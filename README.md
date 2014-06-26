@@ -99,3 +99,27 @@ _[tagName] 방식으로 가능
            <li class="item">list2</li>
         </ul>
 ``` 
+
+#### 생성방법 4 #
+테이블 생성예제 ()
+
+```javascript
+        _TABLE(""
+            _A("::link1"),
+            _A("::link2"),
+            _A("::link3")
+        )
+```
+```html
+        <table>
+            <tbody>
+                <tr><a>link1</a></tr>
+            </tbody>
+        </table>
+```
+
+
+### 셀렉트 #
+```javascript
+        
+```
