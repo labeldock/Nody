@@ -67,11 +67,9 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
 #### 생성방법 1 #
 css 스타일로 구현 가능
 
-코드::
 ```javascript
         _EL("div#hello.world[my=code]"); 
 ```
-결과::
 ```html
         <div id="hello" class="world" my="code"></div>
 ```
@@ -79,12 +77,9 @@ css 스타일로 구현 가능
 #### 생성방법 2 #        
 _[tagName] 방식으로 가능
 
-코드::
 ```javascript
         _LI("::helloWorld");
 ```
-
-결과::
 ```html
         <li>helloWorld</li>
 ``` 
@@ -92,15 +87,12 @@ _[tagName] 방식으로 가능
 #### 생성방법 3 #
 파라메터를 중첩하여 생성가능
 
-코드::
 ```javascript
         _UL(
           _LI(".item::list1"),
           _LI(".item::list2")
         );
 ```
-
-결과::
 ```html
         <ul>
            <li class="item">list1</li>
