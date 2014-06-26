@@ -1,5 +1,5 @@
-Nody
-====
+Nody.js
+=======
 
 # introduce #
 nody.js DHTML javascript lib
