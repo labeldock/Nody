@@ -61,14 +61,14 @@ _[tagName] 방식으로 가능
 테이블 생성예제 ()
 
 ```javascript
-        _TABLE(""
+        _TABLE("#my-table",
             _A("::link1"),
             _A("::link2"),
             _A("::link3")
         );
 ```
 ```html
-        <table>
+        <table id="my-table">
             <tbody>
                 <tr><td><a>link1</a></td></tr>
                 <tr><td><a>link2</a></td></tr>
