@@ -105,11 +105,62 @@ _[tagName] 방식으로 가능
         </script>
 ```
 
+### 배열처리 #
+
+#### each #
+```javascript
+       _Array([1,2,3]).each(function(value,index){
+           console.log(value,index)
+       });
+       //log => 1,0
+       //log => 2,1
+       //log => 3,2
+```
+
+#### map #
+```javascript
+        _Array([1,3,5]).map(function(v){
+            return v+1;
+        });
+        // => [2,4,6]
+```
+
+#### inject #
+```javascript
+        _Array([2,4,6]).inject({},function(injectObject,value,index){
+            injectObject[index] = value;
+        });
+        //=>{0:2,1:4,2:6}
+```
+
+#### eachback #
+```javascript
+       _Array([1,2,3]).eachback(function(value,index){
+           console.log(value,index)
+       });
+       //log => 3,2
+       //log => 2,1
+       //log => 1,0
+```
+
+#### object each #
+_Array와 마찬가지로 _Object도 동일하게 동작하도록 하는게 원칙입니다.
+```javascript
+        var sample = [];
+        _Object({1:2,2:3,4:5}).each(function(value,key){
+            sample.push(key+value);
+        });
+        console.log(sample);
+        //=>["12", "23", "45"]
+```
+
+### 파싱 #
+
 
 ### 모듈(Like Class) #
 Nody의 모듈은 클래스와 비슷한 개념이다.
 
-### 모듈생성 #
+#### 모듈생성 #
 
 ```javascript
         makeModule("Zombie",{
@@ -134,7 +185,8 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
 ```
 
 
-### 상속 #
+
+#### 상속 #
         
 ```javascript
         extendModule("Zombie","ZombieDog",{
