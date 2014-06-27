@@ -3,10 +3,11 @@ Nody.js
 
 # introduce #
 nody.js DHTML javascript lib
+(developement version)
 
 # 한국어 소개 #
 Nody.js는 DHTML 페이지를 만들기위한 라이브러리이다.
-인터페이스를 완성하고 있으며 1.0이 될때까지 수시로 api가 변경될 예정이다.
+개발버전이며 인터페이스를 완성하고 있으며 1.0이 될때까지 수시로 api가 변경될 예정이다.
 
 ## 특징 #
 1. 직관적인 Node 생성이 가능하다.
