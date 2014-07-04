@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>QUnit Example</title>
+  <link rel="stylesheet" href="http://code.jquery.com/qunit/qunit-1.14.0.css">
+</head>
+<body>
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+  <script src="../js/nody.js"></script>
+  <script src="http://code.jquery.com/qunit/qunit-1.14.0.js"></script>
+  <script>
+  //utility
+  var _isElementNode = function(node){
+	  if( (typeof node == "object") && ("nodeType" in node) ) return node.nodeType == 1;
+	  return false;
+  }
+  
+  var TESTBOX = function(){
+	  var ca = Array.prototype.slice.call(arguments);
+	  return function(f){ return f.apply(f,ca); };
+  }
+  
+  var TESTEACH = function(){
+  	  var ca = Array.prototype.slice.call(arguments);
+	  return function(f){ for(var i=0,l=ca.length;i<l;i++) f.call(f,ca[i]) }
+  }
+  
+  var $$ = function(){
+	  var re = '';
+	  var ca = Array.prototype.slice.call(arguments);
+	  for(var i=0,l=ca.length;i<l;i++){
+		  switch(typeof ca[i]){
+	  		  case "object":
+	  			  re+=" #{ "+(ca[i])+" }";
+	  			  break;
+	  		  default:
+	  			  re+=" "+ca[i];
+	  			  break;
+	  	  }
+		  if(i==0)re+=" => ";
+	  } 
+	  return re;
+  }
+  
+  QUnit.module("::EL");
+  //test
+  QUnit.test( 'EL("div")', function($a) {
+	  
+	  TESTBOX ( EL("div") ) (function(el){
+		  $a.ok( _isElementNode(el) , $$("Node Element",el)  );
+		  $a.equal( el.outerHTML, "<div></div>", $$("Right HTML",el.outerHTML) );  
+	  });
+	  
+  });
+  
+  QUnit.test( 'EL("div.class")' , function( $a ) {
+	  
+	  TESTBOX ( EL("div.hello") ) (function(el){
+		  $a.ok( _isElementNode(el) , $$("Node Element",el)  );
+		  $a.equal( el.getAttribute("class"), 'hello', $$("single class ok",el.getAttribute("class")) );
+	  });
+	  
+	  TESTBOX ( EL("div.hello.world") ) (function(el){
+		  $a.ok( _isElementNode(el) , $$("Node Element",el)  );
+		  $a.equal( el.getAttribute("class"), 'hello world', $$("single class ok",el.getAttribute("class")) );
+	  });
+	  
+  });
+  
+  QUnit.test( 'EL("div#id")' , function( $a ) {
+	  
+	  TESTBOX ( EL("div#id") ) (function(el){
+		  $a.ok( _isElementNode(el) , $$("Node Element",el)  );
+		  $a.equal( el.getAttribute("id"), 'id', $$("right id ok",el.getAttribute("id")) );
+	  });
+	  
+  });
+  
+  QUnit.test( 'EL("div::hello world")' , function( $a ) {
+	  TESTBOX ( EL("div::hello world") ) (function(el){
+		  $a.ok( _isElementNode(el) , $$("Node Element",el)  );
+		  $a.equal( el.innerText, 'hello world', $$("innerText ok",el.innerText) );
+	  });
+  });
+  
+  QUnit.test( '_(TAG) Test' , function( $a ) {
+	  
+	  TESTEACH (
+		  "_HEADER",
+		  "_MAIN",
+		  "_FOOTER",
+		  "_ASIDE",
+		  "_NAV",
+		  "_TEMPLATE",
+		  "_DIV",
+		  "_H1",
+		  "_H2",
+		  "_H3",
+		  "_H4",
+		  "_H5",
+		  "_H6",
+		  "_P",
+		  "_UL",
+		  "_OL",
+		  "_LI",
+		  "_TABLE",
+		  "_TR",
+		  "_TD",
+		  "_TBODY",
+		  "_THEAD",
+		  "_TFOOT") 
+      (function(fn){
+		  var el = window[fn]();
+		  $a.ok( _isElementNode(el), $$(fn+" Element",el," => ",el.outerHTML));
+	  });
+	  
+  });
+  
+  
+  
+  QUnit.module("::Multi Element");
+  
+  QUnit.test( 'Multi Element Test (ul)' , function( $a ) {
+	  TESTBOX (
+		  _UL(
+            _LI(".item::list1"),
+            _LI(".item::list2")
+          )
+	  )
+	  (function(el){
+		  $a.ok(true,'test => _UL(_LI(".item::list1"),_LI(".item::list2"))')
+		$a.ok( _isElementNode(el), "Node Element");
+		$a.equal(el.outerHTML,'<ul><li class="item">list1</li><li class="item">list2</li></ul>', $$("ok",el.outerHTML) );
+	  })
+  });
+  QUnit.test( 'Multi Element Test (table lazy..)' , function( $a ) {
+	  TESTBOX (
+		  _TABLE("#my-table",
+              _A("::link1"),
+              _A("::link2"),
+              _A("::link3")
+          )
+	  )
+	  (function(el){
+		  $a.ok(true,'test => _TABLE("#my-table", _A("::link1"), _A("::link2"), _A("::link3") )')
+		  $a.ok( _isElementNode(el), "Node Element");
+		  $a.equal(el.outerHTML,'<table id="my-table"><tbody><tr><td><a>link1</a></td></tr><tr><td><a>link2</a></td></tr><tr><td><a>link3</a></td></tr></tbody></table>', $$("ok",el.outerHTML) );
+		  
+	  })
+  });
+  </script>
+</body>
+</html>
