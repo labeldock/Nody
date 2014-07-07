@@ -1,6 +1,6 @@
 //Nody CoreFoundation
 (+(function(W,NativeCore){
-	var version = "0.1.2";
+	var version = "0.1.3";
 	// Author                 // hojung ahn (open9.net)
 	// Concept                // DHTML RAD TOOL
 	// tested in              // IE9 + (on 4.0) & webkit2 & air13
@@ -2351,39 +2351,38 @@
 	E,R element command Extention*/
 	makeSingleton("ElementFoundation",{
 		//테그의 속성을 text로 표현합니다.
-		"TAGINFO"   : function(tagProperty,attrValue,dataValue){
+		"SELECTINFO"   : function(tagProperty,attrValue,dataValue){
 			//name refactory
-			var name = (typeof tagProperty == "undefined") ? "*" : tagProperty ;
+			var name = (typeof tagProperty == "undefined") ? "" : tagProperty ;
 			name = name.trim();
 			
 			var attributedToken = {};
 			attributedToken.tagName  = "";
 	
-			//value attr in tagMeta & tagValue
+			//value attr in tagMeta & tagValue("::")
 			name = name.replace(/(\:[\w\-]+\([\S]+\)|\:\:.*$|\:[\w\-]+)/gi,function(s){ 
 				if(s.indexOf("::") == 0){
-					attributedToken.tagValue = s.substr(2);
+					attributedToken["::"] = s.substr(2);
 				} else {
-					
 					var la = /(\:[\w\-\_]+|[\w\-\_]+)(\(.*\)|)$/.exec( s.toLowerCase().trim() );
 					var ls = la[1].trim();
 					var lv = la[2].substr(1,la[2].length-2).trim();
-					console.log("la",s,TOSTRING(la));
+					
 					switch(ls){
 						case ":disabled": case ":readonly": case ":checked":
 							attributedToken[ls.toLowerCase().substr(1)] = true;
 							break;
 						case ":eq": case ":nth-child":
-							if(!("@meta" in attributedToken)) attributedToken["@meta"] = {};
-							attributedToken["@meta"][ls.substr(1)] = (lv == "even" || lv == "odd" ) ? lv : TONUMBER(lv);
+							if(!(":" in attributedToken)) attributedToken[":"] = {};
+							attributedToken[":"][ls.substr(1)] = (lv == "even" || lv == "odd" ) ? lv : TONUMBER(lv);
 							break;
 						case ":contains": case ":has": case ":not":
-							if(!("@meta" in attributedToken)) attributedToken["@meta"] = {};
-							attributedToken["@meta"][ls.substr(1)] = lv;
+							if(!(":" in attributedToken)) attributedToken[":"] = {};
+							attributedToken[":"][ls.substr(1)] = lv;
 							break;
-						case ":first-child": case ":last-child": case ":only-child": case ":even": case ":odd":
-							if(!("@meta" in attributedToken)) attributedToken["@meta"] = {};
-							attributedToken["@meta"][ls.substr(1)] = null;
+						case ":first-child": case ":last-child": case ":only-child": case ":even": case ":odd": case ":hover":
+							if(!(":" in attributedToken)) attributedToken[":"] = {};
+							attributedToken[":"][ls.substr(1)] = null;
 							break;
 						default :
 							try{
@@ -2391,14 +2390,13 @@
 								if(ISNOTHING(capture)) throw new Error("unsupported");
 								attributedToken[capture[1]] = UNWRAP(capture[2],["",'']);
 							} catch(e){
-								console.warn("TAGINFO::지원하지 않는 메타키 입니다. => ",s," <=",tagProperty);
+								console.warn("SELECTINFO::지원하지 않는 메타키 입니다. => ",s," <=",tagProperty);
 							}
 							break;
 					}
 				}
 				return "";
 			});
-			//name = name.replace(/(\:\:.*$)/i,function(s){ attributedToken.tagValue = s.substr(2); return ""});
 			
 			//both attribute case
 			name = name.replace(/\[([\w\-]+)\=([^\]]*)\]/gi,function(s){
@@ -2457,7 +2455,7 @@
 			//value attr in attrValue
 			var attrvals = MV(OBJECT(attrValue,"html"));
 			if(attrvals["html"]) { 
-				attributedToken.tagValue = attrvals["html"]; delete attrvals["html"]; 
+				attributedToken["::"] = attrvals["html"]; delete attrvals["html"]; 
 			}
 			for(var key in attrvals) { attributedToken[key] = attrvals[key]; };
 	
@@ -2470,12 +2468,12 @@
 		//css스타일 태그를 html스타일 태그로 바꿉니다.
 		"TAG"      : function(tagProperty,attrValue,dataValue){
 			//tagInfo
-			var tagInfo = TAGINFO(tagProperty,attrValue,dataValue);
+			var tagInfo = SELECTINFO(tagProperty,attrValue,dataValue);
 			if(!("tagName" in tagInfo) || tagInfo.tagName == "*") tagInfo.tagName = "div";
 			//make attribute text
 			var attributedTexts = "";
 			for(var name in tagInfo) switch(name){
-				case "tagName":case "tagValue":case "@meta": break;
+				case "tagName":case "::":case ":": break;
 				default:
 					var atValue = tagInfo[name];
 					if(typeof atValue == undefined || atValue == null){
@@ -2490,7 +2488,7 @@
 			//common attribute process
 			var name     = "<" + tagInfo.tagName + (attributedTexts.length < 1 ? "" : (" " + attributedTexts));
 			
-			var tagValue = "tagValue" in tagInfo ? tagInfo.tagValue : "";
+			var tagValue = "::" in tagInfo ? tagInfo["::"] : "";
 
 			//close tag
 			if(tagInfo.tagName.toLowerCase() == "input"){
@@ -2570,15 +2568,10 @@
 			if(!ISELNODE(node)) return ;
 			return node.parentElement;
 		},
-
 		//포커스 상태인지 검사합니다.
 		"NODEHASFOCUS":function(node){ return document.activeElement == node; },
-		"ELHASFOCUS":function(aSel){ return document.activeElement == FINDZERO(aSel); },
-		//케럿을 움직일수 있는 상태인지 검새합니다.
-		"ELCARETPOSSIBLE":function(aSel){ var node = FINDZERO(aSel); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
-		//node the
 		"NODETHE":function(node,selectText,extraData){
-			var tagInfo = TAGINFO(selectText);
+			var tagInfo = (typeof selectText == "object") ? selectText : SELECTINFO(selectText);
 			for(var key in tagInfo){
 				switch(key){
 					case "tagName":
@@ -2611,10 +2604,10 @@
 							return false;
 						}
 						break;
-					case "tagValue":
+					case "::":
 						if(ELVALUE(node) !== tagInfo[key]) return false;
 						break;
-					case "@meta":
+					case ":":
 						for(var metaKey in tagInfo[key]){
 							switch(metaKey){
 								case "not":
@@ -2697,6 +2690,8 @@
 				.replace(/\s*(\>|\+)\s*/g,function(s){ return s.replace(/\s/g,""); })
 				.replace(/[\w\-\_\.\#\:]+(\s|\>|)/g,function(s){ querys.push(s); });
 				//
+				querys = DATAMAP(querys,function(query){ return SELECTINFO(query); });
+				
 				//console.log("qi",qi,"ql",ql,"each",querys,"qlenght",querys.length);
 				if(querys.length == 0){
 					judgement = false;
@@ -2789,18 +2784,11 @@
 			FEEDERDOWN(root,function(node){ if( NODEIS(this,query) ) result.push(this); },"children");
 			return result;
 		},
-		"ELTQ":function(query){
-			MARK("elquerySPEED");
-			var elquery_result = ELQUERY(query);
-			MARK("elquerySPEED");
-			MARK("sizzleSPEED");
-			var sizzle_result  = ELQUERY(query);
-			MARK("sizzleSPEED");
-			console.log("##result same? => ",elquery_result.length == sizzle_result.length);
-			console.log("elquery::("+elquery_result.length+")",elquery_result);
-			console.log("sizzle::("+sizzle_result.length+")",sizzle_result);
-			return elquery_result;
-		},
+		//포커스 상태인지 검사합니다.
+		"ELHASFOCUS":function(aSel){ return document.activeElement == FINDZERO(aSel); },
+		//케럿을 움직일수 있는 상태인지 검새합니다.
+		"ELCARETPOSSIBLE":function(aSel){ var node = FINDZERO(aSel); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
+		
 		"ELATTR":function(sel,v1,v2){
 			var node = FINDZERO(sel);
 			return NODEATTR(node,v1,v2);
