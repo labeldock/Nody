@@ -158,10 +158,12 @@ _Array와 마찬가지로 _Object도 동일하게 동작하도록 하는게 원�
 ### 파싱 #
 TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브젝트로  파싱 가능하다.
 ```javascript
-        TOOBJECT("{'hello':'wolrd','foo':'bar','1':2}");
-        TOOBJECT("{hello:wolrd,foo:bar,1:2}");
-        TOOBJECT("hello:wolrd,foo:bar,1:2");
-        //result equal
+        TOOBJECT("{'hello':'world','foo':'bar','1':2}");
+        TOOBJECT("{hello:world,foo:bar,1:2}");
+        TOOBJECT("hello:world,foo:bar,1:2");
+        /*
+        result(3 case equal) => {"hello":"world","foo":"bar","1",2}
+        */
         //but top case is 10x more fast (native json parsing)
 ```
 
