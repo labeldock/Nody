@@ -7,7 +7,7 @@
 
 if(!TweenMax){ console.warn("nody.move.js::can't find the TweenMax.."); }
 
-(+(function(W){
+(+(function(){
 	//action // movement
 	makeModule("Action",{
 		addMovement : function(){
@@ -163,7 +163,7 @@ if(!TweenMax){ console.warn("nody.move.js::can't find the TweenMax.."); }
 	},function(element,movevalue,beginEvent,completeEvent){
 		this._super(element,movevalue,beginEvent,completeEvent);
 	});
-})(window));
+})());
 if("atypeLoadException" in window){delete window["atypeLoadException"];}
 
 window.ELFLASH = function(s,loc,callback){ 
@@ -183,20 +183,20 @@ window.ELFLASH = function(s,loc,callback){
 			prev = prop;
 			node.onflash = prop;
 		}
-		_Move(node,{"background":"rgba(255,255,140,0.5)","duration":fs},undefined,function(){
+		_Move(node,{"background-color":"rgba(255,255,140,0.5)","duration":fs},undefined,function(){
 			if(ISNOTHING(prev)){
-				_Move(node,{"background":"rgba(255,255,170,0)","duration":fe},undefined,function(){
-					ELSTYLE(node,"background",prev);
+				_Move(node,{"background-color":"rgba(255,255,170,0)","duration":fe},undefined,function(){
+					ELSTYLE(node,"background-color",prev);
 					delete node["onflash"];
-					CALLBACK(callback)
+					CALLBACK(callback);
 				});
 			} else {
 				_Move(node,{"background":prev,"duration":fe},undefined,function(){
-					ELSTYLE(node,"background",prev);
+					ELSTYLE(node,"background-color",prev);
 					delete node["onflash"];
-					CALLBACK(callback)
+					CALLBACK(callback);
 				});
 			}
 		});
 	}
-}
+};

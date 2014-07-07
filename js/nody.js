@@ -1,6 +1,6 @@
 //Nody CoreFoundation
 (+(function(W,NativeCore){
-	var version = "0.1.1";
+	var version = "0.1.2";
 	// Author                 // hojung ahn (open9.net)
 	// Concept                // DHTML RAD TOOL
 	// tested in              // IE9 + (on 4.0) & webkit2 & air13
@@ -2542,8 +2542,10 @@
 					var result = (node.getAttribute && node.getAttribute(v1)) || null;
 			        if( !result ) {
 			            var attrs = node.attributes;
-			            var length = attrs.length;
-			            for(var i = 0; i < length; i++) if(attrs[i].nodeName === v1) result = attrs[i].nodeValue;
+			            if(!ISNOTHING(attrs)){
+			            	var length = attrs.length;
+			            	for(var i = 0; i < length; i++) if(attrs[i].nodeName === v1) result = attrs[i].nodeValue;
+			            }
 			        }
 			        return result;
 				} else {
@@ -2568,6 +2570,13 @@
 			if(!ISELNODE(node)) return ;
 			return node.parentElement;
 		},
+
+		//포커스 상태인지 검사합니다.
+		"NODEHASFOCUS":function(node){ return document.activeElement == node; },
+		"ELHASFOCUS":function(aSel){ return document.activeElement == FINDZERO(aSel); },
+		//케럿을 움직일수 있는 상태인지 검새합니다.
+		"ELCARETPOSSIBLE":function(aSel){ var node = FINDZERO(aSel); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
+		//node the
 		"NODETHE":function(node,selectText,extraData){
 			var tagInfo = TAGINFO(selectText);
 			for(var key in tagInfo){
@@ -2610,6 +2619,9 @@
 							switch(metaKey){
 								case "not":
 									if( NODETHE(node,tagInfo[key][metaKey]) ) return false;
+									break;
+								case "focus":
+									if(!NODEHASFOCUS(node)) return false;
 									break;
 								case "eq": case "nth-child":
 									if(!node.parentElement) return false;
@@ -2772,8 +2784,7 @@
 		},
 		"ELQUERY":function(query,root){
 			if(typeof query !== "string" || ISNOTHING(query)) return [];
-			
-			var root   = ISELNODE(root)?root:document.body.parentElement;
+			var root   = ISDOCUMENT(root)?document.body.parentElement:ISELNODE(root)?root:document.body.parentElement;
 			var result = [];
 			FEEDERDOWN(root,function(node){ if( NODEIS(this,query) ) result.push(this); },"children");
 			return result;
@@ -3268,10 +3279,6 @@
 			node.focus();
 			return pos;
 		},
-		//포커스 상태인지 검사합니다.
-		"ELHASFOCUS":function(aSel){ return FINDZERO(":focus") == FINDZERO(aSel); },
-		//케럿을 움직일수 있는 상태인지 검새합니다.
-		"ELCARETPOSSIBLE":function(aSel){ var node = FINDZERO(aSel); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
 		//이벤트를 발생시킵니다.
 		"ELTRIGGER":function(node,eventName){
 			if(ISWINDOW(node)){
@@ -3475,7 +3482,6 @@
 					var reo={};reo[esv]=param;return reo;}return _String(param).getContent();
 				}
 			}
-			if(typeof param=="undefined" && typeof es=="object") return es;
 			return{};
 		},
 		//오브젝트 혹은 element를 반환합니다.
@@ -3753,9 +3759,19 @@
 			var dateValue = ELVALUE(this.Source);
 			return _Type(dateValue).is(/(\d+)\D+(\d+)\D+(\d+)/,_String(dateValue).printf(/(\d+)\D+(\d+)\D+(\d+)/,[1],"년 ",[2],"월 ",[3],"일"),dateValue);
 		},
-		maskNumber:function(mask,reverse){ this.__maskApply("getNumberTextFormat",mask,reverse); },
-		maskPhoneNumber:function(p,s){ this.__maskApply("getPhoneNumber"); },
-		maskDecimal:function(p,s){ this.__maskApply("getDecimal",p,s); },
+		maskNumber:function(mask,reverse){
+			if(this.Source) return this.__maskApply("getNumberTextFormat",mask,reverse); 
+			return console.warn("Inside:: inside source invalid");
+		},
+		maskPhoneNumber:function(p,s){ 
+			if(this.Source) return this.__maskApply("getPhoneNumber"); 
+			return console.warn("Inside:: inside source invalid");
+		},
+		maskDecimal:function(p,s){ 
+			if(this.Source) return this.__maskApply("getDecimal",p,s); 
+			return console.warn("Inside:: inside source invalid");
+		},
+			
 		is:function(){
 			var t = _Type( this.getValue() );
 			return t.is.apply(t,arguments);
