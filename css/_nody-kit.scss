@@ -1,0 +1,204 @@
+/*
+	default interface style kit
+	auther        : hojugn ahn (open9.net)
+	version       : 0.4
+	concept       : interface set, auto preload image, easy hack, easy animation
+*/
+
+@mixin text-flag(){
+	&.primary{ color:#8e9fb1; }
+	&.positive{ color:#87d083; }
+	&.negative{ color:#d37474; }
+}
+@mixin preload($key:'background',$url:'undefined',$after:'',$color:''){
+	$url-text:url("#{$url}");
+	$preload-images:#{$preload-images}(#{$url-text+' '})!global;
+	#{$key}:#{$color} #{$url-text} #{$after};
+}
+@mixin background ($url:'undefined',$after:'',$color:''){
+	@include preload('background',$url,$after,$color);
+}
+@mixin assets($url:'undefined',$after:'no-repeat',$color:''){
+	@include preload('background',($base-assets-path + $url),$after,$color);
+}
+@mixin content($url:'undefined'){
+	@include preload('content',($base-assets-path + $url));
+}
+
+@mixin transition ($sec:0.3s,$range:all){
+	@each $prefix in $next-browser { 
+		#{$prefix}transition:$range $sec ease-in-out; 
+	}
+}
+@mixin image-preload($view:none){
+	body:before{	
+		content:#{$preload-images};
+		display:$view;
+	};
+	$preload-images:''!global;
+}
+@mixin no-webkit(){ -webkit-appearance:none; }
+@mixin inline-block{display:inline-block;zoom:1;*display:inline;}
+@mixin makeOne($name,$value){#{$name}:#{$value};}
+@mixin no-select() {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+@mixin button($width,$height,$display:''){
+	@include no-select;
+	@if $display == '' {
+		@include inline-block;
+	} @else {
+		display:$display;
+	}
+	@if $width {
+		width:$width;
+	}
+	@if $height {
+		height:$height;
+		line-height:$height;
+	}
+	padding-top:0;
+	padding-bottom:0;
+	cursor:pointer;
+	border:0px solid white;
+	text-align:center;
+	&:hover{ text-decoration:none; };
+}
+
+/* table styilus*/
+@mixin cell-padding($p:0,$fp:0,$lp:0){
+	td,th{
+		padding:$p;
+	}
+	@if $fp != 0 {
+		td:first-child,th:first-child{
+			padding-left:$fp;
+		}
+	}
+	@if $lp != 0 {
+		td:last-child,th:last-child{
+			padding-left:$fp;
+		}
+	}
+}
+@mixin grid-table($vertical:middle,$spacing:0px) {
+	table-layout:fixed;
+	width:100%;
+	@if $spacing > 0px {
+		border-spacing:$spacing;
+		border-collapse:separate;
+	} @else {
+		border-spacing:0px;
+		border-collapse:collapse;
+	}
+	td,th {
+		position:relative;
+		vertical-align:$vertical;
+		border:none;
+		input { margin:0px; }
+	}
+}
+@mixin keepParentHeight {
+	&:after {
+	   content: " ";
+	   display: block; 
+	   height: 0; 
+	   clear: both;
+	}
+	width:100%;
+}
+@mixin paragraphPart($model,$headname,$headHeight){
+	.#{$model}-#{$headname} {
+		* { margin-bottom:0; }
+		position:relative;
+		@if($headHeight!=''){ height:#{$headHeight};line-height:#{$headHeight};}
+		.#{$model}-#{$headname}-title,.#{$model}-#{$headname}-left{
+			float:left;
+			@if($headHeight!=''){ height:#{$headHeight};line-height:#{$headHeight};}
+			i {margin-right:3px;img {vertical-align:baseline;}}
+			
+		}
+		.#{$model}-#{$headname}-commands,.#{$model}-#{$headname}-right{
+			@include no-select;
+			float:right;
+			@if($headHeight!=''){ height:#{$headHeight};line-height:#{$headHeight};}
+			>*  { @include inline-block; position:relative; }
+			p   { cursor:default; margin:0; }
+			li,a{ cursor:pointer; text-decoration:none; }
+			i   {margin-right:3px;img {vertical-align:baseline;}}
+		}
+		@include keepParentHeight;
+	}
+}
+@mixin paragraphModel($model,$sel,$headHeight:'',$footHeight:'') {
+	#{$sel} {
+		@each $headname in 'header','heading' { @include paragraphPart($model,$headname,$headHeight); }
+		@each $footname in 'foot','footer'    { @include paragraphPart($model,$footname,$footHeight); }
+		.#{$model}-body { position:relative; }
+	}
+}
+//webkit filter
+@mixin filter($value:none) { -webkit-filter: $value;filter: $value; }
+// 뿌옅게 0 ~ *
+@mixin filter-blur($px){ -webkit-filter: blur($px);filter: blur($px); }
+//밝기 0 ~ 10
+@mixin filter-brightness($float){ -webkit-filter: brightness($float);filter: brightness($float); }
+//생기 0 ~ 10
+@mixin filter-saturate($float){	-webkit-filter: saturate($float);filter: saturate($float); }
+//음영 0 ~ 1
+@mixin filter-grayscale($float){ -webkit-filter: grayscale($float);filter: grayscale($float); }
+//날카롭게 0 ~ 10
+@mixin filter-contrast($float){ -webkit-filter: contrast($float);filter: contrast($float); }
+//투명도 0 ~ 360
+@mixin filter-hue-rotate($float){ -webkit-filter: hue-rotate($float);filter: hue-rotate($float); }
+//고전적 0 ~ 1
+@mixin filter-sepia($float){ -webkit-filter: sepia($float);filter: sepia($float); }
+//반전 0 ~ 1
+@mixin filter-invert($float){ -webkit-filter: invert($float);filter: invert($float); }
+// Single side border-radius
+@mixin border-radius-top($radius) {
+  border-top-right-radius: $radius;
+   border-top-left-radius: $radius;
+}
+@mixin border-radius-right($radius) {
+  border-bottom-right-radius: $radius;
+     border-top-right-radius: $radius;
+}
+@mixin border-radius-bottom($radius) {
+  border-bottom-right-radius: $radius;
+   border-bottom-left-radius: $radius;
+}
+@mixin border-radius-left($radius) {
+  border-bottom-left-radius: $radius;
+     border-top-left-radius: $radius;
+}
+@mixin absolute($absolute-top:'',$absolute-left:'') {
+	display:absolute;
+	@if($absolute-top!=''){
+		top:$absolute-top;
+	}
+	@if($absolute-left!=''){
+		left:$absolute-left;
+	}
+}
+@mixin close-group-style-default($group-height:30px,$child-tag:'>*'){
+	display:table;
+    width: 100%;
+	border-collapse: separate;
+    table-layout: fixed;
+	height:$group-height;
+	#{$child-tag} {
+		@include no-select;
+		position:relative;
+		float:none;
+		display:table-cell;
+		width:100%;
+		height:$group-height;
+		line-height:$group-height;
+	}
+}
