@@ -206,11 +206,11 @@ Nody는 글자사이의 숫자를 인식한다. 내부적으로 숫자로
 ```javascript
         _Number(3000).getNumber(); //=> "3000"
         _Number(3000).getDecimal(); //=> "3,000"
-        _Number("halfby 3000$ dance").number(); //=> 3000
-        _Number("halfby 3000$ dance").getNumber(); //=> "3000"
-        _Number("halfby 3000$ dance").getDecimal(); //=> "3,000"
-        _Number("halfby 3000$ dance").getPrefix(); //=> "halfby "
-        _Number("halfby 3000$ dance").getSuffix(); //=> "$ dance"
+        _Number("halfby $3000 dance").number(); //=> 3000
+        _Number("halfby $3000 dance").getNumber(); //=> "3000"
+        _Number("halfby $3000 dance").getDecimal(); //=> "3,000"
+        _Number("halfby $3000 dance").getPrefix(); //=> "halfby $"
+        _Number("halfby $3000 dance").getSuffix(); //=> " dance"
         _Number("hello world").number(); // => 0
         
 ```
