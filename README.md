@@ -156,6 +156,62 @@ _Array와 마찬가지로 _Object도 동일하게 동작하도록 하는게 원�
 ```
 
 ### 파싱 #
+TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브젝트로  파싱 가능하다.
+```javascript
+        TOOBJECT("{'hello':'wolrd','foo':'bar','1':2}");
+        TOOBJECT("{hello:wolrd,foo:bar,1:2}");
+        TOOBJECT("hello:wolrd,foo:bar,1:2");
+        //result equal
+        //but top case is 10x more fast (native json parsing)
+```
+
+### TypeInsepct #
+
+```javascript
+        _Type("123").is("string"); //=> true
+        _Type("123").is("number"); //=> false
+        _Type("123").is("nothing"); //=> false
+        _Type("123").is("meaning"); //=> true
+        _Type("0").is("meaning"); //=> true
+        _Type(0).is("nothing"); //=> true
+        _Type("123").is("string>5"); //=> false
+        _Type("123456").is("string>5"); //=> true
+        _Type(123456).is("text>5"); //=> true
+        _Type(123456).is("number<100"); //=> false
+        _Type({}).is("object"); //=> true
+        _Type([]).is("array"); //=> true
+```
+
+### 글자 #
+
+#### byteSize #
+바이트사이즈를 출력할수 있다.
+```javascript
+        _String("McDonald's").getByteSize(); //=> 10
+        _String("맥도널드").getByteSize(); //=>8
+        _String("マクドナルド").getByteSize(); //=>12
+```
+#### string model #
+class attribute 같은 string의 추가제거에 사용가능하다.
+```javascript
+        _String("McDonald's").addModel("good").get(); //=>"McDonald's good"
+        _String("McDonald's").removeModel("Mc").get(); //=>"McDonald's"
+        _String("McDonald's").removeModel("McDonald's").get(); //=>""
+```
+
+### 숫자 #
+Nody는 글자사이의 숫자를 인식한다. 내부적으로 숫자로
+```javascript
+        _Number(3000).getNumber(); //=> "3000"
+        _Number(3000).getDecimal(); //=> "3,000"
+        _Number("halfby 3000$ dance").number(); //=> 3000
+        _Number("halfby 3000$ dance").getNumber(); //=> "3000"
+        _Number("halfby 3000$ dance").getDecimal(); //=> "3,000"
+        _Number("halfby 3000$ dance").getPrefix(); //=> "halfby "
+        _Number("halfby 3000$ dance").getSuffix(); //=> "$ dance"
+        _Number("hello world").number(); // => 0
+        
+```
 
 
 ### 모듈(Like Class) #
