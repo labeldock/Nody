@@ -171,6 +171,7 @@ TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브�
 
 #### type::is #
 ```javascript
+        
         _Type("123").is("string"); //=> true
         _Type("123").is("number"); //=> false
         _Type("123").is("nothing"); //=> false
@@ -183,6 +184,13 @@ TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브�
         _Type(123456).is("number<100"); //=> false
         _Type({}).is("object"); //=> true
         _Type([]).is("array"); //=> true
+        //multi
+        _Type([]).is("nothing array"); //=> true
+        _Type({}).is("nothing object"); //=> true
+        _Type(12).is("nothing number"); //=> false
+        _Type(0).is("nothing number"); //=> true
+        _Type(0).is("nothing text"); //=> true
+        _Type(0).is("nothing string"); //=> false
 ```
 
 #### type::as #
