@@ -12,8 +12,8 @@ Nody.js는 DHTML 페이지를 만들기위한 라이브러리이다.
 
 ## 특징 #
 1. 직관적인 Node 생성이 가능하다.
-2. 각종 인터페이스 구현체가 존재한다.
-3. 각종 enumeration이 존재한다.
+2. 인라인 코딩을 지향한다.
+3. 각종 인터페이스 구현체가 존재한다.
 4. 코어만 따로 띄어내어 객체지향 개발을 흉내낼수도 있다.
 
 ## 알아둘점 #
@@ -280,6 +280,40 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
         zombieDog.walk();
         zombieDog.bark();
         zombieDog.getEnergy(); // => 2
+```
+
+#### new 호출 #
+```javascript
+    makeModule("Cat",{},function(name){ console.log(name+" : 'Meow'"); });
+    
+    // General way
+    var pinkCat = new Cat("PinkCat"); // console.log => PinkCat : 'Meow'
+    
+    // Lazy way
+    var blueCat = _Cat("blueCat");    // console.log => BlueCat : 'Meow'
+```
+
+#### super 호출 #
+
+```javascript
+        makeModule("Dog",{
+            bark:function(){
+                return "bark";
+            }
+        },function(type){
+            console.log(type+"Dog are born");
+        });
+        
+        extendModule("ShockDog",{
+            bark:function(){
+                return this._super()+"!!";
+            }
+        },function(){
+            this.super("Shock");
+        });
+        
+        var shockDog = new ShockDog(); // console.log => "ShockDog are born"
+        shockDog.bark(); // => "bark!!"
 ```
         
 
