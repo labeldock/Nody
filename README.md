@@ -30,10 +30,10 @@ _EL, 또는 _[태그이름] 을 사용하여 태그생성이 가능하다.
 css 스타일로 구현 가능
 
 ```javascript
-        _EL("div#hello.world[my=code]"); 
+        _EL("div#hello.world[my=code]:disabled::foo"); 
 ```
 ```html
-        <div id="hello" class="world" my="code"></div>
+        <div id="hello" class="world" my="code" disabled>foo</div>
 ```
 
 #### 생성방법 2 #        
