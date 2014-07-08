@@ -241,47 +241,6 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
 
 #### 모듈생성 #
 
-```javascript
-        makeModule("Zombie",{
-          run:function(){
-            this.energy = this.energy - 5;
-          },
-          walk:function(){
-            this.energy--;
-          },
-          getEnergy:function(){
-            return this.energy;
-          }
-        },function(energyPoint){
-          this.energy = energyPoint;
-        });
-        
-        var zombie = new Zombie(10);
-        zombie.run();
-        zombie.getEnergy(); // => 5
-        zombie.walk();
-        zombie.getEnergy(); // => 4
-```
-
-
-
-#### 상속 #
-        
-```javascript
-        extendModule("Zombie","ZombieDog",{
-          bark:function(){
-            this.energy = this.energy - 2;
-          }
-        },function(energyPoint){
-          this._super(energyPoint - 5);
-        });
-        
-        var zombieDog = new ZombieDog(10);
-        zombieDog.walk();
-        zombieDog.bark();
-        zombieDog.getEnergy(); // => 2
-```
-
 #### new 호출 #
 ```javascript
     makeModule("Cat",{},function(name){ console.log(name+" : 'Meow'"); });
@@ -314,6 +273,24 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
         
         var shockDog = new ShockDog(); // console.log => "ShockDog are born"
         shockDog.bark(); // => "bark!!"
+```
+
+
+#### 상속 #
+        
+```javascript
+        extendModule("Zombie","ZombieDog",{
+          bark:function(){
+            this.energy = this.energy - 2;
+          }
+        },function(energyPoint){
+          this._super(energyPoint - 5);
+        });
+        
+        var zombieDog = new ZombieDog(10);
+        zombieDog.walk();
+        zombieDog.bark();
+        zombieDog.getEnergy(); // => 2
 ```
         
 
