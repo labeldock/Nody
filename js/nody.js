@@ -1,6 +1,6 @@
 //Nody CoreFoundation
 (+(function(W,NativeCore){
-	var version = "0.2";
+	var version = "0.2.1";
 	// Author                 // hojung ahn (open9.net)
 	// Concept                // DHTML RAD TOOL
 	// tested in              // IE9 + (on 4.0) & webkit2 & air13
@@ -265,7 +265,7 @@
 //Nody Foundation
 (+(function(W){
 	if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
-	W.makeSingleton("AFoundationUtility",{
+	W.makeSingleton("FUT",{
 		"CONTINUTILITY":function(func,over,owner){
 			return function(){
 				var args = Array.prototype.slice.apply(arguments);
@@ -277,7 +277,6 @@
 			}
 		}
 	});
-	AFoundationUtility.eachGetter();
 	
 	W.makeSingleton("AFoundation",{
 		"TOLENGTH":function(v,d){
@@ -718,13 +717,13 @@
 		// 함수가 존재하면 호출하여 콜백한다
 		"FJOB": function(f,v,owner){ if( typeof f == "function" ){ return f.call(owner,v); } return v; },
 		// 각각의 값의 function실행
-		"DATAEACH"    :CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
+		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
 		// 각각의 값의 function실행
-		"DATAEACHBACK":CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
+		"DATAEACHBACK":FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
 		// 각각의 값을 배열로 다시 구해오기
-		"DATAMAP"     :CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f(ev[i],i)); return rv; },2),
+		"DATAMAP"     :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f(ev[i],i)); return rv; },2),
 		// 각각의 값을 배열로 다시 구해오되 undefined는 제거합니다
-		"DATAGATHER"  :CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) { var def = f(ev[i],i); if(typeof def !== "undefined") rv.push(); } return rv; },2),
+		"DATAGATHER"  :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) { var def = f(ev[i],i); if(typeof def !== "undefined") rv.push(); } return rv; },2),
 		// 배열을 댑스를 모두 제거합니다.
 		"DATAFLATTEN":function(){ var result = []; function arrayFlatten(args){ DATAEACH(args,function(arg){ if(ISARRAY(arg)) return DATAEACH(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
 		// 배열을 댑스를 모두 제거합니다.
@@ -1190,6 +1189,7 @@
 		for(var i=0,l=(isNaN(repeat) == true ? 1 : parseInt(repeat) );i<l;i++)_a.push(JOB(value));
 		return _a;
 	};
+	
 	extendModule("Array","Range",{},function(a,b){
 		b = isNaN(b) ? 1 : parseInt(b);
 		if(typeof a == "string"){
@@ -1291,7 +1291,7 @@
 		abilityObject    : function(){ return this.abilityFunction(",",":",true); },
 		abilityParameter : function(){ return this.abilityFunction("&","="); },
 		abilityCss       : function(){ return this.abilityFunction(";",":"); },
-		isContent:function(absoluteWrap){
+		isDataContent:function(absoluteWrap){
 			var o = this.abilityObject();
 			var c = this.abilityCss();
 			var p = this.abilityParameter();
@@ -1304,25 +1304,25 @@
 			if(o > 0) return "css";
 			return "plain";
 		},
-		getContentFunction:function(fs,is,js){
+		isDataContentFunction:function(fs,is,js){
 			return _Array( (js==true) ? OUTERSPLIT(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs) ).inject({},function(s,inj){
 				var v = s.substr(s.indexOf(is)+1);
-				if(s.trim().length > 0) inj[ UNWRAP(s.substr(0,s.indexOf(is)),['""',"''"]) ] = UNWRAP((js == true) ? _String(v).getContent(true) : v,['""',"''"]);
+				if(s.trim().length > 0) inj[ UNWRAP(s.substr(0,s.indexOf(is)),['""',"''"]) ] = UNWRAP((js == true) ? _String(v).getDataContent(true) : v,['""',"''"]);
 				return inj;
 			});
 		},
-		getContent:function(absoluteWrap){
-			switch(this.isContent(absoluteWrap)){
-				case "object"       : return this.getContentFunction(",",":",true); break;
-				case "parameter"    : return this.getContentFunction("&","="); break;
-				case "css"          : return this.getContentFunction(";",":"); break;
+		getDataContent:function(absoluteWrap){
+			switch(this.isDataContent(absoluteWrap)){
+				case "object"       : return this.isDataContentFunction(",",":",true); break;
+				case "parameter"    : return this.isDataContentFunction("&","="); break;
+				case "css"          : return this.isDataContentFunction(";",":"); break;
 				case "array"        :
 					var a = OUTERSPLIT(this.Source,",",["{}","[]",'""',"''"]);
 					if(a == ""){
 						return [];
 					} else {
 						return _Array(a).inject([],function(s,inj){
-							inj.push(UNWRAP( _String(s).getContent(true) , ["''",'""'] )); 
+							inj.push(UNWRAP( _String(s).getDataContent(true) , ["''",'""'] )); 
 							return inj; 
 						});
 					}
@@ -1336,7 +1336,7 @@
 				break;
 			};
 		},
-		getJSON:function(){ return JSON.stringify(this.getContent());},
+		getJSON:function(){ return JSON.stringify(this.getDataContent());},
 		//reverse
 		getReverse : function() { return this.Source.split("").reverse().join(""); },
 		reverse    : function()   { this.Source = this.getReverse(); return this; },
@@ -1429,7 +1429,61 @@
 			this.Source = TOSTRING(param,10,jsonfy);
 		}
 	});
-
+	
+	extendModule("String","AreaContent",{
+		getContentInfo:function(){
+			var r = {"type":null,"value":null,"range":null,"pattern":null}
+			//number
+			console.log("this.Source",this.Source)
+			var numberType = /(\d+)\~(\d+)/.exec(this.Source);
+			if(numberType){
+				r.type = "number";
+				var low = parseInt( numberType[1] ) > parseInt( numberType[2] ) ? parseInt( numberType[2] ) : parseInt( numberType[1] );
+				var big = parseInt( numberType[1] ) > parseInt( numberType[2] ) ? parseInt( numberType[1] ) : parseInt( numberType[2] );
+				r.value = low;
+				r.range = big-low;
+				return r;
+			}
+			//plain
+			r.type  = "plain";
+			r.value = this.Source;
+			return r;
+		},
+		getContent:function(index){
+			var info = this.getContentInfo();
+			console.log("content info",this.Source,TOSTRING(info));
+			if(info){
+				switch(info.type){
+					case "number":
+						return info.value+Math.floor(Math.random()*info.range);
+						break;
+					case "plain":
+						return info.value;
+						break;
+				}
+				
+			}
+		}
+	},function(param){
+		if( ISARRAY(param) ) param = TOARRAY(param).join(",");
+		this._super(param);
+		this.Source = this.Source.trim();
+	},function(i){return this.getContent(i)});
+	
+	extendModule("Array","Area",{
+		getContent:function(){
+			
+		}
+		
+	},function(){
+		var contents = Array.prototype.slice.call(arguments);
+		var pushData = [];
+		for(var i=0,l=contents.length;i<l;i++) pushData.push( new AreaContent(contents[i]) );
+		this.replace(pushData);
+	});
+	
+	
+	
 	// Number
 	extendModule("String","Number",{
 		// number core
@@ -2349,17 +2403,17 @@
 	W.ManagedMetaObjectData = [];
 	makeModule("Meta",{
 		//validate
-		isVaild :function() { return this.Source == false ? false : true; },
+		isValid :function() { return this.Source == false ? false : true; },
 		//data
-		data    :function(v){ if(this.isVaild()){ return W.ManagedMetaObjectData[this.Source]; } },
-		getOwner:function() { if(this.isVaild()) return UID.getObject(this.Source); },
+		data    :function(v){ if(this.isValid()){ return W.ManagedMetaObjectData[this.Source]; } },
+		getOwner:function() { if(this.isValid()) return UID.getObject(this.Source); },
 		//prop
 		getProp :function(propName){ if(typeof propName == "string" || typeof propName == "number"){ return W.ManagedMetaObjectData[this.Source][propName]; } },
 		setProp :function(propName,value){ if(typeof propName == "string" || typeof propName == "number"){ W.ManagedMetaObjectData[this.Source][propName] = value;} return this; },
 		hasProp :function(propName){ if(typeof propName == "string" || typeof propName == "number") return (propName in W.ManagedMetaObjectData[this.Source]); return false; },
 		removeProp:function(propName){ if( this.hasProp(propName) ) delete anagedMetaObjectData[this.Source][propName]; return this; },
 		//Destroy
-		destroy   :function() { if(this.isVaild()){ W.ManagedMetaObjectData[this.Source] = undefined; UID.destroy(this.Source); return true;} return false; },
+		destroy   :function() { if(this.isValid()){ W.ManagedMetaObjectData[this.Source] = undefined; UID.destroy(this.Source); return true;} return false; },
 		lastProp:function(propName){ var r = this.getProp(propName); this.destroy(); return r; },
 		lastData:function(){ var r = this.data(); this.destroy(); return r; },
 		destroyTimeout:function(time){ var own = this; setTimeout(function(){ own.destroy(); },NUMBER(time));}
@@ -2585,9 +2639,9 @@
 		"PRINT":function(a){ return EL("div",a,W.document); }
 	});
 	ELUT.eachGetter();
-	makeSingleton("NODE",{
+	makeSingleton("NODY",{
 		"ATTR":function(node,v1,v2){
-			if(!ISELNODE(node)) { console.error("NODE.ATTR은 element만 가능합니다. => 들어온값" + TOS(node)); return null; }
+			if(!ISELNODE(node)) { console.error("NODY.ATTR은 element만 가능합니다. => 들어온값" + TOS(node)); return null; }
 			if(typeof v1 == "object") {
 				for(var k in v1) node.setAttribute(k,k1[v]);
 			} else if(typeof v1 == "string"){
@@ -2687,10 +2741,10 @@
 						for(var metaKey in tagInfo[key]){
 							switch(metaKey){
 								case "not":
-									if( NODE.THE(node,tagInfo[key][metaKey]) ) return false;
+									if( NODY.THE(node,tagInfo[key][metaKey]) ) return false;
 									break;
 								case "focus":
-									if(!NODE.HASFOCUS(node)) return false;
+									if(!NODY.HASFOCUS(node)) return false;
 									break;
 								case "eq": case "nth-child":
 									if(!node.parentElement) return false;
@@ -2771,9 +2825,9 @@
 				if(querys.length == 0){
 					judgement = false;
 				} else if(querys.length == 1) {
-					judgement = NODE.THE(node,querys[0]);
+					judgement = NODY.THE(node,querys[0]);
 				} else {
-					var allNodes   = [node].concat(NODE.PARENTS(node));
+					var allNodes   = [node].concat(NODY.PARENTS(node));
 					var findThe    = 0;
 					var lastResult = true;
 					//console.log(allNodes);
@@ -2785,8 +2839,8 @@
 								for(var f=findThe+1,l=allNodes.length-findThe;f<l;f++){
 									findThe++;
 									var queryText = querys[i].trim();
-									//console.log(NODE.THE(allNodes[f],queryText),allNodes[f],queryText);
-									if( NODE.THE(allNodes[f],queryText) ){
+									//console.log(NODY.THE(allNodes[f],queryText),allNodes[f],queryText);
+									if( NODY.THE(allNodes[f],queryText) ){
 										lastResult = true;
 										break;
 									} else {
@@ -2798,7 +2852,7 @@
 								//console.log("case '>'");
 								findThe++;
 								var queryText = querys[i].trim();
-								if(NODE.THE(allNodes[findThe],queryText)){
+								if(NODY.THE(allNodes[findThe],queryText)){
 									lastResult = true;
 								} else {
 									lastResult = false;
@@ -2807,7 +2861,7 @@
 								break;
 							default:
 								//console.log("case 'd'");
-								if( NODE.THE(allNodes[findThe],querys[i]) ){
+								if( NODY.THE(allNodes[findThe],querys[i]) ){
 									lastResult = true;
 								} else {
 									lastResult = false;
@@ -2826,9 +2880,9 @@
 			var root      = ISDOCUMENT(root)?document.body.parentElement:ISELNODE(root)?root:document.body.parentElement;			
 			var queryData = DataConstructorInit("QueryData",query);
 			var result = [];
-			NODE.FEEDERDOWN(
+			NODY.FEEDERDOWN(
 				root,
-				function(node){ if( NODE.IS(this,queryData) ) result.push(this); },
+				function(node){ if( NODY.IS(this,queryData) ) result.push(this); },
 				"children"
 			);
 			return result;
@@ -2836,14 +2890,14 @@
 		"FEEDERDOWN_WHILE":function(feeder,stopFilter,findChild){
 			if( stopFilter.call(feeder,feeder) !== false ){
 				var childs = TOARRAY(findChild.call(feeder,feeder));
-				for(var i=0,l=childs.length;i<l;i++) NODE.FEEDERDOWN_WHILE(childs[i],stopFilter,findChild);
+				for(var i=0,l=childs.length;i<l;i++) NODY.FEEDERDOWN_WHILE(childs[i],stopFilter,findChild);
 			}
 		},
 		"FEEDERDOWN":function(feeder,filter,feeddown){
 			if(typeof filter !== "function") console.error("DATAFEEDDOWN 두번째 파라메터는 function이여야 합니다");
 			var feeddownMethod;
 			switch(typeof feeddown){case "function":feeddownMethod=feeddown;break;case "string":feeddownMethod=function(fd){return fd[feeddown];};break;default:return;break;}
-			if(typeof feeder == "object") NODE.FEEDERDOWN_WHILE(feeder,filter,feeddownMethod,2);
+			if(typeof feeder == "object") NODY.FEEDERDOWN_WHILE(feeder,filter,feeddownMethod,2);
 		},
 		"MEMBER":function(node,offset){
 			var target = node;
@@ -2860,14 +2914,14 @@
 		"FINDFUNCTION":function(find,root){
 			if (typeof root !== "undefined"){
 				if( ISELNODE(root) && ISELNODE(find) ){
-					var finded = NODE.QUERY(ELTRACE(find),root);
+					var finded = NODY.QUERY(ELTRACE(find),root);
 					for(var i=0,l=finded.length;i<l;i++) {
 						if(finded[i] == find) return [find];
 					}
 				}
 				var findCollection = [];
 				var roots = FINDFUNCTION(root);
-				for(var i=0,l=roots.length;i<l;i++){ findCollection.push(NODE.QUERY(find,roots[i])); }
+				for(var i=0,l=roots.length;i<l;i++){ findCollection.push(NODY.QUERY(find,roots[i])); }
 				return DATAUNIQUE.apply(undefined,findCollection);
 			} else if( ISARRAY(find) ){
 				var findCollection = [];
@@ -2876,7 +2930,7 @@
 			} else if( ISELNODE(find) ){
 				return [find];
 			}  else {
-				return NODE.QUERY(find,W.document);
+				return NODY.QUERY(find,W.document);
 			}
 			return [];
 		},
@@ -2896,7 +2950,7 @@
 				}
 			}
 			if(typeof find == "string"){
-				return NODE.QUERY(find,frame);
+				return NODY.QUERY(find,frame);
 			} else if(ISARRAY(find)){
 				var findCollection = [];
 				for(var i=0,l=find.length;i<l;i++) findCollection.push(DOCUMENTFIND(find[i],frame));
@@ -2916,7 +2970,7 @@
 			DATAEACH(target.parentNode.children,function(node,i){ if(target == node) { currentIndex = i; return false; } });
 			return target.parentNode.children[currentIndex+offset];
 		},
-		"FIND" : CONTINUTILITY(function(find,root,eq){
+		"FIND" : FUT.CONTINUTILITY(function(find,root,eq){
 			if(typeof root == "number"){
 				eq   = root;
 				root = undefined;
@@ -2928,13 +2982,13 @@
 			}
 		}),		
 		// 배열이라면 엘리먼트의 하나 추출
-		"FINDZERO" : CONTINUTILITY(function(find,root){
+		"FINDZERO" : FUT.CONTINUTILITY(function(find,root){
 			return FINDFUNCTION(find,root)[0];
 		}),
-		"FINDIN" : CONTINUTILITY(function(root,find){
+		"FINDIN" : FUT.CONTINUTILITY(function(root,find){
 			return FINDFUNCTION( (ISNOTHING(find) ? "*" : find) ,root);
 		},2),
-		"FINDON": CONTINUTILITY(function(root,find){
+		"FINDON": FUT.CONTINUTILITY(function(root,find){
 			var finds = DATAMAP(FINDFUNCTION(root),function(node){
 				return node.children;
 			},DATAFLATTEN)
@@ -2943,19 +2997,19 @@
 					return finds[find];
 				case "string":
 					return DATAFILTER(finds,function(node){
-						return NODE.IS(node,find);
+						return NODY.IS(node,find);
 					});
 				default :
 					return finds;
 			}
 		},2),
-		"FINDPARENTS":function(el){ return NODE.PARENTS(FINDFUNCTION(el)[0]); },
-		"FINDPARENT" :CONTINUTILITY(function(el,require){
+		"FINDPARENTS":function(el){ return NODY.PARENTS(FINDFUNCTION(el)[0]); },
+		"FINDPARENT" :FUT.CONTINUTILITY(function(el,require){
 			var node = FINDFUNCTION(el)[0];
 			if(!ISELNODE(node)) return ;
 			if(typeof require == "string"){
-				var parents = NODE.PARENTS(node);
-				for(var i in parents) if( NODE.IS(parents[i],require) ) return parents[i];
+				var parents = NODY.PARENTS(node);
+				for(var i in parents) if( NODY.IS(parents[i],require) ) return parents[i];
 				return undefined;
 			} else {
 				return node.parentElement;
@@ -2972,9 +3026,9 @@
 		//케럿을 움직일수 있는 상태인지 검새합니다.
 		"ELCARETPOSSIBLE":function(sel){ var node = FINDZERO(sel); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
 		//어트리뷰트값을 읽거나 변경합니다.
-		"ELATTR":function(sel,v1,v2){ var node = FINDZERO(sel); return NODE.ATTR(node,v1,v2); },
+		"ELATTR":function(sel,v1,v2){ var node = FINDZERO(sel); return NODY.ATTR(node,v1,v2); },
 		//css스타일로 el의 상태를 확인합니다.
-		"ELIS":function(sel,value){ var node = FINDZERO(sel); return NODE.IS(node,value); },
+		"ELIS":function(sel,value){ var node = FINDZERO(sel); return NODY.IS(node,value); },
 		//선택한 element중 대상만 남깁니다.
 		"ELFILTER":function(sel,filter){
 			var targets = FIND(sel);
@@ -3021,7 +3075,7 @@
 				case "input": case "option": case "textarea":
 					//get
 					if(nodeName == "option"){
-						var selNode = NODE.QUERY(":selected",node);
+						var selNode = NODY.QUERY(":selected",node);
 						if( ISELNODE(selNode) ) return selNode.value;
 						return node.value;
 					} else {
@@ -3474,8 +3528,8 @@
 					var jp = JSON.parse(param);
 					if(typeof jp !== "object") throw new Error("pass");
 				} catch(e) {
-					if(_String(param).isContent()=="plain"){var esv=(typeof es == "string" ? es : "value");
-					var reo={};reo[esv]=param;return reo;}return _String(param).getContent();
+					if(_String(param).isDataContent()=="plain"){var esv=(typeof es == "string" ? es : "value");
+					var reo={};reo[esv]=param;return reo;}return _String(param).getDataContent();
 				}
 			}
 			return{};
@@ -3535,11 +3589,31 @@
 				});
 			}
 		},
-		"ELHASCLASS":function(node,name,hideConsole){
-			var node = FINDZERO(node);
-			if( ISELNODE(node) ) if(typeof node.getAttribute("class") == "string") return _String(node.getAttribute("class")).hasModel(name);
-			if(hideConsole !== true) console.error("ELHASCLASS:: 알수없는 node값 입니다. => " + TOS(node) );
-			return false;
+		"ELPUT":function(sel,putContent){
+			var node = FINDZERO(sel);
+			if(!ISELNODE(node)) return console.warn("ELPUT:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
+			ELEMPTY(node);
+			var newContents = [];
+			DATAEACH( TOARRAY(putContent),function(content){
+				if(ISELNODE(content)){
+					newContents.push(content)
+				} else {
+					content = TOSTRING(content);
+					switch(node.tagName){
+						case "UL":
+							newContents.push(_LI("::"+content))
+							break;
+						case "DL":
+							newContents.push(_DD("::"+content))
+							break;
+						default:
+							newContents.push(_SPAN("::"+content))
+							break;	
+					}
+				}
+			});
+			ELAPPEND(node,newContents);
+			return node;
 		}
 	});
 	ElementFoundation.eachGetter();
@@ -3624,7 +3698,7 @@
 	});
 	// Frame
 	extendModule("Controls","Form",{
-		isVaild        :function(f){ if(typeof f == "function") return f.call(this); return ISELNODE(this.Source); },
+		isValid        :function(f){ if(typeof f == "function") return f.call(this); return ISELNODE(this.Source); },
 		getSelects     :function(){ return FIND(this.SelectRule,this.Source); },
 		getSelectTokens:function(){
 			return _Array(this.SelectRule.split(",")).map(function(selString){
@@ -5989,7 +6063,7 @@
 					break;
 			}
 		},
-		isVaild:function(){return this.OriginSource?true:false;},
+		isValid:function(){return this.OriginSource?true:false;},
 		//getProps
 		getFiltedHSV:function(){
 			var s = MV(this.Source);
@@ -6117,7 +6191,7 @@
 				this.OriginSource[0] = "RGB";
 			}
 		}
-		if(!this.isVaild()){ console.error("Color::파라메터의 형식에 대응할 수 올바르지 없습니다. white로 대응합니다.=> ",p1); this.OriginSource=["HEX","FFFFFF"]; };
+		if(!this.isValid()){ console.error("Color::파라메터의 형식에 대응할 수 올바르지 없습니다. white로 대응합니다.=> ",p1); this.OriginSource=["HEX","FFFFFF"]; };
 		this.Source = this.getColorSource();
 	},function(){
 		switch(this.OriginSource[0]){
