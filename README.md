@@ -268,7 +268,7 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
                 return this._super()+"!!";
             }
         },function(){
-            this.super("Shock");
+            this._super("Shock");
         });
         
         var shockDog = new ShockDog(); // console.log => "ShockDog are born"
