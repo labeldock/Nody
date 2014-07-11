@@ -59,7 +59,7 @@ if(!TweenMax){ console.warn("nody.move.js::can't find the TweenMax.."); }
 		complete    : function(method) { this.addEvent("complete",method); }
 	},function(attributed){
 		this.ActionIndex          = 0;
-		this.ActionMovementOption = CLONE(OBJECT(attributed));
+		this.ActionMovementOption = CLONE(TOOBJECT(attributed));
 		this.Source = _Array();
 		//event
 		var own = this;
@@ -130,7 +130,7 @@ if(!TweenMax){ console.warn("nody.move.js::can't find the TweenMax.."); }
 		if(completeEvent) this.addEvent("complete",completeEvent);
 
 		//move_que
-		this.que   = movevalue ? [OBJECT(movevalue)] : [];
+		this.que   = movevalue ? [TOOBJECT(movevalue)] : [];
 		
 		//console.log("que info",movevalue,"->",TOSTRING(this.que));
 		
