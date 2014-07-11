@@ -1,6 +1,6 @@
 //Nody CoreFoundation
 (+(function(W,NativeCore){
-	var version = "0.3.0";
+	var version = "0.3.0.1";
 	// Author                 // hojung ahn (open9.net)
 	// Concept                // DHTML RAD TOOL
 	// tested in              // IE9 + (on 4.0) & webkit2 & air13
@@ -3298,6 +3298,34 @@
 			return parent;
 		},
 		"ELAPPENDTO":function(targets,parentEL){ return ELAPPEND(FINDZERO(parentEL),targets); },
+		"ELPUT":function(sel){
+			var node = FINDZERO(sel);
+			if(!ISELNODE(node)) return console.warn("ELPUT:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
+			ELEMPTY(node);
+			var newContents = [];
+			var params = Array.prototype.slice.call(arguments);
+			params.shift();
+			DATAEACH( DATAFLATTEN(params) ,function(content){
+				if(ISELNODE(content)){
+					newContents.push(content)
+				} else {
+					content = TOSTRING(content);
+					switch(node.tagName){
+						case "UL":case "MENU":
+							newContents.push(_LI("::"+content))
+							break;
+						case "DL":
+							newContents.push(_DD("::"+content))
+							break;
+						default:
+							newContents.push(_SPAN("::"+content))
+							break;	
+					}
+				}
+			});
+			ELAPPEND(node,newContents);
+			return node;
+		},
 		//이전 엘리먼트를 찾습니다.
 		"ELBEFORE":function(node,appendNodes){ 
 			var target;
@@ -3634,32 +3662,6 @@
 					}
 				});
 			}
-		},
-		"ELPUT":function(sel,putContent){
-			var node = FINDZERO(sel);
-			if(!ISELNODE(node)) return console.warn("ELPUT:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
-			ELEMPTY(node);
-			var newContents = [];
-			DATAEACH( TOARRAY(putContent),function(content){
-				if(ISELNODE(content)){
-					newContents.push(content)
-				} else {
-					content = TOSTRING(content);
-					switch(node.tagName){
-						case "UL":
-							newContents.push(_LI("::"+content))
-							break;
-						case "DL":
-							newContents.push(_DD("::"+content))
-							break;
-						default:
-							newContents.push(_SPAN("::"+content))
-							break;	
-					}
-				}
-			});
-			ELAPPEND(node,newContents);
-			return node;
 		},
 		"INLINEFIX":function(sel){
 			$(sel).each(function(context){
