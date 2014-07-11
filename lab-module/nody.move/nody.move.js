@@ -2,7 +2,7 @@
 // It is not the official version (If you want use this code, please use in commercial 'TweenMax' license.)
 // 이것은 배포 버전이 아닙니다. 상업적 이용은 TweenMax 라이센스를 취득후 사용해주세요.
 
-// Move Version 1.2
+// Move Version 1.3
 // Require TweenMax and ScrollToPlugin For TweenMax.
 
 if(!TweenMax){ console.warn("nody.move.js::can't find the TweenMax.."); }
@@ -59,7 +59,7 @@ if(!TweenMax){ console.warn("nody.move.js::can't find the TweenMax.."); }
 		complete    : function(method) { this.addEvent("complete",method); }
 	},function(attributed){
 		this.ActionIndex          = 0;
-		this.ActionMovementOption = MV(OBJECT(attributed));
+		this.ActionMovementOption = CLONE(OBJECT(attributed));
 		this.Source = _Array();
 		//event
 		var own = this;

@@ -1,6 +1,6 @@
 //Nody CoreFoundation
 (+(function(W,NativeCore){
-	var version = "0.2.1";
+	var version = "0.3.0";
 	// Author                 // hojung ahn (open9.net)
 	// Concept                // DHTML RAD TOOL
 	// tested in              // IE9 + (on 4.0) & webkit2 & air13
@@ -24,7 +24,6 @@
 							traces.push(TOSTRING(args[i]));
 							break;
 					}
-					
 				}
 				air.trace( traces.join(", ") ); 
 			}
@@ -38,13 +37,13 @@
 	var __aJSONCount__ = "JSON" in W ? 1 : 0; 
 	W.aJSON = {
 		 "parse"     : function (jtext) { 
-			if(__aJSONCount__ < 1){ __aJSONCount__++; console.info("현재 사용하고 있는 환경에서는 JSON이 내장되지 않아 nody의 오브젝트 해석기가 사용됩니다. 본 해석기는 완전히 JSON.stringify와 똑같이 작동되지 않습니다."); }
+			if(__aJSONCount__ < 1){ __aJSONCount__++; }
 			 var result;
 			 try { result = eval('(' + jtext + ')'); } catch(e) { result = TOOBJECT(jtext); }
 			 return result;
 		 },
 		 "stringify" : function (obj)   {
-			if(__aJSONCount__ < 1){ __aJSONCount__++; console.info("현재 사용하고 있는 환경에서는 JSON이 내장되지 않아 nody의 오브젝트 해석기가 사용됩니다. 본 해석기는 완전히 JSON.stringify와 똑같이 작동되지 않습니다."); }
+			if(__aJSONCount__ < 1){ __aJSONCount__++; }
 			return W.TOSTRING(obj,Number.POSITIVE_INFINITY,true);
  		}
 	};
@@ -265,6 +264,9 @@
 //Nody Foundation
 (+(function(W){
 	if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
+	
+	var FUT_CACHE;
+	
 	W.makeSingleton("FUT",{
 		"CONTINUTILITY":function(func,over,owner){
 			return function(){
@@ -275,45 +277,20 @@
 				}
 				return func.apply(owner,args);
 			}
-		}
+		},
+		"CACHEIN":function(sender,name){
+			if( !(sender in FUT_CACHE) ) return false;
+			if( !(name in FUT_CACHE[sender]) ) return false;
+			return true;
+		},
+		"CACHESET"  :function(s,n,v){ if( !(s in FUT_CACHE) ) FUT_CACHE[s] = {}; FUT_CACHE[s][n] = v; },
+		"CACHEGET"  :function(s,n)  { if( this.CACHEIN(s,n) ) return FUT_CACHE[s][n]; },
+		"CACHECLEAR":function()     { FUT_CACHE = {"SELECTINFO":{"":{}},"AreaContent":{}}},
+		"CACHETRACE":function()     { return JSON.stringify(FUT_CACHE); }
 	});
-	
+	FUT.CACHECLEAR();
+	//
 	W.makeSingleton("AFoundation",{
-		"TOLENGTH":function(v,d){
-			switch(typeof v){ case "number":return (v+"").length;break;case "string":return v.length;case "object":if("length" in v)return v.length;}
-			return (typeof d=="undefined")?0:d;
-		},
-		"TONUMBER":function(v,d){
-			switch(typeof v){ case "number":return v;case "string":var r=v*1;return isNaN(r)?0:r;break; }
-			switch(typeof d){ case "number":return d;case "string":var r=d*1;return isNaN(r)?0:r;break; }
-			return 0;
-		},
-		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
-		"RETURNINDEX":function(index,maxIndex){ return TONUMBER(maxIndex,TOLENGTH(index))-TURNINDEX(index,maxIndex)-1; },
-		"TILE":function(v,l){
-			var base;
-			switch(typeof v){
-				case "string":case "number": base = v; break;
-				case "object":if(ISARRAY(v)) base = v; break;
-			}
-			if(typeof base == "undefined"){ return ; } else {
-				var baseLength = TOLENGTH(v);
-				var result,len = TONUMBER(l,baseLength);
-				switch(typeof base){
-					case "string": result=""; for(var i=0;i<len;i++)result+=v[TURNINDEX(i,baseLength)]; return result;
-					case "number": 
-						var vm = [];
-						(v+"").replace(/\d/g,function(s){vm.join(s*1);});
-						result=0 ; for(var i=0;i<len;i++)result+=vm[TURNINDEX(i,baseLength)]; return result;
-						break;
-				}
-			}
-		},
-		"CLIP":function(s,l,e){
-			if(typeof s!=="number")s=s+"";
-			if(typeof s!=="string")return s;
-			if(typeof l=="number"){return (s.length > l) ? s.substr(0,l) : "developed..."; } else { return s.trim(); }
-		},
 		"DEFAULT"   :function(v,d){ return typeof v !== "undefined" ? v : d; },
 		"ISJQUERY"  :function(o){ return (typeof o == "object" && o !== null ) ? ("jquery" in o) ? true : false : false; },
 		"ISARRAY"   :function(a){ return (typeof a == "object" || typeof a == "function") ? ( a !== null && ((a instanceof Array || a instanceof NodeList || ISJQUERY(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) ) ? true : false) : false; },
@@ -332,13 +309,13 @@
 		"ISTEXT" :function(v){ return (typeof v == "string" || typeof v == "number") ? true : false; },
 		//배열이 아니면 배열로 만들어줌
 		"TOARRAY":function(t,s){ if(typeof t=="undefined" && arguments.length < 2) return []; if(typeof t == "string" && typeof s == "string"){ return t.split(s); } else if(ISARRAY(t) == true) { return t; } else { return [t]; } },
-		"MVARRAY":function(v) { var mvArray = []; if( ISARRAY(v) ) { if("toArray" in v){ Array.prototype.splice.apply(mvArray,v.toArray()); } else { for(var i=0,l=v.length;i<l;i++) mvArray.push(v[i]); } } else { if(v||v==0) mvArray.push(v); return this; } return mvArray; },
+		"CLONEARRAY":function(v) { var mvArray = []; if( ISARRAY(v) ) { if("toArray" in v){ Array.prototype.splice.apply(mvArray,v.toArray()); } else { for(var i=0,l=v.length;i<l;i++) mvArray.push(v[i]); } } else { if(v||v==0) mvArray.push(v); return this; } return mvArray; },
 		"ARRAYINARRAY":function(l) { l=TONUMBER(l);var aa=[];for(var i=0;i<l;i++){ aa.push([]); }return aa; },
 		"DATAUNIQUE" :function() {
 			var value  = [];
 			var result = [];
 			for(var ai=0,li=arguments.length;ai<li;ai++){
-				var mvArray = MVARRAY(arguments[ai]);
+				var mvArray = CLONEARRAY(arguments[ai]);
 				for(var i=0,l=mvArray.length;i<l;i++){
 					var unique = true;
 					for(var i2=0,l2=result.length;i2<l2;i2++){
@@ -424,11 +401,9 @@
 			return target;
 		},
 		// 복사
-		"MV"  : function(t) { 
+		"CLONE"  : function(t) { 
 			switch(typeof t){
-				case "undefined":
-				return t;
-					break;
+				case "undefined": return t; break;
 				case "number": return t+0; break;
 				case "string": return t+"";break;
 				case "object":
@@ -436,69 +411,23 @@
 				if(t instanceof Array){var r=[]; for(var i=0,length=t.length;i<length;i++)r[i]=t[i];return r;}
 				if( ISELNODE(t) == true ) return t;
 				if(t instanceof Object){var r={};for(var k in t)if(t.hasOwnProperty(k))r[k]=t[k];return r;}
-				default :
-					console.error("MV::copy failed : target => ",t);
-					return t;
-				break;
+				default : console.error("CLONE::copy failed : target => ",t); return t; break;
 			}
 		},
-		"STRINGFUNCTION":function(j,ss){
-			var r = [];
-			for(var i=0,l=ss.length;i<l;i++){
-				switch(typeof ss[i]){
-					case "string": r.push(ss[i]); break;
-					case "number": r.push(ss[i]+""); break;
-					default: break;
-				}
-			}
-			return r.join(j);
-		},
-		"STRING" :function(){ return STRINGFUNCTION("" ,Array.prototype.slice.apply(arguments));},
-		"STRINGS":function(){ return STRINGFUNCTION(" ",Array.prototype.slice.apply(arguments));},
-		"STRINGC":function(){ return STRINGFUNCTION(",",Array.prototype.slice.apply(arguments));},
+		//STRINGC,STRINGS,STRING 의 헬퍼 함수
+		"STRCOMMONHELPER":function(j,ss){ var r = []; for(var i=0,l=ss.length;i<l;i++){ switch(typeof ss[i]){ case "string": r.push(ss[i]); break; case "number": r.push(ss[i]+""); break; default: break; } } return r.join(j); },
+		"STRING" :function(){ return STRCOMMONHELPER("" ,Array.prototype.slice.apply(arguments));},
+		"STRINGS":function(){ return STRCOMMONHELPER(" ",Array.prototype.slice.apply(arguments));},
+		"STRINGC":function(){ return STRCOMMONHELPER(",",Array.prototype.slice.apply(arguments));},
 		"NUMBERFUCTION":function(n,r,f){ if(!isNaN(n) && n !== "") return f(n); if(typeof r == "number") return r; return 0; },
 		"INTEGER":function(n,r){ return NUMBERFUCTION(n,r,parseInt);   },
 		"NUMBER" :function(n,r){ return NUMBERFUCTION(n,r,parseFloat); },
-		
-		//thread
-		"THREAD":function(f,s) { var t = function(){ f.call(s); }; setTimeout(t,0); return t; },
 		//wrap
-		"ISWRAP":function(c,w){
-			if(typeof c == "string"){
-				c = c.trim();
-				w = typeof w !== "undefined" ? TOARRAY(w) : ['""',"''","{}","[]"];
-				for(var i=0,l=w.length;i<l;i++){
-					var wf = w[i].substr(0,w[i].length-1);
-					var we = w[i].substr(w[i].length-1);
-					if(c.indexOf(wf)==0 && c.substr(c.length-1) == we) return true;
-				}
-			}
-			return false;
-		},
-		"UNWRAP":function(c,w){
-			if(typeof c == "string"){
-				c = c.trim();
-				w = typeof w !== "undefined" ? TOARRAY(w) : ['""',"''","{}","[]","<>"];
-				for(var i=0,l=w.length;i<l;i++) if(ISWRAP(c,w[i])) return c.substring(w[i].substr(0,w[i].length-1).length,c.length-1);
-			}
-			return c;
-		},
-		"WRAP":function(c,w){
-			if(!ISWRAP(c,w)){
-				c = typeof c == "string" ? c.trim() : "";
-				w = typeof w == "string" ? w.length > 1 ? w : '""' : '""';
-				return w.substr(0,w.length-1) + c + w.substr(w.length-1);
-			}
-			return c;
-		},
-		"DQURT":function(c){
-			if(typeof c == "string"){ if(ISWRAP(c,'""')) return c; return '"'+UNWRAP(c,"''")+'"'; }
-			return c;
-		},
-		"SQURT":function(c){
-			if(typeof c == "string"){ if(ISWRAP(c,"''")) return c; return "'"+UNWRAP(c,'""')+"'"; }
-			return c;
-		},
+		"ISWRAP":function(c,w){ if(typeof c == "string"){ c = c.trim(); w = typeof w !== "undefined" ? TOARRAY(w) : ['""',"''","{}","[]"]; for(var i=0,l=w.length;i<l;i++){ var wf = w[i].substr(0,w[i].length-1); var we = w[i].substr(w[i].length-1); if(c.indexOf(wf)==0 && c.substr(c.length-1) == we) return true; } } return false; },
+		"UNWRAP":function(c,w){ if(typeof c == "string"){ c = c.trim(); w = typeof w !== "undefined" ? TOARRAY(w) : ['""',"''","{}","[]","<>"]; for(var i=0,l=w.length;i<l;i++) if(ISWRAP(c,w[i])) return c.substring(w[i].substr(0,w[i].length-1).length,c.length-1); } return c; },
+		"WRAP":function(c,w){ if(!ISWRAP(c,w)){ c = typeof c == "string" ? c.trim() : ""; w = typeof w == "string" ? w.length > 1 ? w : '""' : '""'; return w.substr(0,w.length-1) + c + w.substr(w.length-1); } return c; },
+		"DQURT":function(c){ if(typeof c == "string"){ if(ISWRAP(c,'""')) return c; return '"'+UNWRAP(c,"''")+'"'; } return c; },
+		"SQURT":function(c){ if(typeof c == "string"){ if(ISWRAP(c,"''")) return c; return "'"+UNWRAP(c,'""')+"'"; } return c; },
 		"INDEXES":function(c,s){
 			if(typeof c == "string" || typeof c == "number"){
 				var idx = [],mvc = c+"",s = s+"",prog = 0,next;
@@ -517,7 +446,7 @@
 		},
 		"SPLITINDEXES":function(c,idx){
 			if(typeof c == "string" && ISARRAY(idx)){
-				var indexes = MV(idx);
+				var indexes = CLONE(idx);
 				indexes.push(c.length);
 				var result  = [];
 				var past    = 0;
@@ -637,27 +566,15 @@
 				return SPLITINDEXES(c,splitIndexes);
 			}
 		},
-		//TextCase관련 함수
-		"CASEARRAY":function(s,c){
-			if(typeof c == "string") return s.split(c) ;
-			if(typeof s !== "string")return console.error("CASEARRAY::첫번째 파라메터는 반드시 String이여야 합니다. // s =>",s);
-			s = s.replace(/^\#/,"");
-			//kebab
-			var k = s.split("-");
-			if(k.length > 1) return k;
-			//snake
-			var _ = s.split("_");
-			if(_.length > 1) return _;
-			//Cap
-			return s.replace(/[A-Z][a-z]/g,function(s){return "%@"+s;}).replace(/^\%\@/,"").split("%@");
-		},
-		//PascalCase
+		//Helper of PASCAL,CAMEL,SNAKE,KEBAB
+		"CASEARRAY":function(s,c){ if(typeof c == "string") return s.split(c) ; if(typeof s !== "string")return console.error("CASEARRAY::첫번째 파라메터는 반드시 String이여야 합니다. // s =>",s); s = s.replace(/^\#/,""); /*kebab*/ var k = s.split("-"); if(k.length > 1) return k; /*snake*/ var _ = s.split("_"); if(_.length > 1) return _; /*Cap*/ return s.replace(/[A-Z][a-z]/g,function(s){return "%@"+s;}).replace(/^\%\@/,"").split("%@"); },
+		//to PascalCase
 		"PASCAL":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); return words.join(""); },
-		//camelCase
+		//to camelCase
 		"CAMEL":function(s){ var words = CASEARRAY(s); for(var i=1,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); words[0] = words[0].toLowerCase(); return words.join(""); },
-		//snake_case
+		//to snake_case
 		"SNAKE":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("_"); },
-		//kebab-case
+		//to kebab-case
 		"KEBAB":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("-"); },
 		//타입검사
 		"ISTYPE":function(t,v) {
@@ -676,46 +593,14 @@
 			return false;
 		},
 		//함수실행
-		"APPLY" : function(f,owner,args) { 
-			if(typeof f == "function"){
-				var mvArgs = MVARRAY(args);
-				try {
-					if(mvArgs.length > 0){
-						return f.apply(owner,mvArgs);
-					} else {
-						return f.call(owner);
-					}
-				} catch(e) {
-					for(key in console) if(console[key] == f) { return f.apply(console,mvArgs); } 
-					throw e;
-				}
-				
-			}
-		},
-		"CALL"     : function(f,owner) { 
-			if(typeof f == "function"){
-				if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); }
-				try {
-					var args = Array.prototype.slice.apply(arguments);
-					args.shift();
-					args.shift();
-					return APPLY(f,owner,args);
-				} catch(e) {
-					throw e;
-				}
-			}
-		},
-		"CALLBACK" : function(f){ 
-			if(typeof f == "function"){
-				var args = Array.prototype.slice.apply(arguments);
-				args.shift();
-				return APPLY(f,undefined,args);
-			}
-		},
+		"APPLY" : function(f,owner,args) { if(typeof f == "function"){ var mvArgs = CLONEARRAY(args); try { if(mvArgs.length > 0){ return f.apply(owner,mvArgs); } else { return f.call(owner); } } catch(e) { for(key in console) if(console[key] == f) { return f.apply(console,mvArgs); } throw e; } } },
+		"CALL" : function(f,owner) { if(typeof f == "function"){ if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); } try { var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } catch(e) { throw e; } } },
+		"CALLBACK" : function(f){ if(typeof f == "function"){ var args = Array.prototype.slice.apply(arguments); args.shift(); return APPLY(f,undefined,args); } },
 		// 함수면 호출 아니면 리턴
 		"JOB" : function(f,a,owner){ if( typeof f == "function" ){ return f.call(owner,a); } return f; },
 		// 함수가 존재하면 호출하여 콜백한다
 		"FJOB": function(f,v,owner){ if( typeof f == "function" ){ return f.call(owner,v); } return v; },
+		"TIMES":function(l,f){ l=TONUMBER(l); for(var i=0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
 		// 각각의 값의 function실행
 		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
 		// 각각의 값의 function실행
@@ -738,6 +623,60 @@
 			return [];
 		},
 		"DATAINDEX":function(data,compare){ var v = TOARRAY(data); for(var i in v) if(compare == v[i]) return TONUMBER(i); },
+		"TOLENGTH":function(v,d){
+			switch(typeof v){ case "number":return (v+"").length;break;case "string":return v.length;case "object":if("length" in v)return v.length;}
+			return (typeof d=="undefined")?0:d;
+		},
+		"TONUMBER":function(v,d){
+			switch(typeof v){ case "number":return v;case "string":var r=v*1;return isNaN(r)?0:r;break; }
+			switch(typeof d){ case "number":return d;case "string":var r=d*1;return isNaN(r)?0:r;break; }
+			return 0;
+		},
+		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
+		"RETURNINDEX":function(index,maxIndex){ return TONUMBER(maxIndex,TOLENGTH(index))-TURNINDEX(index,maxIndex)-1; },
+		"DATATILE":function(v,l){
+			var base;
+			switch(typeof v){
+				case "string":case "number": base = v; break;
+				case "object":if(ISARRAY(v)){base = v;}else{ console.warn("DATATILE::Array만 가능합니다."); return v;} break;
+			}
+			if(typeof base == "undefined"){ return ; } else {
+				var baseLength = TOLENGTH(v);
+				var result,len = TONUMBER(l,baseLength);
+				switch(typeof base){
+					case "string": result=""; for(var i=0;i<len;i++)result+=v[TURNINDEX(i,baseLength)]; return result;
+					case "number":
+						var vm = [];
+						(v+"").replace(/\d/g,function(s){vm.join(s*1);});
+						result=0 ; for(var i=0;i<len;i++)result+=vm[TURNINDEX(i,baseLength)]; return result;
+						break;
+					case "object":
+						result=[]; for(var i=0;i<len;i++)result.push(v[TURNINDEX(i,baseLength)]); return result;
+						break;
+				}
+			}
+		},
+		// 1~4 => random any
+		"RNUMBER":function(source){
+			try {
+				var numberType = /(\d+)\~(\d+)/.exec(source);
+				var d1 = TONUMBER(numberType[1]);
+				var d2 = TONUMBER(numberType[2]);
+				if(d1 > d2){ return d2+Math.floor(Math.random()*(d1-d2+1));
+				} else     { return d1+Math.floor(Math.random()*(d2-d1+1)); }
+			} catch(e){
+				return TONUMBER(source);
+			}
+		},
+		// 1,2,3,4 => random any
+		"RCHOICE":function(value,split){
+			if( ISARRAY(value) ) return value[Math.floor(Math.random()*(value.length))];
+			var cache = FUT.CACHEGET("RCHOICE",value+split);
+			if(cache) return cache[Math.floor(Math.random()*(cache.length))];
+			var cachedata = value.split(typeof split == "string"?split:",");
+			FUT.CACHESET("RCHOICE",value+split,cachedata);
+			return cachedata[Math.floor(Math.random()*(cachedata.length))];
+		},
 		//
 		"ISNOTHING":function(o){ 
 	        if (typeof o == "undefined")return true;
@@ -758,36 +697,7 @@
 	        return true;
 		},
 		"ISMEANING":function(o){ return !ISNOTHING(o); },
-		"ISENOUGH" :function(o){ return !ISNOTHING(o); },
-		"FLAG"     :function(flagParam,secondParam){
-			if(typeof flagParam == "boolean") return flagParam;
-			var flagValue;
-			if(typeof flagParam == "object"){
-				if ("result" in flagParam) {
-					flagValue = flagParam.result;
-				} else {
-					flagValue = undefined;
-				}
-			} else if(typeof flagParam ==  "function"){
-				flagValue = APPLY(flagParam,undefined,secondParam);
-			} else {
-				flagValue = flagParam;
-			}
-			if(typeof flagValue == "string"){
-				var fs = flagValue.trim().toLowerCase();
-				if(fs == "true" || fs == "0" || flagValue == "yes" || flagValue == "ok"){
-					return true;
-				} else {
-					return false;
-				}
-			}
-			if(typeof flagValue == "number") if(flagValue == 0) return true; return false;
-			console.warn("FLAG::flag가 처리할수 없는 값입니다. =>", flagParam);
-			return false;
-		},
-		//
-		"ALERT":function(v){ W.alert(TOS(v)); return v; },
-		"ELALERT":function(){ W.alert(FIND(v)); return v; }
+		"ISENOUGH" :function(o){ return !ISNOTHING(o); }
 	});
 	AFoundation.eachGetter();
 	
@@ -1064,8 +974,8 @@
 		min :function(){
 			
 		},
-		clone:function(){return MV(this.Source); },
-		save:function() {return this.__GlobalConstructor__(MV(this.Source)); },
+		clone:function(){return CLONE(this.Source); },
+		save:function() {return this.__GlobalConstructor__(CLONE(this.Source)); },
 		//key value get setter
 		prop:function(k,v){
 			if(ISTEXT(k) && arguments.length > 1){
@@ -1100,12 +1010,12 @@
 		//map
 		getMap:function(f,ksel){ 
 			if(typeof f == "function"){
-				var result = MV(this.Source);
+				var result = CLONE(this.Source);
 				var keys   = this.getKeys(ksel);
 				for(var i=0,l=keys.length;i<l;i++) result[keys[i]] = f(this.Source[keys[i]],keys[i]);
 				return result; 
 			} else { 
-				return MV(this.Source);
+				return CLONE(this.Source);
 			} 
 		},
 		map:function() { return this.replace( this.getMap.apply(this,arguments) ); },
@@ -1142,14 +1052,14 @@
 		stringify:function(){ return JSON.stringify(this.Source); },
 		changeKey:function(original, change){ if(typeof original == "string" && typeof change == "string") { this.Source[change] = this.Source[original]; delete this.Source[original]; } return this.Source; },
 		//String의 순차적으로 오브젝트 반환  "1 2 3 4" => {"1":"2","3":"4"}
-		getKvo:function(arg,split){ split = typeof split == "string" ? split : " "; arg = arg.split(split); var source = MV(this.Source); var keyName = undefined; _Array(arg).turning(2,function(value,i){ if(i == 0) { keyName = value; } else if(i == 1) { if(typeof keyName !== "undefined") { switch(value){ case "''": case '""': case "'": case '"': source[keyName] = ""; break; default : source[keyName] = value; break ; } } keyName = undefined; } }); return source; },
+		getKvo:function(arg,split){ split = typeof split == "string" ? split : " "; arg = arg.split(split); var source = CLONE(this.Source); var keyName = undefined; _Array(arg).turning(2,function(value,i){ if(i == 0) { keyName = value; } else if(i == 1) { if(typeof keyName !== "undefined") { switch(value){ case "''": case '""': case "'": case '"': source[keyName] = ""; break; default : source[keyName] = value; break ; } } keyName = undefined; } }); return source; },
 		kvo:function(arg){ return this.replace(this.getKvo.call(this,arg)); },
 		//오브젝트의 키를 지우고자 할때
 		removeAll:function(){ for( var key in this.Source ) delete this.Source[key]; return this.Source; },
 		getRemove:function(){ var source = this.Source; _Array(arguments).stringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
 		remove:function(key){ return this.replace( this.getRemove.apply(this,arguments) ); },
 		//존재하지 않는 키벨류값을 적용함;
-		getTouch:function(key,value){ var m = MV(this.Source);_Array(key).stringFlatten().each(function(key){ if(!(key in m)) m[key] = value; }); return m; },
+		getTouch:function(key,value){ var m = CLONE(this.Source);_Array(key).stringFlatten().each(function(key){ if(!(key in m)) m[key] = value; }); return m; },
 		touch:function(key,value){ return this.replace( this.getTouch.apply(this,arguments) ); },
 		//키의 배열을 받는다
 		keys:function(){ var result = []; for (key in this.Source) result.push(key); return result; },
@@ -1430,59 +1340,194 @@
 		}
 	});
 	
+	//developement......
+	makeGetter("DATEVALUE",function(source){
+		if(source instanceof Date){ return +new Date();}
+		if(typeof source == "number") return source;
+		if(typeof source == "string"){
+			var TS = {Y:1970,M:1,D:1,h:0,m:0,s:0};
+			//년월일
+			var orient = /^(\d{4}|\d{2})[^\d](\d{1,2})[^\d](\d{1,2})/.exec(source);
+			console.log(orient);
+			if(orient){
+				TS.Y = (orient[1].length == 2) ? parseInt("20"+orient[1]) : orient[1];
+				TS.M = parseInt(orient[2]);
+				TS.D = parseInt(orient[3]);
+			}
+			
+			if(TS.M == 0) dateObj.M = 1;
+			if(TS.D == 0) dateObj.D = 1;
+			
+			var result=0;
+		}
+	});
+	
 	extendModule("String","AreaContent",{
-		getContentInfo:function(){
-			var r = {"type":null,"value":null,"range":null,"pattern":null}
+		getContentInfo:function(rLength){
+			var r = {"type":null,"value":null,"maxLength":null,"pattern":[0]};
+			// source and pattern
+			var pattern;
+			var source = this.Source.replace(/\|[^\|]*\|$/,function(s){
+				pattern = s.substr(1,s.length-2);
+				return "";
+			});
+			pattern = (typeof pattern=="undefined")?null:pattern.split("&&");
+			
+			//patterProgress
+			if( ISARRAY(pattern) ) if( !(pattern.length == 1 && pattern[0] == "") ){
+				for(var pi=0,l=pattern.length;pi<l;pi++){
+					var pp = /([^\:]*)(\:(\~\+|\+\+|\+|\--|)(.*)|)/.exec(pattern[pi]);
+					if(!pp)console.warn("inValid pattern => ",pattern[pi]);
+					
+					// default relativeValue
+					var patternVar    = 0;
+					var patternRepeat = pp[1]=="" ? 1 : RNUMBER(pp[1]);
+					var patternImp    = pp[3]==""?"+":pp[3];
+					var patternValue  = pp[4];
+					
+					//console.log("patternRepeat,patternVar,patternImp,patternValue",patternRepeat,patternVar,patternImp,patternValue);
+					
+					var patternArray = [];
+					switch(patternImp){
+						case "++":
+							for(var i=0;i<patternRepeat;i++){
+								patternVar += RNUMBER(patternValue);
+								patternArray.push( patternVar );
+							}
+							break;
+						case "~+":
+							patternArray.push( patternVar );
+							for(var i=1;i<patternRepeat;i++){
+								patternVar += RNUMBER(patternValue);
+								patternArray.push( patternVar );
+							}
+							break;
+						case "--":
+							for(var i=0;i<patternRepeat;i++){
+								patternVar -= RNUMBER(patternValue);
+								patternArray.push( patternVar );
+							}
+						case "+": default:
+							for(var i=0;i<patternRepeat;i++) patternArray.push( RNUMBER(patternValue) );
+							break;
+					}
+					if(patternArray.length){
+						if(!r.pattern) r.pattern = [];
+						r.pattern = r.pattern.concat( patternArray );
+					}
+				}
+			}
 			//number
-			console.log("this.Source",this.Source)
-			var numberType = /(\d+)\~(\d+)/.exec(this.Source);
-			if(numberType){
-				r.type = "number";
-				var low = parseInt( numberType[1] ) > parseInt( numberType[2] ) ? parseInt( numberType[2] ) : parseInt( numberType[1] );
-				var big = parseInt( numberType[1] ) > parseInt( numberType[2] ) ? parseInt( numberType[1] ) : parseInt( numberType[2] );
-				r.value = low;
-				r.range = big-low;
+			if(/(\s|)(^\d+\~\d+|\d+)(\s|)$/.test(source)){
+				r.type   = "rangeNumber";
+				r.value  = source;
+				r.maxLength = r.pattern.length;
+				return r;
+			}
+			//plain before
+			if(source.indexOf(",")>0){
+				if(typeof rLength == "number" && rLength != 1){
+					r.type   = "operatedArray";
+					r.value  = [];
+					TIMES(rLength,function(){ r.value.push(RCHOICE(source)); });
+					r.maxLength = r.value.length;
+				} else {
+					r.type   = "randomArray";
+					r.value  = source;
+					r.length = RCHOICE(source).length
+				}
 				return r;
 			}
 			//plain
-			r.type  = "plain";
-			r.value = this.Source;
+			if(typeof rLength == "number" && rLength != 1 ){
+				r.type   = "operatedArray";
+				r.value  = [];
+				TIMES(rLength,function(){ r.value.push(source) });
+				r.maxLength = r.value.length;;
+			} else {
+				r.type   = "plain";
+				r.maxLength = 1;
+				r.value  = source;
+			}
 			return r;
 		},
-		getContent:function(index){
+		getLength:function(){
 			var info = this.getContentInfo();
-			console.log("content info",this.Source,TOSTRING(info));
+			if(info) switch(info.type){
+				case "rangeNumber": return info.maxLength; break;
+				case "randomArray": return info.maxLength; break;
+				case "plain"      : return info.maxLength; break;
+			}
+			return 0;
+		},
+		getContents:function(maxLength){
+			var info   = this.getContentInfo(maxLength);
+			//console.log("info## ",this.Source,TOSTRING(info),"ppl =>",maxLength);
 			if(info){
 				switch(info.type){
-					case "number":
-						return info.value+Math.floor(Math.random()*info.range);
+					case "rangeNumber":
+						return DATAMAP(info.pattern,function(pvalue){
+							return RNUMBER(info.value) + pvalue;
+						});
+						break;
+					case "randomArray":
+						return [RCHOICE(info.value)];
 						break;
 					case "plain":
+						return [info.value];
+						break;
+					case "operatedArray":
 						return info.value;
 						break;
+					default:
+						
+						break;
 				}
-				
 			}
-		}
+			return[];
+		},
+		getContent:function(index){return this.getContents()[TONUMBER(index)];}
 	},function(param){
-		if( ISARRAY(param) ) param = TOARRAY(param).join(",");
+		if( ISARRAY(param) ) param = param.join(",");
 		this._super(param);
-		this.Source = this.Source.trim();
+		this.Source = this.Source;
 	},function(i){return this.getContent(i)});
 	
 	extendModule("Array","Area",{
-		getContent:function(){
+		getContents:function(length){
+			var maxLength=0;
+			if(typeof length == "number") maxLength = length;
+			else this.each(function(content){ var len = content.getLength(); if(len > maxLength) maxLength = len; });
 			
+			//
+			var result = ARRAYINARRAY(maxLength);
+			this.each(function(content){
+				var tileData = content.getContents(maxLength);
+				for(var i=0,l=tileData.length;i<l;i++)result[i].push(tileData[i]);
+			});
+			return result;
+		},
+		getJoinContents:function(joinText,length){
+			if(typeof joinText == "number"){
+				length   = joinText;
+				joinText = "";
+			} else {
+				joinText = typeof joinText == "string" ? joinText : "";
+			}
+			
+			return DATAMAP(this.getContents(length),function(lineData){ return lineData.join(joinText); });
+		},
+		getLineContents:function(joinText,length){
+			var joinContents = this.getJoinContents(joinText,length);
+			for(var i=0,l=joinContents.length-1;i<l;i++){ joinContents[i] = joinContents[i]+"\n"; }
+			return joinContents.join("");
 		}
-		
 	},function(){
 		var contents = Array.prototype.slice.call(arguments);
 		var pushData = [];
 		for(var i=0,l=contents.length;i<l;i++) pushData.push( new AreaContent(contents[i]) );
 		this.replace(pushData);
 	});
-	
-	
 	
 	// Number
 	extendModule("String","Number",{
@@ -1770,7 +1815,7 @@
 			} else {
 				switch(this.RankingType){
 					case "object":
-						var rankResult = MV(this.Source);
+						var rankResult = CLONE(this.Source);
 						//
 						var rankAttribute = [];
 						for(var key in this.Source) rankAttribute(key);
@@ -2422,7 +2467,7 @@
 			this.Source = UID.get(v);
 			if(!(this.Source in W.ManagedMetaObjectData)){
 				if(typeof d == "object"){
-					W.ManagedMetaObjectData[this.Source] = MV(d);
+					W.ManagedMetaObjectData[this.Source] = CLONE(d);
 				} else if(typeof d == "undefined"){
 					W.ManagedMetaObjectData[this.Source] = {};
 				} else {
@@ -2453,14 +2498,15 @@
 //Nody DHTML Foundation
 (+(function(W){
 	if(W.nodyLoadException==true){ throw new Error("Nody DHTML Foundation init cancled"); return;}
-	var ELUT_SELECTINFO_CACHE = {"":{}};
+	
 	makeSingleton("ELUT",{
 		//테그의 속성을 text로 표현합니다.
 		"SELECTINFO"   : function(tagProperty,attrValue,dataValue){
 			//selectInfoCahche
 			if(typeof tagProperty == "string" && typeof attrValue=="undefined" && typeof dataValue=="undefined"){
 				var tp = tagProperty.trim();
-				if( tp in ELUT_SELECTINFO_CACHE ) return MVOBJECT( ELUT_SELECTINFO_CACHE[tagProperty] )
+				var cache = FUT.CACHEGET(tp);
+				if( cache ) return CLONEOBJECT( cache );
 				var selectInfoCacheEnabled = tp;
 			}
 			
@@ -2565,18 +2611,18 @@
 			name.replace(/(\?[\w\-]+)/i,function(s){ attributedToken["type"] = s.substr(1); });
 	
 			//value attr in attrValue
-			var attrvals = MV(TOOBJECT(attrValue,"html"));
+			var attrvals = CLONE(TOOBJECT(attrValue,"html"));
 			if(attrvals["html"]) { 
 				attributedToken["::"] = attrvals["html"]; delete attrvals["html"]; 
 			}
 			for(var key in attrvals) { attributedToken[key] = attrvals[key]; };
 	
 			//data attr
-			var datavals = MV(TOOBJECT(dataValue,"value"));
+			var datavals = CLONE(TOOBJECT(dataValue,"value"));
 			for(var key in datavals) { attributedToken[ "data-" + key ] = attrvals[key]; };
 			
 			//cache save
-			if(selectInfoCacheEnabled) ELUT_SELECTINFO_CACHE[selectInfoCacheEnabled] = MVOBJECT(attributedToken);
+			if(selectInfoCacheEnabled) FUT.CACHESET("SELECTINFO",selectInfoCacheEnabled,CLONEOBJECT(attributedToken));
 			
 			//result 
 			return attributedToken;
@@ -2634,7 +2680,7 @@
 			var baseTag = typeof baseTag == "string" ? baseTag : "div";
 			var makeWrapper = document.createElement(baseTag);
 			makeWrapper.innerHTML = html;
-			return MVARRAY(makeWrapper.children);
+			return CLONEARRAY(makeWrapper.children);
 		},
 		"PRINT":function(a){ return EL("div",a,W.document); }
 	});
@@ -3534,7 +3580,7 @@
 			}
 			return{};
 		},
-		"MVOBJECT":function(inv){ if(typeof inv == "object"){ var result = {}; for(var k in inv) result[k] = inv[k]; return result; } return TOOBJECT(inv); },
+		"CLONEOBJECT":function(inv){ if(typeof inv == "object"){ var result = {}; for(var k in inv) result[k] = inv[k]; return result; } return TOOBJECT(inv); },
 		//오브젝트 혹은 element를 반환합니다.
 		"DATACONTEXT":function(target){
 			if ( typeof target == "string" ) target = FINDZERO(target);
@@ -3614,6 +3660,14 @@
 			});
 			ELAPPEND(node,newContents);
 			return node;
+		},
+		"INLINEFIX":function(sel){
+			$(sel).each(function(context){
+				$(this).contents().filter(function() {
+					return (!this.innerText && this.nodeType === 3)?true:false;
+	            }).remove();
+			});
+			return this;
 		}
 	});
 	ElementFoundation.eachGetter();
@@ -3661,7 +3715,6 @@
 	});
 	makeSingleton("ElementGenerator",ElementGeneratorPrototype);
 	ElementGenerator.eachGetter();
-	
 	
 	makeModule("Controls",{
 		getSelects:function(){ return this.Source; },
@@ -3857,65 +3910,6 @@
 	});
 	//contexts
 	makeModule("Contexts",{
-		width:function(widthUnit){
-			widthUnit = (typeof widthUnit == "string")?widthUnit.split(" "):widthUnit;
-			_this = this;
-			$(this.currentGroups).each(function(){
-				var $lists = $(this).children(_this.getSelectFilter());
-				for(var i = 0;i < widthUnit.length; i++){
-					if($lists[i] && widthUnit[i]){
-						$($lists[i]).width(widthUnit[i]);
-					} else {
-						break;
-					}
-				}
-			});
-			return this;
-		},
-		align:function(widthUnit){
-			widthUnit = (typeof widthUnit == "string")?widthUnit.split(" "):widthUnit;
-			_this = this;
-			$(this.currentGroups).each(function(){
-				var $lists = $(this).children(_this.getSelectFilter());
-				for(var i = 0;i < widthUnit.length; i++){
-					if($lists[i] && widthUnit[i]){
-						$($lists[i]).css("text-align",widthUnit[i]);
-					} else {
-						break;
-					}
-				}
-			});
-			return this;
-		},
-		layerInterface:function(child){
-			this.contexts.each(function(e){ _Element(e).layerInterface(); });
-			if(typeof child == "undefined" || child == true){
-				this.targets.each(function(e){ _Element(e).layerInterface() });
-			}
-		},
-		frameInterface:function(child){
-			this.contexts.each(function(e){ _Element(e).frameInterface(); });
-			if(typeof child == "undefined" || child == true){
-				this.targets.each(function(e){ _Element(e).layerInterface() });
-			}
-		},
-		rolling:function(rollingMethod){
-			var rollings = [];
-			for(var i = 0;i < arguments.length;i++)if(typeof arguments[i] == "function")rollings.push(arguments[i]);
-			_this = this;
-			if(rollings.length > 0)
-			$(this.groups).each(function(){
-				var $lists = $(this).children(_this.getSelectFilter());
-				for(var i = 0;i < $lists.length; i++){
-					if($lists[i]){
-						rollings[_Line(rollings.length).getRolling(i)]($lists[i],i,$lists.length);
-					} else {
-						break;
-					}
-				}
-			});
-			return this;
-		},
 		whereIsContexts : function(index) { var s = this.contexts , _ = _Element , f = "flash" ; if(s[index]) { _(s[index])[f](); } else { s.each (function(e){ _(e)[f](); }); } return this; },
 		whereIsSelects  : function(index) { var s = this.selects  , _ = _Element , f = "flash" ; if(s[index]) { _(s[index])[f](); } else { s.each (function(e){ _(e)[f](); }); } return this; },
 		whereIsTargets  : function(index) { var s = this.targets  , _ = _Element , f = "flash" ; if(s[index]) { _(s[index])[f](); } else { s.each (function(e){ _(e)[f](); }); } return this; },
@@ -4032,14 +4026,6 @@
 			} else {
 				console.error("onSelect::초기화 할수 없습니다. 글자함수필요",event,func);
 			}
-			return this;
-		},
-		inlineFix:function(){
-			_Array(this.getContexts()).each(function(context){
-				$(context).contents().filter(function() {
-					return (!this.innerText && this.nodeType === 3)?true:false;
-	            }).remove();
-			});
 			return this;
 		}
 	},function(cSel,sSel,tSel){
@@ -4358,14 +4344,14 @@
 					console.warn("FrameController::setDefaultDataWithName 두번째 파라메터값은 반드시 String이나 Number이여야 합니다. param => ",data,name);
 				}
 			},
-			getDefaultDataList:function(){ return MV(this.DefaultDataModels); },
+			getDefaultDataList:function(){ return CLONE(this.DefaultDataModels); },
 			getDefaultData:function(index){
 				if( typeof index == "undefined") {
 					//아무거나 나옴
-					if("defualtData" in this.DefaultDataModels) return MV(this.DefaultDataModels[key]);
-					for(var key in this.DefaultDataModels) return MV(this.DefaultDataModels[key]);
+					if("defualtData" in this.DefaultDataModels) return CLONE(this.DefaultDataModels[key]);
+					for(var key in this.DefaultDataModels) return CLONE(this.DefaultDataModels[key]);
 				} else {
-					return MV(this.DefaultDataModels[index]);
+					return CLONE(this.DefaultDataModels[index]);
 				}
 			},
 			//
@@ -4465,11 +4451,11 @@
 			this.view              = c;
 		
 			//status data
-			this.ViewStatus   = MV(TOOBJECT(viewStatus));
+			this.ViewStatus   = CLONE(TOOBJECT(viewStatus));
 			this.CurrentViewStatus = undefined;
 			
 			//attribute & default data
-			property = MV(TOOBJECT(property,"init"));
+			property = CLONE(TOOBJECT(property,"init"));
 			this.DefaultDataModels = {};
 			for(var key in property) {
 				var keySign = /([\#]+|)(.*)/.exec(key);
@@ -4483,7 +4469,7 @@
 					if(keySign[2] in this.DefaultDataModels){
 						console.warn("FrameController:: error key => "+ key +" 추가 하려는 '기본 데이터'는 이미 존재하는 메서드입니다. 추가할수 없습니다.");
 					} else {
-						this.DefaultDataModels[keySign[2]] = MV(property[key]);
+						this.DefaultDataModels[keySign[2]] = CLONE(property[key]);
 					}
 				}
 			}
@@ -4501,28 +4487,10 @@
 	);
 	//카운트를 샌후 함수실행
 	makeModule("Fire",{
-		complete:function(){
-			this.FireCurrent = this.FireMax;
-			return this.FireFunction.apply(this,arguments);
-		},
-		touch:function(){
-			this.FireCurrent++
-			if(this.FireCurrent >= this.FireMax) return this.complete.apply(this,arguments);
-		},
-		back:function(){
-			this.FireCurrent--;
-			return this;
-		},
-		each:function(f){
-			var own = this;
-			var touchLiteral = function(){ return own.touch(); };
-			if(ISARRAY(this.Source) && typeof f == "function"){
-				_Array(this.Source).each(function(data,index){ return APPLY(f,own,[data,index,touchLiteral]); });
-			} else {
-				console.warn("Fire::조건이 충족되지 못해 fire를 실행하지 못하였습니다. source=> ",this.Source,"each f=>",f);
-			}
-			return this;
-		}
+		complete:function(){ this.FireCurrent = this.FireMax; return this.FireFunction.apply(this,arguments); },
+		touch:function(){ this.FireCurrent++; if(this.FireCurrent >= this.FireMax) return this.complete.apply(this,arguments); },
+		back:function(){ this.FireCurrent--; return this; },
+		each:function(f){ var own = this; var touchLiteral = function(){ return own.touch(); }; if(ISARRAY(this.Source) && typeof f == "function"){ _Array(this.Source).each(function(data,index){ return APPLY(f,own,[data,index,touchLiteral]); }); } else { console.warn("Fire::조건이 충족되지 못해 fire를 실행하지 못하였습니다. source=> ",this.Source,"each f=>",f); } return this; }
 	},function(number,fireFunction){
 		//array
 		this.Source       = number;
@@ -4684,7 +4652,7 @@
 			//
 			var beginResult;
 			this.Source.each(function(_dg,i){
-				var i2 = MV(indexes);
+				var i2 = CLONE(indexes);
 				i2.push(i);
 				var dgResult = _dg.getIndexesByDataGrid(dataGrid,i2);
 				if(typeof dgResult == "object") {
@@ -4782,7 +4750,7 @@
 			} else if (ISTEXT(key)) {
 				return this.Property[key];
 			} else if(typeof key == "undefined"){
-				return MV(this.Property);
+				return CLONE(this.Property);
 			} else if(typeof key == "object"){
 				for(var kk in key) this.prop(kk,key[kk]);
 			}
@@ -4796,7 +4764,7 @@
 			} else if (ISTEXT(key)) {
 				return this.PropertyFirst[key];
 			} else if(typeof key == "undefined"){
-				return MV(this.PropertyFirst);
+				return CLONE(this.PropertyFirst);
 			} else if(typeof key == "object"){
 				for(var kk in key) this.propFirst(kk,key[kk]);
 			}
@@ -5284,7 +5252,7 @@
 		this._super();
 		//defualt propertys
 		this.initData(data,defaultDepth);
-		this.DataEvents     = MV(TOOBJECT(events));
+		this.DataEvents     = CLONE(TOOBJECT(events));
 		this.RenderHistory  = _Array();
 		//this.RenderNothing  = function(){ return EL("div.nothing"); };
 		this.DataTrancefrom = (typeof dataTranceForm == "object") ? dataTranceForm : {} ;
@@ -5363,238 +5331,7 @@
 		});
 		return this;
 	});
-	makeModule("PageControl",{
-		setPageViewContext:function(context){ this.PageControlContext = FINDZERO(context); },
-		drawPageView:function(navigationStart){
-			// 네비게이션 전체
-			var naviTotal  = Math.ceil(this.PageControlItemLength < 1 ? 1 : this.PageControlItemLength / this.PagePerLength)+1;
-			var naviStart  = isNaN(navigationStart) ? (Math.floor((this.PageCurrent-1) / this.PageControlDisplayLength) * this.PageControlDisplayLength + 1) : parseInt(navigationStart);
-			var naviEnd    = naviStart + this.PageControlDisplayLength;
-
-			if(naviEnd > naviTotal) naviEnd = naviTotal;
-			
-			if(this.PageCurrent >= naviEnd) this.PageCurrent = naviEnd - 1;
-			
-			var pageControl = this;
-			
-			var items = (naviStart < 2) ? [ _LI(".action.mute::이전") ] : [ ELON(_LI(".action::이전"),"click",function(){ pageControl.drawPageView( naviStart - pageControl.PageControlDisplayLength ); }) ];
-			for(var i=naviStart,l=naviStart+this.PageControlDisplayLength;i<l;i++) {
-				if(i < naviTotal){
-					items.push( ELON( _LI( ("[data-index="+i+"]" + ((i==this.PageCurrent) ? ".active::" + i : "::" + i))), "click", function(){ pageControl.page( ELATTR(this,"data-index") ); }) )
-				} else {
-					items.push( _LI(".mute::"+i) );
-				}
-			}
-			items.push( (naviEnd == naviTotal) ? _LI(".action.mute::다음") : ELON( _LI(".action::다음"),"click",function(){ pageControl.drawPageView(  naviEnd ) }) );
-			ELAPPEND(ELEMPTY(this.PageControlContext),_UL(".pagecontrol",items));
-		},
-		updatePageView:function(pageCurrent,pagePerLength,itemLength,pageDisplayLength){
-			// property set
-			if(isNaN(pageCurrent) == true)   return console.error("PageControl::updatePageView 첫번째 파라매터 값이 올바르지 않습니다. => ",pageCurrent);
-			if(isNaN(pagePerLength) == true) return console.error("PageControl::updatePageView 두번째 파라매터 값이 올바르지 않습니다. => ",pagePerLength);
-			if(isNaN(itemLength) == true)    return console.error("PageControl::updatePageView 세번째 파라매터 값이 올바르지 않습니다. => ",itemLength);
-			
-			this.PageCurrent              = parseInt(pageCurrent);
-			this.PagePerLength            = parseInt(pagePerLength);
-			this.PageControlItemLength    = parseInt(itemLength);
-			this.PageControlDisplayLength = isNaN(pageDisplayLength) ? 10 : parseInt(pageDisplayLength);
-			
-			if(ISELNODE(this.PageControlContext)){	
-				this.drawPageView();
-			} else {
-				console.warn("PageControl::updatePageView 페이지를 업데이트 하려하였지만 타겟 context가 존재하지 않습니다.");
-			}
-		},
-		page:function(index){
-			var el = FINDZERO("[data-index="+index+"]",this.PageControlContext);
-			if( this.PageCurrent !== index && ISELNODE(el) == true ){
-				FIND("ul.pagecontrol > li.active",this.PageControlContext,DATAEACH,function(el){ ELATTR(el,"class",""); });
-				ELATTR(el,"class","active");
-				this.PageCurrent = index;
-				CALL(this.EventListener,this,index);
-			}
-		},
-		pageEvent:function(eventListenr){
-			if(typeof eventListenr == "function"){
-				this.EventListener = eventListenr;
-			} else {
-				console.warn("PageControl::setEventListener:: 전체 페이지 값이 잘못되었습니다.")
-			}
-			return this;
-		},
-		setup:function(currentPage,totalPage,after){
-			currentPage = _Number(currentPage).number();
-			
-			if(isNaN(totalPage) == true){
-				if(typeof totalPage !== "undefined") console.warn("PageControl::init:: 전체 페이지 값에 잘못된 값이 들어왔습니다.");
-				totalPage = currentPage;
-			} else {
-				var tp = _Number(totalPage).number();
-				if(currentPage > tp){
-					console.warn("PageControl::init:: 페이지의 값이 너무 큽니다. => 현재페이지, 전체페이지",currentPage,totalPage);
-					totalPage = currentPage;
-				} else {
-					totalPage = totalPage;
-				}
-			}
-			typeof currentPage
-			this.PageControlContext = undefined;
-			this.PageCurrent        = currentPage;
-			this.PagePerLength      = totalPage;
-			if(typeof after == "function"){
-				CALL(after,this);
-			} else if(typeof currentPage == "function"){
-				CALL(currentPage,this);
-			}
-			return this;
-		},
-		getPageOfCurrent:function() { return this.PageCurrent; },
-		setPagePerLength:function(number)  { this.PagePerLength = isNaN(number) ? 10 : parseInt(number);   },
-		getPagePerLength:function()  { return this.PagePerLength;  }
-	},function(currentPage,totalPage){
-		this.setup.apply(this,Array.prototype.slice.apply(arguments));
-	});
-	W.PageControl = function(){ return new PageControlType(arguments); };
-	makeModule("PageViewController",{
-		getItemLength       : function(){ return this.Source.length; },
-		getCurrentPageIndex : function(){ return this.CurrentPageIndex; },
-		getTotalPageIndex   : function(){ return Math.ceil(this.Source.length/this.ItemPerPage); },
-		getCurrentPageData  : function(){ return _Array(this.Source).getSubarr( (this.CurrentPageIndex-1) * this.ItemPerPage, this.ItemPerPage).toArray(); },
-		changePageIndex     : function(index){
-			this.CurrentPageIndex   = index;
-			if(this.RemoteSource){
-				var own = this;
-				this.RemoteSource.call(this,this.CurrentPageIndex,this.ItemPerPage,function(data,totalLength){
-					own.Source.length = parseInt(totalLength);
-					var gap = (own.CurrentPageIndex-1)*own.ItemPerPage;
-					for(var i=0,l=data.length;i<l;i++){
-						own.Source[i+gap] = data[i];	
-					}
-					own.__updateData();
-				});
-			} else {
-				this.__updateData();
-			}
-		},
-		__updateData:function(){
-			this.PageControl.updatePageView ( 
-				this.CurrentPageIndex,
-				this.ItemPerPage,
-				this.Source.length,
-				this.PageLength
-			);
-			this.CurrentPageIndex = this.PageControl.PageCurrent;
-			this.Table.refresh( this.getCurrentPageData() );
-		},
-		getData:function(data){
-			if(arguments.length == 0) return this.Source;
-			var source = _Array(this.Source);
-			if( !isNaN(data) ) {
-				return this.Source[data];
-			} else {
-				var index = source.indexOf(data);
-				if(index > -1) return this.Source[index];
-				return undefined;
-			}
-		},
-		refresh:function(data){
-			if(typeof data == "function"){
-				this.Source = [];
-				this.RemoteSource = data;
-			} else {
-				this.Source = _Array(data).toArray();
-			}
-			this.changePageIndex(1);
-			return this;
-		},
-		removeData:function(data,update){
-			if( isNaN(data) ){
-				this.Source = _Array(this.Source).remove(data).toArray();
-				if(update !== false) this.__updateData();
-			} else {
-				arguments.callee.call(this,this.getData(data),update);
-			}
-			return this;
-		},
-		removeDatas:function(){
-			var targets = [];
-			var own     = this;
-			_Array(arguments).flatten().inject(this,function(c,own){ 
-				_Array(c).each(function(t){
-					var data = own.getData(t);
-					if(data) targets.push(data);
-				});
-			});
-			_Array(targets).inject(this,function(c){
-				own.removeData(c);
-			});
-			this.__updateData();
-			return this;
-		},
-		appendData:function(data){
-			_Array(data).inject(this.Source,function(data,source){ source.push(data); });
-			this.__updateData();
-			return this;
-		},
-		prependData:function(data){
-			var setDatas = _Array(data);
-			_Array(this.Source).each(function(data){ setDatas.push(data); });
-			this.Source = setDatas.toArray();
-			this.__updateData();
-			return this;
-		},
-		setItemPerPage:function(val){
-			if(!isNaN(val)){ 
-				this.ItemPerPage = parseInt(val);
-				this.__updateData();
-			}
-		},
-		setPageLength:function(val){
-			if(!isNaN(val)){ 
-				this.PageLength = parseInt(val);
-				this.__updateData();
-			}
-		},
-		find:function(search){
-			var result = [];
-			_Array( this.Table.getContexts() ).each(function(c){ FIND(search,c,_Array).each(function(node){ result.push(node); }); });
-			return _Array(result).unique().toArray();
-		},
-		findData:function(search){ return _Array(this.find(search)).map(function(e){ return e._data }).filter().unique().toArray(); }
-	},function(data,pageContext,arrayDataContext,arrayDataRender){
-		//default
-		this.CurrentPageIndex    = 1;
-		this.ItemPerPage         = 10;
-		this.PageLength          = 5;
-		
-		//소스 컨트롤
-		//remote source alpha
-		if(typeof data == "function"){
-			this.Source = [];
-			this.RemoteSource = data;
-		} else {
-			this.Source              = _Array(data).toArray();
-			this.RemoteSource        = undefined;
-		}
-		
-		//페이지
-		this.PageControl = _PageControl(this.getCurrentPageIndex(),this.getTotalPageIndex());
-		this.PageControl.setPagePerLength(this.ItemPerPage);
-		this.PageControl.setPageViewContext(pageContext);
-		this.PageControl.updatePageView(this.CurrentPageIndex,this.ItemPerPage,this.Source.length,this.PageLength);
-		
-		//page event
-		var own = this;
-		this.PageControl.pageEvent(function(){ own.changePageIndex( own.PageControl.getPageOfCurrent() ); });
-		
-		//뷰컨트롤
-		this.Table = _ArrayViewController.apply(undefined,_Array(arguments).subarr(2).insert(this.getCurrentPageData()).toArray());
-		
-		//ifExsistRemoteData
-		if(this.RemoteSource){
-			this.changePageIndex(1);
-		}
-	});
+	
 	
 	makeModule("Request",{
 		__debug:function(data,param,moduleOption){
@@ -5790,7 +5527,6 @@
 		this._super(url,requestOption,moduleOption);
 		this.send();
 	});
-
 	makeSingleton("ActiveRecordPlugins",{
 		addPlugin:function(moduleName,moduleInit){
 			var names = moduleName.trim().split(" ");
@@ -5848,7 +5584,7 @@
 		},
 		D:function(data,success,error,requestSpace){
 			//uniquezKey process
-			data = MV(TOOBJECT(data));
+			data = CLONE(TOOBJECT(data));
 			if("deleteKey" in this.ActiveRecordOption) if(_Type(data[this.ActiveRecordOption.deleteKey]).isNothing() == false) {
 				var deleteValue = data[this.ActiveRecordOption.deleteKey];
 				data = {};
@@ -5859,351 +5595,7 @@
 	},function(type,path,option,moduleOption){
 		this.ActiveRecordType         = type;
 		this.ActiveRecordPath         = path;
-		this.ActiveRecordOption       = MV(TOOBJECT(option));
-		this.ActiveRecordModuleOption = MV(TOOBJECT(moduleOption));
+		this.ActiveRecordOption       = CLONE(TOOBJECT(option));
+		this.ActiveRecordModuleOption = CLONE(TOOBJECT(moduleOption));
 	});
-	
-	// spinJS
-	//
-	(function(t,e){if(typeof exports=="object")module.exports=e();else if(typeof define=="function"&&define.amd)define(e);else t.Spinner=e()})(this,function(){"use strict";var t=["webkit","Moz","ms","O"],e={},i;function o(t,e){var i=document.createElement(t||"div"),o;for(o in e)i[o]=e[o];return i}function n(t){for(var e=1,i=arguments.length;e<i;e++)t.appendChild(arguments[e]);return t}var r=function(){var t=o("style",{type:"text/css"});n(document.getElementsByTagName("head")[0],t);return t.sheet||t.styleSheet}();function s(t,o,n,s){var a=["opacity",o,~~(t*100),n,s].join("-"),f=.01+n/s*100,l=Math.max(1-(1-t)/o*(100-f),t),u=i.substring(0,i.indexOf("Animation")).toLowerCase(),d=u&&"-"+u+"-"||"";if(!e[a]){r.insertRule("@"+d+"keyframes "+a+"{"+"0%{opacity:"+l+"}"+f+"%{opacity:"+t+"}"+(f+.01)+"%{opacity:1}"+(f+o)%100+"%{opacity:"+t+"}"+"100%{opacity:"+l+"}"+"}",r.cssRules.length);e[a]=1}return a}function a(e,i){var o=e.style,n,r;i=i.charAt(0).toUpperCase()+i.slice(1);for(r=0;r<t.length;r++){n=t[r]+i;if(o[n]!==undefined)return n}if(o[i]!==undefined)return i}function f(t,e){for(var i in e)t.style[a(t,i)||i]=e[i];return t}function l(t){for(var e=1;e<arguments.length;e++){var i=arguments[e];for(var o in i)if(t[o]===undefined)t[o]=i[o]}return t}function u(t){var e={x:t.offsetLeft,y:t.offsetTop};while(t=t.offsetParent)e.x+=t.offsetLeft,e.y+=t.offsetTop;return e}function d(t,e){return typeof t=="string"?t:t[e%t.length]}var p={lines:12,length:7,width:5,radius:10,rotate:0,corners:1,color:"#000",direction:1,speed:1,trail:100,opacity:1/4,fps:20,zIndex:2e9,className:"spinner",top:"auto",left:"auto",position:"relative"};function c(t){if(typeof this=="undefined")return new c(t);this.opts=l(t||{},c.defaults,p)}c.defaults={};l(c.prototype,{spin:function(t){this.stop();var e=this,n=e.opts,r=e.el=f(o(0,{className:n.className}),{position:n.position,width:0,zIndex:n.zIndex}),s=n.radius+n.length+n.width,a,l;if(t){t.insertBefore(r,t.firstChild||null);l=u(t);a=u(r);f(r,{left:(n.left=="auto"?l.x-a.x+(t.offsetWidth>>1):parseInt(n.left,10)+s)+"px",top:(n.top=="auto"?l.y-a.y+(t.offsetHeight>>1):parseInt(n.top,10)+s)+"px"})}r.setAttribute("role","progressbar");e.lines(r,e.opts);if(!i){var d=0,p=(n.lines-1)*(1-n.direction)/2,c,h=n.fps,m=h/n.speed,y=(1-n.opacity)/(m*n.trail/100),g=m/n.lines;(function v(){d++;for(var t=0;t<n.lines;t++){c=Math.max(1-(d+(n.lines-t)*g)%m*y,n.opacity);e.opacity(r,t*n.direction+p,c,n)}e.timeout=e.el&&setTimeout(v,~~(1e3/h))})()}return e},stop:function(){var t=this.el;if(t){clearTimeout(this.timeout);if(t.parentNode)t.parentNode.removeChild(t);this.el=undefined}return this},lines:function(t,e){var r=0,a=(e.lines-1)*(1-e.direction)/2,l;function u(t,i){return f(o(),{position:"absolute",width:e.length+e.width+"px",height:e.width+"px",background:t,boxShadow:i,transformOrigin:"left",transform:"rotate("+~~(360/e.lines*r+e.rotate)+"deg) translate("+e.radius+"px"+",0)",borderRadius:(e.corners*e.width>>1)+"px"})}for(;r<e.lines;r++){l=f(o(),{position:"absolute",top:1+~(e.width/2)+"px",transform:e.hwaccel?"translate3d(0,0,0)":"",opacity:e.opacity,animation:i&&s(e.opacity,e.trail,a+r*e.direction,e.lines)+" "+1/e.speed+"s linear infinite"});if(e.shadow)n(l,f(u("#000","0 0 4px "+"#000"),{top:2+"px"}));n(t,n(l,u(d(e.color,r),"0 0 1px rgba(0,0,0,.1)")))}return t},opacity:function(t,e,i){if(e<t.childNodes.length)t.childNodes[e].style.opacity=i}});function h(){function t(t,e){return o("<"+t+' xmlns="urn:schemas-microsoft.com:vml" class="spin-vml">',e)}r.addRule(".spin-vml","behavior:url(#default#VML)");c.prototype.lines=function(e,i){var o=i.length+i.width,r=2*o;function s(){return f(t("group",{coordsize:r+" "+r,coordorigin:-o+" "+-o}),{width:r,height:r})}var a=-(i.width+i.length)*2+"px",l=f(s(),{position:"absolute",top:a,left:a}),u;function p(e,r,a){n(l,n(f(s(),{rotation:360/i.lines*e+"deg",left:~~r}),n(f(t("roundrect",{arcsize:i.corners}),{width:o,height:i.width,left:i.radius,top:-i.width>>1,filter:a}),t("fill",{color:d(i.color,e),opacity:i.opacity}),t("stroke",{opacity:0}))))}if(i.shadow)for(u=1;u<=i.lines;u++)p(u,-2,"progid:DXImageTransform.Microsoft.Blur(pixelradius=2,makeshadow=1,shadowopacity=.3)");for(u=1;u<=i.lines;u++)p(u);return n(e,l)};c.prototype.opacity=function(t,e,i,o){var n=t.firstChild;o=o.shadow&&o.lines||0;if(n&&e+o<n.childNodes.length){n=n.childNodes[e+o];n=n&&n.firstChild;n=n&&n.firstChild;if(n)n.opacity=i}}}var m=f(o("group"),{behavior:"url(#default#VML)"});if(!a(m,"transform")&&m.adj)h();else i=a(m,"animation");return c});
-	makeGetter("INDICATOR",function(context,text,parent){
-		var targetContext = FINDZERO(context);
-		if(ISELNODE(targetContext) == true){
-			//spin
-			var indicator = new Spinner({
-			  lines: 9, // The number of lines to draw
-			  length: 2, // The length of each line
-			  width: 4, // The line thickness
-			  radius: 8, // The radius of the inner circle
-			  corners: 1, // Corner roundness (0..1)
-			  rotate: 0, // The rotation offset
-			  direction: 1, // 1: clockwise, -1: counterclockwise
-			  color: '#000', // #rgb or #rrggbb or array of colors
-			  speed: 1, // Rounds per second
-			  trail: 60, // Afterglow percentage
-			  shadow: false, // Whether to render a shadow
-			  hwaccel: false, // Whether to use hardware acceleration
-			  className: 'spinner', // The CSS class to assign to the spinner
-			  zIndex: 2e9, // The z-index (defaults to 2000000000)
-			  top: 'auto', // Top position relative to parent in px
-			  left: 'auto' // Left position relative to parent in px
-			}).spin(targetContext);
-
-			this.stop = function(){
-				indicator.stop();
-				ELREMOVE(indicator);
-				return true;
-			};
-
-			return this;
-		} else {
-			console.warn("Indicator::인디케이터를 활성할수 없습니다. 컨텍스트 경로가 올바르지 않습니다. =>", context, targetContext);
-		}
-	});
-	
-	makeModule("Loader",{
-		clear:function(){
-			if(this.LoaderCurrent) this.LoaderViews[this.LoaderCurrent] = _Array(this.LoaderContext.children).each(function(el){ ELREMOVE(el); }); return this;
-		},
-		clearSource:function(){
-			this.clear();
-			this.LoaderCurrent = undefined;
-			this.LoaderViews   = {};
-			return this;
-		},
-		executeScriptForCurrentEnum:function(loadArguments,completeBlock){
-			var own      = this;
-			var loadEnum = this.LoaderCurrent;
-			//
-			var scripts = _Array(FIND("script",this.LoaderContext));
-			scripts.each(function(scriptDom){
-				var javascript = scriptDom.innerHTML;
-				try {
-					eval(javascript);
-				} catch(e){
-					console.error("스크립트 구문 오류로 스크립트 실행이 정지되었습니다. => ",MAX(javascript,200));
-					throw e;
-				}
-			});
-			if(typeof this.LoaderEvent == "object") {
-				if(loadEnum in this.LoaderEvent) {
-					var currentLoadEvent = this.LoaderEvent[loadEnum];
-					switch(typeof currentLoadEvent){
-						case "function":
-							currentLoadEvent.apply(this.LoaderContext,loadArguments);
-							break;
-						case "string":
-							if(/(\.js|\.js\s)$/.test(currentLoadEvent)){
-								var scriptPath = _Client.getAbsolutePath(currentLoadEvent,_Client.scriptUrl());
-								new Open(scriptPath,function(javascript){
-									try {
-										var r = eval("("+javascript+")");
-										if(typeof r == "function"){ r.apply(own.LoaderContext,loadArguments); }
-									} catch(e1) {
-										try {
-											eval(javascript);
-										} catch(e2) {
-											console.error("Loader::executeScriptForCurrentEnum 외부스크립트 오류 스크립트 구문 오류로 스크립트 실행이 정지되었습니다. => ",MAX(javascript,200));
-											throw e1;
-										}
-									}		
-								},function(){
-									console.error("Loader::executeScriptForCurrentEnum 외부스크립트를 가져오는데 실패하였습니다.. => ",currentLoadEvent," => ",scriptPath);
-								});
-								
-							} else {
-								console.error("Loader::executeScriptForCurrentEnum .js로 끝나는 자바스크립트만 가능합니다.");
-							}
-							break;
-						default: break;
-					}
-				}
-			}
-			return APPLY(completeBlock,this);
-		},
-		statusChange:function(loadPath,loadEnum,after) { 
-			var result = CALL(this.LoaderBindEvent,this,loadPath,loadEnum,"before",this.LoaderContext);
-			if(result !== false) { 
-				CALL(after,this,function(){
-					CALL(this.LoaderBindEvent,this,loadPath,loadEnum,"after",this.LoaderContext);
-				});
-			}
-			return result;
-		},
-		link: function (linkText){
-			if(this.LoaderCurrent){
-				this.Source[this.LoaderCurrent] = linkText;
-				this.load.apply(this,_Array(arguments).subarr(1).insert(this.LoaderCurrent).toArray());
-			} else {
-				console.error("불러진 컨텐츠가 없습니다.");
-			}
-		},
-		load: function (loadEnum){
-			if(loadEnum in this.Source){
-				var loadArguments = Array.prototype.slice.call(arguments);
-				loadArguments.shift();
-				this.statusChange(loadEnum,"load",function(completeBlock){
-					this.clear();
-					this.LoaderCurrent = loadEnum;
-					var own = this;
-					var loadPath  = this.Source[loadEnum];
-					if(typeof loadPath == "function"){
-						var result = loadPath(loadEnum);
-						if(typeof result == "string"){ loadPath = result; }
-					}
-					//ELEMENT(s) or URL
-					if( typeof loadPath == "string" ){
-						//element
-						var indicator = INDICATOR(this.LoaderContext);
-						_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") +_Client.base64Random(2),{
-							"dataType":"dom",
-							"success":function(doms){
-								indicator.stop();
-								_Array(doms).each(function(el){ ELAPPEND(own.LoaderContext,el); });
-								own.executeScriptForCurrentEnum(loadArguments,completeBlock);
-							},
-							"error":function(){
-								console.error("Loader::load 페이지를 불러오는데 실패하였습니다. :path => ",loadPath);
-								APPLY(completeBlock,own);
-							}
-						});
-					} else {
-						var elfind = FIND(loadPath);
-						if( elfind.length < 1 ){
-							console.error("Loader::load 불러올 엘리먼트가 존재하지 않습니다. => ",loadPath);
-						} else {
-							_Array(elfind).each(function(el){ ELAPPEND(own.LoaderContext,el); });
-							this.executeScriptForCurrentEnum(loadArguments,completeBlock);
-						}
-					}
-				});
-			} else {
-				console.error("Loader::load::정의되지 않은 Enum을 호출할수 없습니다. => ",loadEnum,this);
-			}
-			return this;
-		},
-	    open: function (loadEnum) {
-			if(this.LoaderCurrent !== loadEnum) if(loadEnum in this.LoaderViews){
-				var openArgument = _Array(arguments).subarr(1).toArray();
-				this.statusChange(loadEnum,"open",function(completeBlock){
-					var own = this;
-					this.clear();
-					this.LoaderCurrent = loadEnum;
-					this.LoaderViews[loadEnum].each( function(el){ ELAPPEND(own.LoaderContext,el); });
-					APPLY(completeBlock,own,openArgument);
-				});
-			} else {
-				this.load(loadEnum);
-			}
-			return this;
-	    }
-	},function(context,navs,loadEvent,chageEvent){
-		// context    => 컨텐츠를 채울 곳
-		// navs       => object: key value로 해당이 호출되면 context에 내용이 체워짐
-		// loadEvent  => navs key과 같은 데이터가 불러와질때 호출되는 이벤트
-		// chageEvent => 모든 이벤트의 집합
-		this.Source          = navs;
-		this.LoaderCurrent   = undefined;
-		this.LoaderContext   = FINDZERO(context);
-		this.LoaderEvent     = TOOBJECT(loadEvent);
-		this.LoaderBindEvent = chageEvent;
-		this.LoaderViews     = {};
-	});
-	makeModule("Color",{
-		getColorSource : function(){
-			console.log(this.OriginSource);
-			switch(this.OriginSource[0]){
-				case "HEX" : return this.Utility.HEXToHSV(this.OriginSource[1]); break;
-				case "RGB" : return this.Utility.HEXToHSV(this.OriginSource.shift()); break;
-				case "RGBA": return this.Utility.HEXToHSV(this.OriginSource.shift()); break;
-				case "HSV" : var c = this.OriginSource;  return [c[1],c[2],c[3]] ; break;
-				case "HSVA": var c = this.OriginSource; return [c[1],c[2],c[3]] ; break;
-				default:
-					console.log("Color::getColorSource Source형식이 지원하지 않습니다.");
-					break;
-			}
-		},
-		isValid:function(){return this.OriginSource?true:false;},
-		//getProps
-		getFiltedHSV:function(){
-			var s = MV(this.Source);
-			for(var key in this.ColorFilter) {
-				if(this.ColorFilter[key] !== 0) switch(key) {
-					case "cold"  : s[0]+=s[0]; break;
-					case "light" : s[1]+=s[1]; break;
-					case "bright": s[2]+=s[2]; break;
-					default      : console.warn("Color::getFiltedHSV 알수 없는 필터값이 존재합니다. =>",key); break;
-				}
-			}
-			return s;
-		},
-	    getHSV :function() { return STRING("hsv(", STRINGC.apply(undefined,this.getFiltedHSV()),")"); },
-		getHEX :function() { return STRING("#",this.Utility.HSVToHEX(this.getFiltedHSV()));},
-	    getRGB :function() { return STRING("rgb(", STRINGC.apply(undefined,this.Utility.HSVToRGB(this.getFiltedHSV())),")"); },
-		getRGBA:function() { return STRING("rgba(",STRINGC.apply(undefined,this.Utility.HSVToRGB(this.getFiltedHSV())),","+this.alpha+")"); },
-	    //filter
-	    bright:function(level){ this.ColorFilter["bright"]+= NUMBER(level,10); return this; },
-	    dark  :function(level){ this.ColorFilter["bright"]-= NUMBER(level,10); return this; },
-	    cold  :function(level){ this.ColorFilter["cold"]  += NUMBER(level,10); return this; },
-	    warm  :function(level){ this.ColorFilter["cold"]  -= NUMBER(level,10); return this; },
-	    light :function(level){ this.ColorFilter["light"] += NUMBER(level,10); return this; },
-		bold  :function(level){ this.ColorFilter["light"] -= NUMBER(level,10); return this; },
-		//utility
-		Utility:{
-		    HEXToRGB: function(hex) {
-		        var hex = parseInt(((hex.indexOf('#') > -1) ? hex.substring(1) : hex), 16);
-		        return [hex >> 16, (hex & 0x00FF00) >> 8, (hex & 0x0000FF)];
-		    },
-		    HEXToHSV: function(hex) { return this.RGBToHSV(this.HEXToRGB(hex)); },
-		    RGBToHSV: function(rgb_array) {
-		        var r = rgb_array[0] / 255;
-		        var g = rgb_array[1] / 255;
-		        var b = rgb_array[2] / 255;
-		        var H, S, V, C;
-		        V = Math.max(r, g, b);
-		        C = V - Math.min(r, g, b);
-		        H = (C === 0 ? null : V == r ? (g - b) / C : V == g ? (b - r) / C + 2 : (r - g) / C + 4);
-		        H = ((H + 360) % 6) * 60 / 360;
-		        S = C === 0 ? 0 : C / V;
-		        return [360 * (H || 1), 100 * S, 100 * V];
-		    },
-		    HSVToRGB: function(hsb_array) {
-		        var rgb = {};
-		        var h = Math.round(hsb_array[0]),
-		            s = Math.round(hsb_array[1] * 255 / 100),
-		            v = Math.round(hsb_array[2] * 255 / 100);
-		        if (s == 0) {
-		            rgb.r = rgb.g = rgb.b = v;
-		        } else {
-		            var t1 = v;
-		            var t2 = (255 - s) * v / 255;
-		            var t3 = (t1 - t2) * (h % 60) / 60;
-		            if (h == 360) h = 0;
-		            if (h < 60) {
-		                rgb.r = t1;
-		                rgb.b = t2;
-		                rgb.g = t2 + t3;
-		            } else if (h < 120) {
-		                rgb.g = t1;
-		                rgb.b = t2;
-		                rgb.r = t1 - t3;
-		            } else if (h < 180) {
-		                rgb.g = t1;
-		                rgb.r = t2;
-		                rgb.b = t2 + t3;
-		            } else if (h < 240) {
-		                rgb.b = t1;
-		                rgb.r = t2;
-		                rgb.g = t1 - t3;
-		            } else if (h < 300) {
-		                rgb.b = t1;
-		                rgb.g = t2;
-		                rgb.r = t2 + t3;
-		            } else if (h < 360) {
-		                rgb.r = t1;
-		                rgb.g = t2;
-		                rgb.b = t1 - t3;
-		            } else {
-		                rgb.r = 0;
-		                rgb.g = 0;
-		                rgb.b = 0;
-		            }
-		        }
-		        return [Math.round(rgb.r), Math.round(rgb.g), Math.round(rgb.b)];
-		    },
-		    RGBToHEX: function(rgb_array) {
-		        var hex = [rgb_array[0].toString(16), rgb_array[1].toString(16), rgb_array[2].toString(16)];
-				for(var i=0,l=hex.length;i<l;i++) if(hex[i].length < 2) hex[i] = "0"+hex[i];
-				return hex.join("");
-		    },
-		    HSVToHEX: function(hsv) { return this.RGBToHEX(this.HSVToRGB(hsv)); }
-		}
-	},function(p1){
-		p1               = p1.toUpperCase().trim();
-		this.alpha       = 1;
-		this.ColorFilter = { "bright":0, "cold" :0, "light" :0 };
-		//
-		if(/(hex|\#|)[0-9a-f]{3}/i.test(p1)){
-			if(/([0-9a-f]{6})/i.test(p1)){
-				//hex6
-				this.OriginSource = /([0-9a-f]{6})/i.exec(p1);
-				this.OriginSource[0] = "HEX";
-			} else {
-				//hex3
-				this.OriginSource = /([0-9a-f]{3})/i.exec(p1);
-				this.OriginSource[0] = "HEX";
-				this.OriginSource[1] = this.OriginSource[1].replace(/[0-9a-f]/gi,function(s){return s+s;});
-			}
-		} else if(/\D+(\d+)\D+(\d+)\D+(\d+)/i.test(p1)) {
-			if(/hsva\D+(\d+)\D+(\d+)\D+(\d+)\D+([\.\d]+)/i.test(p1)){
-				this.OriginSource = /\D+(\d+)\D+(\d+)\D+(\d+)\D+([\.\d]+)/i.exec(p1);
-				this.OriginSource[0] = "HSVA";
-				this.alpha = parseFloat(this.OriginSource[4]);
-			} else if(/hsv\D+(\d+)\D+(\d+)\D+(\d+)/i.test(p1)){
-				this.OriginSource = /\D+(\d+)\D+(\d+)\D+(\d+)/i.exec(p1);
-				this.OriginSource[0] = "HSV";
-			} else if(/\D+(\d+)\D+(\d+)\D+(\d+)\D+([\.\d]+)/i.test(p1)){
-				this.OriginSource = /\D+(\d+)\D+(\d+)\D+(\d+)\D+([\.\d]+)/i.exec(p1);
-				this.OriginSource[0] = "RGBA";
-				this.alpha = parseFloat(this.OriginSource[4]);
-			} else {
-				this.OriginSource = /\D+(\d+)\D+(\d+)\D+(\d+)/i.exec(p1);
-				this.OriginSource[0] = "RGB";
-			}
-		}
-		if(!this.isValid()){ console.error("Color::파라메터의 형식에 대응할 수 올바르지 없습니다. white로 대응합니다.=> ",p1); this.OriginSource=["HEX","FFFFFF"]; };
-		this.Source = this.getColorSource();
-	},function(){
-		switch(this.OriginSource[0]){
-			case "HEX"  : return this.getHEX();  break;
-			case "RGB"  : return this.getRGB();  break;
-			case "RGBA" : return this.getRGBA(); break;
-			case "HSV"  : return this.getHSV();  break;
-			default: console.log("Color::getColorSource Source형식이 지원하지 않습니다."); break;
-		}
-	});
-	//수다쟁이 모듈
-	extendModule("Array","Magpie",{talk:function(joinText){joinText=typeof joinText=="string"?joinText:"";sneeze=[];this.each(function(t){sneeze.push(_Array(t).getRandom());});return sneeze.join(joinText);}},function(){var magpie=this;_Array(arguments).each(function(a){magpie.push(typeof a=="string"?a.split(","):a);});});
-	
-	
 })(window));

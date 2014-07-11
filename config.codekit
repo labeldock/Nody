@@ -86,45 +86,67 @@
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/lab-module\/nody.move.js": {
+	"\/lab-module\/nody.comp\/nody.component.js": {
 		"fileType": 64,
 		"ignore": 0,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/lab-module\/nody.move.js",
-		"outputAbbreviatedPath": "\/js-module-move\/nody.move.min.js",
+		"ignoreWasSetByUser": 1,
+		"inputAbbreviatedPath": "\/lab-module\/nody.comp\/nody.component.js",
+		"outputAbbreviatedPath": "\/lab-module\/nody.comp\/nody.component.min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 1,
 		"outputStyle": 1,
-		"syntaxCheckerStyle": 1
+		"syntaxCheckerStyle": 0
 		},
-	"\/lab-module\/nody.move.min.js": {
+	"\/lab-module\/nody.comp\/nody.component.min.js": {
 		"fileType": 64,
 		"ignore": 1,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/lab-module\/nody.move.min.js",
-		"outputAbbreviatedPath": "\/lab-module\/min\/nody.move.min-ck.js",
+		"inputAbbreviatedPath": "\/lab-module\/nody.comp\/nody.component.min.js",
+		"outputAbbreviatedPath": "\/lab-module\/nody.comp\/min\/nody.component.min-ck.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/lab-module\/ScrollToPlugin.min.js": {
+	"\/lab-module\/nody.move\/nody.move.js": {
+		"fileType": 64,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/lab-module\/nody.move\/nody.move.js",
+		"outputAbbreviatedPath": "\/lab-module\/nody.move\/nody.move.min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 1,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 0
+		},
+	"\/lab-module\/nody.move\/nody.move.min.js": {
 		"fileType": 64,
 		"ignore": 1,
-		"ignoreWasSetByUser": 1,
-		"inputAbbreviatedPath": "\/lab-module\/ScrollToPlugin.min.js",
-		"outputAbbreviatedPath": "\/lab-module\/min\/ScrollToPlugin.min-ck.js",
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/lab-module\/nody.move\/nody.move.min.js",
+		"outputAbbreviatedPath": "\/lab-module\/nody.move\/min\/nody.move.min-ck.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/lab-module\/TweenMax.js": {
+	"\/lab-module\/nody.move\/ScrollToPlugin.min.js": {
 		"fileType": 64,
 		"ignore": 1,
 		"ignoreWasSetByUser": 1,
-		"inputAbbreviatedPath": "\/lab-module\/TweenMax.js",
-		"outputAbbreviatedPath": "\/lab-module\/min\/TweenMax-ck.js",
+		"inputAbbreviatedPath": "\/lab-module\/nody.move\/ScrollToPlugin.min.js",
+		"outputAbbreviatedPath": "\/lab-module\/nody.move\/min\/ScrollToPlugin.min-ck.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
+	"\/lab-module\/nody.move\/TweenMax.js": {
+		"fileType": 64,
+		"ignore": 1,
+		"ignoreWasSetByUser": 1,
+		"inputAbbreviatedPath": "\/lab-module\/nody.move\/TweenMax.js",
+		"outputAbbreviatedPath": "\/lab-module\/nody.move\/min\/TweenMax-ck.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
@@ -135,8 +157,8 @@
 		"enableSmartyPants": 1,
 		"expandTabs": 1,
 		"fileType": 4096,
-		"ignore": 1,
-		"ignoreWasSetByUser": 1,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
 		"inputAbbreviatedPath": "\/README.md",
 		"outputAbbreviatedPath": "\/README.html",
 		"outputPathIsOutsideProject": 0,
