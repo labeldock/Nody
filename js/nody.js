@@ -1,6 +1,6 @@
 //Nody CoreFoundation
 (+(function(W,NativeCore){
-	var version = "0.3.0.1";
+	var version = "0.3.0.2";
 	// Author                 // hojung ahn (open9.net)
 	// Concept                // DHTML RAD TOOL
 	// tested in              // IE9 + (on 4.0) & webkit2 & air13
@@ -1123,8 +1123,6 @@
 		this.replace(a);
 	});
 	
-	
-	
 	//******************
 	//String
 	makeModule("String",{
@@ -1418,7 +1416,7 @@
 				}
 			}
 			//number
-			if(/(\s|)(^\d+\~\d+|\d+)(\s|)$/.test(source)){
+			if(/(\s|)(^\d+\~\d+|\d+)(\s|)$/.test(source)){				
 				r.type   = "rangeNumber";
 				r.value  = source;
 				r.maxLength = r.pattern.length;
@@ -1433,8 +1431,8 @@
 					r.maxLength = r.value.length;
 				} else {
 					r.type   = "randomArray";
+					r.maxLength = 1;
 					r.value  = source;
-					r.length = RCHOICE(source).length
 				}
 				return r;
 			}
@@ -1453,6 +1451,7 @@
 		},
 		getLength:function(){
 			var info = this.getContentInfo();
+			console.log("info##",TOSTRING(info));
 			if(info) switch(info.type){
 				case "rangeNumber": return info.maxLength; break;
 				case "randomArray": return info.maxLength; break;
@@ -1498,13 +1497,13 @@
 			var maxLength=0;
 			if(typeof length == "number") maxLength = length;
 			else this.each(function(content){ var len = content.getLength(); if(len > maxLength) maxLength = len; });
-			
 			//
 			var result = ARRAYINARRAY(maxLength);
 			this.each(function(content){
 				var tileData = content.getContents(maxLength);
 				for(var i=0,l=tileData.length;i<l;i++)result[i].push(tileData[i]);
 			});
+			console.log("result",result);
 			return result;
 		},
 		getJoinContents:function(joinText,length){
