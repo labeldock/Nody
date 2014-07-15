@@ -1,10 +1,10 @@
 @charset "UTF-8";
 @import 'nody-kit';
 /*
-	default interface style sheet
+	modernizer & look and feel support
 	auther        : hojugn ahn (open9.net)
 	compatibility : IE7;
-	version       : 1.6
+	version       : 1.7
 */
 /*****************************
  default layout style */
@@ -366,21 +366,11 @@ body#dev-visual *,body.dev-visual *,.auto-transition{
 	}
 }
 .ellipsis, .ellipsis-all * {
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	-o-text-overflow: ellipsis;
-	-ms-text-overflow: ellipsis;
-	overflow: hidden;
-	word-wrap:normal !important;
+	@include ellipsis;
 }
 span.ellipsis { margin:0px;padding:0px;display:block;width:100%; }
 .multi-line{
-	white-space: normal !important;
-	text-overflow: clip !important;
-	-o-text-overflow: clip !important;
-	-ms-text-overflow: clip !important;
-	overflow: visible !important;
-	word-wrap:normal !important;
+	@include multiline;
 }
 .pointer {
 	&,&-each>*{

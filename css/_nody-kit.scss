@@ -1,7 +1,7 @@
 /*
-	default interface style kit
+	sass style kit
 	auther        : hojugn ahn (open9.net)
-	version       : 0.4
+	version       : 0.5
 	concept       : interface set, auto preload image, easy hack, easy animation
 */
 
@@ -24,7 +24,6 @@
 @mixin content($url:'undefined'){
 	@include preload('content',($base-assets-path + $url));
 }
-
 @mixin transition ($sec:0.3s,$range:all){
 	@each $prefix in $next-browser { 
 		#{$prefix}transition:$range $sec ease-in-out; 
@@ -39,6 +38,22 @@
 }
 @mixin no-webkit(){ -webkit-appearance:none; }
 @mixin inline-block{display:inline-block;zoom:1;*display:inline;}
+@mixin ellipsis {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	-o-text-overflow: ellipsis;
+	-ms-text-overflow: ellipsis;
+	overflow: hidden;
+	word-wrap:normal !important;
+}
+@mixin multiline {
+	white-space: normal !important;
+	text-overflow: clip !important;
+	-o-text-overflow: clip !important;
+	-ms-text-overflow: clip !important;
+	overflow: visible !important;
+	word-wrap:normal !important;
+}
 @mixin makeOne($name,$value){#{$name}:#{$value};}
 @mixin no-select() {
 	-webkit-touch-callout: none;
@@ -201,4 +216,9 @@
 		height:$group-height;
 		line-height:$group-height;
 	}
+}
+@mixin clearfix {
+	content:" ";
+	font-size:0;
+	clear:both;
 }

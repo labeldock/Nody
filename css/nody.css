@@ -1,16 +1,16 @@
 @charset "UTF-8";
 /*
-	default interface style kit
+	sass style kit
 	auther        : hojugn ahn (open9.net)
-	version       : 0.4
+	version       : 0.5
 	concept       : interface set, auto preload image, easy hack, easy animation
 */
 /* table styilus*/
 /*
-	default interface style sheet
+	modernizer & look and feel support
 	auther        : hojugn ahn (open9.net)
 	compatibility : IE7;
-	version       : 1.6
+	version       : 1.7
 */
 /***************************** default layout style */
 *, *:before, *:after { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; }
