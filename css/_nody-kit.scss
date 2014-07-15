@@ -1,7 +1,7 @@
 /*
 	sass style kit
 	auther        : hojugn ahn (open9.net)
-	version       : 0.5
+	version       : 0.5.1
 	concept       : interface set, auto preload image, easy hack, easy animation
 */
 
@@ -37,7 +37,7 @@
 	$preload-images:''!global;
 }
 @mixin no-webkit(){ -webkit-appearance:none; }
-@mixin inline-block{display:inline-block;zoom:1;*display:inline;}
+@mixin inline-block{display:inline;zoom:1;display:inline-block;}
 @mixin ellipsis {
 	white-space: nowrap;
 	text-overflow: ellipsis;
