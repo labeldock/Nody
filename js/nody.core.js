@@ -240,7 +240,7 @@
 		W[n]=new o();
 		NativeCore.Singletons[n]=W[n];
 	};
-	W.makeGetters   = function(o){ if(typeof o == "obwiject") for(var k in o) W.makeGetter(k,o[k]); };
+	W.makeGetters   = function(o){ if(typeof o == "object") for(var k in o) W.makeGetter(k,o[k]); };
 })(window,{
 	Getters:[],
 	Singletons:{},
