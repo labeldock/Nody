@@ -1,11 +1,14 @@
+// Author                 // hojung ahn (open9.net)
+// Concept                // DHTML RAD TOOL
+// tested in              // IE9 + (on 4.0) & webkit2 & air13
+// lincense               // MIT lincense
 //Nody CoreFoundation
 (+(function(W,NativeCore){
-	var version = "0.3.0.2";
-	// Author                 // hojung ahn (open9.net)
-	// Concept                // DHTML RAD TOOL
-	// tested in              // IE9 + (on 4.0) & webkit2 & air13
-	// lincense               // MIT lincense
+	var version = "0.3.3";
+	
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
+	
+	var nodyCoreVersion = "1.0";
 	//CONSOLE FIX
 	if (typeof W.console !== "object"){W.console = {};} 'log info warn error count assert dir clear profile profileEnd"'.replace(/\S+/g,function(n){ 
 		if(!(n in W.console)){W.console[n] = function(){
@@ -198,31 +201,19 @@
 	//Getter:Core
 	W.makeGetter    = function(n,m){ var name=n.toUpperCase(); W[name]=m; NativeCore.Getters.push(name); };
 	dataConstructorPrototype = {
-		"get":function(){ return this.Source; },
+		"get":function(key){ if(key) return this.Source[key]; return this.Source; },
 		"empty":function(){ for(var k in this.Source) delete this.Source[k]; return this.Source; },
 		"replace":function(data){ this.empty(); for(var k in data) this.Source[k] = data[k]; return this.Source; },
-		"keymap":function(keys,r){
-			var i=0,sets={};
-			for(var k in keys) sets[keys[k]] = r(keys[k],k,i++);
-			return this.replace(sets);
-		},
-		"each":function(r){
-			var i=0;
-			for(var k in this.Source) {var br = r(this.Source[k],k,i++);if(br == false) break;}
-			return this.Source;
-		}
+		"keymap":function(keys,r){ var i=0,sets={}; for(var k in keys) sets[keys[k]] = r(keys[k],k,i++); return this.replace(sets); },
+		"each":function(r){ var i=0; for(var k in this.Source) {var br = r(this.Source[k],k,i++);if(br == false) break;} return this.Source; },
+		"map":function(f){ var r = []; this.each(function(v,k,i){ r.push(f(v,k,i)); }); return r; },
+		"trace":function(m){ console.log((m?m+" ":"")+TOSTRING(this.Source)); }
 	};
 	W.makeDataConstructor = function(n,m){
 		if(typeof n !== "string" || typeof m !== "function") return console.warn("makeDataConstructor::worng arguments!");
 		NativeCore.DataConstructor[n]=function(){ this.Source={};m.apply(this,Array.prototype.slice.call(arguments)); };
-		NativeCore.DataConstructor[n].prototype = {
-			"constructor":m,
-			"get":dataConstructorPrototype.get,
-			"empty":dataConstructorPrototype.empty,
-			"replace":dataConstructorPrototype.replace,
-			"keymap":dataConstructorPrototype.keymap,
-			"each":dataConstructorPrototype.each
-		};
+		NativeCore.DataConstructor[n].prototype = {"constructor":m};
+		for(var key in dataConstructorPrototype) NativeCore.DataConstructor[n].prototype[key] = dataConstructorPrototype[key];
 		window[n] = NativeCore.DataConstructor[n];
 	};
 	//Data가 
@@ -656,27 +647,12 @@
 				}
 			}
 		},
-		// 1~4 => random any
-		"RNUMBER":function(source){
-			try {
-				var numberType = /(\d+)\~(\d+)/.exec(source);
-				var d1 = TONUMBER(numberType[1]);
-				var d2 = TONUMBER(numberType[2]);
-				if(d1 > d2){ return d2+Math.floor(Math.random()*(d1-d2+1));
-				} else     { return d1+Math.floor(Math.random()*(d2-d1+1)); }
-			} catch(e){
-				return TONUMBER(source);
-			}
-		},
-		// 1,2,3,4 => random any
-		"RCHOICE":function(value,split){
-			if( ISARRAY(value) ) return value[Math.floor(Math.random()*(value.length))];
-			var cache = FUT.CACHEGET("RCHOICE",value+split);
-			if(cache) return cache[Math.floor(Math.random()*(cache.length))];
-			var cachedata = value.split(typeof split == "string"?split:",");
-			FUT.CACHESET("RCHOICE",value+split,cachedata);
-			return cachedata[Math.floor(Math.random()*(cachedata.length))];
-		},
+		
+		
+		
+		
+		
+		
 		//
 		"ISNOTHING":function(o){ 
 	        if (typeof o == "undefined")return true;
@@ -697,7 +673,108 @@
 	        return true;
 		},
 		"ISMEANING":function(o){ return !ISNOTHING(o); },
-		"ISENOUGH" :function(o){ return !ISNOTHING(o); }
+		"ISENOUGH" :function(o){ return !ISNOTHING(o); },
+		"DataConstructor#StringNumberInfo":function(nv){
+			var i = /([\D]*)(([\d\,]+|)+(\.[\d]+|))([\D]*)/.exec(nv);
+			var n = /([0]*)(.*)/.exec(i[2]);
+			// i[1] prefix
+			// i[2] number
+			// i[3] integer
+			// i[4] float
+			// i[5] suffix
+			// n number
+			// n[1] 
+			// n[2]
+			//console.log(TOSTRING(i));
+			//console.log(TOSTRING(n));
+			//010
+			// if 000, ""
+			if( !!n[1].length && !n[2].length ){
+				n[1] = n[1].substr(0,n[1].length-1);
+				//n[2] = "0";
+				i[2] = "0";
+				i[3] = "0";
+			}
+			//console.log(TOSTRING(i));
+			//console.log(TOSTRING(n));
+			//
+			if(i[1].charAt(i[1].length-1) == "-" && !!i[2].length ){
+				i[1] = i[1].substr(0,i[1].length-1);
+				i[2] = "-"+i[2];
+				i[3] = "-"+i[3];
+			}
+			
+			if(n[1].length){
+				i[2] = n[2];
+				i[3] = n[2];
+			}
+			
+			
+			this.Source.prefix     = i[1];
+			this.Source.prefixZero = n[1];
+			this.Source.number     = i[2];
+			this.Source.integer    = i[3];
+			this.Source.float      = i[4];
+			this.Source.suffix     = i[5];
+	
+			this.fixNumberInfo    = function(){
+				if(!("floatValue" in this.Source)){
+					//float
+					this.Source.floatValue = (this.float !== "") ? "0"+this.Source.float : "0";
+					//nothing
+					if( this.Source.integer == "") this.Source.integer = "0";
+					if( this.Source.float   == "") this.Source.float   = "0";
+					if( this.Source.number  == "") this.Source.number  = "0";
+				}
+				return this;
+			}
+		},
+		"TRUNCBACK":function(val,len){
+			val = TONUMBER(val);
+			len = TONUMBER(len);
+			if(!len) return val;
+			//제곱
+			return ((val + Math.pow(10,len))+"").substr(1);
+		},
+		"TEXTNUMBER":function(source){
+			if(typeof source == "string"){
+				var info = (new StringNumberInfo(source)).get();
+				if(!!info.prefix || !!info.prefixZero || !!info.suffix) return source;
+			}
+			return TONUMBER(source);
+		},
+		// 1~4 => random any
+		"RNUMBER":function(source){
+			var numberSplit = /^([^\~]*)\~(.*)$/.exec(source);
+			if(numberSplit){
+				var ns1 = (new StringNumberInfo(numberSplit[1])).get();
+				var ns2 = (new StringNumberInfo(numberSplit[2])).get();
+				//
+				var nprefix = ns1.prefix;
+				var nzeroLen = ns1.prefixZero.length + ns1.integer.length ;
+				//
+				var numv1 = TONUMBER(ns1.number);
+				var numv2 = TONUMBER(ns2.number);
+				//
+				var chov  = 0;
+				if(numv1 > numv2){ chov = numv2+Math.floor(Math.random()*(numv1-numv2+1));
+				} else { chov = numv1+Math.floor(Math.random()*(numv2-numv1+1)); }
+				//
+				if( nzeroLen > 0) chov = TRUNCBACK(chov,nzeroLen);
+				return !!nprefix ? nprefix+chov : chov;
+			} else {
+				return TEXTNUMBER(source);
+			}
+		},
+		// 1,2,3,4 => random any
+		"RCHOICE":function(value,split){
+			if( ISARRAY(value) ) return value[Math.floor(Math.random()*(value.length))];
+			var cache = FUT.CACHEGET("RCHOICE",value+split);
+			if(cache) return cache[Math.floor(Math.random()*(cache.length))];
+			var cachedata = value.split(typeof split == "string"?split:",");
+			FUT.CACHESET("RCHOICE",value+split,cachedata);
+			return cachedata[Math.floor(Math.random()*(cachedata.length))];
+		}
 	});
 	AFoundation.eachGetter();
 	
@@ -1363,7 +1440,8 @@
 	extendModule("String","AreaContent",{
 		getContentInfo:function(rLength){
 			var r = {"type":null,"value":null,"maxLength":null,"pattern":[0]};
-			// source and pattern
+			// source :
+			// pattern : 
 			var pattern;
 			var source = this.Source.replace(/\|[^\|]*\|$/,function(s){
 				pattern = s.substr(1,s.length-2);
@@ -1373,6 +1451,7 @@
 			
 			//patterProgress
 			if( ISARRAY(pattern) ) if( !(pattern.length == 1 && pattern[0] == "") ){
+				r.pattern = [];
 				for(var pi=0,l=pattern.length;pi<l;pi++){
 					var pp = /([^\:]*)(\:(\~\+|\+\+|\+|\--|)(.*)|)/.exec(pattern[pi]);
 					if(!pp)console.warn("inValid pattern => ",pattern[pi]);
@@ -1410,7 +1489,6 @@
 							break;
 					}
 					if(patternArray.length){
-						if(!r.pattern) r.pattern = [];
 						r.pattern = r.pattern.concat( patternArray );
 					}
 				}
@@ -1513,7 +1591,6 @@
 			} else {
 				joinText = typeof joinText == "string" ? joinText : "";
 			}
-			
 			return DATAMAP(this.getContents(length),function(lineData){ return lineData.join(joinText); });
 		},
 		getLineContents:function(joinText,length){
@@ -1532,40 +1609,31 @@
 	extendModule("String","Number",{
 		// number core
 		// spot 1:prefix 2:integer 3:floatValue 4:suffix
-		__NumberInfo  : function(value){
-			return /([\D]*)([\d\,]+|)+(\.[\d]+|)([\D]*)/.exec(value);
-		},
-		isNotANumber:function(){ var i = this.__NumberInfo(this.Source)[2]; if(i=="" || i.length < 1) return true; return false; },
-		isANumber:function(){return !this.isNotANumber();},
-		getNumberInfo : function(spot){
-			var i = this.__NumberInfo(this.Source);
-			//integer
-			
-			//, remove // 001 => 1;
-			i[2] = i[2].replace(/\,/gi,"").replace(/(^[0]+\d|^[0])/,function(s){
-				var lastChar = s.charAt(s.length-1);
-				return lastChar == "0" ? "0" : lastChar;
-			});
-			
-			// minors
-			if(i[2] !== "0")  i[1] = i[1].replace(/(\-|\-\s)$/,function(s){ i[2] = "-" + i[2]; return ""; });
-			
-			//number
-			if( (i[2]=="")  && (i[3]=="" )) i[5] = "";
-			if( (i[2]!=="") && (i[3]=="" )) i[5] = i[2];
-			if( (i[2]!=="") && (i[3]!=="")) i[5] = i[2]+i[3];
-			if( (i[2]=="")  && (i[3]!=="")) i[5] = "0"+i[3];
-			//float
-			if( i[3] !== "") i[3] = "0"+i[3];
-			//nothing
-			if( i[2] == "") i[2] = "0";
-			if( i[3] == "") i[3] = "0";
-			if( i[5] == "") i[5] = "0";
 		
+		isNotANumber:function(){ if((new StringNumberInfo(this.Source)).get("number").length) return true; return false; },
+		isANumber   :function(){ return !this.isNotANumber(); },
+		getNumberInfo : function(spot){
+			//getInfo
+			var info = new StringNumberInfo(this.Source);
+			info.fixNumberInfo();
+			
 			//result
-			if(typeof spot == "number") return i[spot];
-			var info =  { "prefix" : i[1], "suffix" : i[4], "integer" : i[2] * 1, "floatValue" : i[3] * 1, "number" : i[5] };
-			if(typeof spot == "string") return info[spot];
+			if(typeof spot == "number") switch(spot){
+				case 0: return info.get("prefix"); break;
+				case 2: return info.get("integer"); break;
+				case 3: return info.get("floatValue"); break;
+				case 4: return info.get("suffix"); break;
+				case 5: return info.get("number"); break;
+			}
+			
+			var info =  { 
+				"prefix"     : info.get("prefix"), 
+				"suffix"     : info.get("suffix"), 
+				"integer"    : info.get("integer"), 
+				"floatValue" : info.get("floatValue"), 
+				"number"     : info.get("number")
+			};
+			if(typeof spot == "string") return info.get(spot);
 			return info;
 		},
 		setNumberInfo : function(value,position){
@@ -2845,7 +2913,7 @@
 			}
 			return true;
 		},
-		"DataConstructor#QueryData":function(querys){
+		"DataConstructor#QueryDataInfo":function(querys){
 			this.keymap(OUTERSPLIT(querys,",",["()"]),function(query){
 				var querySplit = [];
 				query.trim()
@@ -2861,7 +2929,7 @@
 			if(value == "*" || value == "") return true;
 			if(typeof value == "undefined") return true;
 			
-			var judgement, inspectData = DataConstructorInit("QueryData",value);
+			var judgement, inspectData = DataConstructorInit("QueryDataInfo",value);
 			
 			inspectData.each(function(querys,queryCase,index){
 				//
@@ -2923,7 +2991,7 @@
 		"QUERY":function(query,root){
 			if(typeof query !== "string" || ISNOTHING(query)) return [];
 			var root      = ISDOCUMENT(root)?document.body.parentElement:ISELNODE(root)?root:document.body.parentElement;			
-			var queryData = DataConstructorInit("QueryData",query);
+			var queryData = DataConstructorInit("QueryDataInfo",query);
 			var result = [];
 			NODY.FEEDERDOWN(
 				root,
