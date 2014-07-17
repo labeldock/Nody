@@ -204,22 +204,22 @@
 		"map":function(f){ var r = []; this.each(function(v,k,i){ r.push(f(v,k,i)); }); return r; },
 		"trace":function(m){ console.log((m?m+" ":"")+TOSTRING(this.Source)); }
 	};
-	W.makeDataConstructor = function(n,m){
-		if(typeof n !== "string" || typeof m !== "function") return console.warn("makeDataConstructor::worng arguments!");
-		NativeCore.DataConstructor[n]=function(){ this.Source={};m.apply(this,Array.prototype.slice.call(arguments)); };
-		NativeCore.DataConstructor[n].prototype = {"constructor":m};
-		for(var key in dataConstructorPrototype) NativeCore.DataConstructor[n].prototype[key] = dataConstructorPrototype[key];
-		window[n] = NativeCore.DataConstructor[n];
+	W.makeStructure = function(n,m){
+		if(typeof n !== "string" || typeof m !== "function") return console.warn("makeStructure::worng arguments!");
+		NativeCore.Structure[n]=function(){ this.Source={};m.apply(this,Array.prototype.slice.call(arguments)); };
+		NativeCore.Structure[n].prototype = {"constructor":m};
+		for(var key in dataConstructorPrototype) NativeCore.Structure[n].prototype[key] = dataConstructorPrototype[key];
+		window[n] = NativeCore.Structure[n];
 	};
 	//Data가 
-	DataConstructorInit = function(n,o){ return (o instanceof W[n]) ? o : new W[n](o); };
+	StructureInit = function(n,o){ return (o instanceof W[n]) ? o : new W[n](o); };
 	//Kit:Core
 	W.makeSingleton = function(n,m,i){
 		var o=i?i:function(){};
 		for(var cname in m) {
-			if(typeof cname == "string" && cname.indexOf("DataConstructor#")==0){
-				var dataName = cname.substr(16);
-				if( dataName.length > 0) W.makeDataConstructor(dataName,m[cname]);
+			if(typeof cname == "string" && cname.indexOf("Structure#")==0){
+				var dataName = cname.substr(10);
+				if( dataName.length > 0) W.makeStructure(dataName,m[cname]);
 				delete m[cname];
 			}
 		}
@@ -245,5 +245,5 @@
 	Getters:[],
 	Singletons:{},
 	Modules:{},
-	DataConstructor:{}
+	Structure:{}
 }));

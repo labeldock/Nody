@@ -4,7 +4,7 @@
 // lincense               // MIT lincense
 //Nody CoreFoundation
 (+(function(W,NativeCore){
-	var version = "0.3.4";
+	var version = "0.3.5";
 	
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
 	
@@ -200,7 +200,7 @@
 	};
 	//Getter:Core
 	W.makeGetter    = function(n,m){ var name=n.toUpperCase(); W[name]=m; NativeCore.Getters.push(name); };
-	dataConstructorPrototype = {
+	structruePrototype = {
 		"get":function(key){ if(key) return this.Source[key]; return this.Source; },
 		"empty":function(){ for(var k in this.Source) delete this.Source[k]; return this.Source; },
 		"replace":function(data){ this.empty(); for(var k in data) this.Source[k] = data[k]; return this.Source; },
@@ -209,22 +209,22 @@
 		"map":function(f){ var r = []; this.each(function(v,k,i){ r.push(f(v,k,i)); }); return r; },
 		"trace":function(m){ console.log((m?m+" ":"")+TOSTRING(this.Source)); }
 	};
-	W.makeDataConstructor = function(n,m){
-		if(typeof n !== "string" || typeof m !== "function") return console.warn("makeDataConstructor::worng arguments!");
-		NativeCore.DataConstructor[n]=function(){ this.Source={};m.apply(this,Array.prototype.slice.call(arguments)); };
-		NativeCore.DataConstructor[n].prototype = {"constructor":m};
-		for(var key in dataConstructorPrototype) NativeCore.DataConstructor[n].prototype[key] = dataConstructorPrototype[key];
-		window[n] = NativeCore.DataConstructor[n];
+	W.makeStructure = function(n,m){
+		if(typeof n !== "string" || typeof m !== "function") return console.warn("makeStructure::worng arguments!");
+		NativeCore.Structure[n]=function(){ this.Source={};m.apply(this,Array.prototype.slice.call(arguments)); };
+		NativeCore.Structure[n].prototype = {"constructor":m};
+		for(var key in structruePrototype) NativeCore.Structure[n].prototype[key] = structruePrototype[key];
+		window[n] = NativeCore.Structure[n];
 	};
 	//Data가 
-	DataConstructorInit = function(n,o){ return (o instanceof W[n]) ? o : new W[n](o); };
+	StructureInit = function(n,o){ return (o instanceof W[n]) ? o : new W[n](o); };
 	//Kit:Core
 	W.makeSingleton = function(n,m,i){
 		var o=i?i:function(){};
 		for(var cname in m) {
-			if(typeof cname == "string" && cname.indexOf("DataConstructor#")==0){
-				var dataName = cname.substr(16);
-				if( dataName.length > 0) W.makeDataConstructor(dataName,m[cname]);
+			if(typeof cname == "string" && cname.indexOf("Structure#")==0){
+				var dataName = cname.substr(10);
+				if( dataName.length > 0) W.makeStructure(dataName,m[cname]);
 				delete m[cname];
 			}
 		}
@@ -250,7 +250,7 @@
 	Getters:[],
 	Singletons:{},
 	Modules:{},
-	DataConstructor:{}
+	Structure:{}
 }));
 //Nody Foundation
 (+(function(W){
@@ -674,7 +674,7 @@
 		},
 		"ISMEANING":function(o){ return !ISNOTHING(o); },
 		"ISENOUGH" :function(o){ return !ISNOTHING(o); },
-		"DataConstructor#StringNumberInfo":function(nv){
+		"Structure#StringNumberInfo":function(nv){
 			var i = /([\D]*)(([\d\,]+|)+(\.[\d]+|))([\D]*)/.exec(nv);
 			var n = /([0]*)(.*)/.exec(i[2]);
 			// i[1] prefix
@@ -2913,7 +2913,7 @@
 			}
 			return true;
 		},
-		"DataConstructor#QueryDataInfo":function(querys){
+		"Structure#QueryDataInfo":function(querys){
 			this.keymap(OUTERSPLIT(querys,",",["()"]),function(query){
 				var querySplit = [];
 				query.trim()
@@ -2929,7 +2929,7 @@
 			if(value == "*" || value == "") return true;
 			if(typeof value == "undefined") return true;
 			
-			var judgement, inspectData = DataConstructorInit("QueryDataInfo",value);
+			var judgement, inspectData = StructureInit("QueryDataInfo",value);
 			
 			inspectData.each(function(querys,queryCase,index){
 				//
@@ -2991,7 +2991,7 @@
 		"QUERY":function(query,root){
 			if(typeof query !== "string" || ISNOTHING(query)) return [];
 			var root      = ISDOCUMENT(root)?document.body.parentElement:ISELNODE(root)?root:document.body.parentElement;			
-			var queryData = DataConstructorInit("QueryDataInfo",query);
+			var queryData = StructureInit("QueryDataInfo",query);
 			var result = [];
 			NODY.FEEDERDOWN(
 				root,
