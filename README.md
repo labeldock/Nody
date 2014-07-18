@@ -1,36 +1,100 @@
 Nody.js
 =======
 
-# introduce #
-nody.js DHTML javascript lib
-(developement version)
+# help me #
+```
+	This is not a complete sentence in English. Please help me to write English
+```
 
-# 한국어 소개 #
+
+# Table of Contents
+  - [Introduce](#introduce)
+  - [Featrue](#feature)
+  - [Orientation](#orientation)
+  - [Simple showcase](#simple-showcase)
+    - [Tag Generator](#showcase-tag-generator)
+      - [Case1](#showcase-tag-generator-01)
+      - [Case2](#showcase-tag-generator-02)
+      - [Case3](#showcase-tag-generator-03)
+      - [Case4](#showcase-tag-generator-04)
+    - [셀렉트](#showcase-select)
+      - [Case1](#showcase-select-01)
+      - [Case2](#showcase-select-02)
+    - [Enumerate](#showcase-enumerate)
+      - [Each](#showcase-enumerate-each)
+      - [Map](#showcase-enumerate-map)
+      - [Inject](#showcase-enumerate-inject)
+      - [Each back](#showcase-enumerate-eachback)
+      - [Object each](#showcase-enumerate-object-each)
+    - [Parsing](#showcase-parsing)
+    - [Type Inspect](#showcase-type-inspect)
+      - [Type::Is](#showcase-type-inspect-is)
+      - [Type::As](#showcase-type-inspect-as)
+    - [String](#showcase-string)
+      - [ByteSize](#showcase-string-01) 
+      - [String Model](#showcase-string-02) 
+    - [Number](#showcase-number)
+    - [Module](#showcase-module)
+      - [Module::new](#showcase-module-new)
+      - [Module::super](#showcase-module-super)
+      - [Module::Inheritance](#showcase-module-inheritance)
+
+
+<a name="introduce"/>
+# introduce #
+
+Nody.js is inline style DHTML javascript library.
+Now 'nody' is developement version.
+api change from time to time be until version 1.0.
+Api stated in document was completed.
+
+
 Nody.js는 DHTML 페이지를 만들기위한 라이브러리이다.
 개발버전이며 인터페이스를 완성하고 있으며 1.0이 될때까지 내부적으로 수시로 api가 변경될 예정이다.
 해당 도큐먼트에 노출된 API는 완성체이며 api변경은 없을 예정이다.
 
-## 특징 #
+
+
+<a name="feature"/>
+## Featrue #
+### English #
+1. Node create intuitive
+2. Line development-oriented
+3. Interface implementations exist
+4. Can imitate object-oriented development.
+ 
+
+### Korean #
 1. 직관적인 Node 생성이 가능하다.
 2. 인라인 코딩을 지향한다.
 3. 각종 인터페이스 구현체가 존재한다.
 4. 코어만 따로 띄어내어 객체지향 개발을 흉내낼수도 있다.
 
-## 알아둘점 #
+
+
+<a name="orientation"/>
+## Orientation #
 본 라이브러리는 로직의 통일성과 손쉬운 구현을 중요시여겨 객체지향 모델을 따라 만들어졌다.
 따라서 코드의 실행시간은 여타 성숙한 자바스크립트 라이브러리에 비해 느릴수 있으나 최적화 작업은 계속 진행되고 있다.
 
 
-## 간단예제 #
-본 라이브러리의 기본적인 컨샙을 이해하기 위한 예제이다.
 
-### 태그생성 #
+<a name="simple-showcase"/>
+## Simple showcase #
+To understand the basic concepts of this library for example.
+
+
+
+<a name="showcase-tag-generator"/>
+### Tag Generator #
 _EL, 또는 _[태그이름] 을 사용하여 태그생성이 가능하다.
 ```
 아래 html결과물은 실질적으로 개행이 되지 않으나 이해를 돕기위해 개행과 들여쓰기를 집어넣었다.
 ```
 
-#### 생성방법 1 #
+
+<a name="showcase-tag-generator-01"/>
+#### Case 1 #
 css 스타일로 구현 가능
 
 ```javascript
@@ -40,7 +104,8 @@ css 스타일로 구현 가능
         <div id="hello" class="world" my="code" disabled>foo</div>
 ```
 
-#### 생성방법 2 #        
+<a name="showcase-tag-generator-02"/>
+#### Case 2 #        
 _[tagName] 방식으로 가능
 
 ```javascript
@@ -50,7 +115,8 @@ _[tagName] 방식으로 가능
         <li>helloWorld</li>
 ``` 
 
-#### 생성방법 3 #
+<a name="showcase-tag-generator-03"/>
+#### Case 3 #
 파라메터를 중첩하여 생성가능
 
 ```javascript
@@ -66,7 +132,8 @@ _[tagName] 방식으로 가능
         </ul>
 ``` 
 
-#### 생성방법 4 #
+<a name="showcase-tag-generator-04"/>
+#### Case 4 #
 테이블 생성예제
 
 ```javascript
@@ -86,9 +153,10 @@ _[tagName] 방식으로 가능
         </table>
 ```
 
-
+<a name="showcase-select"/>
 ### 셀렉트 #
 
+<a name="showcase-select-01"/>
 #### 선택방법 1 #
 ```javascript
         FIND("div.target");
@@ -96,6 +164,7 @@ _[tagName] 방식으로 가능
         //
 ```
 
+<a name="showcase-select-02"/>
 #### 선택방법 2 #
 ```javascript
         FIND("div.target",jQuery);
@@ -110,8 +179,10 @@ _[tagName] 방식으로 가능
         </script>
 ```
 
-### 배열처리 #
+<a name="showcase-enumerate"/>
+### enumerate #
 
+<a name="showcase-enumerate-each"/>
 #### each #
 ```javascript
        _Array([1,2,3]).each(function(value,index){
@@ -122,7 +193,8 @@ _[tagName] 방식으로 가능
        //log => 3,2
 ```
 
-#### map #
+<a name="showcase-enumerate-map"/>
+#### Map #
 ```javascript
         _Array([1,3,5]).map(function(v){
             return v+1;
@@ -130,7 +202,8 @@ _[tagName] 방식으로 가능
         // => [2,4,6]
 ```
 
-#### inject #
+<a name="showcase-enumerate-inject"/>
+#### Inject #
 ```javascript
         _Array([2,4,6]).inject({},function(injectObject,value,index){
             injectObject[index] = value;
@@ -138,7 +211,8 @@ _[tagName] 방식으로 가능
         //=>{0:2,1:4,2:6}
 ```
 
-#### eachback #
+<a name="showcase-enumerate-eachback"/>
+#### Eachback #
 ```javascript
        _Array([1,2,3]).eachback(function(value,index){
            console.log(value,index)
@@ -148,7 +222,8 @@ _[tagName] 방식으로 가능
        //log => 1,0
 ```
 
-#### object each #
+<a name="showcase-enumerate-object-each"/>
+#### Object each #
 _Array와 마찬가지로 _Object도 동일하게 동작하도록 하는게 원칙입니다.
 ```javascript
         var sample = [];
@@ -159,7 +234,9 @@ _Array와 마찬가지로 _Object도 동일하게 동작하도록 하는게 원�
         //=>["12", "23", "45"]
 ```
 
-### 파싱 #
+
+<a name="showcase-parsing"/>
+### Parsing #
 TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브젝트로  파싱 가능하다.
 ```javascript
         TOOBJECT("{'hello':'world','foo':'bar','1':2}");
@@ -171,8 +248,11 @@ TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브�
         //but top case is 10x more fast (native json parsing)
 ```
 
+
+<a name="showcase-type-inspect"/>
 ### TypeInsepct #
 
+<a name="showcase-type-inspect-is"/>
 #### type::is #
 ```javascript
         
@@ -197,6 +277,7 @@ TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브�
         _Type(0).is("nothing string"); //=> false
 ```
 
+<a name="showcase-type-inspect-as"/>
 #### type::as #
 as 는 스트링 값만을 위한 api이다
 ```javascript
@@ -204,8 +285,11 @@ as 는 스트링 값만을 위한 api이다
         _Type("        ").as("nothing"); //=> true
 ```
 
-### 글자 #
 
+<a name="showcase-string"/>
+### String #
+
+<a name="showcase-string-01"/>
 #### byteSize #
 바이트사이즈를 출력할수 있다.
 ```javascript
@@ -213,6 +297,8 @@ as 는 스트링 값만을 위한 api이다
         _String("맥도널드").getByteSize(); //=>8
         _String("マクドナルド").getByteSize(); //=>12
 ```
+
+<a name="showcase-string-02"/>
 #### string model #
 class attribute 같은 string의 추가제거에 사용가능하다.
 ```javascript
@@ -221,8 +307,9 @@ class attribute 같은 string의 추가제거에 사용가능하다.
         _String("McDonald's").removeModel("McDonald's").get(); //=>""
 ```
 
+<a name="showcase-number"/>
 ### 숫자 #
-Nody는 글자사이의 숫자를 인식한다. 내부적으로 숫자로
+Nody는 글자사이의 숫자를 인식한다. 내부적으로 숫자를 글자로 취급한다.
 ```javascript
         _Number(3000).getNumber(); //=> "3000"
         _Number(3000).getDecimal(); //=> "3,000"
@@ -235,12 +322,11 @@ Nody는 글자사이의 숫자를 인식한다. 내부적으로 숫자로
         
 ```
 
+<a name="showcase-module"/>
+### Module (Like Class) #
+Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 흉내내기 위한 api이다.
 
-### 모듈(Like Class) #
-Nody의 모듈은 클래스와 비슷한 개념이다.
-
-#### 모듈생성 #
-
+<a name="showcase-module-new"/>
 #### new 호출 #
 ```javascript
     makeModule("Cat",{},function(name){ console.log(name+" : 'Meow'"); });
@@ -252,6 +338,7 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
     var blueCat = _Cat("blueCat");    // console.log => BlueCat : 'Meow'
 ```
 
+<a name="showcase-module-super"/>
 #### super 호출 #
 
 ```javascript
@@ -275,8 +362,8 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
         shockDog.bark(); // => "bark!!"
 ```
 
-
-#### 상속 #
+<a name="showcase-module-inheritance"/>
+#### Inheritance #
         
 ```javascript
         extendModule("Zombie","ZombieDog",{
@@ -292,6 +379,4 @@ Nody의 모듈은 클래스와 비슷한 개념이다.
         zombieDog.bark();
         zombieDog.getEnergy(); // => 2
 ```
-        
-
 
