@@ -4,7 +4,7 @@
 // lincense               // MIT lincense
 //Nody CoreFoundation
 (+(function(W,NativeCore){
-	var version = "0.3.5";
+	var version = "0.3.5.1";
 	
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
 	
@@ -751,11 +751,12 @@
 				var ns2 = (new StringNumberInfo(numberSplit[2])).get();
 				//
 				var nprefix = ns1.prefix;
-				var nzeroLen = ns1.prefixZero.length + ns1.integer.length ;
+				var nzeroLen = !!ns1.prefixZero ? ns1.prefixZero.length + ns1.integer.length : 0 ;
 				//
 				var numv1 = TONUMBER(ns1.number);
 				var numv2 = TONUMBER(ns2.number);
 				//
+				
 				var chov  = 0;
 				if(numv1 > numv2){ chov = numv2+Math.floor(Math.random()*(numv1-numv2+1));
 				} else { chov = numv1+Math.floor(Math.random()*(numv2-numv1+1)); }
@@ -1529,7 +1530,6 @@
 		},
 		getLength:function(){
 			var info = this.getContentInfo();
-			console.log("info##",TOSTRING(info));
 			if(info) switch(info.type){
 				case "rangeNumber": return info.maxLength; break;
 				case "randomArray": return info.maxLength; break;
@@ -1544,6 +1544,7 @@
 				switch(info.type){
 					case "rangeNumber":
 						return DATAMAP(info.pattern,function(pvalue){
+							console.log("info.value",info.value,RNUMBER(info.value),pvalue);
 							return RNUMBER(info.value) + pvalue;
 						});
 						break;
@@ -1581,8 +1582,11 @@
 				var tileData = content.getContents(maxLength);
 				for(var i=0,l=tileData.length;i<l;i++)result[i].push(tileData[i]);
 			});
-			console.log("result",result);
 			return result;
+		},
+		getRowContents:function(index){
+			index = typeof index == "number" ? index : 0;
+			return this.getContents(index+1)[index];
 		},
 		getJoinContents:function(joinText,length){
 			if(typeof joinText == "number"){
