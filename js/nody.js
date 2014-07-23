@@ -1588,6 +1588,12 @@
 			index = typeof index == "number" ? index : 0;
 			return this.getContents(index+1)[index];
 		},
+		getColumnContents:function(index,length){
+			index = typeof index == "number" ? index : 0;
+			return DATAMAP(this.getContents(length),function(row){
+				return row[index];
+			});
+		},
 		getJoinContents:function(joinText,length){
 			if(typeof joinText == "number"){
 				length   = joinText;
