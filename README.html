@@ -1,0 +1,497 @@
+<h1>Nody.js</h1>
+
+<h1>help me</h1>
+
+<p><code>
+    This is not a complete sentence in English. Please help me to write English
+</code></p>
+
+<h1>Table of Contents</h1>
+
+<ul>
+<li><a href="#introduce">Introduce</a></li>
+<li><a href="#feature">Featrue</a></li>
+<li><a href="#orientation">Orientation</a></li>
+<li><a href="#simple-showcase">Simple showcase</a>
+
+<ul>
+<li><a href="#showcase-tag-generator">Tag Generator</a>
+
+<ul>
+<li><a href="#showcase-tag-generator-01">Case1</a></li>
+<li><a href="#showcase-tag-generator-02">Case2</a></li>
+<li><a href="#showcase-tag-generator-03">Case3</a></li>
+<li><a href="#showcase-tag-generator-04">Case4</a></li>
+</ul>
+</li>
+<li><a href="#showcase-select">셀렉트</a>
+
+<ul>
+<li><a href="#showcase-select-01">Case1</a></li>
+<li><a href="#showcase-select-02">Case2</a></li>
+</ul>
+</li>
+<li><a href="#showcase-enumerate">Enumerate</a>
+
+<ul>
+<li><a href="#showcase-enumerate-each">Each</a></li>
+<li><a href="#showcase-enumerate-map">Map</a></li>
+<li><a href="#showcase-enumerate-inject">Inject</a></li>
+<li><a href="#showcase-enumerate-eachback">Each back</a></li>
+<li><a href="#showcase-enumerate-object-each">Object each</a></li>
+</ul>
+</li>
+<li><a href="#showcase-parsing">Parsing</a></li>
+<li><a href="#showcase-type-inspect">Type Inspect</a>
+
+<ul>
+<li><a href="#showcase-type-inspect-is">Type::Is</a></li>
+<li><a href="#showcase-type-inspect-as">Type::As</a></li>
+</ul>
+</li>
+<li><a href="#showcase-string">String</a>
+
+<ul>
+<li><a href="#showcase-string-01">ByteSize</a></li>
+<li><a href="#showcase-string-02">String Model</a></li>
+</ul>
+</li>
+<li><a href="#showcase-number">Number</a></li>
+<li><a href="#showcase-module">Module</a>
+
+<ul>
+<li><a href="#showcase-module-new">Module::new</a></li>
+<li><a href="#showcase-module-super">Module::super</a></li>
+<li><a href="#showcase-module-inheritance">Module::Inheritance</a></li>
+<li><a href="#showcase-module-veriable">Module::Default Veriable</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#version-info">Version</a></li>
+</ul>
+
+
+<p><a name="introduce"/></p>
+
+<h1>introduce</h1>
+
+<p>Nody.js is inline style DHTML javascript library.
+Now &lsquo;nody&rsquo; is developement version.
+api change from time to time be until version 1.0.
+Api stated in document was completed.</p>
+
+<p>Nody.js는 DHTML 페이지를 만들기위한 라이브러리이다.
+개발버전이며 인터페이스를 완성하고 있으며 1.0이 될때까지 내부적으로 수시로 api가 변경될 예정이다.
+해당 도큐먼트에 노출된 API는 완성체이며 api변경은 없을 예정이다.</p>
+
+<p><a name="feature"/></p>
+
+<h2>Featrue</h2>
+
+<h3>English</h3>
+
+<ol>
+<li>Node create intuitive</li>
+<li>Line development-oriented</li>
+<li>Interface implementations exist</li>
+<li>Can imitate object-oriented development.</li>
+</ol>
+
+
+<h3>Korean</h3>
+
+<ol>
+<li>직관적인 Node 생성이 가능하다.</li>
+<li>인라인 코딩을 지향한다.</li>
+<li>각종 인터페이스 구현체가 존재한다.</li>
+<li>코어만 따로 띄어내어 객체지향 개발을 흉내낼수도 있다.</li>
+</ol>
+
+
+<p><a name="orientation"/></p>
+
+<h2>Orientation</h2>
+
+<p>본 라이브러리는 로직의 통일성과 손쉬운 구현을 중요시여겨 객체지향 모델을 따라 만들어졌다.
+따라서 코드의 실행시간은 여타 성숙한 자바스크립트 라이브러리에 비해 느릴수 있으나 최적화 작업은 계속 진행되고 있다.</p>
+
+<p><a name="simple-showcase"/></p>
+
+<h2>Simple showcase</h2>
+
+<p>To understand the basic concepts of this library for example.</p>
+
+<p><a name="showcase-tag-generator"/></p>
+
+<h3>Tag Generator</h3>
+
+<p>MAKE, 또는 MAKE_[태그이름] 을 사용하여 태그생성이 가능하다.
+<code>
+아래 html결과물은 실질적으로 개행이 되지 않으나 이해를 돕기위해 개행과 들여쓰기를 집어넣었다.
+</code></p>
+
+<p><a name="showcase-tag-generator-01"/></p>
+
+<h4>Case 1</h4>
+
+<p>css 스타일로 구현 가능</p>
+
+<p><code>javascript
+        MAKE("div#hello.world[my=code]:disabled::foo");
+</code>
+<code>html
+        &lt;div id="hello" class="world" my="code" disabled&gt;foo&lt;/div&gt;
+</code></p>
+
+<p><a name="showcase-tag-generator-02"/></p>
+
+<h4>Case 2 #</h4>
+
+<p>_[tagName] 방식으로 가능</p>
+
+<p><code>javascript
+        MAKE_LI("::helloWorld");
+</code>
+<code>html
+        &lt;li&gt;helloWorld&lt;/li&gt;
+</code></p>
+
+<p><a name="showcase-tag-generator-03"/></p>
+
+<h4>Case 3</h4>
+
+<p>파라메터를 중첩하여 생성가능</p>
+
+<p><code>javascript
+        MAKE_UL(
+          MAKE_LI(".item::list1"),
+          MAKE_LI(".item::list2")
+        );
+</code>
+<code>html
+        &lt;ul&gt;
+           &lt;li class="item"&gt;list1&lt;/li&gt;
+           &lt;li class="item"&gt;list2&lt;/li&gt;
+        &lt;/ul&gt;
+</code></p>
+
+<p><a name="showcase-tag-generator-04"/></p>
+
+<h4>Case 4</h4>
+
+<p>테이블 생성예제</p>
+
+<p><code>javascript
+        MAKE_TABLE("#my-table",
+            MAKE_A("::link1"),
+            MAKE_A("::link2"),
+            MAKE_A("::link3")
+        );
+</code>
+<code>html
+        &lt;table id="my-table"&gt;
+            &lt;tbody&gt;
+                &lt;tr&gt;&lt;td&gt;&lt;a&gt;link1&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+                &lt;tr&gt;&lt;td&gt;&lt;a&gt;link2&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+                &lt;tr&gt;&lt;td&gt;&lt;a&gt;link3&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+            &lt;/tbody&gt;
+        &lt;/table&gt;
+</code></p>
+
+<p><a name="showcase-select"/></p>
+
+<h3>셀렉트</h3>
+
+<p><a name="showcase-select-01"/></p>
+
+<h4>선택방법 1</h4>
+
+<p><code>javascript
+        FIND("div.target");
+        //result=&gt; [div.target,div.target...]  &lt;= native array
+        //
+</code></p>
+
+<p><a name="showcase-select-02"/></p>
+
+<h4>선택방법 2</h4>
+
+<p><code>javascript
+        FIND("div.target",jQuery);
+        //result=&gt; jQuery Object
+</code>
+응용
+<code>html
+        &lt;div class="target" foo="bar"&gt;&lt;/div&gt;
+        &lt;script&gt;
+            FIND("div.target",jQuery).attr("foo");
+            //result=&gt; bar
+        &lt;/script&gt;
+</code></p>
+
+<p><a name="showcase-enumerate"/></p>
+
+<h3>enumerate</h3>
+
+<p><a name="showcase-enumerate-each"/></p>
+
+<h4>each</h4>
+
+<p><code>javascript
+       _Array([1,2,3]).each(function(value,index){
+           console.log(value,index)
+       });
+       //log =&gt; 1,0
+       //log =&gt; 2,1
+       //log =&gt; 3,2
+</code></p>
+
+<p><a name="showcase-enumerate-map"/></p>
+
+<h4>Map</h4>
+
+<p><code>javascript
+        _Array([1,3,5]).map(function(v){
+            return v+1;
+        });
+        // =&gt; [2,4,6]
+</code></p>
+
+<p><a name="showcase-enumerate-inject"/></p>
+
+<h4>Inject</h4>
+
+<p><code>javascript
+        _Array([2,4,6]).inject({},function(injectObject,value,index){
+            injectObject[index] = value;
+        });
+        //=&gt;{0:2,1:4,2:6}
+</code></p>
+
+<p><a name="showcase-enumerate-eachback"/></p>
+
+<h4>Eachback</h4>
+
+<p><code>javascript
+       _Array([1,2,3]).eachback(function(value,index){
+           console.log(value,index)
+       });
+       //log =&gt; 3,2
+       //log =&gt; 2,1
+       //log =&gt; 1,0
+</code></p>
+
+<p><a name="showcase-enumerate-object-each"/></p>
+
+<h4>Object each</h4>
+
+<p><em>Array와 마찬가지로 </em>Object도 동일하게 동작하도록 하는게 원칙입니다.
+<code>javascript
+        var sample = [];
+        _Object({1:2,2:3,4:5}).each(function(value,key){
+            sample.push(key+value);
+        });
+        console.log(sample);
+        //=&gt;["12", "23", "45"]
+</code></p>
+
+<p><a name="showcase-parsing"/></p>
+
+<h3>Parsing</h3>
+
+<p>TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브젝트로  파싱 가능하다.
+<code>javascript
+        TOOBJECT("{'hello':'world','foo':'bar','1':2}");
+        TOOBJECT("{hello:world,foo:bar,1:2}");
+        TOOBJECT("hello:world,foo:bar,1:2");
+        /*
+        result(3 case equal) =&gt; {"hello":"world","foo":"bar","1",2}
+        */
+        //but top case is 10x more fast (native json parsing)
+</code></p>
+
+<p><a name="showcase-type-inspect"/></p>
+
+<h3>TypeInsepct</h3>
+
+<p><a name="showcase-type-inspect-is"/></p>
+
+<h4>type::is</h4>
+
+<p>```javascript</p>
+
+<pre><code>    _Type("123").is("string"); //=&gt; true
+    _Type("123").is("number"); //=&gt; false
+    _Type("123").is("nothing"); //=&gt; false
+    _Type("123").is("meaning"); //=&gt; true
+    _Type("0").is("meaning"); //=&gt; true
+    _Type(0).is("nothing"); //=&gt; true
+    _Type("123").is("string&gt;5"); //=&gt; false
+    _Type("123456").is("string&gt;5"); //=&gt; true
+    _Type(123456).is("text&gt;5"); //=&gt; true
+    _Type(123456).is("number&lt;100"); //=&gt; false
+    _Type({}).is("object"); //=&gt; true
+    _Type([]).is("array"); //=&gt; true
+    //multi
+    _Type([]).is("nothing array"); //=&gt; true
+    _Type({}).is("nothing object"); //=&gt; true
+    _Type(12).is("nothing number"); //=&gt; false
+    _Type(0).is("nothing number"); //=&gt; true
+    _Type(0).is("nothing text"); //=&gt; true
+    _Type(0).is("nothing string"); //=&gt; false
+</code></pre>
+
+<p>```</p>
+
+<p><a name="showcase-type-inspect-as"/></p>
+
+<h4>type::as</h4>
+
+<p>as 는 스트링 값만을 위한 api이다
+<code>javascript
+        _Type("123     ").as("string&gt;4"); //=&gt; false
+        _Type("        ").as("nothing"); //=&gt; true
+</code></p>
+
+<p><a name="showcase-string"/></p>
+
+<h3>String</h3>
+
+<p><a name="showcase-string-01"/></p>
+
+<h4>byteSize</h4>
+
+<p>바이트사이즈를 출력할수 있다.
+<code>javascript
+        _String("McDonald's").getByteSize(); //=&gt; 10
+        _String("맥도널드").getByteSize(); //=&gt;8
+        _String("マクドナルド").getByteSize(); //=&gt;12
+</code></p>
+
+<p><a name="showcase-string-02"/></p>
+
+<h4>string model</h4>
+
+<p>class attribute 같은 string의 추가제거에 사용가능하다.
+<code>javascript
+        _String("McDonald's").addModel("good").get(); //=&gt;"McDonald's good"
+        _String("McDonald's").removeModel("Mc").get(); //=&gt;"McDonald's"
+        _String("McDonald's").removeModel("McDonald's").get(); //=&gt;""
+</code></p>
+
+<p><a name="showcase-number"/></p>
+
+<h3>숫자</h3>
+
+<p>Nody는 글자사이의 숫자를 인식한다. 내부적으로 숫자를 글자로 취급한다.
+```javascript
+        <em>Number(3000).getNumber(); //=> &ldquo;3000&rdquo;
+        </em>Number(3000).getDecimal(); //=> &ldquo;3,000&rdquo;
+        <em>Number(&ldquo;halfby $3000 dance&rdquo;).number(); //=> 3000
+        </em>Number(&ldquo;halfby $3000 dance&rdquo;).getNumber(); //=> &ldquo;3000&rdquo;
+        <em>Number(&ldquo;halfby $3000 dance&rdquo;).getDecimal(); //=> &ldquo;3,000&rdquo;
+        </em>Number(&ldquo;halfby $3000 dance&rdquo;).getPrefix(); //=> &ldquo;halfby $&rdquo;
+        <em>Number(&ldquo;halfby $3000 dance&rdquo;).getSuffix(); //=> &ldquo; dance&rdquo;
+        </em>Number(&ldquo;hello world&rdquo;).number(); // => 0</p>
+
+<p>```</p>
+
+<p><a name="showcase-module"/></p>
+
+<h3>Module (Like Class)</h3>
+
+<p>Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 흉내내기 위한 api이다.</p>
+
+<p><a name="showcase-module-new"/></p>
+
+<h4>new 호출</h4>
+
+<p>```javascript
+    makeModule(&ldquo;Cat&rdquo;,{},function(name){ console.log(name+&ldquo; : &lsquo;Meow&rsquo;&rdquo;); });</p>
+
+<pre><code>// General way
+var pinkCat = new Cat("PinkCat"); // console.log =&gt; PinkCat : 'Meow'
+
+// Lazy way
+var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
+</code></pre>
+
+<p>```</p>
+
+<p><a name="showcase-module-super"/></p>
+
+<h4>super 호출</h4>
+
+<p>```javascript
+        makeModule(&ldquo;Dog&rdquo;,{
+            bark:function(){
+                return &ldquo;bark&rdquo;;
+            }
+        },function(type){
+            console.log(type+&ldquo;Dog are born&rdquo;);
+        });</p>
+
+<pre><code>    extendModule("ShockDog",{
+        bark:function(){
+            return this._super()+"!!";
+        }
+    },function(){
+        this._super("Shock");
+    });
+
+    var shockDog = new ShockDog(); // console.log =&gt; "ShockDog are born"
+    shockDog.bark(); // =&gt; "bark!!"
+</code></pre>
+
+<p>```</p>
+
+<p><a name="showcase-module-veriable"/></p>
+
+<h4>default instance veriable 호출</h4>
+
+<p>0.5에서 새로 추가되었습니다. 아직 테스트가 완료되지 않았습니다.
+```javascript
+        makeModule(&ldquo;Dog&rdquo;,{
+            &ldquo;var!name&rdquo;:&ldquo;Dog name&rdquo;
+        },function(){});</p>
+
+<pre><code>    var dog = new Dog();
+    dog.name; // =&gt; "Dog name"
+</code></pre>
+
+<p>```</p>
+
+<p><a name="showcase-module-inheritance"/></p>
+
+<h4>Inheritance</h4>
+
+<p>```javascript
+        extendModule(&ldquo;Zombie&rdquo;,&ldquo;ZombieDog&rdquo;,{
+          bark:function(){
+            this.energy = this.energy - 2;
+          }
+        },function(energyPoint){
+          this._super(energyPoint - 5);
+        });</p>
+
+<pre><code>    var zombieDog = new ZombieDog(10);
+    zombieDog.walk();
+    zombieDog.bark();
+    zombieDog.getEnergy(); // =&gt; 2
+</code></pre>
+
+<p>```
+<a name="version-info"/></p>
+
+<h2>Version info</h2>
+
+<h4>5.0 변동사항</h4>
+
+<ul>
+<li>모듈 생성시 초기화 값 지정이 생겼습니다. 이름을 &ldquo;var!&hellip;"으로 지으면 됩니다. (배타)</li>
+<li>_EL 이 MAKE로 바뀌었습니다.</li>
+<li>_DIV 와 같은 표현을 MAKE_DIV로 바꾸었습니다.</li>
+<li>DHTML과 관련없는 API가 줄었습니다</li>
+</ul>
+

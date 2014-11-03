@@ -38,7 +38,8 @@ Nody.js
       - [Module::new](#showcase-module-new)
       - [Module::super](#showcase-module-super)
       - [Module::Inheritance](#showcase-module-inheritance)
-
+	  - [Module::Default Veriable](#showcase-module-veriable)
+  - [Version](#version-info)
 
 <a name="introduce"/>
 # introduce #
@@ -87,7 +88,7 @@ To understand the basic concepts of this library for example.
 
 <a name="showcase-tag-generator"/>
 ### Tag Generator #
-_EL, 또는 _[태그이름] 을 사용하여 태그생성이 가능하다.
+MAKE, 또는 MAKE_[태그이름] 을 사용하여 태그생성이 가능하다.
 ```
 아래 html결과물은 실질적으로 개행이 되지 않으나 이해를 돕기위해 개행과 들여쓰기를 집어넣었다.
 ```
@@ -98,7 +99,7 @@ _EL, 또는 _[태그이름] 을 사용하여 태그생성이 가능하다.
 css 스타일로 구현 가능
 
 ```javascript
-        _EL("div#hello.world[my=code]:disabled::foo"); 
+        MAKE("div#hello.world[my=code]:disabled::foo"); 
 ```
 ```html
         <div id="hello" class="world" my="code" disabled>foo</div>
@@ -109,7 +110,7 @@ css 스타일로 구현 가능
 _[tagName] 방식으로 가능
 
 ```javascript
-        _LI("::helloWorld");
+        MAKE_LI("::helloWorld");
 ```
 ```html
         <li>helloWorld</li>
@@ -120,9 +121,9 @@ _[tagName] 방식으로 가능
 파라메터를 중첩하여 생성가능
 
 ```javascript
-        _UL(
-          _LI(".item::list1"),
-          _LI(".item::list2")
+        MAKE_UL(
+          MAKE_LI(".item::list1"),
+          MAKE_LI(".item::list2")
         );
 ```
 ```html
@@ -137,10 +138,10 @@ _[tagName] 방식으로 가능
 테이블 생성예제
 
 ```javascript
-        _TABLE("#my-table",
-            _A("::link1"),
-            _A("::link2"),
-            _A("::link3")
+        MAKE_TABLE("#my-table",
+            MAKE_A("::link1"),
+            MAKE_A("::link2"),
+            MAKE_A("::link3")
         );
 ```
 ```html
@@ -362,6 +363,19 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
         shockDog.bark(); // => "bark!!"
 ```
 
+<a name="showcase-module-veriable"/>
+#### default instance veriable 호출 #
+0.5에서 새로 추가되었습니다. 아직 테스트가 완료되지 않았습니다.
+```javascript
+        makeModule("Dog",{
+            "var!name":"Dog name"
+        },function(){});
+		
+		var dog = new Dog();
+		dog.name; // => "Dog name"
+```
+
+
 <a name="showcase-module-inheritance"/>
 #### Inheritance #
         
@@ -379,4 +393,10 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
         zombieDog.bark();
         zombieDog.getEnergy(); // => 2
 ```
-
+<a name="version-info"/>
+## Version info #
+#### 5.0 변동사항 #
+  - 모듈 생성시 초기화 값 지정이 생겼습니다. 이름을 "var!..."으로 지으면 됩니다. (배타)
+  - _EL 이 MAKE로 바뀌었습니다.
+  - _DIV 와 같은 표현을 MAKE_DIV로 바꾸었습니다.
+  - DHTML과 관련없는 API가 줄었습니다
