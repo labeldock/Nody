@@ -6,7 +6,7 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.4.9.1";
+	var version = "0.5.1";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -660,6 +660,17 @@
 		"CALLBACK" : function(f){ if(typeof f == "function"){ var args = Array.prototype.slice.apply(arguments); args.shift(); return APPLY(f,undefined,args); } },		
 		//1:길이와 같이 2: 함수호출
 		"TIMES":function(l,f){ l=TONUMBER(l); for(var i=0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
+		// 데이터의 갯수를 샘
+		"DATACOUNT" : function(v){
+			if( v == undefined || v == null ) return 0;
+			if( typeof v == "object"){
+				if( ISARRAY(v) ) return v.length;
+				var count = 0;
+				for(var key in v) count++;
+				return count;
+			}
+			return 1;
+		},
 		// 각각의 값의 function실행
 		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
 		// 각각의 값의 function실행
@@ -1118,6 +1129,7 @@
 		min :function(){
 			
 		},
+		count:function(){return DATACOUNT(this.Source) },
 		clone:function(){return CLONE(this.Source); },
 		save:function() {return this.__GlobalConstructor__(CLONE(this.Source)); },
 		//key value get setter
@@ -1202,6 +1214,7 @@
 		removeAll:function(){ for( var key in this.Source ) delete this.Source[key]; return this.Source; },
 		getRemove:function(){ var source = this.Source; _Array(arguments).stringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
 		remove:function(key){ delete this.Source[key]; return this; },
+		removeNothing:function(){ for(var key in this.Source) if(ISNOTHING(this.Source[key])) delete this.Source[key]; return this; },
 		//존재하지 않는 키벨류값을 적용함;
 		getTouch:function(key,value){ var m = CLONE(this.Source);_Array(key).stringFlatten().each(function(key){ if(!(key in m)) m[key] = value; }); return m; },
 		touch:function(key,value){ return this.replace( this.getTouch.apply(this,arguments) ); },
@@ -2952,6 +2965,7 @@
 		"PARENT":function(node){ if(!ISELNODE(node)) return ; return node.parentElement; },
 		//포커스 상태인지 검사합니다.
 		"HASFOCUS":function(node){ return document.activeElement == node; },
+		//하나의 CSS테스트
 		"THE":function(node,selectText,extraData){
 			var tagInfo = SELECTINFO(selectText);
 			for(var key in tagInfo){
@@ -3023,7 +3037,7 @@
 					default :
 						var nodeValue = ELATTR(node,key);
 						var infoValue = tagInfo[key];
-					
+						
 						if ( nodeValue == null ) {
 							return false;
 						} else if (infoValue == null) {
@@ -3055,13 +3069,18 @@
 		"Structure#QueryDataInfo":function(querys){
 			this.keymap(OUTERSPLIT(querys,",",["()"]),function(query){
 				var querySplit = [];
+				
 				query.trim()
-					.replace(/[\n]|[\s]{2,}/g," ")
-					.replace(/\s*(\>|\+)\s*/g,function(s){ return s.replace(/\s/g,""); })
-					.replace(/[\w\-\_\.\#\:]+(\s|\>|)/g,function(s){ querySplit.push(s); });
+				.replace(/[\n]|[\s]{2,}/g," ")
+				.replace(/\s*(\>|\+)\s*/g,function(s){ return s.replace(/\s/g,""); })
+				.replace(/(\[[\w\=\_\-]+\]|\:\w+\([^\)]+\)|[\w\-\_\.\#\:]+)(\s|\>|)/g,function(s){ 
+					querySplit.push(s);
+				});
+				
 				return querySplit;
 			});
 		},
+		//다수의 CSS테스트
 		"IS":function(node,value,advenceResult){
 			//
 			if(!ISELNODE(node)) return false;
@@ -3069,9 +3088,10 @@
 			if(typeof value == "undefined") return true;
 			
 			var judgement, inspectData = StructureInit("QueryDataInfo",value);
-			
+
 			inspectData.each(function(querys,queryCase,index){
-				//
+				// querys,queryCase,index
+				// "[name]" => ["name"], "[name]"
 				if(judgement == true) return false;
 				
 				if(querys.length == 0){
@@ -3760,9 +3780,8 @@
 		
 		//이벤트 타겟을 찾아냅니다.
 		"ELONTARGET":function(node){ if(ISWINDOW(node)){ node = W; } else { node = FINDZERO(node); if(!ISELNODE(node)) throw new Error("ELONTARGET::Element이 여야합니다." + TOS(node)); } return node; },
-		"ELON":function(node, eventName, eventHandler){
+		"ELON":function(node, eventName, eventHandler, useCapture){
 			// 메타이벤트를 임시 삭제함
-			
 			node = ELONTARGET(node);
 			if(!node || !eventHandler) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.");
 			
@@ -3772,7 +3791,7 @@
 			for(var i=0,l=events.length;i<l;i++){
 				//eventMeta.setProp(events[i],function(e){eventHandler.call(node,e);});
 				if (node.addEventListener){
-					node.addEventListener(events[i], handler, false); 
+					node.addEventListener(events[i], handler, useCapture==true ? true : false); 
 					 //node.addEventListener(events[i], eventMeta.getProp(events[i]), false); 
 				} else if (node.attachEvent){
 					node.attachEvent('on'+events[i], handler);
@@ -3985,7 +4004,7 @@
 	});
 	
 	
-	// 폼컨트롤
+	// 폼은 일정 폼 노드들을 컨트롤 하기위해 사용됩니다.
 	extendModule("Controls","Form",{
 		isValid        :function(f){ if(typeof f == "function") return f.call(this); return ISELNODE(this.Source); },
 		getSelects     :function(){ return FIND(this.SelectRule,this.Source); },
@@ -4028,7 +4047,6 @@
 			}).get();
 		},
 		checkin:function(hashMap,v2){
-			console.log("hashMap",hashMap);
 			if(typeof hashMap == "string"){
 				if(typeof v2 !== "string") v2 = TOSTRING(v2);
 				var map      = {};
@@ -4279,46 +4297,8 @@
 	});
 	window.whereis = function(name,index) { var m = _Contexts(name,index).whereIsContexts(index); return m; };
 	
-	// Model
+	// Model은 순수 데이터 모델에 접근하기 위해 사용합니다.
 	extendModule("Object","Model",{
-		validateInfo:function(key,value,abstract){
-			var validateData;
-			var validateResults = {};
-			if(typeof key == "string"){
-				validateData = TOOBJECT(value,key,true);
-			} else if(typeof key == "object"){
-				validateData = key;
-			} else {
-				console.error("validate값이 잘못되었습니다");
-				return undefined;
-			}
-			for(var name in validateData){
-				if( name in this.Source ){
-					validateResults[name] = _Type(this.Source[name]).info( validateData[name],true );
-				} else {
-					if(abstract == true) validateResults[name] = {"type":false,"condition":false,"success":false};
-				}
-			}
-			return validateResults;
-		},
-		validateResult:function(key,value,abstract){
-			var result = this.validateInfo(key,value,abstract);
-			for(var key in result) result[key] = result[key].success;
-			return result;
-		},
-		validate:function(key,value,abstract){
-			return _Ranking(true,false).worst( _Object(this.validateResult(key,value,abstract)).values() );
-		},
-		validateAll:function(validateValue){
-			return this.validate( this.save().empty(validateValue).remove(_Array(arguments).subarr(1).stringFlatten()).data() );
-		},
-		getItem:function(name){
-			if( typeof name == "string" && ISELNODE( this.DataContext ) ){
-				return FIND("[name=" + name + "]" ,this.DataContext);
-			} else {
-				console.warn("Serilizer::getItem은 Context가 element일때만 가능합니다.", findEL);
-			}
-		},
 		exports:function(context,forceData){
 			var exportContext = DATACONTEXT(context);
 			if(!exportContext) { exportContext = this.DataContext; }
@@ -4343,10 +4323,6 @@
 				}
 			}
 			console.error("Model :: 시리얼라이저 다음 초기화 인자가 올바르지 않습니다. => ", target);
-		},			
-		getData:function(k){ 
-			console.warn("deprecated::getData:: Model의 getData대신 data를 사용해주세요");
-			if(typeof k == "string"){ this.Source[k]; } else { return this.Source; } 
 		},
 		replace:function(key,value){
 			if(typeof key == "string"){
@@ -4960,7 +4936,10 @@
 	
 	makeModule("Loader",{
 		clear:function(){
-			if(this.LoaderCurrent) this.LoaderViews[this.LoaderCurrent] = _Array(this.LoaderContext.children).each(function(el){ ELREMOVE(el); }); return this;
+			if(this.LoaderCurrent) {
+				this.LoaderViews[this.LoaderCurrent] = _Array(this.LoaderContainer.children).each(function(el){ ELREMOVE(el); }); 
+			} 
+			return this;
 		},
 		clearSource:function(){
 			this.clear();
@@ -4968,11 +4947,11 @@
 			this.LoaderViews   = {};
 			return this;
 		},
-		executeScriptForCurrentEnum:function(loadArguments,completeBlock){
+		executeScriptForCurrentEnum:function(loadArguments){
 			var own      = this;
 			var loadEnum = this.LoaderCurrent;
 			//
-			var scripts = _Array(FIND("script",this.LoaderContext));
+			var scripts = _Array(FIND("script",this.LoaderContainer));
 			scripts.each(function(scriptDom){
 				var javascript = scriptDom.innerHTML;
 				try {
@@ -4982,51 +4961,46 @@
 					throw e;
 				}
 			});
-			if(typeof this.LoaderEvent == "object") {
-				if(loadEnum in this.LoaderEvent) {
-					var currentLoadEvent = this.LoaderEvent[loadEnum];
-					switch(typeof currentLoadEvent){
-						case "function":
-							currentLoadEvent.apply(this.LoaderContext,loadArguments);
-							break;
-						case "string":
-							if(/(\.js|\.js\s)$/.test(currentLoadEvent)){
-								var scriptPath = _Client.getAbsolutePath(currentLoadEvent,_Client.scriptUrl());
-								new Open(scriptPath,function(javascript){
-									try {
-										var r = eval("("+javascript+")");
-										if(typeof r == "function"){ r.apply(own.LoaderContext,loadArguments); }
-									} catch(e1) {
-										try {
-											eval(javascript);
-										} catch(e2) {
-											console.error("Loader::executeScriptForCurrentEnum 외부스크립트 오류 스크립트 구문 오류로 스크립트 실행이 정지되었습니다. => ",MAX(javascript,200));
-											throw e1;
-										}
-									}		
-								},function(){
-									console.error("Loader::executeScriptForCurrentEnum 외부스크립트를 가져오는데 실패하였습니다.. => ",currentLoadEvent," => ",scriptPath);
-								});
-							
-							} else {
-								console.error("Loader::executeScriptForCurrentEnum .js로 끝나는 자바스크립트만 가능합니다.");
+			
+			if(typeof this.LoaderEvent[loadEnum] == "string"){
+				if(/(\.js|\.js\s)$/.test(currentLoadEvent)){
+					var scriptPath = _Client.getAbsolutePath(currentLoadEvent,_Client.scriptUrl());
+					new Open(scriptPath,function(javascript){
+						try {
+							var r = eval("("+javascript+")");
+							if(typeof r == "function"){ r.apply(own.LoaderContainer,loadArguments); }
+						} catch(e1) {
+							try {
+								eval(javascript);
+							} catch(e2) {
+								console.error("Loader::executeScriptForCurrentEnum 외부스크립트 오류 스크립트 구문 오류로 스크립트 실행이 정지되었습니다. => ",MAX(javascript,200));
+								throw e1;
 							}
-							break;
-						default: break;
-					}
+						}		
+					},function(){
+						console.error("Loader::executeScriptForCurrentEnum 외부스크립트를 가져오는데 실패하였습니다.. => ",currentLoadEvent," => ",scriptPath);
+					});
+				
+				} else {
+					console.error("Loader::executeScriptForCurrentEnum .js로 끝나는 자바스크립트만 가능합니다.");
 				}
 			}
-			return APPLY(completeBlock,this);
 		},
-		statusChange:function(loadPath,loadEnum,after) { 
-			var result = CALL(this.LoaderBindEvent,this,loadPath,loadEnum,"before",this.LoaderContext);
-			if(result !== false) { 
-				CALL(after,this,function(){
-					CALL(this.LoaderBindEvent,this,loadPath,loadEnum,"after",this.LoaderContext);
-				});
-			}
-			return result;
+		statusComplete:function(appearName,openOrLoad,arguments){
+			// 로드가 완료되었을때
+			if( openOrLoad == "load") APPLY(this.LoaderEvent[appearName],this,arguments);
+			CALL(this.LoaderOpenEvent[appearName],this,arguments);
 		},
+		// load
+		// navname, [onen|load], starter method
+		statusWillChange:function(starter) { 
+			// 시작하기전 이전뷰가 사라진다고 통보
+			CALL(this.LoaderDisappearEvent[this.LoaderCurrent],this);
+			
+			// 로드 시작
+			CALL(starter,this);
+		},
+		//
 		link: function (linkText){
 			if(this.LoaderCurrent){
 				this.Source[this.LoaderCurrent] = linkText;
@@ -5035,55 +5009,67 @@
 				console.error("불러진 컨텐츠가 없습니다.");
 			}
 		},
+		//
 		load: function (loadEnum){
 			if(loadEnum in this.Source){
+				//전달되는 파라메터 입니다.
 				var loadArguments = Array.prototype.slice.call(arguments);
 				loadArguments.shift();
-				this.statusChange(loadEnum,"load",function(completeBlock){
+				
+				//
+				
+				this.statusWillChange(function(){
 					this.clear();
 					this.LoaderCurrent = loadEnum;
-					var own = this;
-					var loadPath  = this.Source[loadEnum];
+					var own            = this;
+					var loadPath       = this.Source[loadEnum];
+					
+					//함수일때
 					if(typeof loadPath == "function"){
 						var result = loadPath(loadEnum);
-						if(typeof result == "string"){ loadPath = result; }
+						if(ISELNODE(result) || (typeof result == "string") ) loadPath = result;
 					}
+					
 					//ELEMENT(s) or URL
 					if( typeof loadPath == "string" ){
 						
 						//indicator
-						var contextBound = {width:ELSTYLE(this.LoaderContext,"width"),height:ELSTYLE(this.LoaderContext,"height")};
+						var contextBound = {width:ELSTYLE(this.LoaderContainer,"width"),height:ELSTYLE(this.LoaderContainer,"height")};
 						var indicator;
+						var drawArguments = [contextBound,loadEnum].concat(loadArguments);
+						
 						if(typeof this.drawIndicator == "function"){
-							indicator = this.drawIndicator(contextBound);
+							indicator = this.drawIndicator.apply(own,drawArguments);
 							if(ISELNODE(indicator)) {
-								ELAPPEND(this.LoaderContext);
+								ELAPPEND(this.LoaderContainer);
 							} else {
 								indicator = undefined;
 							}
 						}
 						
-						_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") +_Util.base64Random(2),{
+						_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") +_Util.base36Random(2),{
 							"dataType":"dom",
 							"success":function(doms){
 								if(indicator) ELREMOVE(indicator);
-								_Array(doms).each(function(el){ ELAPPEND(own.LoaderContext,el); });
-								own.executeScriptForCurrentEnum(loadArguments,completeBlock);
+								_Array(doms).each(function(el){ ELAPPEND(own.LoaderContainer,el); });
+								own.executeScriptForCurrentEnum(loadArguments);
+								own.statusComplete(loadEnum,"load",loadArguments);
 							},
 							"error":function(){
 								if(indicator) ELREMOVE(indicator);
-								ELAPPEND(own.drawError(contextBound));
-								console.error("Loader::load 페이지를 불러오는데 실패하였습니다. :path => ",loadPath);
-								APPLY(completeBlock,own);
+								var errerDraw = own.drawError.apply(own,drawArguments);
+								if (ISELNODE(errerDraw)) ELAPPEND(own.LoaderContainer,errerDraw);
 							}
 						});
+						
 					} else {
 						var elfind = FIND(loadPath);
 						if( elfind.length < 1 ){
 							console.error("Loader::load 불러올 엘리먼트가 존재하지 않습니다. => ",loadPath);
 						} else {
-							_Array(elfind).each(function(el){ ELAPPEND(own.LoaderContext,el); });
+							_Array(elfind).each(function(el){ ELAPPEND(own.LoaderContainer,el); });
 							this.executeScriptForCurrentEnum(loadArguments,completeBlock);
+							own.statusComplete(loadEnum,"load",loadArguments);
 						}
 					}
 				});
@@ -5093,39 +5079,59 @@
 			return this;
 		},
 	    open: function (loadEnum) {
-			if(this.LoaderCurrent !== loadEnum) if(loadEnum in this.LoaderViews){
+			if(this.LoaderCurrent !== loadEnum) if(loadEnum in this.LoaderViews) {
+				
 				var openArgument = _Array(arguments).subarr(1).toArray();
-				this.statusChange(loadEnum,"open",function(completeBlock){
+				this.statusWillChange(function(){
 					var own = this;
 					this.clear();
 					this.LoaderCurrent = loadEnum;
-					this.LoaderViews[loadEnum].each( function(el){ ELAPPEND(own.LoaderContext,el); });
-					APPLY(completeBlock,own,openArgument);
+					this.LoaderViews[loadEnum].each( function(el){ ELAPPEND(own.LoaderContainer,el); });
+					this.statusComplete(loadEnum,"open",openArgument);
 				});
 			} else {
 				this.load(loadEnum);
 			}
 			return this;
 	    },
-		setLoadCompleteEvent:function(eventName,method){
-			if((typeof eventName == "string") && (typeof method == "function")){
-				this.LoaderEvent[eventName] = method;
-			} else {
-				console.warn("setLoadCompleteEvent 파라메터 에러",eventName,method)
+		//처음 로드될때
+		_setEvent:function(eventType,eventName,method){
+			if( typeof this[eventType] == "object" ){
+				if((typeof eventName == "string") && (typeof method == "function")){
+					this[eventType][eventName] = method;
+				} else {
+					console.warn("setLoadEvent 파라메터 에러",eventName,method)
+				}
 			}
 		},
-		"var!drawIndicator":undefined, /*function(bound){ return node }*/
+		setLoadEvent:function(eventName,method){
+			this._setEvent("LoaderEvent",eventName,method);
+		},
+		//열때마다 일어나는 이벤트
+		setOpenEvent:function(eventName,method){
+			this._setEvent("LoaderOpenEvent",eventName,method);
+		},
+		//보임이 없어질때마다 일어나는 이벤트
+		setDisappearEvent:function(eventName,method){
+			this._setEvent("LoaderDisappearEvent",eventName,method);
+		},
+		setSwitchEvent:function(eventName,openMethod,disappearMethod){
+			this.setOpenEvent(eventName,openMethod);
+			this.setDisappearEvent(eventName,disappearMethod);
+		},
+		"var!drawIndicator":function(bound){ return MAKE("div::Loading..."); }, /*function(bound){ return node }*/
 		"var!drawError":function(bound){ return MAKE("div::error load"); }
-	},function(context,navs,loadEvent,chageEvent){
+	},function(container,navs){
 		// context    => 컨텐츠를 채울 곳
 		// navs       => object: key value로 해당이 호출되면 context에 내용이 체워짐
 		// loadEvent  => navs key과 같은 데이터가 불러와질때 호출되는 이벤트
-		// chageEvent => 모든 이벤트의 집합
 		this.Source          = navs;
 		this.LoaderCurrent   = undefined;
-		this.LoaderContext   = FINDZERO(context);
-		this.LoaderEvent     = TOOBJECT(loadEvent);
-		this.LoaderBindEvent = chageEvent;
+		this.LoaderContainer = FINDZERO(container);
+		// 로드될때 이벤트입니다.
+		this.LoaderEvent     = {};
+		this.LoaderOpenEvent = {};
+		this.LoaderDisappearEvent = {};
 		this.LoaderViews     = {};
 	});
 	
@@ -5213,14 +5219,14 @@
 				}
 			});
 		},
-		managedDataChangePosition:function(leftPath,rightPath){
-			this.notification("nManagedDataChangePosition",[leftPath,rightPath]);
+		managedDataChangePosition:function(leftID,rightID){
+			this.notification("nManagedDataChangePosition",[leftID,rightID]);
 		},
-		managedDataRemove:function(path){
-			this.notification("nManagedDataRemove",[path]);
+		managedDataRemove:function(bindID){
+			this.notification("nManagedDataRemove",[bindID]);
 		},
-		managedDataAppend:function(path){
-			this.notification("nManagedDataAppend",[path]);
+		managedDataAppend:function(bindID,newManagedData){
+			this.notification("nManagedDataAppend",[bindID,newManagedData]);
 		},
 		managedDataBindEvent:function(bindID,key,value,sender){
 			var wasEventLock = this.notificationBindEventLock;
@@ -5444,7 +5450,7 @@
 	makeModule("ViewModel",{
 		needRenderView:function(depth,managedData,feedViews,viewController){
 			if (typeof this.Source[depth] == "function") {
-				var renderResult = this.Source[depth](managedData,feedViews);
+				var renderResult = this.Source[depth].call(managedData,managedData,feedViews);
 				if(ISELNODE(renderResult)){
 					return renderResult;
 				} else {
@@ -5454,7 +5460,7 @@
 				console.warn("경고::",depth,"depth의 ViewModel뷰모델의 렌더값이 입력되지 않았습니다.");
 			}
 			return MAKE_DIV({html:TOSTRING(managedData.Source)},feedViews);
-		}
+		},
 	},function(renderDepth){
 		this.Source = _Array(arguments).map(function(a){
 			if(typeof a == "string"){
@@ -5540,6 +5546,13 @@
 				console.warn("view컨트롤러 스코프 내에서만 action을 사용할수 있습니다.");
 			}
 		},
+		container:function(tagname){
+			if(this.scope){
+				var containerElement = CREATE(tagname);
+				this.scope.addContainerNode(this.BindID,containerElement);
+				return containerElement;
+			}
+		},
 		revertData:function(){
 			this.context.getDataWithPath(this.path);
 		},
@@ -5564,15 +5577,27 @@
 		getContextID:function(){
 			return this.context.ID;
 		},
+		findById:function(id){
+			if(this.BindID == id){
+				return this;
+			} else {
+				var findID;
+				this.Childrens.each(function(child){
+					findID = child.findById(id);
+					if(findID) return false;
+				});
+				return findID;
+			}
+		},
 		//인덱스를 옮길때 필요함
 		managedDataIndexExchange:function(changeTarget){
 			if(changeTarget){
-				var path1  = this.getPath();
-				var path2  = changeTarget.getPath();
+				var bindId1= this.BindID;
+				var bindId2= changeTarget.BindID;
 				var index1 = this.getIndex();
 				var index2 = changeTarget.getIndex();
 				this.Parent.Childrens.changeIndex(index1,index2);
-				DataContextNotificationCenter.managedDataChangePosition(path1,path2);
+				DataContextNotificationCenter.managedDataChangePosition(bindId1,bindId2);
 				return true;
 			}
 			return false;
@@ -5590,13 +5615,13 @@
 		//현재 데이터를 제거함
 		managedDataRemove:function(){
 			this.removeFromParent();
-			DataContextNotificationCenter.managedDataRemove(this.getPath());
+			DataContextNotificationCenter.managedDataRemove(this.BindID);
 		},
 		//하위 데이터를 추가함
 		managedDataAppend:function(data){
 			if(typeof data == "object") {
 				this.context.feedDownManagedDataMake(data,this);
-				DataContextNotificationCenter.managedDataAppend(this.getPath());
+				DataContextNotificationCenter.managedDataAppend(this.BindID,this.Childrens.getLast());
 			} else {
 				console.warn("managedDataAppend :: append data가 들어오지 않았습니다", data);
 			}
@@ -5642,31 +5667,62 @@
 			}
 		},
 		//노티피케이션
-		nManagedDataChangePosition:function(leftPath,rightPath){
-			this.needDisplay();
+		nManagedDataChangePosition:function(leftID,rightID){
+			var leftNode    = this.structureNodes[leftID];
+			var rightNode   = this.structureNodes[rightID];
+			if(leftNode && rightNode){
+				var leftHelper  = CREATE("div");
+				var rightHelper = CREATE("div");
+				ELBEFORE(leftNode,leftHelper);
+				ELBEFORE(rightNode,rightHelper);
+				ELBEFORE(leftHelper,rightNode);
+				ELBEFORE(rightHelper,leftNode);
+				ELREMOVE(leftHelper);
+				ELREMOVE(rightHelper);
+			}
 		},
-		nManagedDataRemove:function(path){
-			this.needDisplay();
+		nManagedDataRemove:function(bindID){
+			
+			if(this.structureNodes[bindID]){
+				var owner = this;
+				//바인드값 삭제
+				var removeBindNodeTarget = _Array();
+				DATAEACH(this.bindValueNodes,function(bindNode){
+					var hasNode = FINDZERO(bindNode[2],owner.structureNodes[bindID])
+					if(hasNode) removeBindNodeTarget.push(bindNode);
+				});
+				removeBindNodeTarget.each(function(bindNode){
+					owner.bindValueNodes.remove(bindNode);
+				});
+				//스트럭쳐 노드 삭제
+				ELREMOVE(this.structureNodes[bindID])
+				delete this.structureNodes[bindID];
+			}
+			//
+			if(this.containerNodes[bindID]) delete this.containerNodes[bindID];
 		},
-		nManagedDataAppend:function(path){
-			this.needDisplay();
+		nManagedDataAppend:function(bindID,newManagedData){
+			if(this.containerNodes[bindID]) this.needDisplay(newManagedData,this.containerNodes[bindID]);
 		},
 		nManagedDataBindEvent:function(bindID,key,value,sender){
-			DATAEACH(this.bindNodes,function(nodeData){
+			DATAEACH(this.bindValueNodes,function(nodeData){
 				if( (nodeData[0] == bindID) && (nodeData[1] == key) && (nodeData[2] != sender) ) {
 					ELVALUE(nodeData[2],value);
 				}
 			});
-			
+		},
+		addContainerNode:function(bindID,containerNode){
+			if( typeof bindID == "string" && ISELNODE(containerNode) ){
+				this.containerNodes[bindID] = containerNode;
+			}
 		},
 		addBindNode:function(element,managedData,dataKey){
-			
 			if( ISELNODE(element) ){
 				//값을 입력
 				ELVALUE( element, managedData.data(dataKey) );
 				
 				//바인드 값을 입력함
-				this.bindNodes.push( [managedData.BindID,dataKey,element] );
+				this.bindValueNodes.push( [managedData.BindID,dataKey,element] );
 				
 				//이벤트를 등록합니다.
 				switch(element.tagName.toLowerCase()){
@@ -5705,13 +5761,22 @@
 				}
 			});
 		},
-		needDisplay:function(path){
-			this.view.innerHTML= "";
+		needDisplay:function(managedData,rootElement){
+			//파라메터 두개가 존재하지 않으면 초기화 진행을 한다
+			if( (!managedData) && (!rootElement) ){
+				this.view.innerHTML= "";
+				this.bindValueNodes = _Array();
+				this.structureNodes = {};
+				this.containerNodes = {};
+			}
+			managedData     = managedData || this.managedData;
+			rootElement     = rootElement || this.view;
 			var viewController = this;
 			var feedCollection = ARRAYINARRAY(this.managedData.getDepth());
 			var lastFeed       = null;
+			var topLevel       = managedData.getLevel();
 			
-			this.managedData.feedUpManageData(function(managedData,depth){
+			managedData.feedUpManageData(function(managedData,depth){
 				
 				// 마지막 피드가 존재하지 않으면 depth값을 초기화함
 				if (lastFeed == null) lastFeed = depth;
@@ -5721,19 +5786,30 @@
 				
 				var renderResult;
 				
-				if (depth == 0) {
+				if (depth == topLevel) {
 					// 최상위 렌더링
 					var position
-					renderResult = viewController.viewModel.needRenderView(depth,managedData,feedCollection[1],viewController);
-					viewController.view.appendChild(renderResult);
-					feedCollection[1] = [];
+					renderResult = viewController.viewModel.needRenderView(depth,managedData,feedCollection[topLevel+1],viewController);
+					//루트에 추가
+					rootElement.appendChild(renderResult);
+					//컨테이너에 추가
+					if( viewController.containerNodes[managedData.BindID] ){
+						ELAPPEND(viewController.containerNodes[managedData.BindID],feedCollection[topLevel+1]);
+					} 
+					
+					feedCollection[topLevel+1] = [];
 				} else if (depth < lastFeed) {
 					// 렌더 피드가 올라감
 					var renderResult = viewController.viewModel.needRenderView(depth,managedData,feedCollection[lastFeed],viewController);
+					//컨테이너에 추가
+					if( viewController.containerNodes[managedData.BindID] ){ 
+						ELAPPEND(viewController.containerNodes[managedData.BindID],feedCollection[lastFeed])
+					};
+					//피드 초기화
 					feedCollection[lastFeed] = [];
 					feedCollection[depth].push(renderResult);
 				} else {
-					// 렌더 피드를 모음
+					// 최하위 피드모음
 					// 렌더 피드가 내려감
 					var renderResult = viewController.viewModel.needRenderView(depth,managedData,[],viewController);
 					feedCollection[depth].push(renderResult);
@@ -5742,26 +5818,155 @@
 				lastFeed = depth;
 				
 				// 그린내역을 기록함
-				//if(ISELNODE(renderResult) || ISTEXTNODE(renderResult)) viewController.drawStructure[managedData.path] = renderResult;
+				if(ISELNODE(renderResult) || ISTEXTNODE(renderResult)) viewController.structureNodes[managedData.BindID] = renderResult;
 				
 				// 현재 스코프를 지움
 				managedData.scope = undefined;
-			});
+				
+			},topLevel);
+		},
+		needDisplayWithViewModel:function(newViewModel){
+			this.viewModel = newViewModel;
+			this.needDisplay();
 		},
 		setManagedData:function(managedData){
+			if ("getRootManagedData" in managedData) managedData = managedData.getRootManagedData();
+			
 			if ( ISARRAY(managedData) ) {
 				this.managedData = managedData[0];
 			} else {
 				this.managedData = managedData;
 			}
+		},
+		needSelectable:function(allowMultiSelect,allowSelectableLevel){
+			if(allowMultiSelect == true) this.allowMultiSelect = true;
+			if(typeof allowSelectableLevel == "number") this.allowSelectableLevel = allowSelectableLevel;
+			if(this.allowSelectable == false){
+				this.allowSelectable = true;
+				var owner = this;
+				ELON(this.view,"click",function(e){
+					for(var bindId in owner.structureNodes){
+						if(e.target == owner.structureNodes[bindId]){
+							var selectManagedData = owner.managedData.findById(bindId);
+							if(selectManagedData){
+								if( selectManagedData.getLevel() == owner.allowSelectableLevel ){
+									owner.triggingSelectItems(bindId);
+								}
+							}
+						}
+					}
+				});
+			}
+		},
+		deselectAll:function(eventBlocking){
+			var owner = this;
+			if(this.selectIndexes.length > 0){
+				this.selectIndexes.each(function(bindID){
+					owner.shouldDeselectItem(owner.structureNodes[bindID]);
+				});
+				this.selectIndexes.clear();
+				if((eventBlocking != true) && this.selectItemDidChange)this.selectItemDidChange(this.selectIndexes);
+			}
+		},
+		triggingSelectItems:function(bindID){
+			if(this.allowMultiSelect == true){
+				if(this.selectIndexes.has(bindID)){
+					this.selectIndexes.remove(bindID);
+					this.shouldDeselectItem(this.structureNodes[bindID]);
+					if(this.selectItemDidChange)this.selectItemDidChange(this.selectIndexes);
+				} else {
+					this.selectIndexes.push(bindID);
+					this.shouldSelectItem(this.structureNodes[bindID]);
+					if(this.selectItemDidChange)this.selectItemDidChange(this.selectIndexes);
+				}
+			} else {
+				if(this.selectIndexes.length == 1 && this.selectIndexes.has(bindID)){
+					this.deselectAll();
+				} else {
+					this.deselectAll(true);
+					this.selectIndexes.push(bindID)
+					if(this.shouldSelectItem) this.shouldSelectItem(this.structureNodes[bindID]);
+					if(this.selectItemDidChange)this.selectItemDidChange(this.selectIndexes);
+				}
+			}
+		},
+		getSelectableManagedItem:function(){
+			var owner = this;
+			return this.selectIndexes.getMap(function(bindID){
+				return owner.managedData.findById(bindID);
+			}).compact();
+		},
+		"var!selectItemDidChange":undefined,
+		"var!shouldSelectItem":function(node){
+			ELSTYLE(node,"background","#dae8f2");
+		},
+		"var!shouldDeselectItem":function(node){
+			ELSTYLE(node,"background","none")
 		}
 	},function(view,managedData,viewModel){
 		this.view          = FINDZERO(view);
-		this.setManagedData(managedData)
-		this.viewModel     = viewModel;
-		//this.drawStructure = {};
-		this.bindNodes = [];
+		this.setManagedData(managedData);
+		this.viewModel     = viewModel || new ViewModel();
+		//선택관련 인자
+		this.allowSelectable  = false;
+		this.allowMultiSelect = false;
+		this.allowSelectableLevel = 1;
+		this.selectIndexes  = _Array();
+		//바인딩 관련 인자
+		this.bindValueNodes = [];
+		this.structureNodes = {};
+		this.containerNodes = {};
 		DataContextNotificationCenter.addObserver(this);
 	});
 	
+	makeModule("Finger",{
+		getPinchDistance:function(fx1,fy1,fx2,fy2){
+			return Math.sqrt(
+				Math.pow((fx1-fx2),2),
+				Math.pow((fy1-fy2),2)
+			)
+		},
+		pinch:function(method){
+			this.GestureListener["pinch"] = method;
+		}
+	},function(gestureView){
+		
+		this.Source = FINDZERO(gestureView);
+		console.log("gestureView",this.Source)
+		this.GestureListener = {};
+		this.StartPinchValue;
+		var finger = this;
+		if(this.Source){
+			ELON(document,"touchstart",function(e){
+				if (e.originalEvent.touches.length === 2) {
+					finger.StartPinchValue = finger.getPinchDistance(
+						 e.originalEvent.touches[0].pageX,
+						 e.originalEvent.touches[0].pageY,
+						 e.originalEvent.touches[1].pageX,
+						 e.originalEvent.touches[1].pageY
+					);
+				}
+				$(finger.Source).css("background","blue");
+			});
+			ELON(document,"touchmove",function(e){
+				if(finger.GestureListener[pinch] && finger.StartPinchValue && (e.originalEvent.touches.length === 2)){
+					var currentDistance = finger.getPinchDistance(
+						 e.originalEvent.touches[0].pageX,
+						 e.originalEvent.touches[0].pageY,
+						 e.originalEvent.touches[1].pageX,
+						 e.originalEvent.touches[1].pageY
+					);
+					finger.GestureListener[pinch]( ((finger.StartPinchValue / currentDistance) * 1) - 1 );
+				}
+				if(finger.GestureListener[pinch]) {
+					finger.GestureListener[pinch](e.scale - finger.PinchValue);
+					finger.PinchValue = e.scale;
+				}
+				console.log("gesturechange");
+			});
+			ELON(document,"touchend",function(e){
+				finger.StartPinchValue = undefined;
+			});
+		}
+	});
 })(window));

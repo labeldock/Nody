@@ -1,0 +1,331 @@
+@charset "UTF-8";
+@import 'nody-kit';
+/*
+	modernizer & look and feel support
+	auther        : hojugn ahn (open9.net)
+	target-compatibility : IE8+;
+	version       : 1.9.1
+*/
+
+/*****************************
+ mordernizer */
+/* must none boxsizing-target is table tags! */
+*{
+	&,&:before,&:after {
+		-webkit-box-sizing: border-box; 
+		-moz-box-sizing: border-box; 
+		box-sizing: border-box;
+	}
+}
+html,body { margin:0px;padding:0px; }
+h1,h2,h3,h4,h5,h6 { margin-top:0px; }
+img { border:none; }
+a   { text-decoration:none; }
+*:focus { outline:none !important; }
+
+/*****************************
+ HTML5fix */
+article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary, command, fieldset{ display:block; }
+audio,canvas,progress,video {@include inline-block;}
+template,.hidden,.template,.folder { 
+	display: none; 
+}
+
+/* baseline */
+.baseline { @include baseline-group(auto,"div,th,td"); }
+
+/*****************************
+ menu style */
+menu,ul.menu { @include menu-style; }
+.block-menu  { @include menu-style(left,block);}
+.inline-menu { @include menu-style(left,inline-block);}
+
+/*************************
+html5 template extention */
+template,.hidden,.template,.folder {
+	@include hidden-appearance(".show");
+	@include hidden-appearance(".active");
+}
+
+/*****************************
+ tool-group */
+.tool-group,.tool-group-inline{ > * { display:none; } }
+.tool-group { > .show ,> .active { display:block; } }
+.tool-group-inline { > .show ,> .active { @include inline-block; } }
+.tool {
+	display:none;
+	@include hidden-appearance(".active");
+}
+
+
+/*****************************
+ - frame은 공간이다.
+ - layer는 계층이다.
+*/
+.frame,.layer  { position:relative; }
+.frame         { overflow:hidden; }
+.frame-scroll  { overflow:auto;-webkit-overflow-scrolling: touch; }
+.layer-under   { display:block;position:relative; }
+.layer-over    { position:absolute;top:0px;       }
+/*****************************
+ - table
+ - toolbar
+ - bar
+ - caption
+*/
+.fieldset{
+	&,&-top,&-bottom { @include common-layout-setting(expend); }
+}
+.fieldset,.layout,.toolbar,.bar,.caption { 
+	&-top    { margin-bottom:10px; }
+	&-bottom { margin-top:10px; }
+	
+	&-middle { 
+		margin-bottom:10px; 
+		margin-top:10px;
+		
+	}
+	&-middle-sm { 
+		margin-bottom:5px; 
+		margin-top:5px;
+	}
+	&-middle-right {
+		padding-right:10px;
+		&-sm { padding-right:5px; }
+	}
+	&-top-sm    { margin-bottom:5px; }
+	&-bottom-sm { margin-top:5px; }
+}
+fieldset,.layout,.caption { @include common-layout-setting(expend); }
+table.layout { @include grid-table(baseline,0px,0px); }
+
+/********
+block */
+.block { display:block;
+	&-center{ margin-left:auto;margin-right:auto;}
+	&-left{ margin-right:auto;margin-left:0px;}
+	&-right{ margin-left:auto;margin-right:0px;}
+}
+.inline-block {@include inline-block;}
+.scroll-block {overflow-y:scroll;overflow-x:hidden;}
+.hidden-block {overflow:hidden;}
+/********
+ scroll */
+.scroll-{
+	&auto{ overflow:auto;-webkit-overflow-scrolling: touch; }
+	&x   { overflow-x:auto;-webkit-overflow-scrolling: touch; }
+	&y   { overflow-y:auto;-webkit-overflow-scrolling: touch; }
+}
+/********
+ set */
+$xs:2.5px;
+$sm:5px;
+$de:10px;
+$lg:15px;
+$xl:20px;
+
+@each $name, $property in ('.in-set','padding'), ('.out-set','margin') {
+	#{$name} {
+		#{$property}:$de;
+		&-xs{#{$property}:$xs;}
+		&-sm{#{$property}:$sm;}
+		&-lg{#{$property}:$lg;}
+		&-xs{#{$property}:$xl;}
+	
+		&-up{
+			#{$property}-top:$de;
+			&-xs{#{$property}-top:$xs;}
+			&-sm{#{$property}-top:$sm;}
+			&-lg{#{$property}-top:$lg;}
+			&-xs{#{$property}-top:$xl;}
+		}
+	
+		&-down{
+			#{$property}-bottom:$de;
+			&-xs{#{$property}-bottom:$xs;}
+			&-sm{#{$property}-bottom:$sm;}
+			&-lg{#{$property}-bottom:$lg;}
+			&-xs{#{$property}-bottom:$xl;}
+		}
+	
+		&-left,&-indent {
+			#{$property}-left:$de;
+			&-xs{#{$property}-left:$xs;}
+			&-sm{#{$property}-left:$sm;}
+			&-lg{#{$property}-left:$lg;}
+			&-xs{#{$property}-left:$xl;}
+		}
+	
+		&-right,&-indent {
+			&,&.layout-right{#{$property}-right:$de;}
+			&-xs,&-xs.layout-right{#{$property}-right:$xs;}
+			&-sm,&-sm.layout-right{#{$property}-right:$sm;}
+			&-lg,&-lg.layout-right{#{$property}-right:$lg;}
+			&-xs,&-xs.layout-right{#{$property}-right:$xl;}
+		}
+	}
+}
+
+/********
+ full   */
+.full-{ &width {width:100%; } &height{height:100%;} }
+
+/********
+ status */
+.muted { color:#777 !important;}
+.caption { color:#777; padding-top:3px; padding-bottom:3px !important;}
+
+/*****************************
+ group layout */
+.inline-group,.input-group,.text-group,.box{ display:block;}
+@each $name in inline, input, text {
+	.#{$name}-group { 
+		>*{
+			@include inline-block;
+			@if $name != "inline"{
+				margin-bottom:10px;
+			}
+		}
+	}
+}
+.inline{@include inline-block;}
+
+/*text positon*/
+@each $direction in center,right,left {
+	.text-#{$direction}-th th{text-align:#{$direction} !important;}
+	.text-#{$direction}-td td{text-align:#{$direction} !important;}
+	.text-#{$direction}{text-align:#{$direction} !important;} 
+	
+}
+/*text weight*/
+.text-weak  {font-weight:200    !important;}
+.text-normal{font-weight:normal !important;}
+.text-strong{font-weight:800    !important;}
+
+/*default color property*/
+.text-{
+	&default { color :black;}
+	&primary { color :#3071a9;}
+	&success { color :#449d44;}
+	&warning { color :#f0ad4e;}
+	&info    { color :#5bc0de;}	
+	&danger  { color :#d9534f;}
+}
+@mixin badge-in-set {
+	&.in-set {border-radius:3px;}
+	&.in-set-xs {border-radius:1px;}
+	&.in-set-sm {border-radius:2px;}
+	&.in-set-lg {border-radius:5px;}
+	&.in-set-xl {border-radius:10px;}
+}
+.badge-{
+	&default { @include badge-in-set; color: #000; background:white; }
+	&primary { @include badge-in-set; color: #fff; background-color:#3071a9;}
+	&success { @include badge-in-set; color: #fff; background-color:#449d44;}
+	&warning { @include badge-in-set; color: #fff; background-color:#f0ad4e;}
+	&info    { @include badge-in-set; color: #fff; background-color:#5bc0de;}
+	&danger  { @include badge-in-set; color: #fff; background-color:#d9534f;}
+}
+
+
+/********
+ grid */
+table.grid{ @include grid-table; th,td{ vertical-align:top; } }
+table.grid-default{ >thead,>tbody,>tfoot{>tr{>th,>td{border-width:0 !important;}}}}
+table.grid-top, tbody.grid-top, thead.grid-top, tfoot.grid-top, tr.grid-top{ 
+	th,td{ vertical-align:top; } 
+}
+.grid-top{ vertical-align:top !important; }
+table.grid-middle, tbody.grid-middle, thead.grid-middle, tfoot.grid-middle, tr.grid-middle{ 
+	th,td{ vertical-align:middle; } 
+}
+.grid-middle{ vertical-align:middle !important; }
+table.grid-bottom, tbody.grid-bottom, thead.grid-bottom, tfoot.grid-bottom, tr.grid-bottom{ 
+	th,td{ vertical-align:bottom; } 
+}
+.grid-bottom{ vertical-align:bottom !important; }
+/*grid*/
+@for $i from 2 to 13 {
+	$c:#{$i*5};
+	.grid-#{$c} th,.grid-#{$c} td{height:#{$c}px;}
+}
+/********
+ table */
+.table-fixed{table-layout:fixed;}
+.table-frame{
+	width:100%;
+	overflow:auto;
+	-webkit-overflow-scrolling: touch;
+	border:1px solid #eee;height:370px;
+	
+	&-auto{
+		height:auto;
+	}
+	
+	> table {
+		margin-top:0px;
+		padding-top:0px;
+		top:0px; table-layout:auto !important;
+		width:inherit !important;
+	}
+	th, td {
+		white-space:no-wrap !important;
+		text-overflow:clip !important;
+		-o-text-overflow:clip !important;
+		-ms-text-overflow:clip !important; 
+		overflow:visible !important;
+		word-wrap:normal !important;
+	}
+}
+.table-group > table{margin-top:0px;margin-bottom:0px;}
+
+/*****************************
+select block*/
+.no-select{ @include no-select; }
+/*****************************
+ 인터페이스 - 리무버 */
+.clearfix      { clear:both !important; }
+
+@mixin breakfix-def { display:block; clear:both !important; }
+.breakfix      { 
+	@include breakfix-def;
+	height:10px;
+	&-xs{@include breakfix-def;height:$xs;}
+	&-sm{@include breakfix-def;height:$sm;}
+	&-lg{@include breakfix-def;height:$lg;}
+	&-xl{@include breakfix-def;height:$xl;}
+}
+
+@mixin linebreakfix-def { @include inline-block; clear:both !important; }
+.linebreakfix {
+	@include linebreakfix-def;
+	width:10px;
+	&-xs{@include linebreakfix-def;width:$xs;}
+	&-sm{@include linebreakfix-def;width:$sm;}
+	&-lg{@include linebreakfix-def;width:$lg;}
+	&-xl{@include linebreakfix-def;width:$xl;}
+}
+@each $name in '',ul,ol {
+	#{$name}.no-style{ list-style:none !important;text-decoration:none !important; }
+}
+.no-decoration { text-decoration:none !important;  }
+.no-background { background-image:none !important; }					
+
+/*****************************
+ 인터페이스 - 스타일러 */
+.ellipsis, .ellipsis-all * {
+	@include ellipsis;
+}
+span.ellipsis { @include inline-block;margin:0px;padding:0px;width:100%; }
+.multi-line   { @include multiline; }
+.pointer { &,&-each>*{ cursor:pointer; } }
+.pointer-underline{ &:hover,&-each>*:hover { text-decoration:underline; } }
+
+@each $model,$sel in ('header','header,.header'),
+					 ('footer','footer,.footer'),
+					 ('main','main,.main'),
+					 ('section','section,.section'),
+					 ('article','article,.article'),
+					 ('hgroup','hgorup,.hgroup'),
+					 ('aside','aside,.aside'),
+					 ('fieldset','fieldset,.fieldset') { @include paragraphModel($model,$sel); }
