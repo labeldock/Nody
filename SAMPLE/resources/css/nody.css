@@ -97,7 +97,7 @@ template.active.inline, .hidden.active.inline, .template.active.inline, .folder.
 /***************************** - table - toolbar - bar - caption
 */
 .fieldset, .fieldset-top, .fieldset-bottom { position: relative; width: 100%; }
-.fieldset:after, .fieldset-top:after, .fieldset-bottom:after { content: " "; display: block; height: 0; clear: both; }
+.fieldset:after, .fieldset-top:after, .fieldset-bottom:after { content: ""; display: table; clear: both; }
 .fieldset-center, .fieldset-top-center, .fieldset-bottom-center { display: inline; zoom: 1; display: inline-block; margin-left: auto !important; margin-right: auto !important; text-align: center; }
 .fieldset-center > *, .fieldset-top-center > *, .fieldset-bottom-center > * { vertical-align: middle; }
 .fieldset-left, .fieldset-top-left, .fieldset-bottom-left { display: inline; zoom: 1; display: inline-block; float: left; }
@@ -118,7 +118,7 @@ template.active.inline, .hidden.active.inline, .template.active.inline, .folder.
 .fieldset-bottom-sm, .layout-bottom-sm, .toolbar-bottom-sm, .bar-bottom-sm, .caption-bottom-sm { margin-top: 5px; }
 
 fieldset, .layout, .caption { position: relative; width: 100%; }
-fieldset:after, .layout:after, .caption:after { content: " "; display: block; height: 0; clear: both; }
+fieldset:after, .layout:after, .caption:after { content: ""; display: table; clear: both; }
 fieldset-center, .layout-center, .caption-center { display: inline; zoom: 1; display: inline-block; margin-left: auto !important; margin-right: auto !important; text-align: center; }
 fieldset-center > *, .layout-center > *, .caption-center > * { vertical-align: middle; }
 fieldset-left, .layout-left, .caption-left { display: inline; zoom: 1; display: inline-block; float: left; }

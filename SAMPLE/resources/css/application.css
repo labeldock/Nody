@@ -10,11 +10,12 @@
 /* animation */
 /* paragraph */
 /* layout set */
-#header { float: left; margin-right: -200px; }
+#header { position: absolute; left: 0; top: 0; }
 #header nav menu a { display: block; width: 80px; height: 80px; border: 1px solid; line-height: 80px; border-top: none; }
 #header nav menu a:first-child { border-top: 1px solid; }
 
 #main { padding-top: 20px; padding-left: 120px; padding-right: 20px; }
+#main xmp { font-size: 10px; }
 
 .appear-ready { position: relative; transition: all 0.4s; opacity: 0; top: 20px; }
 
@@ -22,7 +23,11 @@
 
 .border-box { border: 1px solid #eee; }
 
-.inline-box { display: inline-block; border: 1px solid; width: 120px; height: 120px; margin-left: 10px; }
+.inline-box { display: inline-block; vertical-align: top; border: 1px solid; width: 120px; height: 120px; margin-left: 10px; }
+.inline-box input { background: rgba(255, 255, 255, 0.7); }
+.inline-box.green { background: #d9f2e4; }
+.inline-box.blue { background: #d9e9f2; }
+.inline-box.small-box { width: 50px; height: 50px; }
 
 .overflow-box { border: 1px solid blue; overflow: hidden; min-height: 500px; }
 

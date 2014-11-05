@@ -6,7 +6,7 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.5.1";
+	var version = "0.5.2";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -5539,7 +5539,7 @@
 		},
 		action:function(actionName,actionElement,arg){
 			if(this.scope){
-				var element = CREATE(actionElement);
+				var element = ISELNODE(actionElement) ? actionElement : CREATE(actionElement);
 				this.scope.addActionNode(actionName,element,this,arg)
 				return element;
 			} else {
@@ -5679,6 +5679,8 @@
 				ELBEFORE(rightHelper,leftNode);
 				ELREMOVE(leftHelper);
 				ELREMOVE(rightHelper);
+				//
+				CALL(this.dataDidChange,this);
 			}
 		},
 		nManagedDataRemove:function(bindID){
@@ -5697,19 +5699,29 @@
 				//스트럭쳐 노드 삭제
 				ELREMOVE(this.structureNodes[bindID])
 				delete this.structureNodes[bindID];
+				//
+				CALL(this.dataDidChange,this);
 			}
 			//
 			if(this.containerNodes[bindID]) delete this.containerNodes[bindID];
+			
 		},
 		nManagedDataAppend:function(bindID,newManagedData){
-			if(this.containerNodes[bindID]) this.needDisplay(newManagedData,this.containerNodes[bindID]);
+			if(this.containerNodes[bindID]) {
+				this.needDisplay(newManagedData,this.containerNodes[bindID]);
+				//
+				CALL(this.dataDidChange,this);
+			}
 		},
 		nManagedDataBindEvent:function(bindID,key,value,sender){
+			var acceptDidChange = false;
 			DATAEACH(this.bindValueNodes,function(nodeData){
-				if( (nodeData[0] == bindID) && (nodeData[1] == key) && (nodeData[2] != sender) ) {
-					ELVALUE(nodeData[2],value);
+				if( (nodeData[0] == bindID) && (nodeData[1] == key) ) {
+					acceptDidChange = true;
+					if(nodeData[2] != sender) ELVALUE(nodeData[2],value);
 				}
 			});
+			if(acceptDidChange == true ) CALL(this.dataDidChange,this);
 		},
 		addContainerNode:function(bindID,containerNode){
 			if( typeof bindID == "string" && ISELNODE(containerNode) ){
@@ -5837,6 +5849,7 @@
 			} else {
 				this.managedData = managedData;
 			}
+			CALL(this.dataDidChange,this);
 		},
 		needSelectable:function(allowMultiSelect,allowSelectableLevel){
 			if(allowMultiSelect == true) this.allowMultiSelect = true;
@@ -5862,10 +5875,10 @@
 			var owner = this;
 			if(this.selectIndexes.length > 0){
 				this.selectIndexes.each(function(bindID){
-					owner.shouldDeselectItem(owner.structureNodes[bindID]);
+					CALL(owner.shouldDeselectItem,owner,owner.structureNodes[bindID]);
 				});
 				this.selectIndexes.clear();
-				if((eventBlocking != true) && this.selectItemDidChange)this.selectItemDidChange(this.selectIndexes);
+				if(eventBlocking != true) CALL(this.selectItemDidChange,this,this.selectIndexes);
 			}
 		},
 		triggingSelectItems:function(bindID){
@@ -5873,11 +5886,11 @@
 				if(this.selectIndexes.has(bindID)){
 					this.selectIndexes.remove(bindID);
 					this.shouldDeselectItem(this.structureNodes[bindID]);
-					if(this.selectItemDidChange)this.selectItemDidChange(this.selectIndexes);
+					CALL(this.selectItemDidChange,this,this.selectIndexes);
 				} else {
 					this.selectIndexes.push(bindID);
 					this.shouldSelectItem(this.structureNodes[bindID]);
-					if(this.selectItemDidChange)this.selectItemDidChange(this.selectIndexes);
+					CALL(this.selectItemDidChange,this,this.selectIndexes);
 				}
 			} else {
 				if(this.selectIndexes.length == 1 && this.selectIndexes.has(bindID)){
@@ -5885,8 +5898,8 @@
 				} else {
 					this.deselectAll(true);
 					this.selectIndexes.push(bindID)
-					if(this.shouldSelectItem) this.shouldSelectItem(this.structureNodes[bindID]);
-					if(this.selectItemDidChange)this.selectItemDidChange(this.selectIndexes);
+					CALL(this.shouldSelectItem,this,this.structureNodes[bindID]);
+					CALL(this.selectItemDidChange,this,this.selectIndexes);
 				}
 			}
 		},
@@ -5896,12 +5909,16 @@
 				return owner.managedData.findById(bindID);
 			}).compact();
 		},
-		"var!selectItemDidChange":undefined,
 		"var!shouldSelectItem":function(node){
 			ELSTYLE(node,"background","#dae8f2");
 		},
 		"var!shouldDeselectItem":function(node){
 			ELSTYLE(node,"background","none")
+		},
+		"var!selectItemDidChange":undefined,
+		"var!dataDidChange":undefined,
+		finalize:function(){
+			
 		}
 	},function(view,managedData,viewModel){
 		this.view          = FINDZERO(view);
@@ -5930,9 +5947,7 @@
 			this.GestureListener["pinch"] = method;
 		}
 	},function(gestureView){
-		
 		this.Source = FINDZERO(gestureView);
-		console.log("gestureView",this.Source)
 		this.GestureListener = {};
 		this.StartPinchValue;
 		var finger = this;

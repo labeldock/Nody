@@ -2,8 +2,9 @@
 @import 'nody-kit';
 
 #header {
-	float:left;
-	margin-right:-200px;
+	position:absolute;
+	left:0;
+	top:0;
 	nav menu {
 		a {
 			display:block;
@@ -23,6 +24,10 @@
 	padding-top:20px;
 	padding-left:120px;
 	padding-right:20px;
+	
+	xmp {
+		font-size:10px;
+	}
 }
 .appear-ready{
 	position:relative;
@@ -41,11 +46,26 @@
 
 .inline-box {
   display:inline-block;
+  vertical-align:top;
   border:1px solid;
   width:120px;
   height:120px;
   margin-left:10px;
+  input {
+	  background:rgba(255,255,255,.7);
+  }
+  &.green {
+	  background:#d9f2e4;
+  }
+  &.blue {
+  	background:#d9e9f2;
+  }
+  &.small-box{
+	  width:50px;
+	  height:50px;
+  }
 }
+
 .overflow-box {
 	border:1px solid blue;
 	overflow:hidden;

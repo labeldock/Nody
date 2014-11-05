@@ -278,7 +278,8 @@
 @mixin common-layout-setting($child:'undefined') {
 	position:relative;
 	width:100%;
-	&:after { content:" ";display:block;height:0;clear:both; }
+	//overflow:hidden;
+	&:after { content:"";display:table;clear:both; }
 	@if $child == 'expend' {
 		&-center{ 
 			@include inline-block;margin-left:auto !important;margin-right:auto !important;text-align:center; 

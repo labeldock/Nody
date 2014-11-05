@@ -3,6 +3,7 @@ var menuContext = new Contexts("#header menu","a");
 var loader = new Loader("#main-container",{
 	"appear":"subview/appear.html",
 	"mvvm":"subview/mvvm.html",
+	"bind":"subview/bind.html",
 	"viewmodel":"subview/viewmodel.html",
 	"multiselect":"subview/multiselect.html"
 });
@@ -27,11 +28,14 @@ loader.setSwitchEvent("appear",function(){
 	});
 });
 loader.setLoadEvent("mvvm",function(){
-    var data = {"root":"hello","list":[
+    var data = {"list":[
     	{title:"카드이름1",description:"첫번째 카드입니다",list:[{title:"별명1"},{title:"별명2"},{title:"별명3"}]},
   		{title:"카드이름2",description:"두번째 카드입니다",list:[{title:"별명4"},{title:"별명5"},{title:"별명6"}]},
 		{title:"카드이름3",description:"세번째 카드입니다",list:[{title:"별명7"},{title:"별명9"},{title:"별명10"}]}
     ]};
+	
+	var mvvmXMP =  $(MAKE("XMP")).appendTo("#init-data-view");
+	
 	
 	//데이터를 불러거나 다시 출력하는 역활
     var dataContext = new DataContext(data,"list");
@@ -39,9 +43,9 @@ loader.setLoadEvent("mvvm",function(){
 	//뷰를 그리는 방법을 정의
     var viewModel = new ViewModel(
   	  function(){
-  		  return MAKE("div.inline-box",
-  			this.bind("title","input"),
-			this.action("delete","button::delete")
+  		  return MAKE("div.inline-box.blue",
+  			this.bind("title","input.full-width"),
+			this.action("delete",MAKE("button",MAKE("span.glyphicon.glyphicon-trash")))
 		 );
   	  },
   	  function(){
@@ -49,13 +53,13 @@ loader.setLoadEvent("mvvm",function(){
   		  	MAKE("table",
   				MAKE("tbody",
   					MAKE("tr",
-  						MAKE("td",
-  							MAKE("div.inline-box",
-  	  						  MAKE("p",
-							  	this.bind("title","p")),
-  	  						  	this.action("up","button::up"),
-  	  						  	this.action("down","button::down"),
-  	  						  	this.action("append","button::append",{title:"별명99"})
+  						MAKE("td.in-set-sm",
+  							MAKE("div.inline-box.green",
+								MAKE("div",this.bind("title","input.full-width")),
+								MAKE("div",this.bind("description","input.full-width")),
+  	  						  	MAKE("label",this.action("up",MAKE("button",MAKE("span.glyphicon.glyphicon-arrow-up")))),
+  	  						  	MAKE("label",this.action("down",MAKE("button",MAKE("span.glyphicon.glyphicon-arrow-down")))),
+  	  						  	MAKE("label",this.action("append",MAKE("button",MAKE("span.glyphicon.glyphicon-plus")),{title:"새로운 별명"}))
   						  )
   						),
 						this.container("td")
@@ -70,46 +74,56 @@ loader.setLoadEvent("mvvm",function(){
     );
 	//뷰를 그리고 이벤트를 등록함
     var listViewController = new DataContextViewController("#listContainer",dataContext.getRootManagedData(),viewModel);
+	listViewController.dataDidChange = function(){
+		var xmpText = dataContext.getJSONString().replace(/\:\[/,":[\n\t").replace(/\}\]\}\,(\s|)/g,"}]},\n\t").replace("]}]}","]}\n]}");
+		mvvmXMP.text(xmpText);
+	}
+	listViewController.dataDidChange();
     listViewController.needDisplay();
-	
-	$("#view-data-1").click(function(){
-		$("#mvvm-modal").find("#mvvm-modal-data").text(dataContext.getJSONString());
-		$("#mvvm-modal").modal();
-	});
-	
 });
 
 // common data
 var viewData = [
-	{title:"가나",fulltitle:"가나 공화국",english:"Ghana – Republic of Ghana"},
-	{title:"가봉",fulltitle:"가봉 공화국",english:"Gabon – République Gabonaise"},
-	{title:"가이아나",fulltitle:"가이아나 공동 공화국",english:"Guyana – Co-operative Republic of Guyana"},
-	{title:"감비아",fulltitle:"감비아 공화국",english:"Gambia – Republic of The Gambia"},
-	{title:"과테말라",fulltitle:"과테말라 공화국",english:"Guatemala – República de Guatemala"},
-	{title:"그리스",fulltitle:"그리스 공화국",english:"Ελλάδα – Ελληνική Δημοκρατία"}
+	{korean:"가나 공화국",language:"Ghana – Republic of Ghana",image:"resources/images/Ghana.png"},
+	{korean:"가봉 공화국",language:"Gabon – République Gabonaise",image:"resources/images/Gabon.png"},
+	{korean:"가이아나 공동 공화국",language:"Guyana – Co-operative Republic of Guyana",image:"resources/images/Guyana.png"},
+	{korean:"감비아 공화국",language:"Gambia – Republic of The Gambia",image:"resources/images/Gambia.png"},
+	{korean:"과테말라 공화국",language:"Guatemala – República de Guatemala",image:"resources/images/Guatemala.png"},
+	{korean:"그리스 공화국",language:"Ελλάδα – Ελληνική Δημοκρατία",image:"resources/images/Greece.png"}
 ];
 var viewDataContext = new DataContext(viewData);
 
 var viewModels = {
-	"small":new ViewModel(),
+	"small":new ViewModel(function(){
+		return MAKE("li.inline-box.small-box.text-center",
+			MAKE("img",{src:this.data("image")})
+		);
+	},function(){
+		return this.container("ul");
+	}),
 	"large":new ViewModel(function(){
-		return this.bind("fulltitle","li.inline-box");
+		return MAKE("li.inline-box.text-center",
+			MAKE("img",{src:this.data("image")}),
+			this.bind("language","p")
+		);
+		
+		
 	},function(){
 		return this.container("ul");
 	}),
 	"list":new ViewModel(function(){
 		return MAKE("tr",
-			MAKE("td",this.bind("title","input.full-width")),
-			MAKE("td",this.bind("fulltitle","input.full-width")),
-			MAKE("td",this.bind("english","input.full-width"))
+			MAKE("td",this.bind("korean","input.full-width")),
+			MAKE("td",this.bind("language","input.full-width")),
+			MAKE("td",this.bind("image","p"))
 		)
 	},function(){
 		return MAKE("table.table",
 			MAKE("thead",
 				MAKE("tr",
-					MAKE("th::title"),
-					MAKE("th::full"),
-					MAKE("th::english")
+					MAKE("th::korean"),
+					MAKE("th::language"),
+					MAKE("th::image")
 				)
 			),
 			this.container("tbody")
