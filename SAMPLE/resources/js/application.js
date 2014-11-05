@@ -1,3 +1,10 @@
+makeGetter("LABCSS3",function(query,name,value){
+	var makeQuery = $(query);
+	",-webkit-,-moz-,-ms-,-o-".replace(/[^\,]*\,/g,function(s){ 
+		makeQuery.css(s.replace(",","")+name,value);
+	});
+});
+
 var menuContext = new Contexts("#header menu","a");
 
 var loader = new Loader("#main-container",{
@@ -13,19 +20,25 @@ menuContext.onSelects("click",function(){
 	if(pagename) loader.open(pagename);
 });
 loader.setSwitchEvent("appear",function(){
-	FIND(".appear-ready",DATAEACH,function(node,i){
-		
+	
+	var appearComplete = new Fire(FIND(".appear-ready"),function(){
+		setTimeout(function(){
+			LABCSS3(".gage-box-css .gage-box-line-container","transform","rotate("+ _Area("-60~60").getStringContents()  +"deg)");
+		},500);
+	}).each(function(node,i,touch){
 		var timeout = 100*i;
 		
 		setTimeout(function(){
 			$(node).addClass("appear-submit");
+			touch();
 		},timeout);
-		
 	});
+	
 },function(){
 	FIND(".appear-ready",DATAEACH,function(node,i){
 		$(node).removeClass("appear-submit");
 	});
+	LABCSS3(".gage-box-css .gage-box-line-container","transform","rotate(-100deg)");
 });
 loader.setLoadEvent("mvvm",function(){
     var data = {"list":[

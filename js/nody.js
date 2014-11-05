@@ -6,7 +6,7 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.5.3";
+	var version = "0.5.4";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -1630,7 +1630,7 @@
 				switch(info.type){
 					case "rangeNumber":
 						return DATAMAP(info.pattern,function(pvalue){
-							console.log("info.value",info.value,RNUMBER(info.value),pvalue);
+							//console.log("info.value",info.value,RNUMBER(info.value),pvalue);
 							return RNUMBER(info.value) + pvalue;
 						});
 						break;
@@ -1693,6 +1693,9 @@
 			var joinContents = this.getJoinContents(joinText,length);
 			for(var i=0,l=joinContents.length-1;i<l;i++){ joinContents[i] = joinContents[i]+"\n"; }
 			return joinContents.join("");
+		},
+		getStringContents:function(a,b){
+			return this.getLineContents(a,b);
 		}
 	},function(){
 		var contents = Array.prototype.slice.call(arguments);
@@ -4713,11 +4716,20 @@
 		complete:function(){ this.FireCurrent = this.FireMax; return this.FireFunction.apply(this,arguments); },
 		touch:function(){ this.FireCurrent++; if(this.FireCurrent >= this.FireMax) return this.complete.apply(this,arguments); },
 		back:function(){ this.FireCurrent--; return this; },
-		each:function(f){ var own = this; var touchLiteral = function(){ return own.touch(); }; if(ISARRAY(this.Source) && typeof f == "function"){ _Array(this.Source).each(function(data,index){ return APPLY(f,own,[data,index,touchLiteral]); }); } else { console.warn("Fire::조건이 충족되지 못해 fire를 실행하지 못하였습니다. source=> ",this.Source,"each f=>",f); } return this; }
+		each:function(f){ 
+			var own = this; 
+			var touchLiteral = function(){ 
+				return own.touch();
+			}; 
+			if(ISARRAY(this.Source) && typeof f == "function"){ 
+				_Array(this.Source).each(function(data,index){ return CALL(f,own,data,index,touchLiteral); }); 
+			} else { 
+				console.warn("Fire::조건이 충족되지 못해 fire를 실행하지 못하였습니다. source=> ",this.Source,"each f=>",f); 
+			} return this; 
+		}
 	},function(number,fireFunction){
 		//array
 		this.Source       = number;
-		if(ISARRAY(number)) number = number.length;
 		//number
 		this.FireMax      = (ISARRAY(number) == true) ? number.length : isNaN(number) == true ? 0 : parseInt(number) ;
 		this.FireFunction = fireFunction;

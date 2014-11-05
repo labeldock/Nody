@@ -1,7 +1,7 @@
 /*
 	sass style kit
 	auther        : hojugn ahn (open9.net)
-	version       : 0.8.1
+	version       : 0.8.2
 	concept       : interface set, auto preload image, easy hack, easy animation
 */
 
@@ -211,10 +211,27 @@
 @mixin background ($url:'undefined',$after:'',$color:''){ @include preload('background',$url,$after,$color); }
 @mixin assets($url:'undefined',$after:'no-repeat',$color:''){ @include preload('background',($base-assets-path + $url),$after,$color); }
 @mixin content($url:'undefined'){ @include preload('content',($base-assets-path + $url)); }
-/* animation */
-@mixin transition ($sec:0.3s,$range:all){
-	transition:$range $sec ease-in-out;
+@mixin transform ($value){
+	-webkit-transform:$value;
+	-moz-transform:$value;
+	-ms-transform:$value;
+	-o-transform:$value;
+	transform:$value;
 }
+/* animation */
+@mixin transition ($range:all,$sec:0.3s,$timing-function:ease-in-out){
+	-webkit-transition:$range $sec;
+    -moz-transition:$range $sec;
+	-ms-transition:$range $sec;
+    -o-transition:$range $sec;
+	transition:$range $sec;
+	-webkit-transition-timing-function:$timing-function;
+	-moz-transition-timing-function:$timing-function;
+	-ms-transition-timing-function:$timing-function;
+	-o-transition-timing-function:$timing-function;
+	transition-timing-function:$timing-function;
+}
+
 
 
 /* paragraph */
