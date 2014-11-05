@@ -58,6 +58,14 @@ Nody.js는 DHTML 페이지를 만들기위한 라이브러리이다.
 Nody는 jQuery와 같이 노드를 핸들링 하기 위한 라이브러리가 아니다. 
 본 라이브러리는 데이터의 관점에서 노드를 핸들링하기 편하도록 하기위해 만들어지고 있다.
 
+### Compatibility #
+#### Recommend #
+IE10+, chrome4+, firefoe 16+, safari4+, opera 15+
+
+#### Minimum #
+  - Core Module : IE8+ 
+  - Node Module : IE9+
+
 <a name="feature"/>
 ## Featrue #
 ### English #

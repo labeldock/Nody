@@ -6,7 +6,7 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.5.2";
+	var version = "0.5.3";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -5640,24 +5640,24 @@
 	
 	makeModule("DataContextViewController",{
 		"var!events":{
-			up:function(managedData,arg){
+			"up":function(managedData,arg){
 				if(typeof arg == "function") {
 					if( arg(managedData,element) != false ) managedData.managedDataDecrease();
 				} else {
 					managedData.managedDataDecrease();
 				}
 			},
-			down:function(managedData,arg){
+			"down":function(managedData,arg){
 				if(typeof arg == "function") {
 					if( arg(managedData,element) != false ) managedData.managedDataIncrease();
 				} else {
 					managedData.managedDataIncrease();
 				}
 			},
-			delete:function(managedData,arg){
+			"delete":function(managedData,arg){
 				managedData.managedDataRemove();
 			},
-			append:function(managedData,arg){
+			"append":function(managedData,arg){
 				managedData.managedDataAppend(arg);
 			}
 		},
