@@ -6070,7 +6070,12 @@
 			
 			ELON(this.Source,"mousewheel",function(e){
 				e.preventDefault();
-				if(e.wheelDelta) owner.needScrollingOffsetY(e.wheelDelta/3)
+				if(e.wheelDeltaY) {
+					owner.needScrollingOffsetY(e.wheelDeltaY/3);
+					owner.needScrollingOffsetX(e.wheelDeltaX/3);
+				} else if(e.wheelDelta) {
+					owner.needScrollingOffsetY(e.wheelDelta/3)
+				}
 			});
 			
 			ELON(this.Source,"scroll",function(e){
