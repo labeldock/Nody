@@ -6,6 +6,9 @@ Nody.js
 	This is not a complete sentence in English. Please help me to write English
 ```
 
+# Sample #
+<a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a>
+
 
 # Table of Contents
   - [Introduce](#introduce)

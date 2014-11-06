@@ -1,7 +1,8 @@
-// Author                 // hojung ahn (open9.net)
-// Concept                // DHTML RAD TOOL
-// tested in              // IE9 + (on 4.0) & webkit2 & air13
-// lincense               // MIT lincense
+// Author      // hojung ahn (open9.net)
+// Concept     // DHTML RAD TOOL
+// tested in   // IE9 + (on 4.0) & webkit2 & air13
+// lincense    // MIT lincense
+// GIT         // https://github.com/labeldock/Nody
 (+(function(W,NativeCore){
 	var nodyCoreVersion = "1.0";
 	//CONSOLE FIX
