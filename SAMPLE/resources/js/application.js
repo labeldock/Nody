@@ -10,7 +10,7 @@ var menuContext = new Contexts("#header menu","a");
 var loader = new Loader("#main-container",{
 	"appear":"subview/appear.html",
 	"mvvm":"subview/mvvm.html",
-	"bind":"subview/bind.html",
+	"scroll":"subview/scroll.html",
 	"viewmodel":"subview/viewmodel.html",
 	"multiselect":"subview/multiselect.html"
 });
@@ -202,4 +202,7 @@ loader.setLoadEvent("multiselect",function(){
 });
 loader.setOpenEvent("multiselect",function(){
 	//viewController.needDisplay();
+});
+loader.setLoadEvent("scroll",function(){
+	var scrollBox = new ScrollBox("#scroll-box");
 });

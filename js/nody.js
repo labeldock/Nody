@@ -6,7 +6,7 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.5.4";
+	var version = "0.5.6";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -5921,17 +5921,15 @@
 				return owner.managedData.findById(bindID);
 			}).compact();
 		},
-		"var!shouldSelectItem":function(node){
-			ELSTYLE(node,"background","#dae8f2");
-		},
-		"var!shouldDeselectItem":function(node){
-			ELSTYLE(node,"background","none")
-		},
+		//이벤트
+		whenSelectItem:function(m)  { if((typeof m == "function") || m == undefined) this.shouldSelectItem = m; },
+		whenDeselectItem:function(m){ if((typeof m == "function") || m == undefined) this.shouldDeselectItem = m; },
+		whenItemDidChange:function(m){ if((typeof m == "function") || m == undefined) this.shouldDeselectItem = m; },
+		whenDataDidChange:function(m){ if((typeof m == "function") || m == undefined) this.shouldDeselectItem = m; },
+		"var!shouldSelectItem":function(node){ ELSTYLE(node,"background","#dae8f2"); },
+		"var!shouldDeselectItem":function(node){ ELSTYLE(node,"background","none") },
 		"var!selectItemDidChange":undefined,
-		"var!dataDidChange":undefined,
-		finalize:function(){
-			
-		}
+		"var!dataDidChange":undefined
 	},function(view,managedData,viewModel){
 		this.view          = FINDZERO(view);
 		this.setManagedData(managedData);
@@ -5955,45 +5953,131 @@
 				Math.pow((fy1-fy2),2)
 			)
 		},
-		pinch:function(method){
-			this.GestureListener["pinch"] = method;
-		}
+		whenPinchStart:function(method){ this.GestureListener["pinchStart"] = method; },
+		whenPinch:function(method){ this.GestureListener["pinch"] = method; },
+		whenTouchMove:function(method){ this.GestureListener["touchMove"] = method; }
 	},function(gestureView){
 		this.Source = FINDZERO(gestureView);
 		this.GestureListener = {};
 		this.StartPinchValue;
+		this.StartTouchMoveX;
+		this.StartTouchMoveY;
 		var finger = this;
 		if(this.Source){
-			ELON(document,"touchstart",function(e){
-				if (e.originalEvent.touches.length === 2) {
+			ELON(this.Source,"touchstart",function(e){
+				e.preventDefault();
+				if (finger.GestureListener["touchMove"] && (e.touches.length === 1)) {
+					finger.StartTouchMoveX = e.touches[0].pageX;
+					finger.StartTouchMoveY = e.touches[0].pageY;
+				}
+				if (finger.GestureListener["pinch"] && (e.touches.length === 2)) {
 					finger.StartPinchValue = finger.getPinchDistance(
-						 e.originalEvent.touches[0].pageX,
-						 e.originalEvent.touches[0].pageY,
-						 e.originalEvent.touches[1].pageX,
-						 e.originalEvent.touches[1].pageY
+						 e.touches[0].pageX,
+						 e.touches[0].pageY,
+						 e.touches[1].pageX,
+						 e.touches[1].pageY
 					);
+					CALL(finger.GestureListener["pinchStart"],finger.Source,e);
 				}
-				$(finger.Source).css("background","blue");
 			});
-			ELON(document,"touchmove",function(e){
-				if(finger.GestureListener[pinch] && finger.StartPinchValue && (e.originalEvent.touches.length === 2)){
+			ELON(this.Source,"touchmove",function(e){
+				e.preventDefault();
+				//1 finger
+				if (finger.GestureListener["touchMove"] && (e.touches.length === 1)) {
+					var moveX = e.touches[0].pageX - finger.StartTouchMoveX;
+					var moveY = e.touches[0].pageY - finger.StartTouchMoveY;
+					finger.StartTouchMoveX = e.touches[0].pageX;
+					finger.StartTouchMoveY = e.touches[0].pageY;
+					CALL(finger.GestureListener["touchMove"],finger.Source,moveX,moveY,e);
+				}
+				//2 finger
+				if(finger.GestureListener["pinch"] && finger.StartPinchValue && (e.touches.length === 2)){
 					var currentDistance = finger.getPinchDistance(
-						 e.originalEvent.touches[0].pageX,
-						 e.originalEvent.touches[0].pageY,
-						 e.originalEvent.touches[1].pageX,
-						 e.originalEvent.touches[1].pageY
+						 e.touches[0].pageX,
+						 e.touches[0].pageY,
+						 e.touches[1].pageX,
+						 e.touches[1].pageY
 					);
-					finger.GestureListener[pinch]( ((finger.StartPinchValue / currentDistance) * 1) - 1 );
+					CALL(finger.GestureListener["pinch"],finger.Source,-((finger.StartPinchValue / currentDistance) - 1))
+					//finger.StartPinchValue = currentDistance;
 				}
-				if(finger.GestureListener[pinch]) {
-					finger.GestureListener[pinch](e.scale - finger.PinchValue);
-					finger.PinchValue = e.scale;
-				}
-				console.log("gesturechange");
 			});
-			ELON(document,"touchend",function(e){
+			ELON(this.Source,"touchend",function(e){
+				e.preventDefault();
+				finger.StartTouchMoveX = undefined;
+				finger.StartTouchMoveY = undefined;
 				finger.StartPinchValue = undefined;
 			});
+		}
+	});
+	
+	makeModule("ScrollBox",{
+		needScrollingOffsetX:function(offset){
+			var needTo = this.Source.scrollLeft + (-offset);
+			if (needTo < 0) needTo = 0;
+			if (needTo > this.Source.scrollWidth) needTo = this.Source.scrollWidth;
+			if (this.Source.scrollLeft != needTo) this.Source.scrollLeft = needTo;
+		},
+		needScrollingOffsetY:function(offset){
+			var needTo = this.Source.scrollTop + (-offset);
+			if (needTo < 0) needTo = 0;
+			if (needTo > this.Source.scrollHeight) needTo = this.Source.scrollHeight;
+			if (this.Source.scrollTop != needTo) this.Source.scrollTop = needTo;
+		},
+		needZoom:function(needTo){
+			needTo = TONUMBER(needTo);
+			if(needTo < this.zoomMin) needTo = this.zoomMin;
+			if(needTo > this.zoomMax) needTo = this.zoomMax;
+			//if(TONUMBER(ELSTYLE(this.ClipView,"zoom")) != needTo ) 
+			ELSTYLE(this.ClipView,"zoom",needTo);
+		},
+		needZoomOffset:function(offset){ if( typeof this.StartZoom == "number" ) this.needZoom(this.StartZoom + offset); },
+		//scroll event
+		whenScroll:function(event){ this.ScrollEvent = event; },
+		whenZoom:function(event){ this.ZoomEvent = event; }
+	},function(node){
+		this.Source = FINDZERO(node);
+		
+		if(this.Source){
+			this.ClipView = MAKE("div.scroll-box-clip-view");
+			ELAPPEND(this.ClipView,this.Source.childNodes);
+			ELAPPEND(this.Source,this.ClipView);
+			//
+			this.ScrollEvent;
+			this.ZoomEvent;
+			this.Finger = new Finger(this.Source);
+			
+			ELSTYLE(this.Source,"overflow","hidden");
+			
+			var owner = this;
+			//
+			this.Finger.whenTouchMove(function(offsetX,offsetY,e){
+				owner.needScrollingOffsetX(offsetX);
+				owner.needScrollingOffsetY(offsetY);
+			});
+			
+			//
+			this.StartZoom = undefined;
+			this.zoomMin = 0.5;
+			this.zoomMax = 2;
+			
+			this.Finger.whenPinchStart(function(){
+				owner.StartZoom = TONUMBER(ELSTYLE(owner.ClipView,"zoom"));
+			});
+			this.Finger.whenPinch(function(zoomOffset,e){
+				owner.needZoomOffset(zoomOffset);
+			});
+			
+			ELON(this.Source,"mousewheel",function(e){
+				e.preventDefault();
+				if(e.wheelDelta) owner.needScrollingOffsetY(e.wheelDelta/3)
+			});
+			
+			ELON(this.Source,"scroll",function(e){
+				CALL(owner.ScrollEvent,owner,e);
+			});
+		} else {
+			console.warn("ScrollBox제대로 불러오지 못했습니다.",node);
 		}
 	});
 })(window));
