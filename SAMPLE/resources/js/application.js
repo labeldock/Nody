@@ -145,8 +145,7 @@ var viewModels = {
 }
 
 loader.setLoadEvent("viewmodel",function(){	
-	window.dat = viewDataContext;
-	
+
 	var viewController = new DataContextViewController("#view-display",viewDataContext);
 	
 	var viewType = new Contexts("#view-type","button");
@@ -191,7 +190,6 @@ loader.setLoadEvent("multiselect",function(){
 				model.each(function(value,key){
 					managedItem.data(key,value);
 				});
-				
 				_Form("#replaceData").empty();
 				viewController.deselectAll();
 			});
@@ -205,4 +203,63 @@ loader.setOpenEvent("multiselect",function(){
 });
 loader.setLoadEvent("scroll",function(){
 	var scrollBox = new ScrollBox("#scroll-box");
+	
+	var calendarBox = new ScrollBox("#calendar-box");
+	var countDisplay = $("#calendar-box-count");
+	
+	var nowMoment = moment();
+	
+	calendarBox.drawAxisYItem(function(index){
+		setTimeout(function(){
+			countDisplay.text( ("generated to down : [" + calendarBox.axisYPositiveItems.length + "] generated to up : ["+ calendarBox.axisYNegativeItems.length+"]") );
+		},1);
+		
+		//return MAKE("div",{html:"["+index+"] calendar : "+nowMoment.clone().add(index,"month").format("YYYY년 MM월")});
+		
+		var firstMoment = nowMoment.clone().add(index,"month").date(1);
+		var lastMoment  = firstMoment.clone().add(1,'months').date(0);
+		
+		var startDay = firstMoment.day();
+		var beforeDate = firstMoment.clone().date(0).date() - startDay;
+		
+		var calendarBodies = ARRAYINARRAY(6);
+		
+		
+		// before month
+		for(var i=0,l=startDay;i<l;i++) calendarBodies[0].push(MAKE("td.before",{html:beforeDate+i}));
+		
+		//
+		var count = lastMoment.date()+startDay;
+		
+		// current month
+		for(var i=startDay,l=count;i<l;i++) calendarBodies[ Math.floor(i/7) ].push(MAKE("td",{html:i-startDay+1}));
+		
+		// after month
+		
+		for(var i=count,l=42,ai=1;i<l;i++){
+			calendarBodies[ Math.floor(i/7) ].push(MAKE("td.after",{html:ai}));
+			ai++;
+		}
+		
+		calendarBodies = DATAMAP(calendarBodies,function(tds){
+			return MAKE("tr",tds);
+		});
+		
+		return MAKE("div.calendar",
+			MAKE("h1::"+firstMoment.format("YYYY년 MM월")),
+			MAKE("table.calendar",
+				MAKE("thead",MAKE("tr",
+					MAKE("td::일"),
+					MAKE("td::월"),
+					MAKE("td::화"),
+					MAKE("td::수"),
+					MAKE("td::목"),
+					MAKE("td::금"),
+					MAKE("td::토")
+				)),
+				MAKE("tbody",calendarBodies)
+			)
+		);
+	});
+	calendarBox.setAxisYRange(200,200);
 });

@@ -26,7 +26,14 @@
 .gage-box .gage-box-line-container .gage-line { margin-top: 17px; }
 .gage-box.gage-box-css .gage-box-line-container { display: block; -webkit-transition: all 1.5s; -moz-transition: all 1.5s; -ms-transition: all 1.5s; -o-transition: all 1.5s; transition: all 1.5s; -webkit-transition-timing-function: cubic-bezier(1, -0.53, 0.405, 1.425); -moz-transition-timing-function: cubic-bezier(1, -0.53, 0.405, 1.425); -ms-transition-timing-function: cubic-bezier(1, -0.53, 0.405, 1.425); -o-transition-timing-function: cubic-bezier(1, -0.53, 0.405, 1.425); transition-timing-function: cubic-bezier(1, -0.53, 0.405, 1.425); -webkit-transform: rotate(-100deg); -moz-transform: rotate(-100deg); -ms-transform: rotate(-100deg); -o-transform: rotate(-100deg); transform: rotate(-100deg); }
 
-#scroll-box { white-space: nowrap; font-size: 30px; border: 1px dotted #ddd; height: 400px; width: 400px; }
+#scroll-box, #calendar-box { white-space: nowrap; font-size: 30px; border: 1px dotted #ddd; height: 400px; width: 400px; }
+
+div.calendar { padding: 10px 0px; }
+
+table.calendar { width: 100%; table-layout: fixed; font-size: 16px; text-align: center; margin: 5px 0; }
+table.calendar thead td { background: #eee; }
+table.calendar td { border: 1px solid #eee; }
+table.calendar td.before, table.calendar td.after { color: #ccc; }
 
 .border-box { border: 1px solid #eee; }
 

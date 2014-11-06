@@ -7,7 +7,7 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.5.6";
+	var version = "0.5.7";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -3437,7 +3437,8 @@
 		},
 		"ELINDEX":function(el){
 			var node = FINDZERO(el);
-			return DATAINDEX(FINDPARENT(node),node);
+			var parent = FINDPARENT(node);
+			if(parent) return DATAINDEX(parent.children,node);
 		},
 		"ELTREE":function(find,root){
 			return _Array(FIND(find)).map(function(node){
@@ -3527,6 +3528,19 @@
 			}
 			return parent;
 		},
+		"ELPREPEND":function(parentIn,childs){
+			var parent = FINDZERO(parentIn);
+			var appendTarget = ELONLYNODES(childs);
+			if(ISMEANING(parent),ISMEANING(appendTarget)){
+				ELAPPEND(parent,appendTarget);
+				var newParent = FINDPARENT(appendTarget[0]);
+				if(newParent) {
+					DATAEACH(appendTarget,function(node,i){
+						newParent.insertBefore(node,newParent.childNodes[i]);
+					});
+				}
+			}
+		},
 		"ELAPPENDTO":function(targets,parentEL){ return ELAPPEND(FINDZERO(parentEL),targets); },
 		"ELPUT":function(sel){
 			var node = FINDZERO(sel);
@@ -3584,6 +3598,8 @@
 			}
 			return target;
 		},
+		"ELBEFOREALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index == "number") for(var i=0,l=index;i<l;i++) result.push(node.parentNode.children[i]); return result; },
+		"ELAFTERALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index == "number") for(var i=index+1,l=node.parentNode.children.length;i<l;i++) result.push(node.parentNode.children[i]); return result; },
 		"ELREPLACE":function(target,replaceNode){
 			var replaceTarget = FINDZERO(replaceNode);
 			ELAFTER(target,replaceTarget);
@@ -6021,8 +6037,18 @@
 		},
 		needScrollingOffsetY:function(offset){
 			var needTo = this.Source.scrollTop + (-offset);
-			if (needTo < 0) needTo = 0;
-			if (needTo > this.Source.scrollHeight) needTo = this.Source.scrollHeight;
+			if (needTo < 0) {
+				this.needNegativeDrawItem();
+				//
+				needTo = this.Source.scrollTop + (-offset);
+				if(needTo < 0) needTo = 0;
+			}
+			if (needTo > this.Source.scrollHeight - this.Source.offsetHeight){
+				this.needPositiveDrawItem();
+				if(needTo > this.Source.scrollHeight){
+					needTo = this.Source.scrollHeight;
+				}
+			} 
 			if (this.Source.scrollTop != needTo) this.Source.scrollTop = needTo;
 		},
 		needZoom:function(needTo){
@@ -6033,6 +6059,57 @@
 			ELSTYLE(this.ClipView,"zoom",needTo);
 		},
 		needZoomOffset:function(offset){ if( typeof this.StartZoom == "number" ) this.needZoom(this.StartZoom + offset); },
+		//
+		// var _drawAxisYItem
+		drawAxisYItem:function(rend){
+			this._drawAxisYItem = rend;
+		},
+		// true == infinite
+		setAxisYRange:function(positive,negative){
+			if (typeof positive == "boolean") {
+				this.axisYPositiveLength = positive ? 100 : 0;
+			} else if(typeof positive == "number") {
+				this.axisYPositiveLength = positive;
+			}
+			
+			if (typeof negative == "boolean") {
+				this.axisYNegativeLength = negative ? 100 : 0;
+			} else if(typeof negative == "number") {
+				this.axisYNegativeLength = negative;
+			}
+			
+			this.needPositiveDrawItem();
+		},
+		needPositiveDrawItem:function(){
+			if(typeof this._drawAxisYItem == "function"){
+				for(var i=this.axisYPositiveItems.length,l=this.axisYPositiveLength;i<l;i++){
+					var node = this._drawAxisYItem(i);
+					
+					if( ISELNODE(node) ) {
+						this.axisYPositiveItems.push(node);
+						ELAPPEND(this.ClipView,node);
+						//정지할지 확인
+						if(this.Source.offsetHeight < (this.ClipView.offsetHeight - this.Source.offsetTop)) break;
+					} else {
+						console.warn("needPositiveDrawItem::렌더링 에러 더이상 드로잉 할수 없습니다.");
+					}
+				}
+			}
+		},
+		needNegativeDrawItem:function(){
+			if(typeof this._drawAxisYItem == "function"){
+				if(this.axisYNegativeItems.length < this.axisYNegativeLength){
+					var i = ((this.axisYNegativeItems.length * -1) -1);
+					var node = this._drawAxisYItem(i);
+					if( ISELNODE(node) ) {
+						this.axisYNegativeItems.push(node);
+						ELPREPEND(this.ClipView,node);
+						this.Source.scrollTop = this.Source.scrollTop + node.offsetHeight;
+					}
+					
+				}
+			}
+		},
 		//scroll event
 		whenScroll:function(event){ this.ScrollEvent = event; },
 		whenZoom:function(event){ this.ZoomEvent = event; }
@@ -6040,6 +6117,12 @@
 		this.Source = FINDZERO(node);
 		
 		if(this.Source){
+			//
+			this.axisYPositiveLength = 0;
+			this.axisYNegativeLength = 0;
+			this.axisYPositiveItems = [];
+			this.axisYNegativeItems = [];
+			
 			this.ClipView = MAKE("div.scroll-box-clip-view");
 			ELAPPEND(this.ClipView,this.Source.childNodes);
 			ELAPPEND(this.Source,this.ClipView);
@@ -6047,6 +6130,7 @@
 			this.ScrollEvent;
 			this.ZoomEvent;
 			this.Finger = new Finger(this.Source);
+			this.allowZoom = true;
 			
 			ELSTYLE(this.Source,"overflow","hidden");
 			
@@ -6063,10 +6147,10 @@
 			this.zoomMax = 2;
 			
 			this.Finger.whenPinchStart(function(){
-				owner.StartZoom = TONUMBER(ELSTYLE(owner.ClipView,"zoom"));
+				if(owner.allowZoom) owner.StartZoom = TONUMBER(ELSTYLE(owner.ClipView,"zoom"));
 			});
 			this.Finger.whenPinch(function(zoomOffset,e){
-				owner.needZoomOffset(zoomOffset);
+				if(owner.allowZoom) owner.needZoomOffset(zoomOffset);
 			});
 			
 			ELON(this.Source,"mousewheel",function(e){

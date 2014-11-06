@@ -65,12 +65,33 @@
 		}
 	}
 }
-#scroll-box {
+#scroll-box, #calendar-box {
 	white-space:nowrap;
 	font-size:30px;
 	border:1px dotted #ddd;
 	height:400px;
 	width:400px;
+}
+div.calendar {
+	padding:10px 0px;
+}
+table.calendar {
+	width:100%;
+	table-layout:fixed;
+	font-size:16px;
+	text-align:center;
+	margin:5px 0;
+	thead{
+		td {
+			background:#eee;
+		}
+	}
+	td{
+		border:1px solid #eee;
+		&.before,&.after {
+			color:#ccc;
+		}
+	}
 }
 .border-box {
     border:1px solid #eee;
