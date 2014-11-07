@@ -7,7 +7,7 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.5.7";
+	var version = "0.5.8";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -902,7 +902,7 @@
 		toArray  : function()  { return Array.prototype.slice.call(this); },
 		//내부요소 모두 지우기
 		clear   : function() { this.length = 0; return this; },
-		
+		clone:function(){ return new AArray(this);},
 		//
 		getFirst:function(){ return ZERO(this); },
 		getLast :function(){ return LAST(this); },
@@ -1240,18 +1240,21 @@
 	});
 	
 	W._Split = function(text,s){
-		if( ISARRAY(text) ) {
-			return new AArray(text);
-		} else if(typeof s == "string") {
-			var result = [];
-			text.replace((typeof s == "undefined" ? /\S+/gi : s ),function(text_s){ result.push(text_s); });
+		if( ISARRAY(text) ) return new AArray(text);
+		
+		if(typeof text == "string"){
+			var result;
+			if((typeof s == "string") || typeof s == "number") {
+				s = s+"";
+				result = text.split(s);
+			} else {
+				result = [];
+				text.replace(/\S+/gi,function(s){ result.push(s); });
+			}
 			return new AArray(result);
-		} else if(typeof s == "undefined") {
-			return new AArray();
-		} else {
-			console.warn("_Split은 text나 array만 넣기를 추천합니다. => ", s);
-			return _Array(text);
 		}
+		console.warn("_Split은 text나 array만 넣기를 추천합니다. => ", text);
+		return _Array(text);
 	};
 	
 	extendModule("Array","Range",{},function(a,b,c){
@@ -1314,23 +1317,25 @@
 			// 유니코드는 2바이트 씩 계산하고 나머지는 1바이트씩 계산한다.
 			return ((cnt * 2) + temp_str.length) + "";
 		},
-		eachLine:function(f){
-			if(typeof f == "function"){
-				var i = 0;
-				var r = this.Source.replace(/[^\n]*\n/gi,function(s){
-					return f(s,i++);
-				});
-			}
-			return r;
+		getLines:function(){
+			return _Split(this.Source,"\n").toArray();
 		},
+		eachLine:function(f,j){
+			if(typeof f == "function"){
+				var r = [];
+				var r = _Array(this.getLines()).map(function(s,i){ return f(s,i); });
+			}
+			return r.join( (j?j:"\n")	 );
+		},
+		//한줄의 탭사이즈를 구함
 		getTabSize:function(){
 			var tabInfo = /^([\s\t]*)(.*)/.exec(this.Source);
 			var tab   = tabInfo[1].replace(/[^\t]*/g,"").length;
 			var space = tabInfo[1].replace(/[^\s]*/g,"").length - tab;
 			return tab + Math.floor(space / 4);
 		},
-		//탭을 정렬함
-		getAlignTab:function(tabSize,tabString){
+		//한줄의 탭을 정렬함
+		getTabAbsolute:function(tabSize,tabString){
 			if(typeof tabSize == "number" || typeof tabSize == "string" ) tabSize = parseInt(tabSize);
 			if(typeof tabSize != "number") tabSize = this.getTabSize();
 			if(typeof tabString !== "string") tabString = "\t";
@@ -1339,13 +1344,50 @@
 			for(var i = 0; i < tabSize; i++) result += tabString;
 			return result + /^([\s\t]*)(.*)/.exec(this.Source)[2];
 		},
-		//탭음 밀어냄
-		getTabOffset:function(offset,tabString){
+		//각각의 탭음 밀어냄
+		getTabsOffset:function(offset,tabString){
 			offset = parseInt(offset);
 			if(typeof offset == "number") return _Split(this.Source,"\n").map(function(text){
-				return _String(text).getAlignTab(_String(text).getTabSize() + offset,tabString);
+				return _String(text).getTabAbsolute(_String(text).getTabSize() + offset,tabString);
 			}).join("\n");
 			return this.Source;
+		},
+		//라인중
+		getTabsSize:function(){
+			var minimum;
+			this.eachLine(function(line){
+				var tabSize = _String(line).getTabSize();
+				if((minimum == undefined) || (tabSize < minimum)) minimum = tabSize;
+			});
+			return minimum;
+		},
+		getTabsAlign:function(){
+			var beforeSize;
+			var baseOffset = 0;
+			return this.eachLine(function(line){
+				console.log("baseOffset",baseOffset);
+				var tabSize = _String(line).getTabSize();
+				console.log(tabSize,beforeSize);
+				if(beforeSize == undefined){
+					beforeSize = 0;
+					return line;
+				} else if(tabSize > beforeSize){
+					baseOffset++;
+				} else if(tabSize < beforeSize){
+					baseOffset--;
+				} else {
+					//nothing is right
+				}
+				beforeSize = tabSize;
+				return _String(line).getTabAbsolute(baseOffset);
+			});
+		},
+		getTrimLine:function(){
+			var lines =  _Array(this.getLines()).map(function(line,i){
+				var trimText = line.trim();
+				if(trimText != "") return line;
+				return "";
+			});
 		},
 		trim:function(trimParam,autoTrim){
 			original = this.Source;
@@ -6050,13 +6092,22 @@
 				}
 			} 
 			if (this.Source.scrollTop != needTo) this.Source.scrollTop = needTo;
+			
 		},
 		needZoom:function(needTo){
 			needTo = TONUMBER(needTo);
 			if(needTo < this.zoomMin) needTo = this.zoomMin;
 			if(needTo > this.zoomMax) needTo = this.zoomMax;
 			//if(TONUMBER(ELSTYLE(this.ClipView,"zoom")) != needTo ) 
+			// fix position
+			//var ScrollW = this.Source.scrollWidth + 0;
+			//var ScrollH = this.Source.scrollHeight + 0;
+			
 			ELSTYLE(this.ClipView,"zoom",needTo);
+		
+			//if(ScrollW != this.Source.scrollWidth) needScrollingOffsetX((this.Source.scrollWidth - ScrollW) / 2);
+			//if(ScrollH != this.Source.scrollHeight)needScrollingOffsetY((this.Source.scrollHeight - ScrollH) / 2);
+			
 		},
 		needZoomOffset:function(offset){ if( typeof this.StartZoom == "number" ) this.needZoom(this.StartZoom + offset); },
 		//
