@@ -142,7 +142,7 @@
 	margin-left:0px;
 	margin-top:0px;
 	padding:0px;
-	margin:0px;	
+	margin:0px;
 	> a, > a:hover { 
 		@if $menu-item-align == block {
 			@include block($menu-text-align);

@@ -7,7 +7,7 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.5.8";
+	var version = "0.6.0";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -655,8 +655,21 @@
 			return false;
 		},
 		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
-		"APPLY" : function(f,owner,args) { if(typeof f == "function"){ var mvArgs = CLONEARRAY(args); try { if(mvArgs.length > 0){ return f.apply(owner,mvArgs); } else { return f.call(owner); } } catch(e) { for(key in console) if(console[key] == f) { return f.apply(console,mvArgs); } throw e; } } },
-		"CALL" : function(f,owner) { if(typeof f == "function"){ if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); } try { var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } catch(e) { throw e; } } },
+		"APPLY" : function(f,owner,args) { 
+			if(typeof f == "function"){ 
+				var mvArgs = CLONEARRAY(args);
+				if(mvArgs.length > 0){ 
+					return f.apply(owner,mvArgs); 
+				} else { 
+					return f.call(owner); 
+				}
+				/* 콘솔에러로 만든 코드이나 디버깅이 어려워져 다시 블럭함 */
+				/*try { if(mvArgs.length > 0){ return f.apply(owner,mvArgs); } else { return f.call(owner); } } catch(e) { for(key in console) if(console[key] == f) { return f.apply(console,mvArgs); } throw e; } */
+			} 
+		},
+		"CALL" : function(f,owner) { 
+			if(typeof f == "function"){ if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); } var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } 
+		},
 		//함수가 존재하면 함수실행
 		"CALLBACK" : function(f){ if(typeof f == "function"){ var args = Array.prototype.slice.apply(arguments); args.shift(); return APPLY(f,undefined,args); } },		
 		//1:길이와 같이 2: 함수호출
@@ -901,7 +914,7 @@
 		// 순수 Array로 반환
 		toArray  : function()  { return Array.prototype.slice.call(this); },
 		//내부요소 모두 지우기
-		clear   : function() { this.length = 0; return this; },
+		clear   : function() { this.splice(0,this.length); return this; },
 		clone:function(){ return new AArray(this);},
 		//
 		getFirst:function(){ return ZERO(this); },
@@ -1321,11 +1334,7 @@
 			return _Split(this.Source,"\n").toArray();
 		},
 		eachLine:function(f,j){
-			if(typeof f == "function"){
-				var r = [];
-				var r = _Array(this.getLines()).map(function(s,i){ return f(s,i); });
-			}
-			return r.join( (j?j:"\n")	 );
+			if(typeof f == "function") return _Array(this.getLines()).map(function(s,i){ return f(s,i); }).compact().join( (j?j:"\n") );
 		},
 		//한줄의 탭사이즈를 구함
 		getTabSize:function(){
@@ -1365,9 +1374,9 @@
 			var beforeSize;
 			var baseOffset = 0;
 			return this.eachLine(function(line){
-				console.log("baseOffset",baseOffset);
+				//console.log("baseOffset",baseOffset);
 				var tabSize = _String(line).getTabSize();
-				console.log(tabSize,beforeSize);
+				//console.log(tabSize,beforeSize);
 				if(beforeSize == undefined){
 					beforeSize = 0;
 					return line;
@@ -1382,13 +1391,9 @@
 				return _String(line).getTabAbsolute(baseOffset);
 			});
 		},
-		getTrimLine:function(){
-			var lines =  _Array(this.getLines()).map(function(line,i){
-				var trimText = line.trim();
-				if(trimText != "") return line;
-				return "";
-			});
-		},
+		tabsAlign:function(){ this.Source = this.getTabsAlign(); return this; },
+		getTrimLine:function(){ return this.eachLine(function(line){ var trimText = line.trim(); return (trimText == "") ? undefined : line; }); },
+		trimLine:function(){ this.Source = this.getTrimLine(); return this; },
 		trim:function(trimParam,autoTrim){
 			original = this.Source;
 			if(autoTrim) original = this.Source.trim();
@@ -4795,6 +4800,10 @@
 		this.FireCurrent  = 0;
 	});
 	
+	makeGetter("FIRE",function(list,counter,executor){
+		return new Fire(list,executor).each(counter);
+	});
+	
 	//XMLHTTP REQUEST
 	makeModule("Request",{
 		__debug:function(data,param,moduleOption){
@@ -5532,6 +5541,11 @@
 			}
 			return MAKE_DIV({html:TOSTRING(managedData.Source)},feedViews);
 		},
+		whenSelectItem:function(m)  { if(typeof m == "function") this.shouldSelectItem = m; },
+		whenDeselectItem:function(m){ if(typeof m == "function") this.shouldDeselectItem = m; },
+		whenSelectToggle:function(se,de){ this.whenSelectItem(se); this.whenDeselectItem(de); },
+		"var!shouldSelectItem"  :function(node,depth){ ELSTYLE(node,"background","#dae8f2"); },
+		"var!shouldDeselectItem":function(node,depth){ ELSTYLE(node,"background","none") }
 	},function(renderDepth){
 		this.Source = _Array(arguments).map(function(a){
 			if(typeof a == "string"){
@@ -5585,21 +5599,28 @@
 			}
 		},
 		data:function(key,value,sender){
-			// 읽기
-			if( arguments.length < 2 ) return this.Source[key];
-			// 쓰기
+			// Read
+			if( arguments.length == 0) return CLONE(this.Source);
+			if( arguments.length == 1) return this.Source[key];
+			// Write
 			this.Source[key] = value;
 			DataContextNotificationCenter.managedDataBindEvent(this.BindID,key,value,sender);
 			return this;
 		},
+		removeData:function(key,sender){
+			if(key in this.Source){
+				delete this.Source[key];
+				DataContextNotificationCenter.managedDataBindEvent(this.BindID,key,"",sender);
+			}
+		},
 		text:function(key){
 			return MAKETEXT( this.data.apply(this,arguments) )
 		},
-		bind:function(dataKey,bindElement){
+		bind:function(dataKey,bindElement,optional){
 			if(this.scope) {
 				//엘리먼트 기본설정값
 				var element = typeof bindElement == "undefined" ? CREATE("input!"+bindElement) : CREATE(bindElement);
-				this.scope.addBindNode(element,this,dataKey);
+				this.scope.addBindNode(element,this,dataKey, optional);
 				return element;
 			} else {
 				console.warn("view컨트롤러 스코프 내에서만 bind를 사용할수 있습니다.");
@@ -5690,6 +5711,7 @@
 		},
 		//하위 데이터를 추가함
 		managedDataAppend:function(data){
+			if(typeof data == "function") data = data();
 			if(typeof data == "object") {
 				this.context.feedDownManagedDataMake(data,this);
 				DataContextNotificationCenter.managedDataAppend(this.BindID,this.Childrens.getLast());
@@ -5799,7 +5821,7 @@
 				this.containerNodes[bindID] = containerNode;
 			}
 		},
-		addBindNode:function(element,managedData,dataKey){
+		addBindNode:function(element,managedData,dataKey,optinal){
 			if( ISELNODE(element) ){
 				//값을 입력
 				ELVALUE( element, managedData.data(dataKey) );
@@ -5813,14 +5835,18 @@
 					case "input" :
 						ELON (element,"keyup",function(e) {
 							setTimeout(function(){
-								managedData.data(dataKey,ELVALUE(element),element);
+								var value = ELVALUE(element);
+								if( (optinal == true) && value == "" ) return managedData.removeData(dataKey,element);
+								managedData.data(dataKey,value,element);
 							},0);
 						});
 						break;
 					case "select":
 						ELON (element,"change",function(e){
 							setTimeout(function(){
-								managedData.data(dataKey,ELVALUE(element),element);
+								var value = ELVALUE(element);
+								if( (optinal == true) && value == "" ) return managedData.removeData(dataKey,element);
+								managedData.data(dataKey,value,element);
 							},0);
 						});
 						break;
@@ -5844,6 +5870,18 @@
 				}
 			});
 		},
+		setManagedData:function(managedData){
+			if (!managedData) return false;
+			if ("getRootManagedData" in managedData) managedData = managedData.getRootManagedData();
+			
+			if ( ISARRAY(managedData) ) {
+				this.managedData = managedData[0];
+			} else {
+				this.managedData = managedData;
+			}
+			CALL(this.dataDidChange,this);
+			return true;
+		},
 		needDisplay:function(managedData,rootElement){
 			//파라메터 두개가 존재하지 않으면 초기화 진행을 한다
 			if( (!managedData) && (!rootElement) ){
@@ -5851,16 +5889,16 @@
 				this.bindValueNodes = _Array();
 				this.structureNodes = {};
 				this.containerNodes = {};
+				this.selectIndexes  = _Array();
 			}
 			managedData     = managedData || this.managedData;
 			rootElement     = rootElement || this.view;
 			var viewController = this;
 			var feedCollection = ARRAYINARRAY(this.managedData.getDepth());
 			var lastFeed       = null;
-			var topLevel       = managedData.getLevel();
-			
+			var topLevel       = this.managedData.getLevel();
+			var startDepth     = managedData.getLevel();
 			managedData.feedUpManageData(function(managedData,depth){
-				
 				// 마지막 피드가 존재하지 않으면 depth값을 초기화함
 				if (lastFeed == null) lastFeed = depth;
 				
@@ -5869,10 +5907,9 @@
 				
 				var renderResult;
 				
-				if (depth == topLevel) {
+				if (depth == startDepth) {
 					// 최상위 렌더링
-					var position
-					renderResult = viewController.viewModel.needRenderView(depth,managedData,feedCollection[topLevel+1],viewController);
+					renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[topLevel+1],viewController);
 					//루트에 추가
 					rootElement.appendChild(renderResult);
 					//컨테이너에 추가
@@ -5883,7 +5920,7 @@
 					feedCollection[topLevel+1] = [];
 				} else if (depth < lastFeed) {
 					// 렌더 피드가 올라감
-					var renderResult = viewController.viewModel.needRenderView(depth,managedData,feedCollection[lastFeed],viewController);
+					var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[lastFeed],viewController);
 					//컨테이너에 추가
 					if( viewController.containerNodes[managedData.BindID] ){ 
 						ELAPPEND(viewController.containerNodes[managedData.BindID],feedCollection[lastFeed])
@@ -5894,7 +5931,7 @@
 				} else {
 					// 최하위 피드모음
 					// 렌더 피드가 내려감
-					var renderResult = viewController.viewModel.needRenderView(depth,managedData,[],viewController);
+					var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,[],viewController);
 					feedCollection[depth].push(renderResult);
 				}
 				// 마지막 피드 depth를 기록함
@@ -5906,87 +5943,105 @@
 				// 현재 스코프를 지움
 				managedData.scope = undefined;
 				
-			},topLevel);
+			},startDepth);
 		},
 		needDisplayWithViewModel:function(newViewModel){
 			this.viewModel = newViewModel;
 			this.needDisplay();
 		},
-		setManagedData:function(managedData){
-			if ("getRootManagedData" in managedData) managedData = managedData.getRootManagedData();
-			
-			if ( ISARRAY(managedData) ) {
-				this.managedData = managedData[0];
-			} else {
-				this.managedData = managedData;
-			}
-			CALL(this.dataDidChange,this);
+		needDisplayWithData:function(data){
+			this.setManagedData(data) ? this.needDisplay() : console.warn("데이터를 초기화하는데 실패하였습니다. 데이터의 형식이 잘못되었습니다.",data);
 		},
-		needSelectable:function(allowMultiSelect,allowSelectableLevel){
+		needSelectable:function(allowMultiSelect){
 			if(allowMultiSelect == true) this.allowMultiSelect = true;
-			if(typeof allowSelectableLevel == "number") this.allowSelectableLevel = allowSelectableLevel;
 			if(this.allowSelectable == false){
 				this.allowSelectable = true;
 				var owner = this;
 				ELON(this.view,"click",function(e){
+					var targetMangedData = owner.managedData.Childrens;
+					var targetNodes      = targetMangedData.clone().map(function(managedData){ return owner.structureNodes[managedData.BindID]; });
+					targetNodes.each(function(node,index){
+						if(e.target == node){
+							owner.triggingSelectItems(targetMangedData[index]);
+							return false;
+						} else if(FINDZERO(e.target,node)) {
+							owner.triggingSelectItems(targetMangedData[index]);
+							return false;
+						}
+					});
+					
+					/*
 					for(var bindId in owner.structureNodes){
 						if(e.target == owner.structureNodes[bindId]){
 							var selectManagedData = owner.managedData.findById(bindId);
 							if(selectManagedData){
 								if( selectManagedData.getLevel() == owner.allowSelectableLevel ){
-									owner.triggingSelectItems(bindId);
+									owner.triggingSelectItems(selectManagedData);
 								}
+							}
+						} else {
+							var eventCapture;
+							_Object(owner.structureNodes,function(node){
+								
+							});
+							
+							curSel.each(function(sel){
+								if(FINDZERO(e.target,sel)){
+									eventCapture = sel;
+									return false;
+								}
+							});
+							if(eventCapture){
+								ELTRIGGER(eventCapture,e.type);
+								return false;
 							}
 						}
 					}
+					*/
 				});
 			}
 		},
 		deselectAll:function(eventBlocking){
 			var owner = this;
 			if(this.selectIndexes.length > 0){
-				this.selectIndexes.each(function(bindID){
-					CALL(owner.shouldDeselectItem,owner,owner.structureNodes[bindID]);
-				});
+				if(this.viewModel){
+					this.selectIndexes.each(function(managedData){	
+						CALL(owner.viewModel.shouldDeselectItem,owner.structureNodes[managedData.BindID],owner.structureNodes[managedData.BindID],1);
+					});
+				}
+				
 				this.selectIndexes.clear();
 				if(eventBlocking != true) CALL(this.selectItemDidChange,this,this.selectIndexes);
 			}
 		},
-		triggingSelectItems:function(bindID){
+		triggingSelectItems:function(managedData){
 			if(this.allowMultiSelect == true){
-				if(this.selectIndexes.has(bindID)){
-					this.selectIndexes.remove(bindID);
-					this.shouldDeselectItem(this.structureNodes[bindID]);
+				if(this.selectIndexes.has(managedData)){
+					this.selectIndexes.remove(managedData);
+					if(this.viewModel) CALL(this.viewModel.shouldDeselectItem,this.structureNodes[managedData.BindID],this.structureNodes[managedData.BindID],1);
 					CALL(this.selectItemDidChange,this,this.selectIndexes);
 				} else {
-					this.selectIndexes.push(bindID);
-					this.shouldSelectItem(this.structureNodes[bindID]);
+					this.selectIndexes.push(managedData);
+					if(this.viewModel) CALL(this.viewModel.shouldSelectItem,this.structureNodes[managedData.BindID],this.structureNodes[managedData.BindID],1);
 					CALL(this.selectItemDidChange,this,this.selectIndexes);
 				}
 			} else {
-				if(this.selectIndexes.length == 1 && this.selectIndexes.has(bindID)){
+				if(this.selectIndexes.length == 1 && this.selectIndexes.has(managedData)){
 					this.deselectAll();
 				} else {
 					this.deselectAll(true);
-					this.selectIndexes.push(bindID)
-					CALL(this.shouldSelectItem,this,this.structureNodes[bindID]);
+					this.selectIndexes.push(managedData)
+					if(this.viewModel) CALL(this.viewModel.shouldSelectItem,this.structureNodes[managedData.BindID],this.structureNodes[managedData.BindID],1);
 					CALL(this.selectItemDidChange,this,this.selectIndexes);
 				}
 			}
 		},
 		getSelectableManagedItem:function(){
-			var owner = this;
-			return this.selectIndexes.getMap(function(bindID){
-				return owner.managedData.findById(bindID);
-			}).compact();
+			return CLONE(this.selectIndexes);
 		},
 		//이벤트
-		whenSelectItem:function(m)  { if((typeof m == "function") || m == undefined) this.shouldSelectItem = m; },
-		whenDeselectItem:function(m){ if((typeof m == "function") || m == undefined) this.shouldDeselectItem = m; },
-		whenItemDidChange:function(m){ if((typeof m == "function") || m == undefined) this.shouldDeselectItem = m; },
-		whenDataDidChange:function(m){ if((typeof m == "function") || m == undefined) this.shouldDeselectItem = m; },
-		"var!shouldSelectItem":function(node){ ELSTYLE(node,"background","#dae8f2"); },
-		"var!shouldDeselectItem":function(node){ ELSTYLE(node,"background","none") },
+		whenItemDidChange:function(m){ if((typeof m == "function") || m == undefined) this.selectItemDidChange = m; },
+		whenDataDidChange:function(m){ if((typeof m == "function") || m == undefined) this.dataDidChange = m; },
 		"var!selectItemDidChange":undefined,
 		"var!dataDidChange":undefined
 	},function(view,managedData,viewModel){
@@ -5996,12 +6051,12 @@
 		//선택관련 인자
 		this.allowSelectable  = false;
 		this.allowMultiSelect = false;
-		this.allowSelectableLevel = 1;
-		this.selectIndexes  = _Array();
+		
 		//바인딩 관련 인자
 		this.bindValueNodes = [];
 		this.structureNodes = {};
 		this.containerNodes = {};
+		this.selectIndexes  = _Array();
 		DataContextNotificationCenter.addObserver(this);
 	});
 	

@@ -1,16 +1,19 @@
-makeGetter("LABCSS3",function(query,name,value){
-	var makeQuery = $(query);
-	",-webkit-,-moz-,-ms-,-o-".replace(/[^\,]*\,/g,function(s){ 
-		makeQuery.css(s.replace(",","")+name,value);
-	});
-});
-makeGetter("HTMLFROMCODE",function(func){
-	if(ISELNODE(func)){
-		return _String(func.innerHTML.trim()).getTabsAlign();
-	} else if(typeof func == "function"){
-		var funcText = func+"";
-		return _String(UNWRAP(funcText.replace(/(^[^{]+)/g,"")).trim()).getTabsAlign();
-	}
+makeGetter("CODE",function(){
+	return _Array(arguments).map(function(func){
+		if(ISELNODE(func)){
+			return _String(func.innerHTML).trimLine().getTabsAlign();
+		} else if(typeof func == "function"){
+			var hideSwitch = false;
+			return _String(UNWRAP((func+"").replace(/(^[^{]+)/g,""))).trimLine().tabsAlign().eachLine(function(line){
+				if(line.indexOf("/*break*/") > -1) return "";
+				if(line.indexOf("/*linehide*/") > -1) {
+					hideSwitch = hideSwitch ? false : true;
+					return undefined;
+				} 
+				return hideSwitch ? undefined : line;
+			});
+		}
+	}).compact().join("\n\n");
 });
 makeGetter("CODEBLOCK",function(node){
 	DATAEACH(node,function(){
@@ -25,54 +28,88 @@ var loader = new Loader("#main-container",{
 	"mvvm":"subview/mvvm.html",
 	"scroll":"subview/scroll.html",
 	"viewmodel":"subview/viewmodel.html",
-	"multiselect":"subview/multiselect.html"
+	"multiselect":"subview/multiselect.html",
+	"selectbind":"subview/selectbind.html"
 });
 
 menuContext.onSelects("click",function(){
 	var pagename = ELATTR(this,"loadpage");
 	if(pagename) loader.open(pagename);
 });
-loader.setSwitchEvent("appear",function(){
+
+var appearLoad = function(){
 	
-	var codeBlock = function(){
-	/* fire */ 
-		new Fire(FIND(".appear-ready"),
-		function(){
-			setTimeout(function(){
-				LABCSS3(".gage-box-css .gage-box-line-container","transform","rotate("+ _Area("-60~60").getStringContents()  +"deg)");
-			},500);
-		}).each(function(node,i,touch){
+	/*linehide*/
+	var css3Transform = function(query,value){
+		",-webkit-,-moz-,-ms-,-o-".replace(/[^\,]*\,/g,function(s){ 
+			$(query).css(s.replace(",","")+"transform",value);
+		});
+	}
+	window.css3Transform = css3Transform;
+	/*linehide*/
+	
+	/* Actions */
+	FIND("#green-box",ELON,"click",function(){
+		css3Transform(".gage-box-line-container","rotate("+ _Area("-80~-20").getStringContents()+"deg)");
+	});
+	FIND("#yellow-box",ELON,"click",function(){
+		css3Transform(".gage-box-line-container","rotate("+ _Area("-20~20").getStringContents()+"deg)");
+	});
+	FIND("#red-box",ELON,"click",function(){
+		css3Transform(".gage-box-line-container","rotate("+ _Area("20~80").getStringContents()+"deg)");
+	});
+};
+var appearOpen = function(){
+	
+	/* CSS3 transform function for all browser */
+	var css3Transform = function(query,value){
+		",-webkit-,-moz-,-ms-,-o-".replace(/[^\,]*\,/g,function(s){ 
+			console.log("hi",query,s.replace(",","")+"transition",value)
+			$(query).css(s.replace(",","")+"transform",value);
+		});
+	}
+	/*break*/
+	/* Each element select and touch complete then fire */ 
+	FIRE(FIND(".appear-ready"),
+		function(node,i,touch){
 			var timeout = 100*i;
-		
+	
 			setTimeout(function(){
 				$(node).addClass("appear-submit");
 				touch();
 			},timeout);
-		});
-		
-	}
-	
-	codeBlock();
-	
-	
-	FIND(".code-block-1 code",ELVALUE,HTMLFROMCODE(FINDZERO(".read-block-1")));
+		},
+		function(){
+			setTimeout(function(){
+				css3Transform(".gage-box-line-container","rotate("+ _Area("-60~60").getStringContents()+"deg)");
+			},500);
+		}
+	)
+};
+
+loader.setLoadEvent("appear",function(){
+	FIND(".code-block-1 code",ELVALUE,CODE(FINDZERO(".read-block-1")));
 	CODEBLOCK(".code-block-1");
 	
-	FIND(".code-block-2 code",ELVALUE,HTMLFROMCODE(codeBlock));
+	FIND(".code-block-2 code",ELVALUE,CODE(appearOpen,appearLoad));
 	CODEBLOCK(".code-block-2");
 	
-	
+	appearLoad();
+})
+loader.setSwitchEvent("appear",function(){	
+	appearOpen();
 },function(){
 	FIND(".appear-ready",DATAEACH,function(node,i){
 		$(node).removeClass("appear-submit");
 	});
-	LABCSS3(".gage-box-css .gage-box-line-container","transform","rotate(-100deg)");
+	
+	window.css3Transform(".gage-box-line-container","rotate(-100deg)");
 });
 loader.setLoadEvent("mvvm",function(){
     var data = {"list":[
-    	{title:"카드이름1",description:"첫번째 카드입니다",list:[{title:"별명1"},{title:"별명2"},{title:"별명3"}]},
-  		{title:"카드이름2",description:"두번째 카드입니다",list:[{title:"별명4"},{title:"별명5"},{title:"별명6"}]},
-		{title:"카드이름3",description:"세번째 카드입니다",list:[{title:"별명7"},{title:"별명9"},{title:"별명10"}]}
+    	{title:"Section1",list:[{title:"Item1"},{title:"Item2"}]},
+  		{title:"Section2",list:[{title:"Item4"},{title:"Item5"}]},
+		{title:"Section3",list:[{title:"Item7"},{title:"Item8"}]}
     ]};
 	
 	var mvvmXMP =  $(MAKE("XMP")).appendTo("#init-data-view");
@@ -80,8 +117,9 @@ loader.setLoadEvent("mvvm",function(){
 	
 	//데이터를 불러거나 다시 출력하는 역활
     var dataContext = new DataContext(data,"list");
-	window.dat = dataContext;
+	
 	//뷰를 그리는 방법을 정의
+	var itemIndex = 10;
     var viewModel = new ViewModel(
   	  function(){
   		  return MAKE("div.inline-box.blue",
@@ -97,10 +135,10 @@ loader.setLoadEvent("mvvm",function(){
   						MAKE("td.in-set-sm",
   							MAKE("div.inline-box.green",
 								MAKE("div",this.bind("title","input.full-width")),
-								MAKE("div",this.bind("description","input.full-width")),
+								MAKE("div",this.bind("description","input.full-width[placeholder=Description]",true)),
   	  						  	MAKE("label",this.action("up",MAKE("button",MAKE("span.glyphicon.glyphicon-arrow-up")))),
   	  						  	MAKE("label",this.action("down",MAKE("button",MAKE("span.glyphicon.glyphicon-arrow-down")))),
-  	  						  	MAKE("label",this.action("append",MAKE("button",MAKE("span.glyphicon.glyphicon-plus")),{title:"새로운 별명"}))
+  	  						  	MAKE("label",this.action("append",MAKE("button",MAKE("span.glyphicon.glyphicon-plus")),function(){ return {title:"Item"+itemIndex++};}))
   						  )
   						),
 						this.container("td")
@@ -125,12 +163,12 @@ loader.setLoadEvent("mvvm",function(){
 
 // common data
 var viewData = [
-	{korean:"가나 공화국",language:"Ghana – Republic of Ghana",image:"resources/images/Ghana.png"},
-	{korean:"가봉 공화국",language:"Gabon – République Gabonaise",image:"resources/images/Gabon.png"},
-	{korean:"가이아나 공동 공화국",language:"Guyana – Co-operative Republic of Guyana",image:"resources/images/Guyana.png"},
-	{korean:"감비아 공화국",language:"Gambia – Republic of The Gambia",image:"resources/images/Gambia.png"},
-	{korean:"과테말라 공화국",language:"Guatemala – República de Guatemala",image:"resources/images/Guatemala.png"},
-	{korean:"그리스 공화국",language:"Ελλάδα – Ελληνική Δημοκρατία",image:"resources/images/Greece.png"}
+	{name:"Ghana",native:"Republic of Ghana",image:"resources/images/Ghana.png"},
+	{name:"Gabon",native:"République Gabonaise",image:"resources/images/Gabon.png"},
+	{name:"Guyana",native:"Co-operative Republic of Guyana",image:"resources/images/Guyana.png"},
+	{name:"Gambia",native:"Republic of The Gambia",image:"resources/images/Gambia.png"},
+	{name:"Guatemala",native:"República de Guatemala",image:"resources/images/Guatemala.png"},
+	{name:"Greece",native:"Ελληνική Δημοκρατία",image:"resources/images/Greece.png"}
 ];
 var viewDataContext = new DataContext(viewData);
 
@@ -145,7 +183,7 @@ var viewModels = {
 	"large":new ViewModel(function(){
 		return MAKE("li.inline-box.text-center",
 			MAKE("img",{src:this.data("image")}),
-			this.bind("language","p")
+			this.bind("native","p")
 		);
 		
 		
@@ -154,16 +192,16 @@ var viewModels = {
 	}),
 	"list":new ViewModel(function(){
 		return MAKE("tr",
-			MAKE("td",this.bind("korean","input.full-width")),
-			MAKE("td",this.bind("language","input.full-width")),
+			MAKE("td",this.bind("name","input.full-width")),
+			MAKE("td",this.bind("native","input.full-width")),
 			MAKE("td",this.bind("image","p"))
 		)
 	},function(){
 		return MAKE("table.table",
 			MAKE("thead",
 				MAKE("tr",
-					MAKE("th::korean"),
-					MAKE("th::language"),
+					MAKE("th::name"),
+					MAKE("th::native"),
 					MAKE("th::image")
 				)
 			),
@@ -197,16 +235,32 @@ loader.setLoadEvent("viewmodel",function(){
 });
 
 loader.setLoadEvent("multiselect",function(){
-	var viewController = new DataContextViewController("#multiselect-display",viewDataContext,viewModels["large"]);
+	var multiViewModel = new ViewModel(function(){
+		return MAKE("div.col-sm-6",
+			MAKE("div.thumbnail",
+				MAKE("img",{src:this.data("image")}),
+				MAKE("div.caption",
+					this.bind("name","h3"),
+					this.bind("native","p")
+				)
+			)
+		);
+	},function(){
+		return this.container("div.row-fluid");
+	});
+	multiViewModel.whenSelectToggle(
+		function(node){
+			$(".thumbnail",node).addClass("active");
+	},function(node){
+			$(".thumbnail",node).removeClass("active");
+	})
+	var viewController = new DataContextViewController("#multiselect-display",viewDataContext,multiViewModel);
+	// true is allowMultiSelect
 	viewController.needSelectable(true);
 	viewController.needDisplay();
 	
 	viewController.selectItemDidChange = function(items){
-		if(items.length > 0){
-			$(".side-bar-container").addClass("side-bar-active");
-		} else {
-			$(".side-bar-container").removeClass("side-bar-active");
-		}
+		(items.length > 0) ? $(".side-bar-container").addClass("side-bar-active") : $(".side-bar-container").removeClass("side-bar-active");
 	};
 	
 	$("#replaceData-submit").click(function(){
@@ -214,7 +268,8 @@ loader.setLoadEvent("multiselect",function(){
 		
 		if(model.count()){
 			var managedItems = viewController.getSelectableManagedItem();
-			managedItems.each(function(managedItem){
+			
+			DATAEACH(managedItems,function(managedItem){
 				model.each(function(value,key){
 					managedItem.data(key,value);
 				});
@@ -226,8 +281,51 @@ loader.setLoadEvent("multiselect",function(){
 		
 	});
 });
-loader.setOpenEvent("multiselect",function(){
-	//viewController.needDisplay();
+loader.setLoadEvent("selectbind",function(){
+	// view model
+	var listViewModel = new ViewModel(
+	function(){
+		return MAKE("a.list-group-item",
+			MAKE("h4.list-group-item-heading",MAKE("img",{src:this.data("image")}),MAKE("span",{html:"&nbsp;"}),this.bind("name","span")),
+			this.bind("native","p.list-group-item-text")
+		)
+	},function(){
+		return this.container("div.menu.list-group")
+	});
+	
+	listViewModel.whenSelectToggle(function(node){
+		$(node).addClass("active");
+	},function(node){
+		$(node).removeClass("active");
+	});
+	
+	var itemViewModel = new ViewModel(function(){
+		return MAKE("div",
+			MAKE("h5::Name"),
+			this.bind("name"),
+			MAKE("h5::Native"),
+			this.bind("native"),
+			MAKE("h5::Image"),
+			this.bind("image","p")
+		);
+	});
+	var itemController = new DataContextViewController("#bind-item-display",undefined,itemViewModel);
+	
+	
+	// list view
+	var viewController = new DataContextViewController("#bind-display",viewDataContext,listViewModel);
+	viewController.needSelectable();
+	viewController.needDisplay();
+	
+	viewController.selectItemDidChange = function(items){
+		(items.length > 0) ? $(".side-bar-container").addClass("side-bar-active") : $(".side-bar-container").removeClass("side-bar-active");
+		var item = items.zero();
+		if(item) itemController.needDisplayWithData(item);
+	};
+	
+	$(document).on("click","#bind-close-button",function(){
+		viewController.deselectAll();
+	});
 });
 loader.setLoadEvent("scroll",function(){
 	var scrollBox = new ScrollBox("#scroll-box");
