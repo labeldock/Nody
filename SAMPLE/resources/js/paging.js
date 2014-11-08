@@ -1,5 +1,5 @@
 // auther : labeldock (http://github.com/labeldock)
-
+ 
 var PagenationController = function(pagenationContainer,pagelistContainer,initData,listLength,pageLength){
 
 	//한개의 컨테이너만 허용

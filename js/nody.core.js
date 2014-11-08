@@ -4,8 +4,10 @@
 // lincense    // MIT lincense
 // GIT         // https://github.com/labeldock/Nody
 (+(function(W,NativeCore){
-	var nodyCoreVersion = "1.0";
-	//CONSOLE FIX
+	// 코어버전
+	var nodyCoreVersion = "1.2";
+	
+	// 콘솔설정 : ie에러 고침 : adobe air
 	if (typeof W.console !== "object"){W.console = {};} 'log info warn error count assert dir clear profile profileEnd"'.replace(/\S+/g,function(n){ 
 		if(!(n in W.console)){W.console[n] = function(){
 			if(typeof air == "object")if("trace" in air){
@@ -28,10 +30,13 @@
 			}
 		};} 
 	});
-	//Bench Mark
+	
+	// MARK("name") 두번호출하면 시간을 측정할수 있음
 	var MARKO = {};W.MARK = function(name){ if(typeof name == "string" || typeof name == "number") { name = name+""; if(typeof MARKO[name] == "number") { console.info("MARK::"+name+" => "+ (+new Date() - MARKO[name])); delete MARKO[name]; } else { console.info("MARK START::"+name); MARKO[name] = +new Date(); } } };
+	
 	//IE8 TRIM FIX
 	if(!String.prototype.trim) String.prototype.trim = function() { return this.replace(/(^\s*)|(\s*$)/gi, "");TOS };
+	
 	//IE7 JSON FIX
 	var __aJSONCount__ = "JSON" in W ? 1 : 0; 
 	W.aJSON = {
@@ -47,13 +52,71 @@
  		}
 	};
 	if(typeof W.JSON == "undefined"){W.JSON = aJSON;};
+	
 	//IE8 Success FIX
 	if (typeof W.success == "function"){W.success = "success";};
+	
 	//IE8 function bind FIX
 	if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { /* closest thing possible to the ECMAScript 5 internal IsCallable function */ throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments,1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }
 	
 	//NativeCore console trace
-	W.NativeTrace = function(){ return TOSTRING(NativeCore); };
+	W.NativeModule   = function(name){
+		if (NativeCore.Modules[name]) {
+			var result = name + "(" + /\(([^\)]*)\)/.exec( ((NativeCore.Modules[name].prototype["set"])+"") )[1] + ")"
+			var i2 = 0;
+			for(protoName in NativeCore.Modules[name].prototype ) switch(protoName){
+				case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__GlobalConstructor__":
+					break;
+				default:
+					if(typeof NativeCore.Modules[name].prototype[protoName] == "function") result += "\n    " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NativeCore.Modules[name].prototype[protoName])+"") )[1] + ")" ;
+					i2++;
+					break;
+			}
+			return result;
+		} else {
+			return name + " module is not found."
+		}
+	};
+	
+	W.NativeTrace = function(){ 
+		var logText = [];
+		//Getter
+		var getterText = "# Native Getter";
+		for (var i=0,l=NativeCore.Getters.length;i<l;i++) getterText += "\n" + i + " : " + NativeCore.Getters[i];
+		logText.push(getterText)
+		//Sigletons
+		var singletonText = "# Native Singleton";
+		var i=0;
+		for ( key in NativeCore.Singletons ) {
+			singletonText += "\n" + i + " : " + key ;
+			var i2=0;
+			switch(key){
+				case "AFoundation": case "ELUT": case "NODY": case "FINDEL": case "ElementFoundation": case "ElementGenerator":
+					var count = 0;
+					for( protoName in NativeCore.Singletons[key].constructor.prototype) count++;
+					singletonText += "\n    [" + count + "]...";
+					break;
+				default:
+					for( protoName in NativeCore.Singletons[key].constructor.prototype) {
+						singletonText += "\n    " + i2 + " : " + protoName;
+						i2++;
+					}
+					break;
+			}
+			i++;
+		}
+		logText.push(singletonText);
+		//Module
+		var moduleText = "# Native Module";
+		var i=0;
+		for ( key in NativeCore.Modules ) {
+			moduleText += "\n " + i + " : " + W.NativeModule(key);
+			i++;
+		}
+		logText.push(moduleText);
+		return logText.join("\n");
+	};
+	
 	//NativeCore Start
 	var NativeFactoryObject = function(type,name,sm,gm){
 		if( !(name in NativeCore.Modules) ){
@@ -61,7 +124,7 @@
 			switch(type){
 				case "object":
 					nativeProto = {};
-					setter      = typeof sm == "function" ? function(v){  sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : function(v){ this.Source = v; return this; };
+					setter      = typeof sm == "function" ? function(v){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : function(v){ this.Source = v; return this; };
 					getter      = gm?gm:function(){return this.Source;};
 					break;
 				case "array":
@@ -74,7 +137,7 @@
 					throw new Error("NativeFactoryObject :: 옳지않은 타입이 이니셜라이징 되고 있습니다. => " + type)
 					break;	
 			}
-			var nativeConstructor = function(){ if(typeof this.set == "function"){ this.set.apply(this,Array.prototype.slice.apply(arguments)); } };
+			var nativeConstructor = function(){ if(typeof this.set == "function"){ for(protoKey in NativeCore.Modules[name].prototype){ if(protoKey.indexOf("var!") == 0) this[protoKey.substr(4)] = NativeCore.Modules[name].prototype[protoKey]; }; this.set.apply(this,Array.prototype.slice.apply(arguments)); } };
 			NativeCore.Modules[name]               = nativeConstructor;
 			NativeCore.Modules[name].prototype     = nativeProto;
 			NativeCore.Modules[name].prototype.set = setter;
@@ -89,9 +152,9 @@
 				//scope start
 				var currentScopeDepth,currentScopeModuleName,currentScopePrototype,currentMethodName,currentCallMethod=arguments.callee.caller,superScope = 0;
 				for(scopeMax=this.__NativeHistroy__.length;superScope<scopeMax;superScope++){
-					currentScopeDepth       = (this.__NativeHistroy__.length - 1) - superScope ;
-					currentScopeModuleName  = this.__NativeHistroy__[currentScopeDepth];
-					currentScopePrototype = NativeCore.Modules[currentScopeModuleName].prototype.constructor.prototype;
+					currentScopeDepth      = (this.__NativeHistroy__.length - 1) - superScope ;
+					currentScopeModuleName = this.__NativeHistroy__[currentScopeDepth];
+					currentScopePrototype  = NativeCore.Modules[currentScopeModuleName].prototype.constructor.prototype;
 					currentMethodName;
 					for(var key in currentScopePrototype){
 						if(key !== "_super" && currentScopePrototype[key] == currentCallMethod){
@@ -196,7 +259,7 @@
 	};
 	//Getter:Core
 	W.makeGetter    = function(n,m){ var name=n.toUpperCase(); W[name]=m; NativeCore.Getters.push(name); };
-	dataConstructorPrototype = {
+	structruePrototype = {
 		"get":function(key){ if(key) return this.Source[key]; return this.Source; },
 		"empty":function(){ for(var k in this.Source) delete this.Source[k]; return this.Source; },
 		"replace":function(data){ this.empty(); for(var k in data) this.Source[k] = data[k]; return this.Source; },
@@ -209,7 +272,7 @@
 		if(typeof n !== "string" || typeof m !== "function") return console.warn("makeStructure::worng arguments!");
 		NativeCore.Structure[n]=function(){ this.Source={};m.apply(this,Array.prototype.slice.call(arguments)); };
 		NativeCore.Structure[n].prototype = {"constructor":m};
-		for(var key in dataConstructorPrototype) NativeCore.Structure[n].prototype[key] = dataConstructorPrototype[key];
+		for(var key in structruePrototype) NativeCore.Structure[n].prototype[key] = structruePrototype[key];
 		window[n] = NativeCore.Structure[n];
 	};
 	//Data가 

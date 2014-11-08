@@ -7,13 +7,13 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.6.0";
+	var version = "0.6.2";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
 	
 	// 코어버전
-	var nodyCoreVersion = "1.1";
+	var nodyCoreVersion = "1.3";
 	
 	// 콘솔설정 : ie에러 고침 : adobe air
 	if (typeof W.console !== "object"){W.console = {};} 'log info warn error count assert dir clear profile profileEnd"'.replace(/\S+/g,function(n){ 
@@ -68,17 +68,15 @@
 	if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { /* closest thing possible to the ECMAScript 5 internal IsCallable function */ throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments,1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }
 	
 	//NativeCore console trace
-	W.NativeAPI   = function(name){
+	W.NativeModule   = function(name){
 		if (NativeCore.Modules[name]) {
-			var result = name;
+			var result = name + "(" + /\(([^\)]*)\)/.exec( ((NativeCore.Modules[name].prototype["set"])+"") )[1] + ")"
 			var i2 = 0;
 			for(protoName in NativeCore.Modules[name].prototype ) switch(protoName){
 				case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__GlobalConstructor__":
 					break;
 				default:
-					
-					
-					result += "\n    " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NativeCore.Modules[name].prototype[protoName])+"") )[1] + ")" ;
+					if(typeof NativeCore.Modules[name].prototype[protoName] == "function") result += "\n    " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NativeCore.Modules[name].prototype[protoName])+"") )[1] + ")" ;
 					i2++;
 					break;
 			}
@@ -120,7 +118,7 @@
 		var moduleText = "# Native Module";
 		var i=0;
 		for ( key in NativeCore.Modules ) {
-			moduleText += "\n " + i + " : " + W.NativeAPI(key);
+			moduleText += "\n " + i + " : " + W.NativeModule(key);
 			i++;
 		}
 		logText.push(moduleText);
@@ -162,9 +160,9 @@
 				//scope start
 				var currentScopeDepth,currentScopeModuleName,currentScopePrototype,currentMethodName,currentCallMethod=arguments.callee.caller,superScope = 0;
 				for(scopeMax=this.__NativeHistroy__.length;superScope<scopeMax;superScope++){
-					currentScopeDepth       = (this.__NativeHistroy__.length - 1) - superScope ;
-					currentScopeModuleName  = this.__NativeHistroy__[currentScopeDepth];
-					currentScopePrototype = NativeCore.Modules[currentScopeModuleName].prototype.constructor.prototype;
+					currentScopeDepth      = (this.__NativeHistroy__.length - 1) - superScope ;
+					currentScopeModuleName = this.__NativeHistroy__[currentScopeDepth];
+					currentScopePrototype  = NativeCore.Modules[currentScopeModuleName].prototype.constructor.prototype;
 					currentMethodName;
 					for(var key in currentScopePrototype){
 						if(key !== "_super" && currentScopePrototype[key] == currentCallMethod){
@@ -315,19 +313,10 @@
 		NativeCore.Singletons[n]=W[n];
 	};
 	W.makeGetters   = function(o){ if(typeof o == "object") for(var k in o) W.makeGetter(k,o[k]); };
-})(window,{
-	Getters:[],
-	Singletons:{},
-	Modules:{},
-	Structure:{}
-}));
-//Nody Foundation
-(+(function(W){
-	if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
 	
 	var FUT_CACHE;
-	
 	W.makeSingleton("FUT",{
+		//함수를 연속적으로 사용 가능하도록 함
 		"CONTINUTILITY":function(func,over,owner){
 			return function(){
 				var args = Array.prototype.slice.apply(arguments);
@@ -337,6 +326,67 @@
 				}
 				return func.apply(owner,args);
 			}
+		},
+		//URL Info
+		"PAGEURLINFO":function(url){
+			if(typeof url == "object") {
+				if( url["ConstructorMark"] ==  ("ClientURLInfo" + W.nody)){
+					return url;
+				} else {
+					null;
+				}
+			}
+			try {
+				var info = /([\w]+)(\:[\/]+)([^/]*\@|)([\w\d\.\-\_\+]+)(\:[\d]+|)(\/|)([\w\d\.\/\-\_]+|)(\?[\d\w\=\&\%]+|)(\#[\d\w]*|)/.exec(url?url:this.url());
+				return {
+					"ConstructorMark" : "ClientURLInfo" + W.nody,
+					"url"      : this.url(),
+					"protocol" : info[1],
+					"divider"  : info[2],
+					"userinfo" : info[3],
+					"hostname" : info[4],
+					"port"     : info[5].substring(1),
+					"path"     : info[6]+info[7],
+					"query"    : info[8],
+					"fragment" : info[9],
+					"filename" : /(\/|)([\w\d\.\-\_]+|)$/.exec(info[6]+info[7])[2]
+				}
+			} catch(e) {
+				return null;
+			}
+		},
+		"PAGEROOT":function(url){ var h = FUT.PAGEURLINFO(url); return h.protocol + h.divider + h.hostname + (h.port != ""?":"+h.port:h.port) + (slash==false?"":"/"); },
+		//current loading page info
+		"LOADINGSCRIPTURL":function(){ 
+			var scripts = document.getElementsByTagName('script');
+			var lastScript = scripts[scripts.length-1];
+			var scriptString;
+			if(lastScript){
+				scriptString = lastScript.src;
+			} else {
+				console.warn("GETSCRIPTURL faild");
+			}
+			//ie7 fix
+			if(!/^[\w]+\:\//.test(scriptString)) scriptString = FUT.PAGEROOT() + scriptString;
+			return scriptString;
+		},
+		"LOADINGSCRIPTROOT":function(){ return FUT.LOADINGSCRIPTURL().replace(/([^\/]+$)/,""); },
+		"INCLUDE":function(aFilename){
+			var filetype = /\.([^\.]+)$/.exec(aFilename)[1];
+			if (filetype=="js"){ 
+				//if aFilename is a external JavaScript file
+				var fileref=document.createElement('script');
+				fileref.setAttribute("type","text/javascript");
+				fileref.setAttribute("src", aFilename);
+			}
+			else if (filetype=="css") {
+				//if aFilename is an external CSS file
+				var fileref=document.createElement("link");
+				fileref.setAttribute("rel", "stylesheet");
+				fileref.setAttribute("type", "text/css");
+				fileref.setAttribute("href", aFilename);
+			}
+			document.getElementsByTagName("head")[0].appendChild(fileref);
 		},
 		"CACHEIN":function(sender,name){
 			if( !(sender in FUT_CACHE) ) return false;
@@ -349,6 +399,18 @@
 		"CACHETRACE":function()     { return JSON.stringify(FUT_CACHE); }
 	});
 	FUT.CACHECLEAR();
+	
+	
+})(window,{
+	Getters:[],
+	Singletons:{},
+	Modules:{},
+	Structure:{}
+}));
+//Nody Foundation
+(+(function(W){
+	if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
+	
 	//
 	W.makeSingleton("AFoundation",{
 		// 첫번째 값이 유효하지 않으면 값을 대채함
@@ -374,6 +436,51 @@
 		"CLONEARRAY":function(v) { var mvArray = []; if( ISARRAY(v) ) { if("toArray" in v){ Array.prototype.splice.apply(mvArray,v.toArray()); } else { for(var i=0,l=v.length;i<l;i++) mvArray.push(v[i]); } } else { if(v||v==0) mvArray.push(v); return this; } return mvArray; },
 		//배열안에 배열을 길이만큼 추가
 		"ARRAYINARRAY":function(l) { l=TONUMBER(l);var aa=[];for(var i=0;i<l;i++){ aa.push([]); }return aa; },
+		//배열의 하나추출
+		"ZERO"   :function(t){ return typeof t == "object" ? typeof t[0] == "undefined" ? undefined : t[0] : t; },
+		//배열의 뒤
+		"LAST"   :function(t){ return ISARRAY(t) ? t[t.length-1] : t; },
+		// 0, "  ", {}, [] 등등 value가 없는 값을 검사합니다.
+		"ISNOTHING":function(o){ 
+	        if (typeof o == "undefined")return true;
+			if (typeof o == "string")return o.trim().length < 1 ? true : false;
+			if (typeof o == "object"){
+				if(ISELNODE(o)) return false;
+				if(o == null ) return true;
+				if(ISARRAY(o)) {
+					o = o.length;
+				} else {
+		            var count = 0; for (var prop in o) { count = 1; break; } o = count;
+				}
+			}
+	        if (typeof o == "number")return o < 1 ? true : false;
+	        if (typeof o == "function")return false;
+			if (typeof o == "boolean")return !this.Source;
+			console.warn("ISNOTHING::이 타입에 대해 알아내지 못했습니다. nothing으로 간주합니다.",o);
+	        return true;
+		},
+		"ISMEANING":function(o){ return !ISNOTHING(o); },
+		"ISENOUGH" :function(o){ return !ISNOTHING(o); },
+		//숫자로 변환합니다. 디폴트 값이나 0으로 반환합니다.
+		"TONUMBER":function(v,d){
+			switch(typeof v){ case "number":return v;case "string":var r=v*1;return isNaN(r)?0:r;break; }
+			switch(typeof d){ case "number":return d;case "string":var r=d*1;return isNaN(r)?0:r;break; }
+			return 0;
+		},
+		//1:길이와 같이 2: 함수호출
+		"TIMES":function(l,f){ l=TONUMBER(l); for(var i=0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
+		"TIMESMAP":function(l,f){ l=TONUMBER(l); var r = []; for(var i=0;i<l;i++) r.push(f(i)); return r; },
+		// 데이터의 갯수를 샘
+		"DATACOUNT" : function(v){
+			if( v == undefined || v == null ) return 0;
+			if( typeof v == "object"){
+				if( ISARRAY(v) ) return v.length;
+				var count = 0;
+				for(var key in v) count++;
+				return count;
+			}
+			return 1;
+		},
 		//중복되는 값 제거
 		"DATAUNIQUE" :function() {
 			var value  = [];
@@ -393,10 +500,35 @@
 			}
 			return result;
 		},
-		//배열의 하나추출
-		"ZERO"   :function(t){ return typeof t == "object" ? typeof t[0] == "undefined" ? undefined : t[0] : t; },
-		//배열의 뒤
-		"LAST"   :function(t){ return ISARRAY(t) ? t[t.length-1] : t; },
+		// 각각의 값의 function실행
+		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
+		// 각각의 값의 function실행
+		"DATAEACHBACK":FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
+		// 각각의 값을 배열로 다시 구해오기
+		"DATAMAP"     :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f(ev[i],i)); return rv; },2),
+		// 각각의 값을 배열로 다시 구해오되 undefined는 제거합니다
+		"DATAGATHER"  :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) { var def = f(ev[i],i); if(typeof def !== "undefined") rv.push(); } return rv; },2),
+		// 배열을 댑스를 모두 제거합니다.
+		"DATAFLATTEN":function(){ var result = []; function arrayFlatten(args){ DATAEACH(args,function(arg){ if(ISARRAY(arg)) return DATAEACH(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
+		// 배열을 댑스를 모두 제거합니다.
+		"DATAFILTER":function(inData,filterMethod){
+			var data = TOARRAY(inData);
+			if(typeof filterMethod == "undefined") { filterMethod = function(a){ return typeof a == "undefined" ? false : true; }; } 
+			if(typeof filterMethod == "function"){
+				var result=[];
+				DATAEACH(data,function(v,i){ if(filterMethod(v,i)==true) result.push(v); });
+				return result;
+			}
+			return [];
+		},
+		"DATAINDEX":function(data,compare){ var v = TOARRAY(data); for(var i in v) if(compare == v[i]) return TONUMBER(i); },
+		//오브젝트의 key를 each열거함
+		"ENUMERATION":FUT.CONTINUTILITY(function(v,f){if((typeof v == "object") && (typeof f == "function")){for(k in v) {f(v[k],k)}}; return v; },2),
+		//무엇이든 길이를 리턴합니다.
+		"TOLENGTH":function(v,d){
+			switch(typeof v){ case "number":return (v+"").length;break;case "string":return v.length;case "object":if("length" in v)return v.length;}
+			return (typeof d=="undefined")?0:d;
+		},
 		//무엇이든 문자열로 넘김
 		"TOSTRING":function(tosv,depth,jsonfy){
 			if(typeof depth == "undefined") depth = 10;
@@ -411,16 +543,8 @@
 						if(tosv == document) { return '"[document]"'; }
 						//node3
 						var tn = tosv.tagName.toLowerCase();
-						var ti = _Type(tosv.id).isNothing(function(){
-							return "";
-						}, function(id){
-							return "#"+id ;
-						});
-						var tc = _Type(tosv.className).isNothing(function(){
-							return "";
-						}, function(className){
-							return "." + className.split(" ").join(".");
-						});
+						var ti = ISNOTHING(tosv.id) ? "" : "#"+tosv.id;
+						var tc = ISNOTHING(tosv.className) ? "" : "." + tosv.className.split(" ").join(".");
 						return jsonfy==true ? '"'+tn+ti+tc+'"' : tn+ti+tc; 
 					} else if(ISTEXTNODE(tosv)) {
 						return '#text '+tosv.textContent;
@@ -431,7 +555,7 @@
 						return "["+(jsonfy==true?result.join(","):result.join(", "))+"]";
 					} else if(tosv.jquery){
 						//jquery
-						var result = _Array(tosv).map(function(o){ return _Lazy(o).tos(); }).join(", ");
+						var result = DATAMAP(tosv,function(o){ TOSTRING(o); }).join(", ");
 						return jsonfy==true ? '"$['+result+']"' : "$["+result+"]";
 					} else {
 						//object
@@ -638,18 +762,21 @@
 		"SNAKE":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("_"); },
 		//to kebab-case
 		"KEBAB":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("-"); },
-		//타입검사
+		//inspect type
 		"ISTYPE":function(t,v) {
 			//real
-			if(t instanceof v) return true;
-			//tName
-			var vn = ((typeof v == "function") ? v["__NatvieContstructorName__"] : v);
-			//inspect
-			if( (typeof t=="object") && (typeof vn=="string") ) if("__NativeHistroy__" in t) {
-				var his = t["__NativeHistroy__"];
+			try {
+				if(t instanceof v) return true;
+			} catch(e){
+				//tName
+				var vn = ((typeof v == "function") ? v["__NatvieContstructorName__"] : v);
+				//inspect
+				if( (typeof t=="object") && (typeof vn=="string") ) if("__NativeHistroy__" in t) {
+					var his = t["__NativeHistroy__"];
 				
-				for(var i=0,l=his.length;i<l;i++){
-					if(his[i] == vn) return true;
+					for(var i=0,l=his.length;i<l;i++){
+						if(his[i] == vn) return true;
+					}
 				}
 			}
 			return false;
@@ -672,54 +799,6 @@
 		},
 		//함수가 존재하면 함수실행
 		"CALLBACK" : function(f){ if(typeof f == "function"){ var args = Array.prototype.slice.apply(arguments); args.shift(); return APPLY(f,undefined,args); } },		
-		//1:길이와 같이 2: 함수호출
-		"TIMES":function(l,f){ l=TONUMBER(l); for(var i=0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
-		// 데이터의 갯수를 샘
-		"DATACOUNT" : function(v){
-			if( v == undefined || v == null ) return 0;
-			if( typeof v == "object"){
-				if( ISARRAY(v) ) return v.length;
-				var count = 0;
-				for(var key in v) count++;
-				return count;
-			}
-			return 1;
-		},
-		// 각각의 값의 function실행
-		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
-		// 각각의 값의 function실행
-		"DATAEACHBACK":FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
-		// 각각의 값을 배열로 다시 구해오기
-		"DATAMAP"     :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f(ev[i],i)); return rv; },2),
-		// 각각의 값을 배열로 다시 구해오되 undefined는 제거합니다
-		"DATAGATHER"  :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) { var def = f(ev[i],i); if(typeof def !== "undefined") rv.push(); } return rv; },2),
-		// 배열을 댑스를 모두 제거합니다.
-		"DATAFLATTEN":function(){ var result = []; function arrayFlatten(args){ DATAEACH(args,function(arg){ if(ISARRAY(arg)) return DATAEACH(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
-		// 배열을 댑스를 모두 제거합니다.
-		"DATAFILTER":function(inData,filterMethod){
-			var data = TOARRAY(inData);
-			if(typeof filterMethod == "undefined") { filterMethod = function(a){ return typeof a == "undefined" ? false : true; }; } 
-			if(typeof filterMethod == "function"){
-				var result=[];
-				DATAEACH(data,function(v,i){ if(filterMethod(v,i)==true) result.push(v); });
-				return result;
-			}
-			return [];
-		},
-		"DATAINDEX":function(data,compare){ var v = TOARRAY(data); for(var i in v) if(compare == v[i]) return TONUMBER(i); },
-		//오브젝트의 key를 each열거함
-		"ENUMERATION":FUT.CONTINUTILITY(function(v,f){if((typeof v == "object") && (typeof f == "function")){for(k in v) {f(v[k],k)}}; return v; },2),
-		//무엇이든 길이를 리턴합니다.
-		"TOLENGTH":function(v,d){
-			switch(typeof v){ case "number":return (v+"").length;break;case "string":return v.length;case "object":if("length" in v)return v.length;}
-			return (typeof d=="undefined")?0:d;
-		},
-		//숫자로 변환합니다. 디폴트 값이나 0으로 반환합니다.
-		"TONUMBER":function(v,d){
-			switch(typeof v){ case "number":return v;case "string":var r=v*1;return isNaN(r)?0:r;break; }
-			switch(typeof d){ case "number":return d;case "string":var r=d*1;return isNaN(r)?0:r;break; }
-			return 0;
-		},
 		//i 값이 제귀합니다.
 		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 		"RETURNINDEX":function(index,maxIndex){ return TONUMBER(maxIndex,TOLENGTH(index))-TURNINDEX(index,maxIndex)-1; },
@@ -746,27 +825,6 @@
 				}
 			}
 		},
-		// 0, "  ", {}, [] 등등 value가 없는 값을 검사합니다.
-		"ISNOTHING":function(o){ 
-	        if (typeof o == "undefined")return true;
-			if (typeof o == "string")return o.trim().length < 1 ? true : false;
-			if (typeof o == "object"){
-				if(ISELNODE(o)) return false;
-				if(o == null ) return true;
-				if(ISARRAY(o)) {
-					o = o.length;
-				} else {
-		            var count = 0; for (var prop in o) { count = 1; break; } o = count;
-				}
-			}
-	        if (typeof o == "number")return o < 1 ? true : false;
-	        if (typeof o == "function")return false;
-			if (typeof o == "boolean")return !this.Source;
-			console.warn("ISNOTHING::이 타입에 대해 알아내지 못했습니다. nothing으로 간주합니다.",o);
-	        return true;
-		},
-		"ISMEANING":function(o){ return !ISNOTHING(o); },
-		"ISENOUGH" :function(o){ return !ISNOTHING(o); },
 		"Structure#StringNumberInfo":function(nv){
 			var i = /([\D]*)(([\d\,]+|)+(\.[\d]+|))([\D]*)/.exec(nv);
 			var n = /([0]*)(.*)/.exec(i[2]);
@@ -1756,7 +1814,6 @@
 	extendModule("String","Number",{
 		// number core
 		// spot 1:prefix 2:integer 3:floatValue 4:suffix
-		
 		isNotANumber:function(){ if((new StringNumberInfo(this.Source)).get("number").length) return true; return false; },
 		isANumber   :function(){ return !this.isNotANumber(); },
 		getNumberInfo : function(spot){
@@ -2378,34 +2435,8 @@
 		bound :function(){ return {"width":this.width(),"height":this.height()}; },
 		//document path
 		url      : function()    { return window.document.URL.toString(); },
-		urlInfo  : function(url)    {
-			if(typeof url == "object") {
-				if( url["ConstructorMark"] ==  ("ClientURLInfo" + W.nody)){
-					return url;
-				} else {
-					null;
-				}
-			}
-			try {
-				var info = /([\w]+)(\:[\/]+)([^/]*\@|)([\w\d\.\-\_\+]+)(\:[\d]+|)(\/|)([\w\d\.\/\-\_]+|)(\?[\d\w\=\&\%]+|)(\#[\d\w]*|)/.exec(url?url:this.url());
-				return {
-					"ConstructorMark" : "ClientURLInfo" + W.nody,
-					"url"      : this.url(),
-					"protocol" : info[1],
-					"divider"  : info[2],
-					"userinfo" : info[3],
-					"hostname" : info[4],
-					"port"     : info[5].substring(1),
-					"path"     : info[6]+info[7],
-					"query"    : info[8],
-					"fragment" : info[9],
-					"filename" : /(\/|)([\w\d\.\-\_]+|)$/.exec(info[6]+info[7])[2]
-				}
-			} catch(e) {
-				return null;
-			}
-		},
-		root      : function(url,slash) { var h = this.urlInfo(url); return h.protocol + h.divider + h.hostname + (h.port != ""?":"+h.port:h.port) + (slash==false?"":"/"); },
+		urlInfo  : function(url) { return FUT.PAGEURLINFO(); },
+		root      : function(url,slash) { return FUT.PAGEROOT(); },
 		protocol  : function(url) { var h = this.urlInfo(url); return h.protocol; },
 		uri       : function(url) { var h = this.urlInfo(url); return h.path;     },
 		filename  : function(url) { var h = this.urlInfo(url); return h.filename; },
@@ -2438,22 +2469,11 @@
 		fragment  : function(url) { var h = this.urlInfo(url); return h.fragment; },
 		queryData : function(url) { var h = this.urlInfo(url); return TOOBJECT(h.query); },
 		//script path
-		scriptUrl  : function()   { 
-			return (function(){ 
-				var find    = false;
-				var scripts = _Array(document.getElementsByTagName('script'));
-				var scriptString = scripts.filter(function(s){ 
-										if(ISELNODE(s))	if(!find) if(s.src.search("nody") > -1) {find=true; return true;}
-									}).useFirst().src;
-				// ie7 fix 
-				if(!/^[\w]+\:\//.test(scriptString)) scriptString = _Client.root() + scriptString;
-				return scriptString;
-			})(); 		
-		},
+		scriptUrl  : (function(){ var scripturl = FUT.LOADINGSCRIPTURL(); return function(){ return scripturl; } })(),
 		scriptInfo : function(url) { return this.urlInfo(url?url:this.scriptUrl()); },
 		scriptName : function(url) { return this.scriptInfo(url).filename },
 		scriptPath : function(url) { return this.scriptInfo(url).path     },
-		scriptRoot : function(url) { return /(.*\/|\/|)[^\/]*$/.exec(this.scriptInfo(url).path)[1] },
+		scriptRoot : function(url) { return /(.*\/|\/|)[^\/]*$/.exec(this.scriptInfo(url).path)[1]; },
 		//cookie
 		setCookie:function (name, value, expire, path) { document.cookie = name + "=" + escape(value) + ((expire == undefined) ?"" : ("; expires=" + expire.toGMTString())) + ";path=" + (typeof path == "undefined"?"/":escape(path)) },
 		getCookie:function (name,path) {
@@ -2530,23 +2550,7 @@
 		},
 		
 		//include
-		include:function(aFilename){
-			var filetype = /\.([^\.]+)$/.exec(aFilename)[1];
-			if (filetype=="js"){ 
-				//if aFilename is a external JavaScript file
-				var fileref=document.createElement('script');
-				fileref.setAttribute("type","text/javascript");
-				fileref.setAttribute("src", aFilename);
-			}
-			else if (filetype=="css") {
-				//if aFilename is an external CSS file
-				var fileref=document.createElement("link");
-				fileref.setAttribute("rel", "stylesheet");
-				fileref.setAttribute("type", "text/css");
-				fileref.setAttribute("href", aFilename);
-			}
-			document.getElementsByTagName("head")[0].appendChild(fileref);
-		},
+		include:function(aFilename){ return FUT.INCLUDE(aFilename); },
 		//clipboard
 		setClipboard:function(s){
 			//http://stackoverflow.com/questions/7713182/copy-to-clipboard-for-all-browsers-using-javascript
@@ -5871,18 +5875,19 @@
 			});
 		},
 		setManagedData:function(managedData){
-			if (!managedData) return false;
-			if ("getRootManagedData" in managedData) managedData = managedData.getRootManagedData();
-			
-			if ( ISARRAY(managedData) ) {
-				this.managedData = managedData[0];
-			} else {
+			if(ISTYPE(managedData,"DataContext")) managedData = managedData.getRootManagedData();
+			if(ISTYPE(managedData,"ManagedData")) {
 				this.managedData = managedData;
-			}
-			CALL(this.dataDidChange,this);
-			return true;
+				CALL(this.dataDidChange,this);
+				return true;
+			} 
+			console.warn("setManagedData::managedData 오브젝트가 필요합니다. 들어온 값->", managedData);
+			return false;
 		},
 		needDisplay:function(managedData,rootElement){
+			//기본적으로 존재하지 않는값을 경고해줌
+			if(!this.managedData) console.warn("DataContextViewController:: Must need set ManagedData before needdisplay");
+			if(!this.viewModel) console.warn("DataContextViewController:: Must need set ViewModel before needdisplay");
 			//파라메터 두개가 존재하지 않으면 초기화 진행을 한다
 			if( (!managedData) && (!rootElement) ){
 				this.view.innerHTML= "";
@@ -5969,35 +5974,6 @@
 							return false;
 						}
 					});
-					
-					/*
-					for(var bindId in owner.structureNodes){
-						if(e.target == owner.structureNodes[bindId]){
-							var selectManagedData = owner.managedData.findById(bindId);
-							if(selectManagedData){
-								if( selectManagedData.getLevel() == owner.allowSelectableLevel ){
-									owner.triggingSelectItems(selectManagedData);
-								}
-							}
-						} else {
-							var eventCapture;
-							_Object(owner.structureNodes,function(node){
-								
-							});
-							
-							curSel.each(function(sel){
-								if(FINDZERO(e.target,sel)){
-									eventCapture = sel;
-									return false;
-								}
-							});
-							if(eventCapture){
-								ELTRIGGER(eventCapture,e.type);
-								return false;
-							}
-						}
-					}
-					*/
 				});
 			}
 		},
@@ -6046,7 +6022,7 @@
 		"var!dataDidChange":undefined
 	},function(view,managedData,viewModel){
 		this.view          = FINDZERO(view);
-		this.setManagedData(managedData);
+		if(managedData)this.setManagedData(managedData);
 		this.viewModel     = viewModel || new ViewModel();
 		//선택관련 인자
 		this.allowSelectable  = false;

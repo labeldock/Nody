@@ -2,10 +2,8 @@
 // It is not the official version (If you want use this code, please use in commercial 'TweenMax' license.)
 // 이것은 배포 버전이 아닙니다. 상업적 이용은 TweenMax 라이센스를 취득후 사용해주세요.
 
-// Move Version 1.3
+// Move Version 1.4
 // Require TweenMax and ScrollToPlugin For TweenMax.
-
-if(!TweenMax){ console.warn("nody.move.js::can't find the TweenMax.."); }
 
 (+(function(){
 	//action // movement
@@ -163,40 +161,45 @@ if(!TweenMax){ console.warn("nody.move.js::can't find the TweenMax.."); }
 	},function(element,movevalue,beginEvent,completeEvent){
 		this._super(element,movevalue,beginEvent,completeEvent);
 	});
-})());
-if("atypeLoadException" in window){delete window["atypeLoadException"];}
-
-window.ELFLASH = function(s,loc,callback){ 
-	if(typeof loc == "function"){
-		callback = loc;
-		loc      = undefined;
-	}
-	var nodes = FIND(s,loc);
-	var fs = 30;
-	var fe = 1300;
-	for(var i=0,l=nodes.length;i<l;i++){
-		var node = nodes[i],prev;
-		if("onflash" in node){
-			prev = node.onflash;
-		} else {
-			var prop = ELSTYLE(node,"background-color");
-			prev = prop;
-			node.onflash = prop;
+	
+	makeGetter("ELFLASH",function(){
+		if(typeof loc == "function"){
+			callback = loc;
+			loc      = undefined;
 		}
-		_Move(node,{"background-color":"rgba(255,255,140,0.5)","duration":fs},undefined,function(){
-			if(ISNOTHING(prev)){
-				_Move(node,{"background-color":"rgba(255,255,170,0)","duration":fe},undefined,function(){
-					ELSTYLE(node,"background-color",prev);
-					delete node["onflash"];
-					CALLBACK(callback);
-				});
+		var nodes = FIND(s,loc);
+		var fs = 30;
+		var fe = 1300;
+		for(var i=0,l=nodes.length;i<l;i++){
+			var node = nodes[i],prev;
+			if("onflash" in node){
+				prev = node.onflash;
 			} else {
-				_Move(node,{"background":prev,"duration":fe},undefined,function(){
-					ELSTYLE(node,"background-color",prev);
-					delete node["onflash"];
-					CALLBACK(callback);
-				});
+				var prop = ELSTYLE(node,"background-color");
+				prev = prop;
+				node.onflash = prop;
 			}
-		});
-	}
-};
+			_Move(node,{"background-color":"rgba(255,255,140,0.5)","duration":fs},undefined,function(){
+				if(ISNOTHING(prev)){
+					_Move(node,{"background-color":"rgba(255,255,170,0)","duration":fe},undefined,function(){
+						ELSTYLE(node,"background-color",prev);
+						delete node["onflash"];
+						CALLBACK(callback);
+					});
+				} else {
+					_Move(node,{"background":prev,"duration":fe},undefined,function(){
+						ELSTYLE(node,"background-color",prev);
+						delete node["onflash"];
+						CALLBACK(callback);
+					});
+				}
+			});
+		}
+	});
+	
+	//Load tweenmax script
+	var root  = FUT.LOADINGSCRIPTROOT();
+	FUT.INCLUDE(root + "TweenMax.js");
+	FUT.INCLUDE(root + "ScrollToPlugin.min.js");
+	
+})());
