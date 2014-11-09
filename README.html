@@ -49,8 +49,8 @@
 <li><a href="#showcase-type-inspect">Type Inspect</a>
 
 <ul>
-<li><a href="#showcase-type-inspect-is">Type::Is</a></li>
-<li><a href="#showcase-type-inspect-as">Type::As</a></li>
+<li><a href="#showcase-type-inspect-is">Type::IS</a></li>
+<li><a href="#showcase-type-inspect-as">Type::AS</a></li>
 </ul>
 </li>
 <li><a href="#showcase-string">String</a>
@@ -344,25 +344,25 @@ Api stated in document was completed.</p>
 
 <p>```javascript</p>
 
-<pre><code>    _Type("123").is("string"); //=&gt; true
-    _Type("123").is("number"); //=&gt; false
-    _Type("123").is("nothing"); //=&gt; false
-    _Type("123").is("meaning"); //=&gt; true
-    _Type("0").is("meaning"); //=&gt; true
-    _Type(0).is("nothing"); //=&gt; true
-    _Type("123").is("string&gt;5"); //=&gt; false
-    _Type("123456").is("string&gt;5"); //=&gt; true
-    _Type(123456).is("text&gt;5"); //=&gt; true
-    _Type(123456).is("number&lt;100"); //=&gt; false
-    _Type({}).is("object"); //=&gt; true
-    _Type([]).is("array"); //=&gt; true
-    //multi
-    _Type([]).is("nothing array"); //=&gt; true
-    _Type({}).is("nothing object"); //=&gt; true
-    _Type(12).is("nothing number"); //=&gt; false
-    _Type(0).is("nothing number"); //=&gt; true
-    _Type(0).is("nothing text"); //=&gt; true
-    _Type(0).is("nothing string"); //=&gt; false
+<pre><code>    IS("123","string"); //=&gt; true
+    IS("123","number"); //=&gt; false
+    IS("123","nothing"); //=&gt; false
+    IS("123","meaning"); //=&gt; true
+    IS("0","meaning"); //=&gt; true
+    IS(0,"meaning"); //=&gt; false
+    IS("123","string&gt;5"); //=&gt; false
+    IS("123456","string&gt;5"); //=&gt; true
+    IS(123456,"text&gt;5"); //=&gt; true
+    IS(123456,"number&lt;100"); //=&gt; false
+    IS({},"object"); //=&gt; true
+    IS([],"array"); //=&gt; true
+    //multi test
+    IS([],"nothing array"); //=&gt; true
+    IS({},"nothing object"); //=&gt; true
+    IS(12,"nothing number"); //=&gt; false
+    IS(0,"nothing number"); //=&gt; true
+    IS(0,"nothing text"); //=&gt; true
+    IS(0,"nothing string"); //=&gt; false
 </code></pre>
 
 <p>```</p>
@@ -373,8 +373,9 @@ Api stated in document was completed.</p>
 
 <p>as 는 스트링 값만을 위한 api이다
 <code>javascript
-        _Type("123     ").as("string&gt;4"); //=&gt; false
-        _Type("        ").as("nothing"); //=&gt; true
+        AS("123     ","string&gt;4"); //=&gt; false
+        AS("        ","string==1"); //=&gt; false
+        AS("        ","string==0"); //=&gt; true
 </code></p>
 
 <p><a name="showcase-string"/></p>
@@ -509,10 +510,19 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <h2>Version info</h2>
 
-<h4>5.0 변동사항</h4>
+<h4>0.6 변동사항</h4>
 
 <ul>
-<li>모듈 생성시 초기화 값 지정이 생겼습니다. 이름을 &ldquo;var!&hellip;"으로 지으면 됩니다. (배타)</li>
+<li>모듈인 &ldquo;Type"이 제거되고 단순 함수 "IS"로 대체되었습니다.</li>
+<li>DataGrid, DataRender, DataViewController 등의 이전 MVVM모듈이 제거되었습니다.</li>
+<li>완전히 새로 작성된 MVVM관련 모듈인 DataContext, ManagedData, ViewModel, DataContextViewController이 추가되었습니다. 이로서 메모리 관리가 최적화 되었고와 렌더링 프로세싱을 최소화 하였습니다.</li>
+</ul>
+
+
+<h4>0.5 변동사항</h4>
+
+<ul>
+<li>모듈 생성시 초기화 값 지정이 생겼습니다. {&ldquo;var!name&rdquo;:value}로 지으면 됩니다.</li>
 <li>_EL 이 MAKE로 바뀌었습니다.</li>
 <li>_DIV 와 같은 표현을 MAKE_DIV로 바꾸었습니다.</li>
 <li>DHTML과 관련없는 API가 줄었습니다</li>

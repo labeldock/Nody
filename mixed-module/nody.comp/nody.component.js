@@ -1,6 +1,371 @@
 // important!
 // It is lab version
 
+
+makeSingleton("ActiveRecordPlugins",{
+	addPlugin:function(moduleName,moduleInit){
+		var names = moduleName.trim().split(" ");
+		if(typeof moduleInit == "function"){
+			for(var key in names) this.Plugins[names[key]] = moduleInit;
+		} else {
+			console.error("ActiveRecordPlugins::",names,"에 해당하는 모듈이 함수이여야 합니다. 초기화 할수 없습니다.",moduleInit);
+		}
+		
+	},
+	getPlugin:function(name){ return this.Plugins[name]; },
+	initPlugin:function(name,path,option,moduleOption){ 
+		if( this.getPlugin(name) ){
+			return this.Plugins[name](name,path,option,moduleOption);
+		} else {
+			console.error("ActiveRecordPlugins:: 존재하지 않는 플러그인을 호출하엿습니다. 플러그인 이름 => ",name)
+		}
+	}
+},function(){
+	this.Plugins = {};
+});
+
+ActiveRecordPlugins.addPlugin("http https json jsonp dom xml",function(type,path,option,moduleOption){
+	return new (function requestPlugin(aType,aPath,aOption,aModuleOption){
+		this.path            = aPath;
+		this.option          = TOOBJECT(aOption);
+		this.option.dataType = aType;
+		this.moduleOption    = aModuleOption;
+		this.command         = function(path,data,success,error,scope){
+			if(typeof data   !== "undefined") this.option.data 		  = data;
+			if(typeof success == "function")  this.option.success     = success;
+			if(typeof error   == "function")  this.option.error       = error;
+			if(typeof scope   == "object")    this.moduleOption.scope = scope;
+			_Open(this.path + path, this.option,this.moduleOption);
+		}
+	})(type,path,option,moduleOption);
+});
+
+makeModule("ActiveRecord",{
+	command:function(path,data,success,error,scope){
+		var recordModule = ActiveRecordPlugins.initPlugin(this.ActiveRecordType,this.ActiveRecordPath,this.ActiveRecordOption,this.ActiveRecordModuleOption);
+		if(recordModule) { recordModule.command(path,data,success,error,scope); };
+	},
+	commandToRoot:function(data,success,error,space) { return this.command("",data,success,error,space); },
+	commandWithEntity:function(entitiy,data,success,error,space){
+		var entitiyValue = this.ActiveRecordOption[entitiy];
+		this.command( entitiyValue ,data,success,error,space);
+	},
+	C:function(data,success,error,requestSpace){
+		this.commandWithEntity("create",_Object(data).trance(this.ActiveRecordOption["tranceCreate"],this.ActiveRecordOption["tranceOnly"]).getConcat(this.ActiveRecordOption["constCreate"]),success,error);
+	},
+	R:function(data,success,error,requestSpace){
+		this.commandWithEntity("read",_Object(data).trance(this.ActiveRecordOption["tranceRead"],this.ActiveRecordOption["tranceOnly"]).getConcat(this.ActiveRecordOption["constRead"]),success,error);
+	},
+	U:function(data,success,error,requestSpace){
+		this.commandWithEntity("update",_Object(data).trance(this.ActiveRecordOption["tranceUpdate"],this.ActiveRecordOption["tranceOnly"]).getConcat(this.ActiveRecordOption["constUpdate"]),success,error);
+	},
+	D:function(data,success,error,requestSpace){
+		//uniquezKey process
+		data = CLONE(TOOBJECT(data));
+		if("deleteKey" in this.ActiveRecordOption) if( IS(data[this.ActiveRecordOption.deleteKey],"!nothing")) {
+			var deleteValue = data[this.ActiveRecordOption.deleteKey];
+			data = {};
+			data[this.ActiveRecordOption.deleteKey] = deleteValue;
+		}
+		this.commandWithEntity("delete",_Object(data).trance(this.ActiveRecordOption["tranceDelete"],this.ActiveRecordOption["tranceOnly"]).getConcat(this.ActiveRecordOption["constDelete"]),success,error);
+	}
+},function(type,path,option,moduleOption){
+	this.ActiveRecordType         = type;
+	this.ActiveRecordPath         = path;
+	this.ActiveRecordOption       = CLONE(TOOBJECT(option));
+	this.ActiveRecordModuleOption = CLONE(TOOBJECT(moduleOption));
+});
+
+//******************
+makeModule("Ranking",{
+	getFlagRank:function(v){
+		if(v == true) return (-1);
+		if(v == false) return (-2);
+		if(v == undefined) return (-3);
+		return (-4);
+	},
+	worst:function(rankData){
+		if( _Array(rankData).isNothing() == true){
+			return this.RankingNothing;
+		} else {
+			switch(this.RankingType){
+				case "object":
+					var rankResult = CLONE(this.Source);
+					//
+					var rankAttribute = [];
+					for(var key in this.Source) rankAttribute(key);
+					//
+					for(var i=0,l=rankData.length;i<l;i++){
+						for(var i2=0,l2=rankAttribute.length;i2<l2;i2++){
+							if( this.getFlagRank(rankResult[rankAttribute[i2]]) > this.getFlagRank(validateResults[i][rankAttribute[i2]]) ){
+								rankResult[rankAttribute[i2]] = validateResults[i][rankAttribute[i2]];
+							}
+						}
+					}
+					return rankResult;
+			
+					break;
+				case "boolean":
+					var flagResult = true;
+					for(var i=0,l=rankData.length;i<l;i++){
+						if( this.getFlagRank(flagResult) > this.getFlagRank(rankData[i]) ){
+							flagResult = rankData[i];
+						}
+					}
+					return flagResult;
+					break;
+				defualt:
+					console.warn("Ranking :: worst 해당 타입으로 랭킹을 매길수 없습니다.",this.RankingType);
+					return undefined;
+					break;
+			}
+		}
+	}
+},function(defualt,nothing){
+	if(typeof firstValue == "undefined"){
+		this.Source         = defualt;
+		this.RankingNothing = nothing;
+		this.RankingType    = "boolean";
+	} else {
+		this.Source         = defualt;
+		this.RankingNothing = nothing;
+		this.RankingType    = typeof defualt;
+	}
+});
+
+
+//******************
+//Type
+makeModule("Type",{
+	isThis       : function ( ) { switch(typeof this.Source){case"object":if(this.isNull())return"null";if(this.isElement())return"element";if(this.isJquery())return"jquery";if(this.isArray())return"array";default:return typeof this.Source;}},
+	isUndefined  : function (tb,fb) {return this.is((typeof this.Source == "undefined") ,tb,fb);},
+	isDefined    : function (tb,fb) {return this.is((typeof this.Source !== "undefined"),tb,fb);},
+	isNull       : function (tb,fb) {return this.is(this.Source === null?true:false      ,tb,fb);},
+	isNil        : function (tb,fb) {return this.is(this.Source ==  null?true:(typeof this.Source == "undefined")?true:false,tb,fb);},
+	isFunction   : function (tb,fb) {return this.is((typeof this.Source == "function")  ,tb,fb);},
+	isBoolean    : function (tb,fb) {return this.is((typeof this.Source == "boolean")   ,tb,fb);},
+	isObject     : function (tb,fb) {return this.is((typeof this.Source == "object")    ,tb,fb);},
+	isString     : function (tb,fb) {return this.is((typeof this.Source == "string")    ,tb,fb);},
+	isNumber     : function (tb,fb) {return this.is((typeof this.Source == "number")    ,tb,fb);},
+	isText       : function (tb,fb) {return this.is((typeof this.Source == "string" || typeof this.Source == "number"),tb,fb);},
+	isNumberText : function (tb,fb) {
+		return this.is(_Number(this.Source).isANumber(),tb,fb);},
+	isTextNumber : function (tb,fb) { 
+		var numberValue = _Number(this.Source).getNumberText();
+		if(numberValue == "") numberValue = undefined;
+		return this.is(!isNaN(numberValue),tb,fb);
+	},
+	isElement      : function (tb,fb) {return this.is(W.ISELNODE       ,tb,fb);},
+	isJquery       : function (tb,fb) {return this.is(W.ISJQUERY       ,tb,fb);},
+	isArray        : function (tb,fb) {return this.is(W.ISARRAY        ,tb,fb);},
+	isUnderBrowser : function (tb,fb) {return this.is(W.ISUNDERBROWSER ,tb,fb);},
+	isNothing      : function (tb,fb) {return this.is(W.ISNOTHING      ,tb,fb);},
+	isEnough       : function (tb,fb) {return this.un(W.ISNOTHING      ,tb,fb);},
+	isPhoneNumber  : function (tb,fb) {return this.isText() ? /\d{6,11}/.test( _Number(this.Source).getNumberText() ) : false;  },
+	isEmail        : function (tb,fb) {return this.isText() ? /^[\w]+\@[\w]+\.[\.\w]+/.test(this.Source) : false;  },
+	isAscii        : function (tb,fb) {return this.isText() ? /^[\x00-\x7F]*$/.test(this.Source) : false;  },
+	__rInfo:function(info,result,caseResult){
+		var flag = undefined;
+		if(typeof result == "boolean" && caseResult == undefined) flag = result;
+		if(typeof result == "boolean" && typeof caseResult == "boolean") flag = caseResult && result;
+		if(info == true){
+			return { "type":result,"condition":caseResult,"success":flag };
+		} else {
+			return flag;
+		}
+	},
+	__validateSize:function(option,value,info,optimizer,sizeType){
+		var size;
+		var switchValue = typeof sizeType == "string" ? sizeType : typeof this.Source;
+		switch( switchValue ){
+			case "numberText" :
+				size = _Number(this.Source).number();
+				break;
+			case "number" :
+				size = parseInt(this.Source);
+				break;
+			case "object" : 
+				if( this.isArray() == false ){
+					size = 0;
+					for(var key in this.Source) size ++;
+				}
+				break;
+			case "textNumber" : case "text" : case "email" : case "ascii" :
+				size = optimizer == true ? (this.Source + "").trim().length : (this.Source + "").length;
+				break;
+			case "string" : //or array
+				size = optimizer == true ? this.Source.trim().length : this.Source.length;
+				break;
+			default :
+				return this.__rInfo(info,false,undefined);
+				break;
+		}
+		switch(option){
+			case ">": try { 
+				return size > parseInt(value); 
+			} catch(e) { return this.__rInfo(info,true,false); }
+				break;
+			case "<": try { 
+				return size < parseInt(value); 
+			} catch(e) { return this.__rInfo(info,true,false); }
+				break;
+			case "=":case "==": try { 
+				return size == parseInt(value); 
+			} catch(e) { return this.__rInfo(info,true,false); }
+				break;
+			default : console.log("Type::validateRule::size::치명적인 오류 => 허용하지 않는 option =>",option);
+				break;
+		}
+		return this.__rInfo(info,false,false);
+	},
+	__validateInterface:function(valType,option,value,info,optimizer){
+		var result;
+		switch(valType){
+			case "string"    : result = this.isString(); break;
+			case "number"    : result = this.isNumber(); break;
+			case "numberText": result = this.isNumberText(); break;
+			case "textNumber": result = this.isTextNumber(); break;
+			case "text"      : result = this.isText(); break;
+			case "array"     : result = this.isArray(); break;
+			case "object"    : result = this.isObject(); break;
+			case "email"     : result = this.isEmail(); break;
+			case "ascii"     : result = this.isAscii(); break;
+		}
+		if(option.length > 0 && value.length > 0) {
+			if(result == false) return this.__rInfo(info,false,false);
+			switch(option){
+				case ">": case "<": case "=": case "==":
+					var caseResult = this.__validateSize.call(this,option,value,info,optimizer,valType);
+					return this.__rInfo(info,result,caseResult);
+					break;
+				case ":":
+					switch(valType){
+						case "string":
+						case "numberText":
+						case "text":
+							if( valType=="string" && result == true){
+								var text = optimizer == true ? this.Source.trim() : this.Source;
+								if(value == "able"){
+									return this.__rInfo(info,result, text.length > 0 );
+								} else if(value=="unable") {
+									return this.__rInfo(info,result, text.length < 1 );
+								} else {
+									console.log("string::",value,"토큰을 알수가 없군요");
+								}
+							}
+							
+							break;
+						case "textNumber":
+							if( result == true ){
+								var numberValue = _Number(this.Source).getNumberText();
+								var text = optimizer == true ? (this.Source + "").trim() : this.Source + "";
+								if(value == "zero"){
+									return this.__rInfo(info,result, numberValue == 0 );
+								} else if(value == "able"){
+									return this.__rInfo(info,result, numberValue > 0 );
+								} else if(value=="unable") {
+									return this.__rInfo(info,result, numberValue < 1 );
+								} else {
+									console.log("numberText::",value,"토큰을 알수가 없군요");
+								}
+							}
+							break;
+						case "object":
+						case "email":
+						case "ascii":
+							result = false;
+							break;
+					}
+				default:
+					break;
+			}
+		}
+		return this.__rInfo(info,result);
+	},
+	//is 의 string이 들어갈경우 처리
+	validateRule:{
+		"string"     : function(option,value,info,optimizer){ return this.__validateInterface("string",option,value,info,optimizer); },
+		"number"     : function(option,value,info,optimizer){ return this.__validateInterface("number",option,value,info,optimizer); },
+		"numberText" : function(option,value,info,optimizer){ return this.__validateInterface("numberText",option,value,info,optimizer); },
+		"textNumber" : function(option,value,info,optimizer){ return this.__validateInterface("textNumber",option,value,info,optimizer); },
+		"text"       : function(option,value,info,optimizer){ return this.__validateInterface("text",option,value,info,optimizer); },
+		"array"      : function(option,value,info,optimizer){ return this.__validateInterface("array",option,value,info,optimizer); },
+		"object"     : function(option,value,info,optimizer){ return this.__validateInterface("object",option,value,info,optimizer); },
+		"email"      : function(option,value,info,optimizer){ return this.__validateInterface("email",option,value,info,optimizer); },
+		"ascii"      : function(option,value,info,optimizer){ return this.__validateInterface("ascii",option,value,info,optimizer); },
+		"phoneNumber": function(a,b,c,o){ return this.__rInfo(c,this.isPhoneNumber());},
+		"undefined"  : function(a,b,c,o){ return this.__rInfo(c,this.isUndefined());  },
+		"null"       : function(a,b,c,o){ return this.__rInfo(c,this.isNull());       },
+		"nil"        : function(a,b,c,o){ return this.__rInfo(c,this.isNil());        },
+		"defined"    : function(a,b,c,o){ return this.__rInfo(c,this.isDefined());    },
+		"nothing"    : function(a,b,c,o){ return this.__rInfo(c,this.isNothing(undefined,undefined,o));},
+		"enough"     : function(a,b,c,o){ return this.__rInfo(c,this.isEnough(undefined,undefined,o)); },
+		"meaning"    : function(a,b,c,o){ return this.__rInfo(c,this.isEnough(undefined,undefined,o)); },
+		"usefull"    : function(a,b,c,o){ return this.__rInfo(c,this.isEnough(undefined,undefined,o)); },
+		"true"       : function(){ return true;  },
+		"false"      : function(){ return false; }
+	},
+	is:function(testf,tB,fB,optimizer,info){
+		var test = testf;
+		switch(typeof test){
+			case "function":
+				test = test(this.Source);
+				break;
+			case "string" :
+				var model = test.trim().split(" ");
+				var validateResults = model.length == 0 ? [this.__rInfo(info,undefined)] : [];
+		
+				for (var i=0,l=model.length;i<l;i++) {
+					var param = /(\w*)([\>\<\=\:]{0,2})([\S]*)/.exec(model[i]);
+					//validation이 존재하는지 확인
+					if(param[1] in this.validateRule){
+						validateResults.push( this.validateRule[param[1]].call(this,param[2],param[3],info,optimizer) );
+					}
+				}
+				if(info == true){
+					var rank = _Ranking({"type":true,"condition":true,"success":true},{"type":undefined,"condition":undefined,"success":undefined});
+					return rank.worst(validateResults);
+				} else {
+					var rank = _Ranking(true,undefined);
+					test = rank.worst(validateResults);
+				}
+				break;
+			case "object" :
+				if((test instanceof RegExp) && (typeof this.Source == "string" || typeof this.Source == "number")){
+					test = test.test(this.Source+"");
+				} else {
+					test = false;
+				}
+				break;
+		}
+		if(test === true){
+			return (typeof tB === "function") ? tB.call(this,this.Source) : (typeof tB !== "undefined") ? tB : true;
+		} else if(test === false){
+			return (typeof fB === "function") ? fB.call(this,this.Source) : (typeof tB !== "undefined") ? fB : false;
+		} else {
+			console.error("Type::is::error test 값이 올바르지 않습니다. =>",testf,"  source =>",this.Source);
+			return undefined;
+		}
+	},
+	un:function(test,fB,tB,optimizer){
+		tB = typeof tB == "undefined" ? true  : tB;
+		fB = typeof fB == "undefined" ? false : fB;
+		return this.is(test,fB,tB,optimizer);
+	},
+	info:function(test,optimizer){ return this.is(test,undefined,undefined,optimizer,true); },
+	//optimizer됨
+	as:function(test,tB,fB,info){ return this.is(test,tB,fB,true,info); },
+	asInfo:function(test,tB,fB,info){ return this.is(test,tB,fB,true,true); },
+	isInstance : function(o){
+		if (this.isObject()) if ( this.Source.__NativeHistroy__ ) {
+			if(typeof o == "undefined") return true;
+			for(var i=0, length = this.Source.__NativeHistroy__.length; i < length; i++) if( this.Source.__NativeHistroy__[i] == o) return true;
+		}
+		return false;
+	}
+});
+
+
 // nody.component
 
 makeModule("PageControl",{

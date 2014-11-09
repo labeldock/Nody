@@ -31,8 +31,8 @@ Nody.js
       - [Object each](#showcase-enumerate-object-each)
     - [Parsing](#showcase-parsing)
     - [Type Inspect](#showcase-type-inspect)
-      - [Type::Is](#showcase-type-inspect-is)
-      - [Type::As](#showcase-type-inspect-as)
+      - [Type::IS](#showcase-type-inspect-is)
+      - [Type::AS](#showcase-type-inspect-as)
     - [String](#showcase-string)
       - [ByteSize](#showcase-string-01) 
       - [String Model](#showcase-string-02) 
@@ -272,33 +272,34 @@ TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브�
 #### type::is #
 ```javascript
         
-        _Type("123").is("string"); //=> true
-        _Type("123").is("number"); //=> false
-        _Type("123").is("nothing"); //=> false
-        _Type("123").is("meaning"); //=> true
-        _Type("0").is("meaning"); //=> true
-        _Type(0).is("nothing"); //=> true
-        _Type("123").is("string>5"); //=> false
-        _Type("123456").is("string>5"); //=> true
-        _Type(123456).is("text>5"); //=> true
-        _Type(123456).is("number<100"); //=> false
-        _Type({}).is("object"); //=> true
-        _Type([]).is("array"); //=> true
-        //multi
-        _Type([]).is("nothing array"); //=> true
-        _Type({}).is("nothing object"); //=> true
-        _Type(12).is("nothing number"); //=> false
-        _Type(0).is("nothing number"); //=> true
-        _Type(0).is("nothing text"); //=> true
-        _Type(0).is("nothing string"); //=> false
+        IS("123","string"); //=> true
+        IS("123","number"); //=> false
+        IS("123","nothing"); //=> false
+        IS("123","meaning"); //=> true
+        IS("0","meaning"); //=> true
+        IS(0,"meaning"); //=> false
+        IS("123","string>5"); //=> false
+        IS("123456","string>5"); //=> true
+        IS(123456,"text>5"); //=> true
+        IS(123456,"number<100"); //=> false
+        IS({},"object"); //=> true
+        IS([],"array"); //=> true
+        //multi test
+        IS([],"nothing array"); //=> true
+        IS({},"nothing object"); //=> true
+        IS(12,"nothing number"); //=> false
+        IS(0,"nothing number"); //=> true
+        IS(0,"nothing text"); //=> true
+        IS(0,"nothing string"); //=> false
 ```
 
 <a name="showcase-type-inspect-as"/>
 #### type::as #
 as 는 스트링 값만을 위한 api이다
 ```javascript
-        _Type("123     ").as("string>4"); //=> false
-        _Type("        ").as("nothing"); //=> true
+        AS("123     ","string>4"); //=> false
+        AS("        ","string==1"); //=> false
+		AS("        ","string==0"); //=> true
 ```
 
 
@@ -410,8 +411,13 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ```
 <a name="version-info"/>
 ## Version info #
-#### 5.0 변동사항 #
-  - 모듈 생성시 초기화 값 지정이 생겼습니다. 이름을 "var!..."으로 지으면 됩니다. (배타)
+#### 0.6 변동사항 #
+  - 모듈인 "Type"이 제거되고 단순 함수 "IS"로 대체되었습니다.
+  - DataGrid, DataRender, DataViewController 등의 이전 MVVM모듈이 제거되었습니다.
+  - 완전히 새로 작성된 MVVM관련 모듈인 DataContext, ManagedData, ViewModel, DataContextViewController이 추가되었습니다. 이로서 메모리 관리가 최적화 되었고와 렌더링 프로세싱을 최소화 하였습니다.
+  
+#### 0.5 변동사항 #
+  - 모듈 생성시 초기화 값 지정이 생겼습니다. {"var!name":value}로 지으면 됩니다.
   - _EL 이 MAKE로 바뀌었습니다.
   - _DIV 와 같은 표현을 MAKE_DIV로 바꾸었습니다.
   - DHTML과 관련없는 API가 줄었습니다

@@ -7,7 +7,7 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.6.3";
+	var version = "0.6.4";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -401,40 +401,83 @@
 	});
 	FUT.CACHECLEAR();
 	
-	// Nody Super base
-	W.makeSingleton("NodyBase",{
-		// 첫번째 값이 유효하지 않으면 값을 대채함
-		"ISJQUERY"  :function(o){ return (typeof o == "object" && o !== null ) ? ("jquery" in o) ? true : false : false; },
-		"ISARRAY"   :function(a){ return (typeof a == "object" || typeof a == "function") ? ( a !== null && ((a instanceof Array || a instanceof NodeList || ISJQUERY(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) ) ? true : false) : false; },
-		// 엘리먼트인지 확인
+	makeGetters({
+		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
+		"APPLY" : function(f,owner,args) { 
+			if(typeof f == "function"){ 
+				var mvArgs = CLONEARRAY(args);
+				if(mvArgs.length > 0){ 
+					return f.apply(owner,mvArgs); 
+				} else { 
+					return f.call(owner); 
+				}
+				/* 콘솔에러로 만든 코드이나 디버깅이 어려워져 다시 블럭함 */
+				/*try { if(mvArgs.length > 0){ return f.apply(owner,mvArgs); } else { return f.call(owner); } } catch(e) { for(key in console) if(console[key] == f) { return f.apply(console,mvArgs); } throw e; } */
+			} 
+		},
+		"CALL" : function(f,owner) { 
+			if(typeof f == "function"){ if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); } var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } 
+		}
+	});
+	
+	var TypeBaseMap = {
+		"string"    : "ISSTRING",
+		"number"    : "ISNUMBER",
+		"numberText": "ISNUMBERTEXT",
+		"text"      : "ISTEXT",
+		"array"     : "ISARRAY",
+		"object"    : "ISOBJECT",
+		"email"     : "ISEMAIL",
+		"ascii"     : "ISASCII",
+		"true"      : "ISTRUE",
+		"false"     : "ISFALSE",
+		"nothing"     : "ISNOTHING",
+		"meaning"     : "ISMEANING",
+		"enough"     : "ISENOUGH"
+	}
+	makeSingleton("TypeBase",{
+		// // 데이터 타입 검사
+		"ISUNDEFINED": function (t) {return typeof t === "undefined" ? true : false ;},
+		"ISDEFINED"  : function (t) {return typeof t !== "undefined" ? true : false ;},
+		"ISNULL"     : function (t) {return t === null ? true : false;},
+		"ISNIL"      : function (t) {return ((t === null) || (typeof t == "undefined")) ? true : false;},
+		
+		"ISFUNCTION" : function (t) {return typeof t == "function" ? true : false;},
+		"ISBOOLEAN"  : function (t) {return typeof t == "boolean"  ? true : false;},
+		"ISOBJECT"   : function (t) {return typeof t == "object"   ? true : false;},
+		"ISSTRING"   : function (t) {return typeof t == "string"   ? true : false;},
+		"ISNUMBER"   : function (t) {return typeof t == "number"   ? true : false;},
+		"ISNUMBERTEXT" : function (t) {return (typeof t == "number") ? true : ((typeof t == "string") ? (parseFloat(t)+"") == (t+"") : false );},
+		
+		"ISJQUERY"   : function(o){ return (typeof o == "object" && o !== null ) ? ("jquery" in o) ? true : false : false; },
+		"ISARRAY"    : function(a){ return (typeof a == "object" || typeof a == "function") ? ( a !== null && ((a instanceof Array || a instanceof NodeList || ISJQUERY(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) ) ? true : false) : false; },
+		"ISEMAIL"    : function(t){ return TypeBase.ISTEXT(t) ? /^[\w]+\@[\w]+\.[\.\w]+/.test(t) : false;},
+		"ISASCII"    : function(t){ return TypeBase.ISTEXT(t) ? /^[\x00-\x7F]*$/.test(t)         : false;},
+		"ISTRUE"     : function(t){ return !!t ? true : false;},
+		"ISFALSE"    : function(t){ return  !t ? false : true;},
+		
+		//문자나 숫자이면 참
+		"ISTEXT" :function(v){ return (typeof v == "string" || typeof v == "number") ? true : false; },
+		
+		// // 엘리먼트 유형 검사
 		"ISWINDOW"  :function(a){ if(typeof a == "object") return "navigator" in a; return false; },
 		"ISDOCUMENT":function(a){ return typeof a == "object" ? a.nodeType == 9 ? true : false : false; },
 		"ISELNODE"  :function(a){ if(a == null) return false; if(typeof a == "object") if(a.nodeType == 1 || ISDOCUMENT(a) ) return true; return false;},
 		"HASELNODE" :function(a){ if( ISARRAY(a) ){ for(var i=0,l=a.length;i<l;i++) if(ISELNODE(a[i])) return true; return false; } else { return ISELNODE(a); } },
 		"ISTEXTNODE":function(a){ if(a == null) return false; if(typeof a == "object") if(a.nodeType == 3 || a.nodeType == 8) return true; return false;},
-		//배열형인지 검사 (jquery sizzle도 배열로 취급)
+		// // 브라우저 유형 검사
 		"ISUNDERBROWSER":function(o){
 			var v = o?o:9;
 	        if (navigator.appVersion.indexOf("MSIE") != -1) return parseInt(v) > parseInt(navigator.appVersion.split("MSIE")[1]);
 	        return false;
 		},
-		//문자나 숫자이면 참
-		"ISTEXT" :function(v){ return (typeof v == "string" || typeof v == "number") ? true : false; },
-		//배열이 아니면 배열로 만들어줌
-		"TOARRAY":function(t,s){ if(typeof t=="undefined" && arguments.length < 2) return []; if(typeof t == "string" && typeof s == "string"){ return t.split(s); } else if(ISARRAY(t) == true) { return t; } else { return [t]; } },
-		//배열을 복사
-		"CLONEARRAY":function(v) { var mvArray = []; if( ISARRAY(v) ) { if("toArray" in v){ Array.prototype.splice.apply(mvArray,v.toArray()); } else { for(var i=0,l=v.length;i<l;i++) mvArray.push(v[i]); } } else { if(v||v==0) mvArray.push(v); return this; } return mvArray; },
-		//배열안에 배열을 길이만큼 추가
-		"ARRAYINARRAY":function(l) { l=TONUMBER(l);var aa=[];for(var i=0;i<l;i++){ aa.push([]); }return aa; },
-		//배열의 하나추출
-		"ZERO"   :function(t){ return typeof t == "object" ? typeof t[0] == "undefined" ? undefined : t[0] : t; },
-		//배열의 뒤
-		"LAST"   :function(t){ return ISARRAY(t) ? t[t.length-1] : t; },
+		// // 값 유형 검사
 		// 0, "  ", {}, [] 등등 value가 없는 값을 검사합니다.
 		"ISNOTHING":function(o){ 
 	        if (typeof o == "undefined")return true;
 			if (typeof o == "string")return o.trim().length < 1 ? true : false;
 			if (typeof o == "object"){
+				if(o instanceof RegExp) return false;
 				if(ISELNODE(o)) return false;
 				if(o == null ) return true;
 				if(ISARRAY(o)) {
@@ -451,6 +494,98 @@
 		},
 		"ISMEANING":function(o){ return !ISNOTHING(o); },
 		"ISENOUGH" :function(o){ return !ISNOTHING(o); },
+		// 무엇이든 길이 유형 검사
+		"TOLENGTH":function(v,d){
+			switch(typeof v){ 
+				case "number":return (v+"").length;break;
+				case "string":return v.length;
+				case "object":if("length" in v)
+				return v.length;
+			}
+			return (typeof d=="undefined")?0:d;
+		},
+		// 무엇이든 크기 유형 검사
+		"TOSIZE":function(target,type){
+			if((typeof type != "undefined") && (typeof type != "string")) console.error("TOSIZE::type은 반드시 string으로 보내주세요",type);
+			switch(type){
+				case "numberText" : return parseFloat(target); break;
+				case "number"     : return parseFloat(target); break;
+				case "textNumber" : case "text" : case "email" : case "ascii" : return (target + "").length; break;
+				case "string" : case "array" : return target.length;
+				case "object" : default : return TOLENGTH(target); break;
+			}
+		},
+		"IS":function(target,test,trueBlock,falseBlock){
+			var testResult;
+			if(ISNOTHING(test)) return ISTRUE(target);
+			
+			switch(typeof test){
+				case "string":
+					var model = [];
+					test.trim().replace(/\S+/g,function(s){ model.push(s); });
+				
+					for (var i=0,l=model.length;i<l;i++) {
+						try {
+							var param = /^(\!|)(\w*)([\>\<\=\:]{0,2})([\S]*)/.exec(model[i]);
+						} catch(e) {
+							console.warn("포멧이 올바르지 않은 키워드 입니다.",model[i]);
+						}
+					
+						var typeMapName = TypeBaseMap[param[2]];
+						if( TypeBaseMap[param[2]] ) {
+							//type 확인
+							testResult = TypeBase[typeMapName](target);
+							if(param[1] == "!") testResult = !testResult;
+							if(!testResult) break;
+							//길이 확인
+							if(param[3] != "" && ISNUMBERTEXT(param[4])){
+								switch(param[3]){
+									case ">": testResult = TOSIZE(target,param[2]) > parseInt(param[4]); break;
+									case "<": testResult = TOSIZE(target,param[2]) < parseInt(param[4]); break;
+									case "<=": case "=<": testResult = TOSIZE(target,param[2]) <= parseInt(param[4]); break;
+									case ">=": case "=>": testResult = TOSIZE(target,param[2]) >= parseInt(param[4]); break;
+									case "=" : case "==": testResult = TOSIZE(target,param[2]) == parseInt(param[4]); break;
+								}
+								if(!testResult) break;
+							}
+						} else {
+							console.warn("인식할수 없는 타입의 키워드 입니다.",param[2]);
+						}	
+					}
+					break;
+				case "object":
+					if((test instanceof RegExp) && ISTEXT(target)){
+						testResult = test.test(target+"");
+					} else {
+						testResult = false;
+					}
+					break;
+			}
+			
+			if(testResult === true)  return (typeof trueBlock === "function")  ? trueBlock(target)  : (typeof trueBlock  !== "undefined") ? trueBlock : true;
+			if(testResult === false) return (typeof falseBlock === "function") ? falseBlock(target) : (typeof falseBlock !== "undefined") ? falseBlock : false;
+			
+			return false;
+		},
+		"AS":function(target,test,tb,fb){
+			if(ISSTRING(target)) target = target.trim();
+			return IS(target,test,tb,fb);
+		}
+	});
+	TypeBase.eachGetter();
+	
+	// Nody Super base
+	W.makeSingleton("NodyBase",{
+		//배열이 아니면 배열로 만들어줌
+		"TOARRAY":function(t,s){ if(typeof t=="undefined" && arguments.length < 2) return []; if(typeof t == "string" && typeof s == "string"){ return t.split(s); } else if(ISARRAY(t) == true) { return t; } else { return [t]; } },
+		//배열을 복사
+		"CLONEARRAY":function(v) { var mvArray = []; if( ISARRAY(v) ) { if("toArray" in v){ Array.prototype.splice.apply(mvArray,v.toArray()); } else { for(var i=0,l=v.length;i<l;i++) mvArray.push(v[i]); } } else { if(v||v==0) mvArray.push(v); return this; } return mvArray; },
+		//배열안에 배열을 길이만큼 추가
+		"ARRAYINARRAY":function(l) { l=TONUMBER(l);var aa=[];for(var i=0;i<l;i++){ aa.push([]); }return aa; },
+		//배열의 하나추출
+		"ZERO"   :function(t){ return typeof t == "object" ? typeof t[0] == "undefined" ? undefined : t[0] : t; },
+		//배열의 뒤
+		"LAST"   :function(t){ return ISARRAY(t) ? t[t.length-1] : t; },
 		//숫자로 변환합니다. 디폴트 값이나 0으로 반환합니다.
 		"TONUMBER":function(v,d){
 			switch(typeof v){ case "number":return v;case "string":var r=v*1;return isNaN(r)?0:r;break; }
@@ -486,11 +621,6 @@
 		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 		//오브젝트의 key를 each열거함
 		"ENUMERATION":FUT.CONTINUTILITY(function(v,f){if((typeof v == "object") && (typeof f == "function")){for(k in v) {f(v[k],k)}}; return v; },2),
-		//무엇이든 길이를 리턴합니다.
-		"TOLENGTH":function(v,d){
-			switch(typeof v){ case "number":return (v+"").length;break;case "string":return v.length;case "object":if("length" in v)return v.length;}
-			return (typeof d=="undefined")?0:d;
-		},
 		//무엇이든 문자열로 넘김
 		"TOSTRING":function(tosv,depth,jsonfy){
 			if(typeof depth == "undefined") depth = 10;
@@ -585,22 +715,6 @@
 				}
 			}
 			return false;
-		},
-		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
-		"APPLY" : function(f,owner,args) { 
-			if(typeof f == "function"){ 
-				var mvArgs = CLONEARRAY(args);
-				if(mvArgs.length > 0){ 
-					return f.apply(owner,mvArgs); 
-				} else { 
-					return f.call(owner); 
-				}
-				/* 콘솔에러로 만든 코드이나 디버깅이 어려워져 다시 블럭함 */
-				/*try { if(mvArgs.length > 0){ return f.apply(owner,mvArgs); } else { return f.call(owner); } } catch(e) { for(key in console) if(console[key] == f) { return f.apply(console,mvArgs); } throw e; } */
-			} 
-		},
-		"CALL" : function(f,owner) { 
-			if(typeof f == "function"){ if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); } var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } 
 		}
 	});
 	NodyBase.eachGetter();
@@ -990,7 +1104,7 @@
 		// 현재의 배열을 보호하고 새로운 배열을 반환한다.
 		save    : function(v){ return this.__GlobalConstructor__(this); },
 		//요소안의 array 녹이기
-		getFlatten : function(){var _result=_Array();this.each(function(value){if(_Type(value).isArray()){_result.concat(value);}else{_result.push(value);}});return _result;},
+		getFlatten : function(){var _result=_Array();this.each(function(value){if(ISARRAY(value)){_result.concat(value);}else{_result.push(value);}});return _result;},
 		flatten    : function(){return this.replace(this.getFlatten());},
 		//다른 배열 요소를 덛붙인다.
 		getConcat : function(){
@@ -1087,7 +1201,7 @@
 		},
 		other:function(){ return this.replace(this.getOther.apply(this,Array.prototype.slice.apply(arguments))); },
 		// 원하는 type만 남기고 리턴
-		getType : function(wanted) { return this.getFilter(function(v){ return _Type(v).is(wanted); }); },
+		getType : function(wanted) { return this.getFilter(function(v){ return IS(v,wanted); }); },
 		type    : function(watend) { return this.replace(this.getType(watend)); },
 		// 같은 요소를 반환
 		getEqual:function(v){ return this.getFilter(function(fv){return fv == v ? true : false; }); },
@@ -1121,7 +1235,7 @@
 		//요소안의 string까지 split하여 flaatten을 실행
 		getStringFlatten:function(){ return this.save().map(function(t){ if(typeof t == "string") return t.split(" "); if(ISARRAY(t)) return _Array(t).flatten().type("string"); }).remove(undefined).flatten(); },
 		stringFlatten:function(){ return this.replace( this.getStringFlatten() ); },
-		getDeepFlatten:function(){function arrayFlatten(_array){var result=_Array();_array.each(function(value){if(_Type(value).isArray()){result.concat(arrayFlatten(_Array(value)));}else{result.push(value);}});return result;}return arrayFlatten(this);},
+		getDeepFlatten:function(){function arrayFlatten(_array){var result=_Array();_array.each(function(value){if( ISARRAY(value) ){result.concat(arrayFlatten(_Array(value)));}else{result.push(value);}});return result;}return arrayFlatten(this);},
 		deepFlatten:function(){ return this.replace(this.getDeepFlatten()); },
 		//그룹 지어줌
 		getGrouping:function(length,reverse){
@@ -1223,9 +1337,8 @@
 		//모든 프로퍼티에 적용
 		propAll:function(dv){for(var key in this.Source) this.Source[key] = dv;return this;},
 		//키값판별
-		propIs    :function(key,test,t,f) { var t = _Type(this.Source[key]); return t.is.apply(t,_Array(arguments).subarr(1).toArray()); },
-		propUn    :function(key,test,t,f) { var t = _Type(this.Source[key]); return t.un.apply(t,_Array(arguments).subarr(1).toArray()); },
-		propAs    :function(key,test,t,f) { var t = _Type(this.Source[key]); return t.as.apply(t,_Array(arguments).subarr(1).toArray()); },
+		propIs    :function(key,test,t,f) { return IS(this.Source[key],test,t,f); },
+		propAs    :function(key,test,t,f) { return AS(this.Source[key],test,t,f); },
 		//오브젝트에 키를 가지고 있는지 확인
 		has:function(key){ return key in this.Source; },
 		//그러한 value가 존재하는지 확인
@@ -2073,295 +2186,6 @@
 			}
 		}
 	});
-	
-	//******************
-	makeModule("Ranking",{
-		getFlagRank:function(v){
-			if(v == true) return (-1);
-			if(v == false) return (-2);
-			if(v == undefined) return (-3);
-			return (-4);
-		},
-		worst:function(rankData){
-			if( _Array(rankData).isNothing() == true){
-				return this.RankingNothing;
-			} else {
-				switch(this.RankingType){
-					case "object":
-						var rankResult = CLONE(this.Source);
-						//
-						var rankAttribute = [];
-						for(var key in this.Source) rankAttribute(key);
-						//
-						for(var i=0,l=rankData.length;i<l;i++){
-							for(var i2=0,l2=rankAttribute.length;i2<l2;i2++){
-								if( this.getFlagRank(rankResult[rankAttribute[i2]]) > this.getFlagRank(validateResults[i][rankAttribute[i2]]) ){
-									rankResult[rankAttribute[i2]] = validateResults[i][rankAttribute[i2]];
-								}
-							}
-						}
-						return rankResult;
-				
-						break;
-					case "boolean":
-						var flagResult = true;
-						for(var i=0,l=rankData.length;i<l;i++){
-							if( this.getFlagRank(flagResult) > this.getFlagRank(rankData[i]) ){
-								flagResult = rankData[i];
-							}
-						}
-						return flagResult;
-						break;
-					defualt:
-						console.warn("Ranking :: worst 해당 타입으로 랭킹을 매길수 없습니다.",this.RankingType);
-						return undefined;
-						break;
-				}
-			}
-		}
-	},function(defualt,nothing){
-		if(typeof firstValue == "undefined"){
-			this.Source         = defualt;
-			this.RankingNothing = nothing;
-			this.RankingType    = "boolean";
-		} else {
-			this.Source         = defualt;
-			this.RankingNothing = nothing;
-			this.RankingType    = typeof defualt;
-		}
-	});
-
-	//******************
-	//Type
-	makeModule("Type",{
-		isThis       : function ( ) { switch(typeof this.Source){case"object":if(this.isNull())return"null";if(this.isElement())return"element";if(this.isJquery())return"jquery";if(this.isArray())return"array";default:return typeof this.Source;}},
-		isUndefined  : function (tb,fb) {return this.is((typeof this.Source == "undefined") ,tb,fb);},
-		isDefined    : function (tb,fb) {return this.is((typeof this.Source !== "undefined"),tb,fb);},
-		isNull       : function (tb,fb) {return this.is(this.Source === null?true:false      ,tb,fb);},
-		isNil        : function (tb,fb) {return this.is(this.Source ==  null?true:(typeof this.Source == "undefined")?true:false,tb,fb);},
-		isFunction   : function (tb,fb) {return this.is((typeof this.Source == "function")  ,tb,fb);},
-		isBoolean    : function (tb,fb) {return this.is((typeof this.Source == "boolean")   ,tb,fb);},
-		isObject     : function (tb,fb) {return this.is((typeof this.Source == "object")    ,tb,fb);},
-		isString     : function (tb,fb) {return this.is((typeof this.Source == "string")    ,tb,fb);},
-		isNumber     : function (tb,fb) {return this.is((typeof this.Source == "number")    ,tb,fb);},
-		isText       : function (tb,fb) {return this.is((typeof this.Source == "string" || typeof this.Source == "number"),tb,fb);},
-		isNumberText : function (tb,fb) {
-			return this.is(_Number(this.Source).isANumber(),tb,fb);},
-		isTextNumber : function (tb,fb) { 
-			var numberValue = _Number(this.Source).getNumberText();
-			if(numberValue == "") numberValue = undefined;
-			return this.is(!isNaN(numberValue),tb,fb);
-		},
-		isElement      : function (tb,fb) {return this.is(W.ISELNODE       ,tb,fb);},
-		isJquery       : function (tb,fb) {return this.is(W.ISJQUERY       ,tb,fb);},
-		isArray        : function (tb,fb) {return this.is(W.ISARRAY        ,tb,fb);},
-		isUnderBrowser : function (tb,fb) {return this.is(W.ISUNDERBROWSER ,tb,fb);},
-		isNothing      : function (tb,fb) {return this.is(W.ISNOTHING      ,tb,fb);},
-		isEnough       : function (tb,fb) {return this.un(W.ISNOTHING      ,tb,fb);},
-		isPhoneNumber  : function (tb,fb) {return this.isText() ? /\d{6,11}/.test( _Number(this.Source).getNumberText() ) : false;  },
-		isEmail        : function (tb,fb) {return this.isText() ? /^[\w]+\@[\w]+\.[\.\w]+/.test(this.Source) : false;  },
-		isAscii        : function (tb,fb) {return this.isText() ? /^[\x00-\x7F]*$/.test(this.Source) : false;  },
-		__rInfo:function(info,result,caseResult){
-			var flag = undefined;
-			if(typeof result == "boolean" && caseResult == undefined) flag = result;
-			if(typeof result == "boolean" && typeof caseResult == "boolean") flag = caseResult && result;
-			if(info == true){
-				return { "type":result,"condition":caseResult,"success":flag };
-			} else {
-				return flag;
-			}
-		},
-		__validateSize:function(option,value,info,optimizer,sizeType){
-			var size;
-			var switchValue = typeof sizeType == "string" ? sizeType : typeof this.Source;
-			switch( switchValue ){
-				case "numberText" :
-					size = _Number(this.Source).number();
-					break;
-				case "number" :
-					size = parseInt(this.Source);
-					break;
-				case "object" : 
-					if( this.isArray() == false ){
-						size = 0;
-						for(var key in this.Source) size ++;
-					}
-					break;
-				case "textNumber" : case "text" : case "email" : case "ascii" :
-					size = optimizer == true ? (this.Source + "").trim().length : (this.Source + "").length;
-					break;
-				case "string" : //or array
-					size = optimizer == true ? this.Source.trim().length : this.Source.length;
-					break;
-				default :
-					return this.__rInfo(info,false,undefined);
-					break;
-			}
-			switch(option){
-				case ">": try { 
-					return size > parseInt(value); 
-				} catch(e) { return this.__rInfo(info,true,false); }
-					break;
-				case "<": try { 
-					return size < parseInt(value); 
-				} catch(e) { return this.__rInfo(info,true,false); }
-					break;
-				case "=":case "==": try { 
-					return size == parseInt(value); 
-				} catch(e) { return this.__rInfo(info,true,false); }
-					break;
-				default : console.log("Type::validateRule::size::치명적인 오류 => 허용하지 않는 option =>",option);
-					break;
-			}
-			return this.__rInfo(info,false,false);
-		},
-		__validateInterface:function(valType,option,value,info,optimizer){
-			var result;
-			switch(valType){
-				case "string"    : result = this.isString(); break;
-				case "number"    : result = this.isNumber(); break;
-				case "numberText": result = this.isNumberText(); break;
-				case "textNumber": result = this.isTextNumber(); break;
-				case "text"      : result = this.isText(); break;
-				case "array"     : result = this.isArray(); break;
-				case "object"    : result = this.isObject(); break;
-				case "email"     : result = this.isEmail(); break;
-				case "ascii"     : result = this.isAscii(); break;
-			}
-			if(option.length > 0 && value.length > 0) {
-				if(result == false) return this.__rInfo(info,false,false);
-				switch(option){
-					case ">": case "<": case "=": case "==":
-						var caseResult = this.__validateSize.call(this,option,value,info,optimizer,valType);
-						return this.__rInfo(info,result,caseResult);
-						break;
-					case ":":
-						switch(valType){
-							case "string":
-							case "numberText":
-							case "text":
-								if( valType=="string" && result == true){
-									var text = optimizer == true ? this.Source.trim() : this.Source;
-									if(value == "able"){
-										return this.__rInfo(info,result, text.length > 0 );
-									} else if(value=="unable") {
-										return this.__rInfo(info,result, text.length < 1 );
-									} else {
-										console.log("string::",value,"토큰을 알수가 없군요");
-									}
-								}
-								
-								break;
-							case "textNumber":
-								if( result == true ){
-									var numberValue = _Number(this.Source).getNumberText();
-									var text = optimizer == true ? (this.Source + "").trim() : this.Source + "";
-									if(value == "zero"){
-										return this.__rInfo(info,result, numberValue == 0 );
-									} else if(value == "able"){
-										return this.__rInfo(info,result, numberValue > 0 );
-									} else if(value=="unable") {
-										return this.__rInfo(info,result, numberValue < 1 );
-									} else {
-										console.log("numberText::",value,"토큰을 알수가 없군요");
-									}
-								}
-								break;
-							case "object":
-							case "email":
-							case "ascii":
-								result = false;
-								break;
-						}
-					default:
-						break;
-				}
-			}
-			return this.__rInfo(info,result);
-		},
-		//is 의 string이 들어갈경우 처리
-		validateRule:{
-			"string"     : function(option,value,info,optimizer){ return this.__validateInterface("string",option,value,info,optimizer); },
-			"number"     : function(option,value,info,optimizer){ return this.__validateInterface("number",option,value,info,optimizer); },
-			"numberText" : function(option,value,info,optimizer){ return this.__validateInterface("numberText",option,value,info,optimizer); },
-			"textNumber" : function(option,value,info,optimizer){ return this.__validateInterface("textNumber",option,value,info,optimizer); },
-			"text"       : function(option,value,info,optimizer){ return this.__validateInterface("text",option,value,info,optimizer); },
-			"array"      : function(option,value,info,optimizer){ return this.__validateInterface("array",option,value,info,optimizer); },
-			"object"     : function(option,value,info,optimizer){ return this.__validateInterface("object",option,value,info,optimizer); },
-			"email"      : function(option,value,info,optimizer){ return this.__validateInterface("email",option,value,info,optimizer); },
-			"ascii"      : function(option,value,info,optimizer){ return this.__validateInterface("ascii",option,value,info,optimizer); },
-			"phoneNumber": function(a,b,c,o){ return this.__rInfo(c,this.isPhoneNumber());},
-			"undefined"  : function(a,b,c,o){ return this.__rInfo(c,this.isUndefined());  },
-			"null"       : function(a,b,c,o){ return this.__rInfo(c,this.isNull());       },
-			"nil"        : function(a,b,c,o){ return this.__rInfo(c,this.isNil());        },
-			"defined"    : function(a,b,c,o){ return this.__rInfo(c,this.isDefined());    },
-			"nothing"    : function(a,b,c,o){ return this.__rInfo(c,this.isNothing(undefined,undefined,o));},
-			"enough"     : function(a,b,c,o){ return this.__rInfo(c,this.isEnough(undefined,undefined,o)); },
-			"meaning"    : function(a,b,c,o){ return this.__rInfo(c,this.isEnough(undefined,undefined,o)); },
-			"usefull"    : function(a,b,c,o){ return this.__rInfo(c,this.isEnough(undefined,undefined,o)); },
-			"true"       : function(){ return true;  },
-			"false"      : function(){ return false; }
-		},
-		is:function(testf,tB,fB,optimizer,info){
-			var test = testf;
-			switch(typeof test){
-				case "function":
-					test = test(this.Source);
-					break;
-				case "string" :
-					var model = test.trim().split(" ");
-					var validateResults = model.length == 0 ? [this.__rInfo(info,undefined)] : [];
-			
-					for (var i=0,l=model.length;i<l;i++) {
-						var param = /(\w*)([\>\<\=\:]{0,2})([\S]*)/.exec(model[i]);
-						//validation이 존재하는지 확인
-						if(param[1] in this.validateRule){
-							validateResults.push( this.validateRule[param[1]].call(this,param[2],param[3],info,optimizer) );
-						}
-					}
-					if(info == true){
-						var rank = _Ranking({"type":true,"condition":true,"success":true},{"type":undefined,"condition":undefined,"success":undefined});
-						return rank.worst(validateResults);
-					} else {
-						var rank = _Ranking(true,undefined);
-						test = rank.worst(validateResults);
-					}
-					break;
-				case "object" :
-					if((test instanceof RegExp) && (typeof this.Source == "string" || typeof this.Source == "number")){
-						test = test.test(this.Source+"");
-					} else {
-						test = false;
-					}
-					break;
-			}
-			if(test === true){
-				return (typeof tB === "function") ? tB.call(this,this.Source) : (typeof tB !== "undefined") ? tB : true;
-			} else if(test === false){
-				return (typeof fB === "function") ? fB.call(this,this.Source) : (typeof tB !== "undefined") ? fB : false;
-			} else {
-				console.error("Type::is::error test 값이 올바르지 않습니다. =>",testf,"  source =>",this.Source);
-				return undefined;
-			}
-		},
-		un:function(test,fB,tB,optimizer){
-			tB = typeof tB == "undefined" ? true  : tB;
-			fB = typeof fB == "undefined" ? false : fB;
-			return this.is(test,fB,tB,optimizer);
-		},
-		info:function(test,optimizer){ return this.is(test,undefined,undefined,optimizer,true); },
-		//optimizer됨
-		as:function(test,tB,fB,info){ return this.is(test,tB,fB,true,info); },
-		asInfo:function(test,tB,fB,info){ return this.is(test,tB,fB,true,true); },
-		isInstance : function(o){
-			if (this.isObject()) if ( this.Source.__NativeHistroy__ ) {
-				if(typeof o == "undefined") return true;
-				for(var i=0, length = this.Source.__NativeHistroy__.length; i < length; i++) if( this.Source.__NativeHistroy__[i] == o) return true;
-			}
-			return false;
-		}
-	});
-	
 	
 	var util_unique_random_key = [];
 	makeSingleton("_Util",{
@@ -4217,7 +4041,7 @@
 		},
 		getDateValue:function(format){
 			var dateValue = ELVALUE(this.Source);
-			return _Type(dateValue).is(/(\d+)\D+(\d+)\D+(\d+)/,_String(dateValue).printf(/(\d+)\D+(\d+)\D+(\d+)/,[1],"년 ",[2],"월 ",[3],"일"),dateValue);
+			return IS(dateValue,/(\d+)\D+(\d+)\D+(\d+)/,_String(dateValue).printf(/(\d+)\D+(\d+)\D+(\d+)/,[1],"년 ",[2],"월 ",[3],"일"),dateValue);
 		},
 		maskNumber:function(mask,reverse){
 			if(this.Source) return this.__maskApply("getNumberTextFormat",mask,reverse); 
@@ -4231,14 +4055,8 @@
 			if(this.Source) return this.__maskApply("getDecimal",p,s); 
 			return console.warn("Inside:: inside source invalid");
 		},	
-		is:function(){
-			var t = _Type( this.getValue() );
-			return t.is.apply(t,arguments);
-		},
-		as:function(){
-			var t = _Type( this.getValue() );
-			return t.as.apply(t,arguments);
-		}
+		is:function(test,tb,fb){ return IS(this.getValue(),test,tb,fb); },
+		as:function(test,tb,fb){ return AS(this.getValue(),test,tb,fb); }
 	},function(el){
 		this._super(el);
 	});
@@ -4533,7 +4351,7 @@
 			notStatus:function(statusName){ return !this.isStatus(statusName); },
 			frameStatusSetter:function(setStatus,forced,touched){
 				if(typeof setStatus == "string" || typeof setStatus == "number"){
-					if( _Type(setStatus).as("text:able") ) {
+					if( IS(setStatus,"text>0") ) {
 						if(typeof setStatus == "string") setStatus = setStatus.trim();
 						if(forced || this.CurrentViewStatus !== setStatus){
 							if(setStatus in this.ViewStatus){
@@ -4558,7 +4376,7 @@
 				}
 				if(typeof setStatus == "string" || typeof setStatus == "number"){
 					if(typeof setStatus == "string") setStatus = setStatus.trim();
-					if( _Type(setStatus).as("text:able") ) if(setStatus in this.ViewStatus) if(typeof this.ViewStatus[setStatus] == "function") {
+					if( AS(setStatus,"text>0") ) if(setStatus in this.ViewStatus) if(typeof this.ViewStatus[setStatus] == "function") {
 						var result = this.ViewStatus[setStatus].apply(this,_Array(arguments).subarr(1).toArray());
 						this.CurrentViewStatus = setStatus;
 						return result;
@@ -5221,77 +5039,6 @@
 		this.LoaderViews     = {};
 	});
 	
-	makeSingleton("ActiveRecordPlugins",{
-		addPlugin:function(moduleName,moduleInit){
-			var names = moduleName.trim().split(" ");
-			if(typeof moduleInit == "function"){
-				for(var key in names) this.Plugins[names[key]] = moduleInit;
-			} else {
-				console.error("ActiveRecordPlugins::",names,"에 해당하는 모듈이 함수이여야 합니다. 초기화 할수 없습니다.",moduleInit);
-			}
-			
-		},
-		getPlugin:function(name){ return this.Plugins[name]; },
-		initPlugin:function(name,path,option,moduleOption){ 
-			if( this.getPlugin(name) ){
-				return this.Plugins[name](name,path,option,moduleOption);
-			} else {
-				console.error("ActiveRecordPlugins:: 존재하지 않는 플러그인을 호출하엿습니다. 플러그인 이름 => ",name)
-			}
-		}
-	},function(){
-		this.Plugins = {};
-	});
-	ActiveRecordPlugins.addPlugin("http https json jsonp dom xml",function(type,path,option,moduleOption){
-		return new (function requestPlugin(aType,aPath,aOption,aModuleOption){
-			this.path            = aPath;
-			this.option          = TOOBJECT(aOption);
-			this.option.dataType = aType;
-			this.moduleOption    = aModuleOption;
-			this.command         = function(path,data,success,error,scope){
-				if(typeof data   !== "undefined") this.option.data 		  = data;
-				if(typeof success == "function")  this.option.success     = success;
-				if(typeof error   == "function")  this.option.error       = error;
-				if(typeof scope   == "object")    this.moduleOption.scope = scope;
-				_Open(this.path + path, this.option,this.moduleOption);
-			}
-		})(type,path,option,moduleOption);
-	});
-	makeModule("ActiveRecord",{
-		command:function(path,data,success,error,scope){
-			var recordModule = ActiveRecordPlugins.initPlugin(this.ActiveRecordType,this.ActiveRecordPath,this.ActiveRecordOption,this.ActiveRecordModuleOption);
-			if(recordModule) { recordModule.command(path,data,success,error,scope); };
-		},
-		commandToRoot:function(data,success,error,space) { return this.command("",data,success,error,space); },
-		commandWithEntity:function(entitiy,data,success,error,space){
-			var entitiyValue = this.ActiveRecordOption[entitiy];
-			this.command( entitiyValue ,data,success,error,space);
-		},
-		C:function(data,success,error,requestSpace){
-			this.commandWithEntity("create",_Object(data).trance(this.ActiveRecordOption["tranceCreate"],this.ActiveRecordOption["tranceOnly"]).getConcat(this.ActiveRecordOption["constCreate"]),success,error);
-		},
-		R:function(data,success,error,requestSpace){
-			this.commandWithEntity("read",_Object(data).trance(this.ActiveRecordOption["tranceRead"],this.ActiveRecordOption["tranceOnly"]).getConcat(this.ActiveRecordOption["constRead"]),success,error);
-		},
-		U:function(data,success,error,requestSpace){
-			this.commandWithEntity("update",_Object(data).trance(this.ActiveRecordOption["tranceUpdate"],this.ActiveRecordOption["tranceOnly"]).getConcat(this.ActiveRecordOption["constUpdate"]),success,error);
-		},
-		D:function(data,success,error,requestSpace){
-			//uniquezKey process
-			data = CLONE(TOOBJECT(data));
-			if("deleteKey" in this.ActiveRecordOption) if(_Type(data[this.ActiveRecordOption.deleteKey]).isNothing() == false) {
-				var deleteValue = data[this.ActiveRecordOption.deleteKey];
-				data = {};
-				data[this.ActiveRecordOption.deleteKey] = deleteValue;
-			}
-			this.commandWithEntity("delete",_Object(data).trance(this.ActiveRecordOption["tranceDelete"],this.ActiveRecordOption["tranceOnly"]).getConcat(this.ActiveRecordOption["constDelete"]),success,error);
-		}
-	},function(type,path,option,moduleOption){
-		this.ActiveRecordType         = type;
-		this.ActiveRecordPath         = path;
-		this.ActiveRecordOption       = CLONE(TOOBJECT(option));
-		this.ActiveRecordModuleOption = CLONE(TOOBJECT(moduleOption));
-	});
 	makeSingleton("DataContextNotificationCenter",{
 		addObserver:function(controller){
 			if(controller)this.notificationObservers.push(controller);
