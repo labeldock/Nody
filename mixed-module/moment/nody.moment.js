@@ -50,10 +50,10 @@
 			// current month
 			for(var i=startDay,l=count;i<l;i++){
 				var date    = i-startDay+1;
-				var makedTd = MAKE("td",{html:date});
+				var makedTd = MAKE("td",{html:date,dataset:{"year":year,"month":month,"date":date}});
 				calendarBodies[ Math.floor(i/7) ].push(makedTd);
 				ELON(makedTd,"click",function(){
-					owner.calendarToggle(parseInt(ELATTR(this,"year")),parseInt(ELATTR(this,"month")),parseInt(ELATTR(this,"date")));
+					owner.calendarToggle(parseInt(ELDATA(this,"year")),parseInt(ELDATA(this,"month")),parseInt(ELDATA(this,"date")));
 				});
 			} 
 		

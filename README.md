@@ -411,10 +411,14 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ```
 <a name="version-info"/>
 ## Version info #
+#### 0.7 변동예정 #
+- EL.. 함수들이 새로운 Nody와 Make모듈로 대체될 예정입니다. API도 jQuery스타일로 바뀝니다.
+
 #### 0.6 변동사항 #
   - 모듈인 "Type"이 제거되고 단순 함수 "IS"로 대체되었습니다.
   - DataGrid, DataRender, DataViewController 등의 이전 MVVM모듈이 제거되었습니다.
   - 완전히 새로 작성된 MVVM관련 모듈인 DataContext, ManagedData, ViewModel, DataContextViewController이 추가되었습니다. 이로서 메모리 관리가 최적화 되었고와 렌더링 프로세싱을 최소화 하였습니다.
+  - ELDATA가 추가되었습니다. 노드의 DATASET에 접근할수 있습니다.
   
 #### 0.5 변동사항 #
   - 모듈 생성시 초기화 값 지정이 생겼습니다. {"var!name":value}로 지으면 됩니다.

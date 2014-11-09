@@ -7,7 +7,7 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.6.4";
+	var version = "0.6.5";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -2601,9 +2601,9 @@
 	
 	makeSingleton("ELUT",{
 		//테그의 속성을 text로 표현합니다.
-		"SELECTINFO"   : function(tagProperty,attrValue,dataValue){
+		"SELECTINFO"   : function(tagProperty,attrValue){
 			//selectInfoCahche
-			if(typeof tagProperty == "string" && typeof attrValue=="undefined" && typeof dataValue=="undefined"){
+			if(typeof tagProperty == "string" && typeof attrValue=="undefined"){
 				var tp = tagProperty.trim();
 				var cache = FUT.CACHEGET(tp);
 				if( cache ) return CLONEOBJECT( cache );
@@ -2712,15 +2712,10 @@
 	
 			//value attr in attrValue
 			var attrvals = CLONE(TOOBJECT(attrValue,"html"));
-			if(attrvals["html"]) { 
-				attributedToken["::"] = attrvals["html"]; delete attrvals["html"]; 
-			}
+			if(attrvals["html"]) { attributedToken["::"] = attrvals["html"]; delete attrvals["html"];  }
+			
 			for(var key in attrvals) { attributedToken[key] = attrvals[key]; };
 	
-			//data attr
-			var datavals = CLONE(TOOBJECT(dataValue,"value"));
-			for(var key in datavals) { attributedToken[ "data-" + key ] = attrvals[key]; };
-			
 			//cache save
 			if(selectInfoCacheEnabled) FUT.CACHESET("SELECTINFO",selectInfoCacheEnabled,CLONEOBJECT(attributedToken));
 			
@@ -2728,9 +2723,10 @@
 			return attributedToken;
 		},
 		//css스타일 태그를 html스타일 태그로 바꿉니다.
-		"TAG"      : function(tagProperty,attrValue,dataValue){
+		"TAG"      : function(tagProperty,attrValue){
+			
 			//tagInfo
-			var tagInfo = SELECTINFO(tagProperty,attrValue,dataValue);
+			var tagInfo = SELECTINFO(tagProperty,attrValue);
 			if(!("tagName" in tagInfo) || tagInfo.tagName == "*") tagInfo.tagName = "div";
 			//make attribute text
 			var attributedTexts = "";
@@ -3606,10 +3602,17 @@
 		},
 		"CREATE" :function(name,attrValue,parent){
 			var element;
-			
+			var dataset;
 			name = (typeof name == "undefined") ? "" : name ;
 			if(typeof name == "string"){
 				name = name.trim();
+				
+				if(typeof attrValue == "object") if("dataset" in attrValue){
+					dataset   = attrValue["dataset"];
+					attrValue = CLONE(attrValue);
+					delete attrValue["dataset"];
+				}
+				
 				if(name.indexOf("<") !== 0) name = TAG(name,attrValue);
 	
 				switch(name.substr(0,3)){
@@ -3645,6 +3648,9 @@
 						element = HTMLTOEL(name)[0];
 						break;
 				}
+				
+				if(dataset) for(var key in dataset) element.dataset[key] = dataset[key];
+					
 			} else {
 				console.error("E::처리할수 없는 첫번째 파라메터가 들어왔습니다. string이여야 합니다.");
 				return undefined;
@@ -3734,6 +3740,13 @@
 				for(var i=0,l=this.events.length;i<l;i++) ELON(node,eventName,timeManager.handler);
 			}
 			return node;
+		},
+		"ELDATA":function(node,key,value){
+			var nodes = FIND(node);
+			if(nodes.length == 0) return;
+			if(arguments.length == 1) return CLONE(ZERO(nodes).dataset);
+			if(arguments.length == 2) return ZERO(nodes).dataset[key];
+			if(arguments.length == 3) { DATAEACH(nodes,function(node){ node.dataset[key] = value; }); return nodes; }
 		},
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 		"MAKECOLS":function(){ return _Array(arguments).inject(CREATE("colgroup"),function(colvalue,parent){ if(typeof colvalue == "string" || typeof colvalue == "number") ELAPPEND(parent,CREATE("col",{width:colvalue})); }); },
