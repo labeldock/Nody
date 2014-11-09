@@ -7,13 +7,13 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.6.2";
+	var version = "0.6.3";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
 	
 	// 코어버전
-	var nodyCoreVersion = "1.3";
+	var nodyCoreVersion = "1.4.0";
 	
 	// 콘솔설정 : ie에러 고침 : adobe air
 	if (typeof W.console !== "object"){W.console = {};} 'log info warn error count assert dir clear profile profileEnd"'.replace(/\S+/g,function(n){ 
@@ -43,7 +43,7 @@
 	var MARKO = {};W.MARK = function(name){ if(typeof name == "string" || typeof name == "number") { name = name+""; if(typeof MARKO[name] == "number") { console.info("MARK::"+name+" => "+ (+new Date() - MARKO[name])); delete MARKO[name]; } else { console.info("MARK START::"+name); MARKO[name] = +new Date(); } } };
 	
 	//IE8 TRIM FIX
-	if(!String.prototype.trim) String.prototype.trim = function() { return this.replace(/(^\s*)|(\s*$)/gi, "");TOS };
+	if(!String.prototype.trim) String.prototype.trim = function() { return this.replace(/(^\s*)|(\s*$)/gi, ""); };
 	
 	//IE7 JSON FIX
 	var __aJSONCount__ = "JSON" in W ? 1 : 0; 
@@ -99,7 +99,7 @@
 			singletonText += "\n" + i + " : " + key ;
 			var i2=0;
 			switch(key){
-				case "AFoundation": case "ELUT": case "NODY": case "FINDEL": case "ElementFoundation": case "ElementGenerator":
+				case "SpecialFoundation": case "ELUT": case "NODY": case "FINDEL": case "ElementFoundation": case "ElementGenerator":
 					var count = 0;
 					for( protoName in NativeCore.Singletons[key].constructor.prototype) count++;
 					singletonText += "\n    [" + count + "]...";
@@ -314,6 +314,7 @@
 	};
 	W.makeGetters   = function(o){ if(typeof o == "object") for(var k in o) W.makeGetter(k,o[k]); };
 	
+	// Foundation UTility
 	var FUT_CACHE;
 	W.makeSingleton("FUT",{
 		//함수를 연속적으로 사용 가능하도록 함
@@ -400,19 +401,8 @@
 	});
 	FUT.CACHECLEAR();
 	
-	
-})(window,{
-	Getters:[],
-	Singletons:{},
-	Modules:{},
-	Structure:{}
-}));
-//Nody Foundation
-(+(function(W){
-	if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
-	
-	//
-	W.makeSingleton("AFoundation",{
+	// Nody Super base
+	W.makeSingleton("NodyBase",{
 		// 첫번째 값이 유효하지 않으면 값을 대채함
 		"ISJQUERY"  :function(o){ return (typeof o == "object" && o !== null ) ? ("jquery" in o) ? true : false : false; },
 		"ISARRAY"   :function(a){ return (typeof a == "object" || typeof a == "function") ? ( a !== null && ((a instanceof Array || a instanceof NodeList || ISJQUERY(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) ) ? true : false) : false; },
@@ -470,36 +460,6 @@
 		//1:길이와 같이 2: 함수호출
 		"TIMES":function(l,f){ l=TONUMBER(l); for(var i=0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
 		"TIMESMAP":function(l,f){ l=TONUMBER(l); var r = []; for(var i=0;i<l;i++) r.push(f(i)); return r; },
-		// 데이터의 갯수를 샘
-		"DATACOUNT" : function(v){
-			if( v == undefined || v == null ) return 0;
-			if( typeof v == "object"){
-				if( ISARRAY(v) ) return v.length;
-				var count = 0;
-				for(var key in v) count++;
-				return count;
-			}
-			return 1;
-		},
-		//중복되는 값 제거
-		"DATAUNIQUE" :function() {
-			var value  = [];
-			var result = [];
-			for(var ai=0,li=arguments.length;ai<li;ai++){
-				var mvArray = CLONEARRAY(arguments[ai]);
-				for(var i=0,l=mvArray.length;i<l;i++){
-					var unique = true;
-					for(var i2=0,l2=result.length;i2<l2;i2++){
-						if(mvArray[i] == result[i2]){
-							unique = false;
-							break;
-						}
-					}
-					if(unique==true)result.push(mvArray[i]);
-				}
-			}
-			return result;
-		},
 		// 각각의 값의 function실행
 		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
 		// 각각의 값의 function실행
@@ -522,6 +482,8 @@
 			return [];
 		},
 		"DATAINDEX":function(data,compare){ var v = TOARRAY(data); for(var i in v) if(compare == v[i]) return TONUMBER(i); },
+		//i 값이 제귀합니다.
+		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 		//오브젝트의 key를 each열거함
 		"ENUMERATION":FUT.CONTINUTILITY(function(v,f){if((typeof v == "object") && (typeof f == "function")){for(k in v) {f(v[k],k)}}; return v; },2),
 		//무엇이든 길이를 리턴합니다.
@@ -604,6 +566,86 @@
 				if(t instanceof Object){var r={};for(var k in t)if(t.hasOwnProperty(k))r[k]=t[k];return r;}
 				default : console.error("CLONE::copy failed : target => ",t); return t; break;
 			}
+		},
+		//inspect type
+		"ISTYPE":function(t,v) {
+			//real
+			try {
+				if(t instanceof v) return true;
+			} catch(e){
+				//tName
+				var vn = ((typeof v == "function") ? v["__NatvieContstructorName__"] : v);
+				//inspect
+				if( (typeof t=="object") && (typeof vn=="string") ) if("__NativeHistroy__" in t) {
+					var his = t["__NativeHistroy__"];
+				
+					for(var i=0,l=his.length;i<l;i++){
+						if(his[i] == vn) return true;
+					}
+				}
+			}
+			return false;
+		},
+		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
+		"APPLY" : function(f,owner,args) { 
+			if(typeof f == "function"){ 
+				var mvArgs = CLONEARRAY(args);
+				if(mvArgs.length > 0){ 
+					return f.apply(owner,mvArgs); 
+				} else { 
+					return f.call(owner); 
+				}
+				/* 콘솔에러로 만든 코드이나 디버깅이 어려워져 다시 블럭함 */
+				/*try { if(mvArgs.length > 0){ return f.apply(owner,mvArgs); } else { return f.call(owner); } } catch(e) { for(key in console) if(console[key] == f) { return f.apply(console,mvArgs); } throw e; } */
+			} 
+		},
+		"CALL" : function(f,owner) { 
+			if(typeof f == "function"){ if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); } var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } 
+		}
+	});
+	NodyBase.eachGetter();
+	
+})(window,{
+	Getters:[],
+	Singletons:{},
+	Modules:{},
+	Structure:{}
+}));
+
+//Nody Foundation
+(+(function(W){
+	if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
+	
+	W.makeSingleton("SpecialFoundation",{
+		// 데이터의 갯수를 샘
+		"DATACOUNT" : function(v){
+			if( v == undefined || v == null ) return 0;
+			if( typeof v == "object"){
+				if( ISARRAY(v) ) return v.length;
+				var count = 0;
+				for(var key in v) count++;
+				return count;
+			}
+			return 1;
+		},
+		//중복되는 값 제거
+		"DATAUNIQUE" :function() {
+			var value  = [];
+			var result = [];
+			for(var ai=0,li=arguments.length;ai<li;ai++){
+				var mvArray = CLONEARRAY(arguments[ai]);
+				for(var i=0,l=mvArray.length;i<l;i++){
+					var unique = true;
+					for(var i2=0,l2=result.length;i2<l2;i2++){
+						if(mvArray[i] == result[i2]){
+							unique = false;
+							break;
+						}
+					}
+					if(unique==true)result.push(mvArray[i]);
+				}
+			}
+			return result;
 		},
 		//래핑된 텍스트를 제거
 		"ISWRAP":function(c,w){ if(typeof c == "string"){ c = c.trim(); w = typeof w !== "undefined" ? TOARRAY(w) : ['""',"''","{}","[]"]; for(var i=0,l=w.length;i<l;i++){ var wf = w[i].substr(0,w[i].length-1); var we = w[i].substr(w[i].length-1); if(c.indexOf(wf)==0 && c.substr(c.length-1) == we) return true; } } return false; },
@@ -762,46 +804,6 @@
 		"SNAKE":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("_"); },
 		//to kebab-case
 		"KEBAB":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("-"); },
-		//inspect type
-		"ISTYPE":function(t,v) {
-			//real
-			try {
-				if(t instanceof v) return true;
-			} catch(e){
-				//tName
-				var vn = ((typeof v == "function") ? v["__NatvieContstructorName__"] : v);
-				//inspect
-				if( (typeof t=="object") && (typeof vn=="string") ) if("__NativeHistroy__" in t) {
-					var his = t["__NativeHistroy__"];
-				
-					for(var i=0,l=his.length;i<l;i++){
-						if(his[i] == vn) return true;
-					}
-				}
-			}
-			return false;
-		},
-		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
-		"APPLY" : function(f,owner,args) { 
-			if(typeof f == "function"){ 
-				var mvArgs = CLONEARRAY(args);
-				if(mvArgs.length > 0){ 
-					return f.apply(owner,mvArgs); 
-				} else { 
-					return f.call(owner); 
-				}
-				/* 콘솔에러로 만든 코드이나 디버깅이 어려워져 다시 블럭함 */
-				/*try { if(mvArgs.length > 0){ return f.apply(owner,mvArgs); } else { return f.call(owner); } } catch(e) { for(key in console) if(console[key] == f) { return f.apply(console,mvArgs); } throw e; } */
-			} 
-		},
-		"CALL" : function(f,owner) { 
-			if(typeof f == "function"){ if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); } var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } 
-		},
-		//함수가 존재하면 함수실행
-		"CALLBACK" : function(f){ if(typeof f == "function"){ var args = Array.prototype.slice.apply(arguments); args.shift(); return APPLY(f,undefined,args); } },		
-		//i 값이 제귀합니다.
-		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
-		"RETURNINDEX":function(index,maxIndex){ return TONUMBER(maxIndex,TOLENGTH(index))-TURNINDEX(index,maxIndex)-1; },
 		//길이만큼 리피트 됩니다.
 		"DATATILE":function(v,l){
 			var base;
@@ -917,7 +919,7 @@
 			return cachedata[Math.floor(Math.random()*(cachedata.length))];
 		},
 	});
-	AFoundation.eachGetter();
+	SpecialFoundation.eachGetter();
 	
 	// 키를 찾는 함수입니다.
 	var objectCommonInterface = {

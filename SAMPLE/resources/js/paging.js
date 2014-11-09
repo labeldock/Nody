@@ -1,5 +1,11 @@
 // auther : labeldock (http://github.com/labeldock)
  
+// 1. 페이지네이션을 그려야할 컨테이너
+// 2. 페이지아이템을 그려야할 컨테이너 리스트
+// 3. 컨텐츠
+// 4. 한번에 보여줄 리스트의 갯수
+// 5. 페이지네이션이 보여줘야할 갯수
+
 var PagenationController = function(pagenationContainer,pagelistContainer,initData,listLength,pageLength){
 
 	//한개의 컨테이너만 허용
