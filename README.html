@@ -80,25 +80,25 @@
 
 <h1>introduce</h1>
 
-<p>Nody.js is inline style DHTML javascript library.
-Now &lsquo;nody&rsquo; is developement version.
-api change from time to time be until version 1.0.
-Api stated in document was completed.</p>
-
-<p>Nody.js는 DHTML 페이지를 만들기위한 라이브러리이다.
-개발버전이며 인터페이스를 완성하고 있으며 1.0이 될때까지 내부적으로 수시로 api가 변경될 예정이다.
-해당 도큐먼트에 노출된 API는 완성체이며 api변경은 없을 예정이다.</p>
+<p>Nody.js는 DHTML 페이지를 쉽게 구성하고 제작하기 위한 라이브러리이다.</p>
 
 <h3>Attention</h3>
 
-<p>Nody는 jQuery와 같이 노드를 핸들링 하기 위한 라이브러리가 아니다.
-본 라이브러리는 데이터의 관점에서 노드를 핸들링하기 편하도록 하기위해 만들어지고 있다.</p>
+<p>Nody는 jQuery와 달리 단순 노드를 핸들링 하기 위한 라이브러리가 아니다.
+본 라이브러리는 데이터의 관점에서 노드를 핸들링하기 편하도록 함수나 컨트롤러가 제공된다.</p>
 
 <h3>Compatibility</h3>
 
 <h4>Recommend</h4>
 
-<p>IE10+, chrome4+, firefoe 16+, safari4+, opera 15+</p>
+<ul>
+<li>IE10+</li>
+<li>chrome4+</li>
+<li>firefoe 16+</li>
+<li>safari4+</li>
+<li>opera 15+</li>
+</ul>
+
 
 <h4>Minimum</h4>
 
@@ -112,23 +112,11 @@ Api stated in document was completed.</p>
 
 <h2>Featrue</h2>
 
-<h3>English</h3>
-
-<ol>
-<li>Node create intuitive</li>
-<li>Line development-oriented</li>
-<li>Interface implementations exist</li>
-<li>Can imitate object-oriented development.</li>
-</ol>
-
-
-<h3>Korean</h3>
-
 <ol>
 <li>직관적인 Node 생성이 가능하다.</li>
 <li>인라인 코딩을 지향한다.</li>
-<li>각종 인터페이스 구현체가 존재한다.</li>
-<li>코어만 따로 띄어내어 객체지향 개발을 흉내낼수도 있다.</li>
+<li>뷰를 제어하기 위한 컨트롤러가 제공된다.</li>
+<li>코어의 객체지향 모듈을 사용하여 제작되었다.</li>
 </ol>
 
 
@@ -136,8 +124,7 @@ Api stated in document was completed.</p>
 
 <h2>Orientation</h2>
 
-<p>본 라이브러리는 로직의 통일성과 손쉬운 구현을 중요시여겨 객체지향 모델을 따라 만들어졌다.
-따라서 코드의 실행시간은 여타 성숙한 자바스크립트 라이브러리에 비해 느릴수 있으나 최적화 작업은 계속 진행되고 있다.</p>
+<p>본 라이브러리는 로직의 통일성과 손쉬운 구현을 중요시여겨 객체지향 모델로 만들어졌다.</p>
 
 <p><a name="simple-showcase"/></p>
 
@@ -167,27 +154,37 @@ Api stated in document was completed.</p>
         &lt;div id="hello" class="world" my="code" disabled&gt;foo&lt;/div&gt;
 </code></p>
 
+<h4>Case 2</h4>
+
+<p>오브젝트를 값을 사용하여 만들수 있음
+<code>javascript
+        MAKE("div",{dataset:{hello:"world",data:"set"},"id":"hello","class":"world"});
+</code>
+<code>html
+        &lt;div id="hello" class="world" data-hello="world" data-data="set"&gt;&lt;/div&gt;
+</code></p>
+
 <p><a name="showcase-tag-generator-02"/></p>
 
-<h4>Case 2 #</h4>
+<h4>Case 3 #</h4>
 
 <p>_[tagName] 방식으로 가능</p>
 
 <p><code>javascript
-        MAKE_LI("::helloWorld");
+        MAKE_LI(".list::helloWorld");
 </code>
 <code>html
-        &lt;li&gt;helloWorld&lt;/li&gt;
+        &lt;li class="list"&gt;helloWorld&lt;/li&gt;
 </code></p>
 
 <p><a name="showcase-tag-generator-03"/></p>
 
-<h4>Case 3</h4>
+<h4>Case 4</h4>
 
 <p>파라메터를 중첩하여 생성가능</p>
 
 <p><code>javascript
-        MAKE_UL(
+        MAKE("ul",
           MAKE_LI(".item::list1"),
           MAKE_LI(".item::list2")
         );
@@ -201,23 +198,35 @@ Api stated in document was completed.</p>
 
 <p><a name="showcase-tag-generator-04"/></p>
 
-<h4>Case 4</h4>
+<h4>Case 5</h4>
 
 <p>테이블 생성예제</p>
 
 <p><code>javascript
         MAKE_TABLE("#my-table",
-            MAKE_A("::link1"),
-            MAKE_A("::link2"),
-            MAKE_A("::link3")
+            MAKE("a[href=#]::link1"),
+            MAKE("a[href=#]::link2"),
+            MAKE("a[href=#]::link3")
         );
 </code>
 <code>html
         &lt;table id="my-table"&gt;
             &lt;tbody&gt;
-                &lt;tr&gt;&lt;td&gt;&lt;a&gt;link1&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
-                &lt;tr&gt;&lt;td&gt;&lt;a&gt;link2&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
-                &lt;tr&gt;&lt;td&gt;&lt;a&gt;link3&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;
+                        &lt;a href="#"&gt;link1&lt;/a&gt;
+                    &lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;
+                        &lt;a href="#"&gt;link2&lt;/a&gt;
+                    &lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;
+                        &lt;a href="#"&gt;link3&lt;/a&gt;
+                    &lt;/td&gt;
+                &lt;/tr&gt;
             &lt;/tbody&gt;
         &lt;/table&gt;
 </code></p>
@@ -259,7 +268,7 @@ Api stated in document was completed.</p>
 
 <p><a name="showcase-enumerate-each"/></p>
 
-<h4>each</h4>
+<h4>Each</h4>
 
 <p><code>javascript
        _Array([1,2,3]).each(function(value,index){
@@ -474,8 +483,7 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <h4>default instance veriable 호출</h4>
 
-<p>0.5에서 새로 추가되었습니다. 아직 테스트가 완료되지 않았습니다.
-```javascript
+<p>```javascript
         makeModule(&ldquo;Dog&rdquo;,{
             &ldquo;var!name&rdquo;:&ldquo;Dog name&rdquo;
         },function(){});</p>
@@ -510,10 +518,11 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <h2>Version info</h2>
 
-<h4>0.7 변동예정</h4>
+<h4>0.7 변동사항</h4>
 
 <ul>
-<li>EL.. 함수들이 새로운 Nody와 Make모듈로 대체될 예정입니다. API도 jQuery스타일로 바뀝니다.</li>
+<li>EL&hellip;, Make 함수들을 Nody와 Make모듈로 컨트롤 할수 있습니다.</li>
+<li>0.7 버전에서 API를 정리하고 브라우저 호환성을 IE8까지 올리는 작업을 진행합니다.</li>
 </ul>
 
 
@@ -524,15 +533,5 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 <li>DataGrid, DataRender, DataViewController 등의 이전 MVVM모듈이 제거되었습니다.</li>
 <li>완전히 새로 작성된 MVVM관련 모듈인 DataContext, ManagedData, ViewModel, DataContextViewController이 추가되었습니다. 이로서 메모리 관리가 최적화 되었고와 렌더링 프로세싱을 최소화 하였습니다.</li>
 <li>ELDATA가 추가되었습니다. 노드의 DATASET에 접근할수 있습니다.</li>
-</ul>
-
-
-<h4>0.5 변동사항</h4>
-
-<ul>
-<li>모듈 생성시 초기화 값 지정이 생겼습니다. {&ldquo;var!name&rdquo;:value}로 지으면 됩니다.</li>
-<li>_EL 이 MAKE로 바뀌었습니다.</li>
-<li>_DIV 와 같은 표현을 MAKE_DIV로 바꾸었습니다.</li>
-<li>DHTML과 관련없는 API가 줄었습니다</li>
 </ul>
 

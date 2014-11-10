@@ -7,13 +7,15 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.6.5";
+	var version = "0.7.0";
+	var build   = "732";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
 	
 	// 코어버전
-	var nodyCoreVersion = "1.4.0";
+	var nodyCoreVersion = "1.6";
+	var nodyCoreBuild   = "71";
 	
 	// 콘솔설정 : ie에러 고침 : adobe air
 	if (typeof W.console !== "object"){W.console = {};} 'log info warn error count assert dir clear profile profileEnd"'.replace(/\S+/g,function(n){ 
@@ -137,7 +139,7 @@
 					break;
 				case "array":
 					nativeProto = [];
-					setter      = typeof sm == "function" ? sm : function(v){ return this.replace(v); };
+					setter      = typeof sm == "function" ? sm : function(v){ return this.setSource(v); };
 					getter      = function(){ return this.toArray.apply(this,arguments); };
 					break;
 				
@@ -270,8 +272,8 @@
 	structruePrototype = {
 		"get":function(key){ if(key) return this.Source[key]; return this.Source; },
 		"empty":function(){ for(var k in this.Source) delete this.Source[k]; return this.Source; },
-		"replace":function(data){ this.empty(); for(var k in data) this.Source[k] = data[k]; return this.Source; },
-		"keymap":function(keys,r){ var i=0,sets={}; for(var k in keys) sets[keys[k]] = r(keys[k],k,i++); return this.replace(sets); },
+		"setSource":function(data){ this.empty(); for(var k in data) this.Source[k] = data[k]; return this.Source; },
+		"keymap":function(keys,r){ var i=0,sets={}; for(var k in keys) sets[keys[k]] = r(keys[k],k,i++); return this.setSource(sets); },
 		"each":function(r){ var i=0; for(var k in this.Source) {var br = r(this.Source[k],k,i++);if(br == false) break;} return this.Source; },
 		"map":function(f){ var r = []; this.each(function(v,k,i){ r.push(f(v,k,i)); }); return r; },
 		"trace":function(m){ console.log((m?m+" ":"")+TOSTRING(this.Source)); }
@@ -297,15 +299,15 @@
 		}
 		o.prototype=m;
 		o.prototype.constructor=o;
-		o.prototype.fusionGetter=function(){
+		o.prototype.eachGetterWithPrefix=function(){
 			for(var k in o.prototype) switch(k){
-				case "eachGetter":case "fusionGetter":case "constructor":break;
+				case "eachGetter":case "eachGetterWithPrefix":case "constructor":break;
 				default: W.makeGetter(n+k,o.prototype[k]); break;
 			}
 		}
 		o.prototype.eachGetter=function(){
 			for(var k in o.prototype) switch(k){
-				case "eachGetter":case "fusionGetter":case "constructor":break;
+				case "eachGetter":case "eachGetterWithPrefix":case "constructor":break;
 				default: W.makeGetter(k,o.prototype[k]); break;
 			}
 		};
@@ -400,25 +402,6 @@
 		"CACHETRACE":function()     { return JSON.stringify(FUT_CACHE); }
 	});
 	FUT.CACHECLEAR();
-	
-	makeGetters({
-		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
-		"APPLY" : function(f,owner,args) { 
-			if(typeof f == "function"){ 
-				var mvArgs = CLONEARRAY(args);
-				if(mvArgs.length > 0){ 
-					return f.apply(owner,mvArgs); 
-				} else { 
-					return f.call(owner); 
-				}
-				/* 콘솔에러로 만든 코드이나 디버깅이 어려워져 다시 블럭함 */
-				/*try { if(mvArgs.length > 0){ return f.apply(owner,mvArgs); } else { return f.call(owner); } } catch(e) { for(key in console) if(console[key] == f) { return f.apply(console,mvArgs); } throw e; } */
-			} 
-		},
-		"CALL" : function(f,owner) { 
-			if(typeof f == "function"){ if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); } var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } 
-		}
-	});
 	
 	var TypeBaseMap = {
 		"string"    : "ISSTRING",
@@ -621,6 +604,28 @@
 		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 		//오브젝트의 key를 each열거함
 		"ENUMERATION":FUT.CONTINUTILITY(function(v,f){if((typeof v == "object") && (typeof f == "function")){for(k in v) {f(v[k],k)}}; return v; },2),
+		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
+		"APPLY" : function(f,owner,args) { 
+			if(typeof f == "function"){ 
+				var mvArgs = CLONEARRAY(args);
+				if(mvArgs.length > 0){ 
+					return f.apply(owner,mvArgs); 
+				} else { 
+					return f.call(owner); 
+				}
+				/* 콘솔에러로 만든 코드이나 디버깅이 어려워져 다시 블럭함 */
+				/*try { if(mvArgs.length > 0){ return f.apply(owner,mvArgs); } else { return f.call(owner); } } catch(e) { for(key in console) if(console[key] == f) { return f.apply(console,mvArgs); } throw e; } */
+			} 
+		},
+		"APPLYS" : function(f,owner) {
+			var args = Array.prototype.slice.apply(arguments);
+			 args.shift();
+			 args.shift();
+			 APPLY(f,owner,DATAFLATTEN(args));
+		},
+		"CALL" : function(f,owner) { 
+			if(typeof f == "function"){ if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); } var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } 
+		},
 		//무엇이든 문자열로 넘김
 		"TOSTRING":function(tosv,depth,jsonfy){
 			if(typeof depth == "undefined") depth = 10;
@@ -1064,7 +1069,7 @@
 		// 값을 추가한다.
 		push : function(v,i){ switch(typeof i){ case "string": case "number": this[i] = v; break; default: Array.prototype.push.call(this,v); break; } return this; },
 		//해당 값을 당 배열로 바꾼다
-		replace   : function(v){
+		setSource : function(v){
 			if( ISARRAY(v) ) {
 				if("toArray" in v){
 					Array.prototype.splice.apply(this,[0,this.length].concat(v.toArray()));
@@ -1079,7 +1084,15 @@
 				return this;
 			}
 		},
-		select:function(v){ return this.replace(v); },
+		//
+		isEmpty:function(){ return (this.length == 1) ? true : false },
+		isMulti:function(){ return (this.length > 1) ? true : false },
+		isSingle:function(){ return (this.length == 1) ? true : false },
+		//선택된 값으로 배열이 재정렬 됩니다.
+		selectValue:function(value){ var selects = []; DATAEACH(this,function(v){ if(v == value) selects.push(v); }); this.setSource(selects); },
+		selectIndex:function(index){ return this.setSource(this[index]); },
+		selectFirst:function(){ return this.setSource(this[0]); },
+		selectLast :function(){ return this.setSource(this[this.length-1]); return this; },
 		//배열의 길이를 조절합니다.
 		max:function(length) { this.length = length > this.length ? this.length : length; return this; },
 		min:function(length,undefTo){var count=parseInt(length);if(typeof count=="number")if(this.length<count)for(var i=this.length;i<count;i++)this.push(undefTo);return this;},
@@ -1100,12 +1113,12 @@
 		overwrite : function(v,a){ this.min(a+1); this[a] = v; return this; },
 		//양방향에 대상을 삽입합니다.
 		getBoth:function(f,l){ return this.save().insert(f).push(l);   },
-		both:function(f,l)   { return this.replace(this.getBoth(f,l)); },
+		both:function(f,l)   { return this.setSource(this.getBoth(f,l)); },
 		// 현재의 배열을 보호하고 새로운 배열을 반환한다.
 		save    : function(v){ return this.__GlobalConstructor__(this); },
 		//요소안의 array 녹이기
 		getFlatten : function(){var _result=_Array();this.each(function(value){if(ISARRAY(value)){_result.concat(value);}else{_result.push(value);}});return _result;},
-		flatten    : function(){return this.replace(this.getFlatten());},
+		flatten    : function(){return this.setSource(this.getFlatten());},
 		//다른 배열 요소를 덛붙인다.
 		getConcat : function(){
 			return _Array(arguments).inject(this.save(),function(v,_a){
@@ -1121,13 +1134,13 @@
 			this[rightIndex] = left;
 		},
 		hasIndex:function(index){ if (index < 0) return false; if (this.length - 1 < index) return false; return true; },
-		concat    : function(){ return this.replace(this.getConcat.apply(this,arguments)); },			
+		concat    : function(){ return this.setSource(this.getConcat.apply(this,arguments)); },			
 		// 리턴한 요소를 누적하여 차례로 전달함
 		inject:function(firstValue,method) { for(var i = 0,l = this.length;i<l;i++) { var returnValue = method(this[i],firstValue,i); if(typeof returnValue !== "undefined") firstValue = returnValue; } return firstValue; },
 		// 리턴되는 오브젝트로 새 배열은 만들어냅니다.
 		mapUtil: { "&":function(owner,param){ return owner.getMap(function(a){ if(typeof a == "object") return a[param]; return undefined;}); }},
 		getMap : function(process,start) { if(typeof process=="function"){var result=[];for(var i=(typeof start == "number" ? start : 0),l=this.length;i<l;i++)result.push(process(this[i],i,this.length));return _Array(result);}else if(typeof getOrder=="string"){process=process.trim();for(var key in this.mapUtil)if(process.indexOf(key)==0){var tokenWith=process[key.length]==":"?true:false;var param=tokenWith?process.substr(key.length+1):process.substr(key.length);return _Array(this.mapUtil[key](this,param));}}return _Array(); },
-		map : function(process) { return this.replace(this.getMap(process)); },
+		map : function(process) { return this.setSource(this.getMap(process)); },
 		
 		// index가 maxIndex한계값이 넘으면 index가 재귀되어 반환된다.
 		turning:function(maxIndex,method){
@@ -1147,10 +1160,10 @@
 			}
 			return _Array();
 		},
-		filter      : function(filterMethod) { return this.replace(this.getFilter(filterMethod)); },
+		filter      : function(filterMethod) { return this.setSource(this.getFilter(filterMethod)); },
 		// undefined요소를 제거한다.
 		getCompact : function(){ return this.getFilter(function(a){ return a == undefined ? false : true; }); },
-		compact    : function(){ return this.replace(this.getCompact());},
+		compact    : function(){ return this.setSource(this.getCompact());},
 		// 파라메터 함수가 모두 true이면 true입니다.
 		passAll:function(passMethod) { for(var i=0,l=this.length;i<l;i++) if(passMethod(this[i],i) != true) return false; return true; },
 		// 하나라도 참이면 true입니다
@@ -1175,23 +1188,23 @@
 			for(var i=ns,l=nl;i<l;i++) result.push(this[i]);
 			return result;
 		},
-		subarray:function() { return this.replace(this.getSubArray.apply(this,arguments));},
+		subarray:function() { return this.setSource(this.getSubArray.apply(this,arguments));},
 		getSubarr:function(fi,li) { return this.getSubArray(fi,li ? li + fi : this.length); },
-		subarr:function(fi,li){return this.replace(this.getSubarr(fi,li));},
+		subarr:function(fi,li){return this.setSource(this.getSubarr(fi,li));},
 		//해당 인덱스 요소를 옮김 (자리바꿈)
 		getLeft:function(index){ if(index < 1) return this.save(); if(index > this.length-1) return this.save(); var t1 = this[index]; var t2 = this[index-1]; return this.save().overwrite(t1,index-1).overwrite(t2,index); },
-		left:function(index){ return this.replace(this.getLeft(index)); },
+		left:function(index){ return this.setSource(this.getLeft(index)); },
 		getRight:function(index){ if(index < 0) return this.save(); if(index > this.length-2) return this.save(); var t1 = this[index]; var t2 = this[index+1]; return this.save().overwrite(t1,index+1).overwrite(t2,index); },
-		right:function(index){ return this.replace(this.getRight(index)); },
+		right:function(index){ return this.setSource(this.getRight(index)); },
 		//해당되는 인덱스를 제거
 		getDrop:function(index){ index=index?index:0;return this.getSubArray(index).getConcat(this.getSubarr(index+1)); },
-		drop:function(index) { return this.replace(this.getDrop(index)); },
+		drop:function(index) { return this.setSource(this.getDrop(index)); },
 		// 인수와 같은 요소를 제거한다.
 		getRemove:function(target) { return this.getFilter(function(t){ if(t == target) return false; return true; }); },
-		remove:function(target) { return this.replace(this.getRemove(target)); },
+		remove:function(target) { return this.setSource(this.getRemove(target)); },
 		// 요소중의 중복된 값을 지운다.
 		getUnique:function(){var result=_Array();this.each(function(selfObject){if(result.passAll(function(target){return selfObject!=target;}))result.push(selfObject);});return result;},
-		unique:function(){return this.replace(this.getUnique());},
+		unique:function(){return this.setSource(this.getUnique());},
 		// 인수가 요소안에 갖고있다면 true가 반환
 		has : function(h) { return this.passAny(function(o) { return o == h; }); },
 		// 다른 요소를 반환
@@ -1199,13 +1212,13 @@
 			var exception = Array.prototype.slice.call(arguments);
 			return this.getFilter(function(o){ for(var i=0,l=exception.length;i<l;i++) if(exception[i] == o) { return false;} return true; });
 		},
-		other:function(){ return this.replace(this.getOther.apply(this,Array.prototype.slice.apply(arguments))); },
+		other:function(){ return this.setSource(this.getOther.apply(this,Array.prototype.slice.apply(arguments))); },
 		// 원하는 type만 남기고 리턴
 		getType : function(wanted) { return this.getFilter(function(v){ return IS(v,wanted); }); },
-		type    : function(watend) { return this.replace(this.getType(watend)); },
+		type    : function(watend) { return this.setSource(this.getType(watend)); },
 		// 같은 요소를 반환
 		getEqual:function(v){ return this.getFilter(function(fv){return fv == v ? true : false; }); },
-		equal:function(v)   { return this.replace(this.getEqual(v)); },
+		equal:function(v)   { return this.setSource(this.getEqual(v)); },
 		// 컨스트럭터를 비교하기 위한
 		getEqualClass:function(v){
 			this.getFilter(function(ref){
@@ -1214,7 +1227,7 @@
 				}
 			});
 		},
-		equalClass:function(v){ return this.replace(this.getEqualClass(v)); },
+		equalClass:function(v){ return this.setSource(this.getEqualClass(v)); },
 		// index위치에 있는 요소를 얻어온다.
 		eq:function(index,length){if(isNaN(length))length=1;return this.getSubarr(index,length);},
 		// 요소중 처음으로 일치하는 index를 반환한다.
@@ -1234,9 +1247,9 @@
 		isEnough:function(){ if(this.length > 0) return true; return false;   },
 		//요소안의 string까지 split하여 flaatten을 실행
 		getStringFlatten:function(){ return this.save().map(function(t){ if(typeof t == "string") return t.split(" "); if(ISARRAY(t)) return _Array(t).flatten().type("string"); }).remove(undefined).flatten(); },
-		stringFlatten:function(){ return this.replace( this.getStringFlatten() ); },
+		stringFlatten:function(){ return this.setSource( this.getStringFlatten() ); },
 		getDeepFlatten:function(){function arrayFlatten(_array){var result=_Array();_array.each(function(value){if( ISARRAY(value) ){result.concat(arrayFlatten(_Array(value)));}else{result.push(value);}});return result;}return arrayFlatten(this);},
-		deepFlatten:function(){ return this.replace(this.getDeepFlatten()); },
+		deepFlatten:function(){ return this.setSource(this.getDeepFlatten()); },
 		//그룹 지어줌
 		getGrouping:function(length,reverse){
 			var result=[];
@@ -1247,7 +1260,7 @@
 			this.turning(length,function(obj,i,g){if(!result[g])result[g]=[];result[g].push(obj);});
 			return _Array(result);
 		},
-		grouping:function(length,reverse){ return this.replace(this.getGrouping(length,reverse)); },
+		grouping:function(length,reverse){ return this.setSource(this.getGrouping(length,reverse)); },
 		//랜덤으로 내용을 뽑아줌
 		getRandom:function(length){
 			if(typeof length == "undefined") return this[Math.floor(Math.random() * this.length)];
@@ -1287,7 +1300,7 @@
 		},
 		ratio:function(joinText){
 			var ratioValue    = this.getRatio(joinText);
-			return this.replace((typeof ratioValue == "string")?[ratioValue]:ratioValue);
+			return this.setSource((typeof ratioValue == "string")?[ratioValue]:ratioValue);
 		}
 	});
 	
@@ -1304,7 +1317,7 @@
 		last:function(){ var keys = this.getKeys(); return this.Source[keys[keys.length-1]];},
 		// 값을 추가한다
 		push:function(value,key){ if( typeof key == "string" || typeof key == "number" ){ this.Source[key] = value; } else { var i = 0; var ex = true; do { if(i in this.Source){ i++; } else { ex = false; this.Source[i] = value; } } while (ex); } return this; },
-		replace:function(obj,k){ 
+		setSource:function(obj,k){ 
 			obj = TOOBJECT(obj,k); if(typeof obj == "object"){ for(var key in this.Source) delete this.Source[key]; for(var k in obj) this.Source[k] = obj[k]; } return this; 
 		},
 		select:function(obj){
@@ -1361,7 +1374,7 @@
 				return CLONE(this.Source);
 			} 
 		},
-		map:function() { return this.replace( this.getMap.apply(this,arguments) ); },
+		map:function() { return this.setSource( this.getMap.apply(this,arguments) ); },
 		//inject 
 		inject:function(o,f,ksel){ if(typeof f == "function") { this.getMap(function(v,k){ var or = f(v,o,k); if(typeof or !== "undefined") { o=or; } },ksel); return o; } },
 		//key getter
@@ -1390,13 +1403,13 @@
 		join:function(a,b){ a = typeof a == "string" ? a : ":"; b = typeof b == "string" ? b : ","; return this.inject([],function(v,i,k){ i.push(k+a+TOSTRING(v)); }).join(b); },
 		//toParam
 		getEncodeObject : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : _String(key).getEncode()) ] = (useEncode == false ? val : _String(val).getEncode()); }); },
-		encodeObject    : function(){ return this.replace(this.getEncodeObject.apply(this,arguments)); },
+		encodeObject    : function(){ return this.setSource(this.getEncodeObject.apply(this,arguments)); },
 		//jsonString으로 반환
 		stringify:function(){ return JSON.stringify(this.Source); },
 		changeKey:function(original, change){ if(typeof original == "string" && typeof change == "string") { this.Source[change] = this.Source[original]; delete this.Source[original]; } return this.Source; },
 		//String의 순차적으로 오브젝트 반환  "1 2 3 4" => {"1":"2","3":"4"}
 		getKvo:function(arg,split){ split = typeof split == "string" ? split : " "; arg = arg.split(split); var source = CLONE(this.Source); var keyName = undefined; _Array(arg).turning(2,function(value,i){ if(i == 0) { keyName = value; } else if(i == 1) { if(typeof keyName !== "undefined") { switch(value){ case "''": case '""': case "'": case '"': source[keyName] = ""; break; default : source[keyName] = value; break ; } } keyName = undefined; } }); return source; },
-		kvo:function(arg){ return this.replace(this.getKvo.call(this,arg)); },
+		kvo:function(arg){ return this.setSource(this.getKvo.call(this,arg)); },
 		//오브젝트의 키를 지우고자 할때
 		removeAll:function(){ for( var key in this.Source ) delete this.Source[key]; return this.Source; },
 		getRemove:function(){ var source = this.Source; _Array(arguments).stringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
@@ -1404,7 +1417,7 @@
 		removeNothing:function(){ for(var key in this.Source) if(ISNOTHING(this.Source[key])) delete this.Source[key]; return this; },
 		//존재하지 않는 키벨류값을 적용함;
 		getTouch:function(key,value){ var m = CLONE(this.Source);_Array(key).stringFlatten().each(function(key){ if(!(key in m)) m[key] = value; }); return m; },
-		touch:function(key,value){ return this.replace( this.getTouch.apply(this,arguments) ); },
+		touch:function(key,value){ return this.setSource( this.getTouch.apply(this,arguments) ); },
 		//키의 배열을 받는다
 		keys:function(){ var result = []; for (key in this.Source) result.push(key); return result; },
 		//값의 배열을 받는다
@@ -1412,10 +1425,10 @@
 		getValue:function(key){ return this.Source[key]; },
 		//다른 오브젝트와 함칠때
 		getConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ _Object(arguments[i]).each(function(v,k){ result[k] = v; }); }; return result; },
-		concat:function(){ this.replace(this.getConcat.apply(this,arguments)); return this; },
+		concat:function(){ this.setSource(this.getConcat.apply(this,arguments)); return this; },
 		//다른 오브젝트와 함칠때 이미 있는 값은 오버라이드 하지 않음
 		getSafeConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ _Object(arguments[i]).each(function(v,k){ if( (k in result) == false) result[k] = v; }); } return result; },
-		safeConcat:function(){ this.replace(this.getSafeConcat.apply(this,arguments)); return this; }
+		safeConcat:function(){ this.setSource(this.getSafeConcat.apply(this,arguments)); return this; }
 	}, function(p,n,s){
 		if(typeof s == "string"){
 			this.Source = {};
@@ -1473,7 +1486,7 @@
 				return ;
 			}
 		} else {
-			this.replace(a);
+			this.setSource(a);
 		}		
 	});
 	
@@ -1922,7 +1935,7 @@
 		var contents = Array.prototype.slice.call(arguments);
 		var pushData = [];
 		for(var i=0,l=contents.length;i<l;i++) pushData.push( new AreaContent(contents[i]) );
-		this.replace(pushData);
+		this.setSource(pushData);
 	});
 	
 	// Number
@@ -2781,9 +2794,9 @@
 		"PRINT":function(a){ return CREATE("div",a,W.document); }
 	});
 	ELUT.eachGetter();
-	makeSingleton("NODY",{
+	makeSingleton("NUT",{
 		"ATTR":function(node,v1,v2){
-			if(!ISELNODE(node)) { console.error("NODY.ATTR은 element만 가능합니다. => 들어온값" + TOS(node)); return null; }
+			if(!ISELNODE(node)) { console.error("NUT.ATTR은 element만 가능합니다. => 들어온값" + TOS(node)); return null; }
 			if(typeof v1 == "object") {
 				for(var k in v1) node.setAttribute(k,k1[v]);
 			} else if(typeof v1 == "string"){
@@ -2884,10 +2897,10 @@
 						for(var metaKey in tagInfo[key]){
 							switch(metaKey){
 								case "not":
-									if( NODY.THE(node,tagInfo[key][metaKey]) ) return false;
+									if( NUT.THE(node,tagInfo[key][metaKey]) ) return false;
 									break;
 								case "focus":
-									if(!NODY.HASFOCUS(node)) return false;
+									if(!NUT.HASFOCUS(node)) return false;
 									break;
 								case "eq": case "nth-child":
 									if(!node.parentElement) return false;
@@ -2974,9 +2987,9 @@
 				if(querys.length == 0){
 					judgement = false;
 				} else if(querys.length == 1) {
-					judgement = NODY.THE(node,querys[0]);
+					judgement = NUT.THE(node,querys[0]);
 				} else {
-					var allNodes   = [node].concat(NODY.PARENTS(node));
+					var allNodes   = [node].concat(NUT.PARENTS(node));
 					var findThe    = 0;
 					var lastResult = true;
 					//console.log(allNodes);
@@ -2988,8 +3001,8 @@
 								for(var f=findThe+1,l=allNodes.length-findThe;f<l;f++){
 									findThe++;
 									var queryText = querys[i].trim();
-									//console.log(NODY.THE(allNodes[f],queryText),allNodes[f],queryText);
-									if( NODY.THE(allNodes[f],queryText) ){
+									//console.log(NUT.THE(allNodes[f],queryText),allNodes[f],queryText);
+									if( NUT.THE(allNodes[f],queryText) ){
 										lastResult = true;
 										break;
 									} else {
@@ -3001,7 +3014,7 @@
 								//console.log("case '>'");
 								findThe++;
 								var queryText = querys[i].trim();
-								if(NODY.THE(allNodes[findThe],queryText)){
+								if(NUT.THE(allNodes[findThe],queryText)){
 									lastResult = true;
 								} else {
 									lastResult = false;
@@ -3010,7 +3023,7 @@
 								break;
 							default:
 								//console.log("case 'd'");
-								if( NODY.THE(allNodes[findThe],querys[i]) ){
+								if( NUT.THE(allNodes[findThe],querys[i]) ){
 									lastResult = true;
 								} else {
 									lastResult = false;
@@ -3029,9 +3042,9 @@
 			var root      = ISDOCUMENT(root)?document.body.parentElement:ISELNODE(root)?root:document.body.parentElement;			
 			var queryData = StructureInit("QueryDataInfo",query);
 			var result = [];
-			NODY.FEEDERDOWN(
+			NUT.FEEDERDOWN(
 				root,
-				function(node){ if( NODY.IS(this,queryData) ) result.push(this); },
+				function(node){ if( NUT.IS(this,queryData) ) result.push(this); },
 				"children"
 			);
 			return result;
@@ -3039,14 +3052,14 @@
 		"FEEDERDOWN_WHILE":function(feeder,stopFilter,findChild){
 			if( stopFilter.call(feeder,feeder) !== false ){
 				var childs = TOARRAY(findChild.call(feeder,feeder));
-				for(var i=0,l=childs.length;i<l;i++) NODY.FEEDERDOWN_WHILE(childs[i],stopFilter,findChild);
+				for(var i=0,l=childs.length;i<l;i++) NUT.FEEDERDOWN_WHILE(childs[i],stopFilter,findChild);
 			}
 		},
 		"FEEDERDOWN":function(feeder,filter,feeddown){
 			if(typeof filter !== "function") console.error("DATAFEEDDOWN 두번째 파라메터는 function이여야 합니다");
 			var feeddownMethod;
 			switch(typeof feeddown){case "function":feeddownMethod=feeddown;break;case "string":feeddownMethod=function(fd){return fd[feeddown];};break;default:return;break;}
-			if(typeof feeder == "object") NODY.FEEDERDOWN_WHILE(feeder,filter,feeddownMethod,2);
+			if(typeof feeder == "object") NUT.FEEDERDOWN_WHILE(feeder,filter,feeddownMethod,2);
 		},
 		"MEMBER":function(node,offset){
 			var target = node;
@@ -3063,14 +3076,14 @@
 		"FINDFUNCTION":function(find,root){
 			if (typeof root !== "undefined"){
 				if( ISELNODE(root) && ISELNODE(find) ){
-					var finded = NODY.QUERY(ELTRACE(find),root);
+					var finded = NUT.QUERY(ELTRACE(find),root);
 					for(var i=0,l=finded.length;i<l;i++) {
 						if(finded[i] == find) return [find];
 					}
 				}
 				var findCollection = [];
 				var roots = FINDFUNCTION(root);
-				for(var i=0,l=roots.length;i<l;i++){ findCollection.push(NODY.QUERY(find,roots[i])); }
+				for(var i=0,l=roots.length;i<l;i++){ findCollection.push(NUT.QUERY(find,roots[i])); }
 				return DATAUNIQUE.apply(undefined,findCollection);
 			} else if( ISARRAY(find) ){
 				var findCollection = [];
@@ -3079,7 +3092,7 @@
 			} else if( ISELNODE(find) ){
 				return [find];
 			}  else {
-				return NODY.QUERY(find,W.document);
+				return NUT.QUERY(find,W.document);
 			}
 			return [];
 		},
@@ -3099,7 +3112,7 @@
 				}
 			}
 			if(typeof find == "string"){
-				return NODY.QUERY(find,frame);
+				return NUT.QUERY(find,frame);
 			} else if(ISARRAY(find)){
 				var findCollection = [];
 				for(var i=0,l=find.length;i<l;i++) findCollection.push(DOCUMENTFIND(find[i],frame));
@@ -3146,19 +3159,19 @@
 					return finds[find];
 				case "string":
 					return DATAFILTER(finds,function(node){
-						return NODY.IS(node,find);
+						return NUT.IS(node,find);
 					});
 				default :
 					return finds;
 			}
 		},2),
-		"FINDPARENTS":function(el){ return NODY.PARENTS(FINDFUNCTION(el)[0]); },
+		"FINDPARENTS":function(el){ return NUT.PARENTS(FINDFUNCTION(el)[0]); },
 		"FINDPARENT" :FUT.CONTINUTILITY(function(el,require){
 			var node = FINDFUNCTION(el)[0];
 			if(!ISELNODE(node)) return ;
 			if(typeof require == "string"){
-				var parents = NODY.PARENTS(node);
-				for(var i in parents) if( NODY.IS(parents[i],require) ) return parents[i];
+				var parents = NUT.PARENTS(node);
+				for(var i in parents) if( NUT.IS(parents[i],require) ) return parents[i];
 				return undefined;
 			} else {
 				return node.parentElement;
@@ -3167,439 +3180,7 @@
 	});
 	FINDEL.eachGetter();
 	
-	/******************
-	E,R element command Extention*/
-	makeSingleton("ElementFoundation",{
-		//포커스 상태인지 검사합니다.
-		"ELHASFOCUS":function(sel){ return document.activeElement == FINDZERO(sel); },
-		//케럿을 움직일수 있는 상태인지 검새합니다.
-		"ELCARETPOSSIBLE":function(sel){ var node = FINDZERO(sel); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
-		//어트리뷰트값을 읽거나 변경합니다.
-		"ELATTR":function(sel,v1,v2){ var node = FINDZERO(sel); return NODY.ATTR(node,v1,v2); },
-		//css스타일로 el의 상태를 확인합니다.
-		"ELIS":function(sel,value){ var node = FINDZERO(sel); return NODY.IS(node,value); },
-		//선택한 element중 대상만 남깁니다.
-		"ELFILTER":function(sel,filter){
-			var targets = FIND(sel);
-			if(typeof filter !== "string") {
-				console.warn("ELFILTER는 string filter만 대응합니다.");
-				return targets;
-			} else {
-				var result  = [];
-				for(var i=0,l=targets.length;i<l;i++) if(ELIS(targets[i],filter)) result.push(targets[i]);
-				return result;
-			}
-		},
-		//el의 중요값을 찾습니다.
-		"ELVALUE":function(aNode,value){
-			var node,nodes = FIND(aNode);
-			if(nodes.length == 0){
-				return;
-			} else if(nodes.length > 1){
-				var nodeZero     = nodes[0];
-				var nodeZeroName = ELATTR(nodeZero,"name");
-				// radio group
-				if(ELATTR(nodeZero,"type") == "radio"){
-					//read write
-					if(!ISNOTHING(nodeZeroName)){
-						if(ISTEXT(value)){
-							var findEl = FINDZERO(ELFILTER(nodes,"[type=radio][name="+nodeZeroName+"]::"+value));
-							if(findEl) findEl.checked = true;
-							return findEl;
-						} else {
-							var checkedEl  = ELFILTER(nodes,"[type=radio][name="+nodeZeroName+"]:checked");
-							var selectedEl = FINDZERO(checkedEl);
-							if(selectedEl){
-								return selectedEl.value;
-							} else {
-								return "";
-							}
-						}
-					}
-				}
-			}
-			node     = ZERO(nodes);
-			nodeName = node.tagName.toLowerCase();
-			switch(nodeName){
-				case "input": case "option": case "textarea":
-					//get
-					if(nodeName == "option"){
-						var selNode = NODY.QUERY(":selected",node);
-						if( ISELNODE(selNode) ) return selNode.value;
-						return node.value;
-					} else {
-						if(typeof value == "undefined") return node.value;
-					}
-					
-					
-					//set
-					var setVal = value+"";
-				
-					if(ELCARETPOSSIBLE(node)){
-						var gap = node.value.length - value.length;
-						var cur = ELCARET(node);
-						node.value = value;
-						ELCARET(node,cur-gap)
-						ELTRIGGER(node,"value_change");
-						return node;
-					} else {
-						node.value = value;
-						ELTRIGGER(node,"value_change");
-						return node;
-					}
-					break;
-				case "select":
-					if(typeof value == "undefined") return node.value;
-					var valEl = FIND("[value="+ value +"]",node);
-					if(valEl.length > 0) {
-						var selEl = ZERO(valEl);
-						selEl.selected = true;
-						ELTRIGGER(node,"value_change");
-						return selEl;
-					}
-					return false;
-					break;
-				default :
-					if(typeof value == "undefined") return node.innerText;
-					node.innerText = value;
-				break;
-			}
-			return node;
-		},
-		"ELHASATTR":function(sel,name,hideConsole){
-			var node = FINDZERO(sel);
-			if( ISELNODE(node) ) { return ELATTR(sel,name) == null ? false : true; }
-			if(hideConsole !== true) console.error("ELHASATTR:: 알수없는 node값 입니다. => " + TOS(node) );
-			return false;
-		},
-		//get css style tag info
-		"ELTRACE"   :function(target,sign,withValue){
-			var t = FINDZERO(target);
-			if( ISELNODE(t) ){
-				switch(sign){
-				case "tag"   : return t.tagName.toLowerCase(); break;
-				case "id"    : return ELATTR(t,"id");          break;
-				case "class" : return ELATTR(t,"class");       break;
-				case "name"  : return ELATTR(t,"name");        break;
-				case "value" : return ELVALUE(t);              break;
-				default :
-					var r = t.tagName.toLowerCase();
-					var b;
-					b = ELATTR(t,"id");    if(b) r = r + "#"+b;
-					b = ELATTR(t,"class"); if(b) r = r + "."+b.split(" ").join(".");
-					b = ELATTR(t,"name");  if(b) r = r + "[name="+b+"]"
-					if( ((typeof sign == "undefined") && (withValue == true)) || ((sign == true) && (typeof withValue == "undefined")) ){
-						b = ELVALUE(t); if(!ISNOTHING(b)) r = r + ":" + b;
-					}
-					return r;
-					break;
-				}
-			} else {
-				console.warn("ELTRACE::target is not element or selector // target =>",target);
-			}
-		},
-		"ELCALL":function(node,f){
-			if(typeof f == "function"){
-				var nodes = FIND(node);
-				DATAEACH(nodes,function(n,i){
-					f.call(n,n,i);
-				});
-				return nodes;
-			}
-			return [];
-		},
-		"ELINDEX":function(el){
-			var node = FINDZERO(el);
-			var parent = FINDPARENT(node);
-			if(parent) return DATAINDEX(parent.children,node);
-		},
-		"ELTREE":function(find,root){
-			return _Array(FIND(find)).map(function(node){
-				var tree  = [];
-				var cnode = node;
-				do { if(cnode) tree.push( ELTRACE(cnode) ); cnode = cnode.parentElement; } while(cnode);
-				return tree.reverse().join(" > ");
-			}).join("\n\n");
-		},
-		"ELONLYNODES": function(v){
-			var nodes   = [];
-			var targets = TOARRAY(v);
-			for(var i=0,l=targets.length;i<l;i++){
-				if( ISELNODE(targets[i]) || ISTEXTNODE(targets[i]) ){
-					nodes.push(targets[i]);
-				}
-			}
-			return nodes;
-		},
-		"ELAPPEND":function(parentIn,childs){
-			var parent = FINDZERO(parentIn);
-			if(!ISELNODE(parent)) return parentIn;
-			var appendTarget  = ELONLYNODES(childs);
-			var parentTagName = parent.tagName.toLowerCase();
-			for(var i=0,l=appendTarget.length;i<l;i++)
-				if (ISELNODE(appendTarget[i])) {
-					switch(parentTagName){
-					case "table":
-						var tagName = appendTarget[i].tagName.toLowerCase();
-						switch(tagName){
-							case "colgroup": case "tbody": case "thead": case "tfoot":
-								parent.appendChild(appendTarget[i]);
-								break;
-							case "tr": case "td": case "th": default:
-								window.tb = parent.tBodies;
-								//tbody가 존재하지 않는 테이블이면 tbodies를 임의로 추가한다
-								if(!parent.tBodies.length){ 
-									if(!!parent.tFoot){
-										parent.appendChild(CREATE("tbody")) ;
-									} else {
-										parent.insertBefore(CREATE("tbody"),parent.tFoot);
-									}
-								}
-								var tbody = parent.tBodies[parent.tBodies.length - 1];									
-								if(tagName == "tr"){
-									tbody.appendChild(appendTarget[i]);
-								} else {
-									//td th else
-									var tr = tbody.insertRow( tbody.children.length );
-									switch(tagName){
-										case "td": case "th":
-											tr.appendChild(appendTarget[i])
-											break;
-										default:
-											//else
-											var td = CREATE("td");
-											tr.appendChild(td);
-											td.appendChild(appendTarget[i]);
-											break;
-									}
-								}
-								break;
-						}
-						break;
-					case "tr":
-						var tagName = appendTarget[i].tagName.toLowerCase();
-						switch(tagName){
-							case "td" : case "th" :
-								parent.appendChild(appendTarget[i]);
-								break;
-							default   :
-								var td = CREATE("td");
-								parent.appendChild(td);
-								td.appendChild(appendTarget[i]);
-								break;
-						}
-						break;
-					default:
-						parent.appendChild(appendTarget[i]);
-						break;
-				} 
-			} else if(ISTEXTNODE(appendTarget[i])){
-				parent.appendChild(appendTarget[i]);
-			} else {
-				//append faild
-				console.warn("ELAPPEND :: 추가하려는 요소는 Element요소여야 합니다.",appendTarget[i])
-			}
-			return parent;
-		},
-		"ELPREPEND":function(parentIn,childs){
-			var parent = FINDZERO(parentIn);
-			var appendTarget = ELONLYNODES(childs);
-			if(ISMEANING(parent),ISMEANING(appendTarget)){
-				ELAPPEND(parent,appendTarget);
-				var newParent = FINDPARENT(appendTarget[0]);
-				if(newParent) {
-					DATAEACH(appendTarget,function(node,i){
-						newParent.insertBefore(node,newParent.childNodes[i]);
-					});
-				}
-			}
-		},
-		"ELAPPENDTO":function(targets,parentEL){ return ELAPPEND(FINDZERO(parentEL),targets); },
-		"ELPUT":function(sel){
-			var node = FINDZERO(sel);
-			if(!ISELNODE(node)) return console.warn("ELPUT:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
-			ELEMPTY(node);
-			var newContents = [];
-			var params = Array.prototype.slice.call(arguments);
-			params.shift();
-			DATAEACH( DATAFLATTEN(params) ,function(content){
-				if(ISELNODE(content)){
-					newContents.push(content)
-				} else {
-					content = TOSTRING(content);
-					switch(node.tagName){
-						case "UL":case "MENU":
-							newContents.push(_LI("::"+content))
-							break;
-						case "DL":
-							newContents.push(_DD("::"+content))
-							break;
-						default:
-							newContents.push(_SPAN("::"+content))
-							break;	
-					}
-				}
-			});
-			ELAPPEND(node,newContents);
-			return node;
-		},
-		//이전 엘리먼트를 찾습니다.
-		"ELBEFORE":function(node,appendNodes){ 
-			var target;
-			target = FINDZERO(node);
-			if(!ISELNODE(target)) return node;
-			if(arguments.length < 2) return FINDMEMBER(target,-1);
-			var appendTarget = FIND(appendNodes);
-			if(appendTarget.length > 0){
-				for(var i=0,l=appendTarget.length;i<l;i++) target.parentNode.insertBefore(appendTarget[i],target); 
-			}
-			return target; 
-		},
-		//이후 엘리먼트를 찾습니다.
-		"ELAFTER" : function(target,appendNodes){ 
-			target = FINDZERO(target); 
-			if(!ISELNODE(target))    return target; 
-			if(arguments.length < 2) return FINDMEMBER(target,1);
-			var appendTarget = FIND(appendNodes);
-			if(appendTarget.length > 0){
-				var afterElement = FINDMEMBER(target,1);
-				if( ISELNODE(afterElement) ){
-					for(var i=0,l=appendTarget.length;i<l;i++) target.parentNode.insertBefore(appendTarget[i],afterElement); 
-				} else {
-					ELAPPEND(target,appendTarget);
-				}
-			}
-			return target;
-		},
-		"ELBEFOREALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index == "number") for(var i=0,l=index;i<l;i++) result.push(node.parentNode.children[i]); return result; },
-		"ELAFTERALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index == "number") for(var i=index+1,l=node.parentNode.children.length;i<l;i++) result.push(node.parentNode.children[i]); return result; },
-		"ELREPLACE":function(target,replaceNode){
-			var replaceTarget = FINDZERO(replaceNode);
-			ELAFTER(target,replaceTarget);
-			ELREMOVE(target);
-			return replaceTarget;
-		},
-		//같은 위치상의 엘리먼트를 위로 올립니다.
-		"ELUP"   : function(target){if(!ISELNODE(target))return target;var parent=target.parentNode;if(!ISELNODE(parent))return target;var prev=target.previousSibling;if(!ISELNODE(prev))return target;ELBEFORE(prev,target);},
-		//같은 위치상의 엘리먼트를 아랠로 내립니다.
-		"ELDOWN" : function(target){if(!ISELNODE(target))return target;var parent=target.parentNode;if(!ISELNODE(parent))return target;var next=target.nextSibling;if(!ISELNODE(next))return target;ELAFTER(next,target);},
-		//스타일을 얻어냅니다.
-		"ELSTYLE": function(target,styleName,value){
-			var target = FINDZERO(target);
-			var nodeStyles = document.defaultView.getComputedStyle ? document.defaultView.getComputedStyle(target) : target.style;
-			if(ISELNODE(target)){
-				var marge;
-				if(typeof styleName == "undefined") return nodeStyles;
-				if(typeof styleName == "object")    marge = styleName;
-				if(typeof styleName == "string"){
-					//get
-					if(typeof value == "undefined") return nodeStyles[CAMEL(styleName)];
-					//set
-					marge = {};
-					marge[CAMEL(styleName)] = value;
-				}
-				for(var key in marge) target.style[key] = value;
-			}
-			return target;
-		},
-		//내무의 내용을 지웁니다.
-		"ELEMPTY"  : function(target){ return FIND(target,DATAMAP,function(node){ if("innerHTML" in node) node.innerHTML = ""; return node; }); },
-		//대상 객체를 제거합니다.
-		"ELREMOVE" : function(node,childs){ var target = FINDZERO(node); if(!ISELNODE(target)) return target; if(!ISELNODE(target.parentNode)) return target; target.parentNode.removeChild(target); return target; },
-		//케럿의 위치를 찾습니다.
-		"ELCARET":function(select,pos){
-			//
-			var node = FINDZERO(select);
-			var editable = node.contentEditable === 'true';
-			var r1,r2,ran;
-			//get
-			if (arguments.length < 2) {
-				//HTML5
-				if (window.getSelection) {
-					//contenteditable
-					if (editable) {
-						node.focus();
-						var r1 = window.getSelection().getRangeAt(0),
-						r2     = r1.cloneRange();
-						r2.selectNodeContents(node);
-						r2.setEnd(r1.endContainer, r1.endOffset);
-						return r2.toString().length;
-					}
-					//textarea
-					return node.selectionStart;
-				}
-				//IE<9
-				if (document.selection) {
-					node.focus();
-					//contenteditable
-					if (editable) {
-						var r1 = document.selection.createRange(),
-						r2 = document.body.createTextRange();
-						r2.moveToElementText(node);
-						r2.setEndPoint('EndToEnd', r1);
-						return r2.text.length;
-					}
-					//textarea
-					var pos  = 0,
-					ran    = node.createTextRange(),
-					r2       = document.selection.createRange().duplicate(),
-					bookmark = r2.getBookmark();
-
-					ran.moveToBookmark(bookmark);
-					while (ran.moveStart('character', -1) !== 0) pos++;
-					return pos;
-				}
-				//not supported
-				return 0;
-			}
-			//set
-			if (pos == -1)
-			pos = this[editable? 'text' : 'val']().length;
-			//HTML5
-			if (window.getSelection) {
-				//contenteditable
-				if (editable) {
-					node.focus();
-					window.getSelection().collapse(node.firstChild, pos);
-				}
-				//textarea
-				else
-				node.setSelectionRange(pos, pos);
-			}
-			//IE<9
-			else if (document.body.createTextRange) {
-				var ran = document.body.createTextRange();
-				ran.moveToElementText(node);
-				ran.moveStart('character', pos);
-				ran.collapse(true);
-				ran.select();
-			}
-			if (!editable)
-			node.focus();
-			return pos;
-		},
-		//이벤트를 발생시킵니다.
-		"ELTRIGGER":function(node,eventName){
-			if(ISWINDOW(node)){
-				node = W;
-			} else {
-				node = FINDZERO(node);
-				if(ISNOTHING(node)) throw new Error("ELTRIGGER는 element를 찾을수 없습니다. => 들어온값" + TOS(node));
-			}
-			if ("createEvent" in document) {
-			    var e = W.document.createEvent("HTMLEvents");
-			    e.initEvent(eventName, true, true);
-			    node.dispatchEvent(e);
-			} else {
-				try{
-					node.fireEvent("on"+eventName);
-				} catch(e) {
-					console.warn("존재하지 않는 이벤트 호출 error => ",e.message);
-				}
-				
-			}
-			return node;
-		},
+	makeSingleton("GUT",{
 		"CREATE" :function(name,attrValue,parent){
 			var element;
 			var dataset;
@@ -3680,74 +3261,6 @@
 			}
 			
 		},
-		
-		//이벤트 타겟을 찾아냅니다.
-		"ELONTARGET":function(node){ if(ISWINDOW(node)){ node = W; } else { node = FINDZERO(node); if(!ISELNODE(node)) throw new Error("ELONTARGET::Element이 여야합니다." + TOS(node)); } return node; },
-		"ELON":function(node, eventName, eventHandler, useCapture){
-			// 메타이벤트를 임시 삭제함
-			node = ELONTARGET(node);
-			if(!node || !eventHandler) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.");
-			
-			var events = eventName.split(" ");
-			//var eventMeta = _Meta(eventHandler);
-			var handler = function(e){eventHandler.call(node,e)};
-			for(var i=0,l=events.length;i<l;i++){
-				//eventMeta.setProp(events[i],function(e){eventHandler.call(node,e);});
-				if (node.addEventListener){
-					node.addEventListener(events[i], handler, useCapture==true ? true : false); 
-					 //node.addEventListener(events[i], eventMeta.getProp(events[i]), false); 
-				} else if (node.attachEvent){
-					node.attachEvent('on'+events[i], handler);
-				    //node.attachEvent('on'+events[i], eventMeta.getProp(events[i]));
-				}
-			}
-			return node;
-		},
-		"ELOFF":function(node, eventName, eventHandler){
-			node = ELONTARGET(node);
-			if(!node || !eventHandler) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.");
-			
-			var events = eventName.split(" ");
-			//var eventMeta = _Meta(eventHandler);
-			var handler = function(e){eventHandler.call(node,e)};
-			for(var i=0,l=events.length;i<l;i++){
-				if (node.removeEventListener){
-					node.removeEventListener(events[i], handler, false); 
-					//node.removeEventListener(events[i], eventMeta.getProp(events[i]), false); 
-				} else if (node.detachEvent){
-					node.detachEvent('on'+events[i], handler);
-				    //node.detachEvent('on'+events[i], eventMeta.getProp(events[i]));
-				}
-			}
-			return node;
-		},
-		//한번만 발생하는 이벤트입니다.
-		"ELONETIME":function(node, eventName, eventHandler, time){
-			if(typeof eventHandler == "function"){
-				console.error("ELTIME:: eventHandler는 만드시 존재해야 합니다");
-			} else {
-				var timeManager = (function(time){ this.time = time; })( isNaN(time) ? 1 : parseInt(time) );
-				timeManager.events = eventName.split(" ");
-				timeManager.handler = function(e){
-					if(timeManager.time > 0){
-						timeCounter.time = timeCounter.time - 1;
-						CALL(handler,node,e);
-					}
-					if(timeManager.time < 1){
-						for(var i=0,l=this.events.length;i<l;i++) ELOFF(node,events[i],timeCounter.handler)
-					}
-				};
-				for(var i=0,l=this.events.length;i<l;i++) ELON(node,eventName,timeManager.handler);
-			}
-			return node;
-		},
-		"ELDATA":function(node,key,value){
-			var nodes = FIND(node);
-			if(nodes.length == 0) return;
-			if(arguments.length == 1) return CLONE(ZERO(nodes).dataset);
-			if(arguments.length == 2) return ZERO(nodes).dataset[key];
-			if(arguments.length == 3) { DATAEACH(nodes,function(node){ node.dataset[key] = value; }); return nodes; }
-		},
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 		"MAKECOLS":function(){ return _Array(arguments).inject(CREATE("colgroup"),function(colvalue,parent){ if(typeof colvalue == "string" || typeof colvalue == "number") ELAPPEND(parent,CREATE("col",{width:colvalue})); }); },
 		"TOOBJECT":function(param,es,kv){
@@ -3777,62 +3290,9 @@
 				return target;
 			}
 			return undefined;
-		},
-		//Disabled
-		"ELDISABLED":function(node,status){
-			var elf = _Array(FIND(node));
-			if( elf.isNothing() ){
-				console.error("ELDISABLED:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
-			} else {
-				elf.each(function(el){
-					if("disabled" in el){
-						if(typeof status == "undefined") return el.disabled;
-						if(status == true || status == "true"){
-							el.disabled = true;
-							return el;
-						}
-						if(status == false || status == "false"){
-							el.disabled = false;
-							return el;
-						}
-					}
-				});
-			}
-		},
-		//Readonly
-		"ELREADONLY":function(node,status){
-			var elf = FIND(node,_Array);
-			if( elf.isNothing() ){
-				console.error("ELREADONLY:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
-			} else {
-				elf.each(function(el){
-					if( "readOnly" in el ){
-						if(typeof status == "undefined") return el.readOnly;
-						if(status == true || status == "true"){
-							el.readOnly = true;
-							return el;
-						}
-						if(status == false || status == "false"){
-							el.readOnly = false;
-							return el;
-						}
-					}
-				});
-			}
 		}
-		/*
-		,
-		"INLINEFIX":function(sel){
-			$(sel).each(function(context){
-				$(this).contents().filter(function() {
-					return (!this.innerText && this.nodeType === 3)?true:false;
-	            }).remove();
-			});
-			return this;
-		}
-		*/
-	});
-	ElementFoundation.eachGetter();
+	})
+	GUT.eachGetter();
 	
 	var ElementGeneratorPrototype = {};
 	var MakeElementGenerator      = function(name,tag,feature){
@@ -3869,6 +3329,7 @@
 			return resultElement;
 		};
 	}
+	
 	"title base link meta style script noscript body section nav article aside h1 h2 h3 h4 h5 h6 header footer template address main p hr pre blockquote ol ul li dl dt dd figure figcaption div a em strong small s cite q dfn abbr data time datetime code var samp kbd sub sup i b u mark ruby rt rp bdi bdo span class lang dir br wbr ins del img iframe embed object param video audio source track canvas map area svg math table caption colgroup col tbody thead tfoot tr td th form fieldset legend label input button select datalist optgroup option textarea keygen output progress meter details summary menuitem menu".replace(/\w+/g,function(s){
 		MakeElementGenerator(s,s);
 	});
@@ -3877,6 +3338,619 @@
 	});
 	makeSingleton("ElementGenerator",ElementGeneratorPrototype);
 	ElementGenerator.eachGetter();
+	
+	makeSingleton("EL",{
+		//포커스 상태인지 검사합니다.
+		"HASFOCUS":function(sel){ return document.activeElement == FINDZERO(sel); },
+		//케럿을 움직일수 있는 상태인지 검새합니다.
+		"CARETPOSSIBLE":function(sel){ var node = FINDZERO(sel); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
+		//어트리뷰트값을 읽거나 변경합니다.
+		"ATTR":function(sel,v1,v2){ var node = FINDZERO(sel); return NUT.ATTR(node,v1,v2); },
+		//css스타일로 el의 상태를 확인합니다.
+		"IS":function(sel,value){ var node = FINDZERO(sel); return NUT.IS(node,value); },
+		//선택한 element중 대상만 남깁니다.
+		"FILTER":function(sel,filter){
+			var targets = FIND(sel);
+			if(typeof filter !== "string") {
+				console.warn("ELFILTER는 string filter만 대응합니다.");
+				return targets;
+			} else {
+				var result  = [];
+				for(var i=0,l=targets.length;i<l;i++) if(ELIS(targets[i],filter)) result.push(targets[i]);
+				return result;
+			}
+		},
+		//el의 중요값을 찾습니다.
+		"VALUE":function(aNode,value){
+			var node,nodes = FIND(aNode);
+			if(nodes.length == 0){
+				return;
+			} else if(nodes.length > 1){
+				var nodeZero     = nodes[0];
+				var nodeZeroName = ELATTR(nodeZero,"name");
+				// radio group
+				if(ELATTR(nodeZero,"type") == "radio"){
+					//read write
+					if(!ISNOTHING(nodeZeroName)){
+						if(ISTEXT(value)){
+							var findEl = FINDZERO(ELFILTER(nodes,"[type=radio][name="+nodeZeroName+"]::"+value));
+							if(findEl) findEl.checked = true;
+							return findEl;
+						} else {
+							var checkedEl  = ELFILTER(nodes,"[type=radio][name="+nodeZeroName+"]:checked");
+							var selectedEl = FINDZERO(checkedEl);
+							if(selectedEl){
+								return selectedEl.value;
+							} else {
+								return "";
+							}
+						}
+					}
+				}
+			}
+			node     = ZERO(nodes);
+			nodeName = node.tagName.toLowerCase();
+			switch(nodeName){
+				case "input": case "option": case "textarea":
+					//get
+					if(nodeName == "option"){
+						var selNode = NUT.QUERY(":selected",node);
+						if( ISELNODE(selNode) ) return selNode.value;
+						return node.value;
+					} else {
+						if(typeof value == "undefined") return node.value;
+					}
+				
+				
+					//set
+					var setVal = value+"";
+			
+					if(ELCARETPOSSIBLE(node)){
+						var gap = node.value.length - value.length;
+						var cur = ELCARET(node);
+						node.value = value;
+						ELCARET(node,cur-gap)
+						ELTRIGGER(node,"value_change");
+						return node;
+					} else {
+						node.value = value;
+						ELTRIGGER(node,"value_change");
+						return node;
+					}
+					break;
+				case "select":
+					if(typeof value == "undefined") return node.value;
+					var valEl = FIND("[value="+ value +"]",node);
+					if(valEl.length > 0) {
+						var selEl = ZERO(valEl);
+						selEl.selected = true;
+						ELTRIGGER(node,"value_change");
+						return selEl;
+					}
+					return false;
+					break;
+				default :
+					if(typeof value == "undefined") return node.innerText;
+					node.innerText = value;
+				break;
+			}
+			return node;
+		},
+		"HASATTR":function(sel,name,hideConsole){
+			var node = FINDZERO(sel);
+			if( ISELNODE(node) ) { return ELATTR(sel,name) == null ? false : true; }
+			if(hideConsole !== true) console.error("ELHASATTR:: 알수없는 node값 입니다. => " + TOS(node) );
+			return false;
+		},
+		//get css style tag info
+		"TRACE"   :function(target,sign,withValue){
+			var t = FINDZERO(target);
+			if( ISELNODE(t) ){
+				switch(sign){
+				case "tag"   : return t.tagName.toLowerCase(); break;
+				case "id"    : return ELATTR(t,"id");          break;
+				case "class" : return ELATTR(t,"class");       break;
+				case "name"  : return ELATTR(t,"name");        break;
+				case "value" : return ELVALUE(t);              break;
+				default :
+					var r = t.tagName.toLowerCase();
+					var b;
+					b = ELATTR(t,"id");    if(b) r = r + "#"+b;
+					b = ELATTR(t,"class"); if(b) r = r + "."+b.split(" ").join(".");
+					b = ELATTR(t,"name");  if(b) r = r + "[name="+b+"]"
+					if( ((typeof sign == "undefined") && (withValue == true)) || ((sign == true) && (typeof withValue == "undefined")) ){
+						b = ELVALUE(t); if(!ISNOTHING(b)) r = r + ":" + b;
+					}
+					return r;
+					break;
+				}
+			} else {
+				console.warn("ELTRACE::target is not element or selector // target =>",target);
+			}
+		},
+		"CALL":function(node,f){
+			if(typeof f == "function"){
+				var nodes = FIND(node);
+				DATAEACH(nodes,function(n,i){
+					f.call(n,n,i);
+				});
+				return nodes;
+			}
+			return [];
+		},
+		"INDEX":function(el){
+			var node = FINDZERO(el);
+			var parent = FINDPARENT(node);
+			if(parent) return DATAINDEX(parent.children,node);
+		},
+		"APPEND":function(parentIn,childs){
+			var parent = FINDZERO(parentIn);
+			if(!ISELNODE(parent)) return parentIn;
+			var appendTarget  = FIND(childs);
+			var parentTagName = parent.tagName.toLowerCase();
+			for(var i=0,l=appendTarget.length;i<l;i++)
+				if (ISELNODE(appendTarget[i])) {
+					switch(parentTagName){
+					case "table":
+						var tagName = appendTarget[i].tagName.toLowerCase();
+						switch(tagName){
+							case "colgroup": case "tbody": case "thead": case "tfoot":
+								parent.appendChild(appendTarget[i]);
+								break;
+							case "tr": case "td": case "th": default:
+								window.tb = parent.tBodies;
+								//tbody가 존재하지 않는 테이블이면 tbodies를 임의로 추가한다
+								if(!parent.tBodies.length){ 
+									if(!!parent.tFoot){
+										parent.appendChild(CREATE("tbody")) ;
+									} else {
+										parent.insertBefore(CREATE("tbody"),parent.tFoot);
+									}
+								}
+								var tbody = parent.tBodies[parent.tBodies.length - 1];									
+								if(tagName == "tr"){
+									tbody.appendChild(appendTarget[i]);
+								} else {
+									//td th else
+									var tr = tbody.insertRow( tbody.children.length );
+									switch(tagName){
+										case "td": case "th":
+											tr.appendChild(appendTarget[i])
+											break;
+										default:
+											//else
+											var td = CREATE("td");
+											tr.appendChild(td);
+											td.appendChild(appendTarget[i]);
+											break;
+									}
+								}
+								break;
+						}
+						break;
+					case "tr":
+						var tagName = appendTarget[i].tagName.toLowerCase();
+						switch(tagName){
+							case "td" : case "th" :
+								parent.appendChild(appendTarget[i]);
+								break;
+							default   :
+								var td = CREATE("td");
+								parent.appendChild(td);
+								td.appendChild(appendTarget[i]);
+								break;
+						}
+						break;
+					default:
+						parent.appendChild(appendTarget[i]);
+						break;
+				} 
+			} else if(ISTEXTNODE(appendTarget[i])){
+				parent.appendChild(appendTarget[i]);
+			} else {
+				//append faild
+				console.warn("ELAPPEND :: 추가하려는 요소는 Element요소여야 합니다.",appendTarget[i])
+			}
+			return parent;
+		},
+		"PREPEND":function(parentIn,childs){
+			var parent = FINDZERO(parentIn);
+			var appendTarget = FIND(childs);
+			if(ISMEANING(parent),ISMEANING(appendTarget)){
+				ELAPPEND(parent,appendTarget);
+				var newParent = FINDPARENT(appendTarget[0]);
+				if(newParent) {
+					DATAEACH(appendTarget,function(node,i){
+						newParent.insertBefore(node,newParent.childNodes[i]);
+					});
+				}
+			}
+		},
+		"APPENDTO":function(targets,parentEL){ return ELAPPEND(FINDZERO(parentEL),targets); },
+		"PUT":function(sel){
+			var node = FINDZERO(sel);
+			if(!ISELNODE(node)) return console.warn("ELPUT:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
+			ELEMPTY(node);
+			var newContents = [];
+			var params = Array.prototype.slice.call(arguments);
+			params.shift();
+			DATAEACH( DATAFLATTEN(params) ,function(content){
+				if(ISELNODE(content)){
+					newContents.push(content)
+				} else {
+					content = TOSTRING(content);
+					switch(node.tagName){
+						case "UL":case "MENU":
+							newContents.push(_LI("::"+content))
+							break;
+						case "DL":
+							newContents.push(_DD("::"+content))
+							break;
+						default:
+							newContents.push(_SPAN("::"+content))
+							break;	
+					}
+				}
+			});
+			ELAPPEND(node,newContents);
+			return node;
+		},
+		//이전 엘리먼트를 찾습니다.
+		"BEFORE":function(node,appendNodes){ 
+			var target;
+			target = FINDZERO(node);
+			if(!ISELNODE(target)) return node;
+			if(arguments.length < 2) return FINDMEMBER(target,-1);
+			var appendTarget = FIND(appendNodes);
+			if(appendTarget.length > 0){
+				for(var i=0,l=appendTarget.length;i<l;i++) target.parentNode.insertBefore(appendTarget[i],target); 
+			}
+			return target; 
+		},
+		//이후 엘리먼트를 찾습니다.
+		"AFTER" : function(target,appendNodes){ 
+			target = FINDZERO(target); 
+			if(!ISELNODE(target))    return target; 
+			if(arguments.length < 2) return FINDMEMBER(target,1);
+			var appendTarget = FIND(appendNodes);
+			if(appendTarget.length > 0){
+				var afterElement = FINDMEMBER(target,1);
+				if( ISELNODE(afterElement) ){
+					for(var i=0,l=appendTarget.length;i<l;i++) target.parentNode.insertBefore(appendTarget[i],afterElement); 
+				} else {
+					ELAPPEND(target,appendTarget);
+				}
+			}
+			return target;
+		},
+		"BEFOREALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index == "number") for(var i=0,l=index;i<l;i++) result.push(node.parentNode.children[i]); return result; },
+		"AFTERALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index == "number") for(var i=index+1,l=node.parentNode.children.length;i<l;i++) result.push(node.parentNode.children[i]); return result; },
+		"REPLACE":function(target,replaceNode){
+			var replaceTarget = FINDZERO(replaceNode);
+			ELAFTER(target,replaceTarget);
+			ELREMOVE(target);
+			return replaceTarget;
+		},
+		//같은 위치상의 엘리먼트를 위로 올립니다.
+		"UP"   : function(target){if(!ISELNODE(target))return target;var parent=target.parentNode;if(!ISELNODE(parent))return target;var prev=target.previousSibling;if(!ISELNODE(prev))return target;ELBEFORE(prev,target);},
+		//같은 위치상의 엘리먼트를 아랠로 내립니다.
+		"DOWN" : function(target){if(!ISELNODE(target))return target;var parent=target.parentNode;if(!ISELNODE(parent))return target;var next=target.nextSibling;if(!ISELNODE(next))return target;ELAFTER(next,target);},
+		//스타일을 얻어냅니다.
+		"STYLE": function(target,styleName,value){
+			var target = FINDZERO(target);
+			var nodeStyles = document.defaultView.getComputedStyle ? document.defaultView.getComputedStyle(target) : target.style;
+			if(ISELNODE(target)){
+				var marge;
+				if(typeof styleName == "undefined") return nodeStyles;
+				if(typeof styleName == "object")    marge = styleName;
+				if(typeof styleName == "string"){
+					//get
+					if(typeof value == "undefined") return nodeStyles[CAMEL(styleName)];
+					//set
+					marge = {};
+					marge[CAMEL(styleName)] = value;
+				}
+				for(var key in marge) target.style[key] = value;
+			}
+			return target;
+		},
+		//내무의 내용을 지웁니다.
+		"EMPTY"  : function(target){ return FIND(target,DATAMAP,function(node){ if("innerHTML" in node) node.innerHTML = ""; return node; }); },
+		//대상 객체를 제거합니다.
+		"REMOVE" : function(node,childs){ var target = FINDZERO(node); if(!ISELNODE(target)) return target; if(!ISELNODE(target.parentNode)) return target; target.parentNode.removeChild(target); return target; },
+		//케럿의 위치를 찾습니다.
+		"CARET":function(select,pos){
+			//
+			var node = FINDZERO(select);
+			var editable = node.contentEditable === 'true';
+			var r1,r2,ran;
+			//get
+			if (arguments.length < 2) {
+				//HTML5
+				if (window.getSelection) {
+					//contenteditable
+					if (editable) {
+						node.focus();
+						var r1 = window.getSelection().getRangeAt(0),
+						r2     = r1.cloneRange();
+						r2.selectNodeContents(node);
+						r2.setEnd(r1.endContainer, r1.endOffset);
+						return r2.toString().length;
+					}
+					//textarea
+					return node.selectionStart;
+				}
+				//IE<9
+				if (document.selection) {
+					node.focus();
+					//contenteditable
+					if (editable) {
+						var r1 = document.selection.createRange(),
+						r2 = document.body.createTextRange();
+						r2.moveToElementText(node);
+						r2.setEndPoint('EndToEnd', r1);
+						return r2.text.length;
+					}
+					//textarea
+					var pos  = 0,
+					ran    = node.createTextRange(),
+					r2       = document.selection.createRange().duplicate(),
+					bookmark = r2.getBookmark();
+
+					ran.moveToBookmark(bookmark);
+					while (ran.moveStart('character', -1) !== 0) pos++;
+					return pos;
+				}
+				//not supported
+				return 0;
+			}
+			//set
+			if (pos == -1)
+			pos = this[editable? 'text' : 'val']().length;
+			//HTML5
+			if (window.getSelection) {
+				//contenteditable
+				if (editable) {
+					node.focus();
+					window.getSelection().collapse(node.firstChild, pos);
+				}
+				//textarea
+				else
+				node.setSelectionRange(pos, pos);
+			}
+			//IE<9
+			else if (document.body.createTextRange) {
+				var ran = document.body.createTextRange();
+				ran.moveToElementText(node);
+				ran.moveStart('character', pos);
+				ran.collapse(true);
+				ran.select();
+			}
+			if (!editable)
+			node.focus();
+			return pos;
+		},
+		//이벤트를 발생시킵니다.
+		"TRIGGER":function(node,eventName){
+			if(ISWINDOW(node)){
+				node = W;
+			} else {
+				node = FINDZERO(node);
+				if(ISNOTHING(node)) throw new Error("ELTRIGGER는 element를 찾을수 없습니다. => 들어온값" + TOS(node));
+			}
+			if ("createEvent" in document) {
+			    var e = W.document.createEvent("HTMLEvents");
+			    e.initEvent(eventName, true, true);
+			    node.dispatchEvent(e);
+			} else {
+				try{
+					node.fireEvent("on"+eventName);
+				} catch(e) {
+					console.warn("존재하지 않는 이벤트 호출 error => ",e.message);
+				}
+			
+			}
+			return node;
+		},
+	
+		//이벤트 타겟을 찾아냅니다.
+		"ONTARGET":function(node){ if(ISWINDOW(node)){ node = W; } else { node = FINDZERO(node); if(!ISELNODE(node)) throw new Error("ELONTARGET::Element이 여야합니다." + TOS(node)); } return node; },
+		"ON":function(node, eventName, eventHandler, useCapture){
+			// 메타이벤트를 임시 삭제함
+			node = ELONTARGET(node);
+			if(!node || !eventHandler) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.");
+		
+			var events = eventName.split(" ");
+			//var eventMeta = _Meta(eventHandler);
+			var handler = function(e){eventHandler.call(node,e)};
+			for(var i=0,l=events.length;i<l;i++){
+				//eventMeta.setProp(events[i],function(e){eventHandler.call(node,e);});
+				if (node.addEventListener){
+					node.addEventListener(events[i], handler, useCapture==true ? true : false); 
+					 //node.addEventListener(events[i], eventMeta.getProp(events[i]), false); 
+				} else if (node.attachEvent){
+					node.attachEvent('on'+events[i], handler);
+				    //node.attachEvent('on'+events[i], eventMeta.getProp(events[i]));
+				}
+			}
+			return node;
+		},
+		"OFF":function(node, eventName, eventHandler){
+			node = ELONTARGET(node);
+			if(!node || !eventHandler) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.");
+		
+			var events = eventName.split(" ");
+			//var eventMeta = _Meta(eventHandler);
+			var handler = function(e){eventHandler.call(node,e)};
+			for(var i=0,l=events.length;i<l;i++){
+				if (node.removeEventListener){
+					node.removeEventListener(events[i], handler, false); 
+					//node.removeEventListener(events[i], eventMeta.getProp(events[i]), false); 
+				} else if (node.detachEvent){
+					node.detachEvent('on'+events[i], handler);
+				    //node.detachEvent('on'+events[i], eventMeta.getProp(events[i]));
+				}
+			}
+			return node;
+		},
+		//한번만 발생하는 이벤트입니다.
+		"ONETIME":function(node, eventName, eventHandler, time){
+			if(typeof eventHandler == "function"){
+				console.error("ELTIME:: eventHandler는 만드시 존재해야 합니다");
+			} else {
+				var timeManager = (function(time){ this.time = time; })( isNaN(time) ? 1 : parseInt(time) );
+				timeManager.events = eventName.split(" ");
+				timeManager.handler = function(e){
+					if(timeManager.time > 0){
+						timeCounter.time = timeCounter.time - 1;
+						CALL(handler,node,e);
+					}
+					if(timeManager.time < 1){
+						for(var i=0,l=this.events.length;i<l;i++) ELOFF(node,events[i],timeCounter.handler)
+					}
+				};
+				for(var i=0,l=this.events.length;i<l;i++) ELON(node,eventName,timeManager.handler);
+			}
+			return node;
+		},
+		"DATA":function(node,key,value){
+			var nodes = FIND(node);
+			if(nodes.length == 0) return;
+			if(arguments.length == 1) return CLONE(ZERO(nodes).dataset);
+			if(arguments.length == 2) return ZERO(nodes).dataset[key];
+			if(arguments.length == 3) { DATAEACH(nodes,function(node){ node.dataset[key] = value; }); return nodes; }
+		},
+		//Disabled
+		"DISABLED":function(node,status){
+			var elf = _Array(FIND(node));
+			if( elf.isNothing() ){
+				console.error("ELDISABLED:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
+			} else {
+				elf.each(function(el){
+					if("disabled" in el){
+						if(typeof status == "undefined") return el.disabled;
+						if(status == true || status == "true"){
+							el.disabled = true;
+							return el;
+						}
+						if(status == false || status == "false"){
+							el.disabled = false;
+							return el;
+						}
+					}
+				});
+			}
+		},
+		//Readonly
+		"READONLY":function(node,status){
+			var elf = FIND(node,_Array);
+			if( elf.isNothing() ){
+				console.error("ELREADONLY:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
+			} else {
+				elf.each(function(el){
+					if( "readOnly" in el ){
+						if(typeof status == "undefined") return el.readOnly;
+						if(status == true || status == "true"){
+							el.readOnly = true;
+							return el;
+						}
+						if(status == false || status == "false"){
+							el.readOnly = false;
+							return el;
+						}
+					}
+				});
+			}
+		}
+	});
+	EL.eachGetterWithPrefix();
+	
+	extendModule("Array","Nody",{
+		hasFocus:function(){ return EL.HASFOCUS(this); },
+		caretPossible:function(){ return EL.CARETPOSSIBLE(this); },
+		attr:function(name){ 
+			if(arguments.length > 1){
+				APPLYS(EL.ATTR,undefined,this,arguments);
+				return this;
+			} else {
+				if(arguments.length == 0) return CALL(EL.ATTR,undefined,this);
+				return CALL(EL.ATTR,undefined,this,name);
+			}
+		},
+		hasAttr:function(){ return APPLYS(EL.ATTR,EL,this,arguments); },
+		is     :function(){ return APPLYS(EL.IS,EL,this,arguments); },
+		filter :function(){ this.replace(APPLYS(EL.FILTER,EL,this,arguments)); return this; },
+		value  :function(name){ 
+			if(arguments.length > 0){
+				APPLYS(EL.VALUE,EL,this,arguments);
+				return this;
+			} else {
+				return CALL(EL.VALUE,EL,this,name);
+			}
+		},
+		trace    :function(){ return APPLYS(EL.TRACE,EL,this,arguments); },
+		//index
+		currentIndex:function(){ return APPLYS(EL.INDEX,EL,this,arguments); },
+		append   :function(){ APPLYS(EL.APPEND,EL,this,arguments);    return this; },
+		prepend  :function(){ APPLYS(EL.PREPEND,EL,this,arguments);   return this; },
+		appendTo :function(target){ CALL(EL.APPENDTO,EL,this,target); return this; },
+		prependTo:function(target){ CALL(EL.PREPENDTO,EL,this,target);return this; },
+		put      :function(){ APPLYS(EL.PUT,EL,this,arguments); return this;},
+		before   :function(){
+			if(arguments.length > 0){
+				APPLYS(EL.BEFORE,EL,this,arguments);
+				return this;
+			} else {
+				return CALL(EL.BEFORE,EL,this);
+			}
+		},
+		after    :function(){
+			if(arguments.length > 0){
+				APPLYS(EL.AFTER,EL,this,arguments);
+				return this;
+			} else {
+				return CALL(EL.AFTER,EL,this);
+			}
+		},
+		beforeAll:function(){ return CALL(EL.BEFOREALL,EL,this); },
+		afterAll :function(){ return CALL(EL.AFTERALL,EL,this); },
+		replace  :function(){ APPLYS(EL.REPLACE,EL,this,arguments); return this;},
+		up    :function(){ return CALL(EL.UP,EL,this); },
+		down  :function(){ return CALL(EL.DOWN,EL,this); },
+		style :function(name){ 
+			if(arguments.length > 1){
+				APPLYS(EL.STYLE,EL,this,arguments);
+				return this;
+			} else {
+				if(arguments.length == 0) return CALL(EL.STYLE,EL,this);
+				return CALL(EL.STYLE,EL,this,name);
+			}
+		},
+		empty  :function(){ CALL(EL.EMPTY,EL,this); return this; },
+		remove :function(){ CALL(EL.REMOVE,EL,this); return this; },
+		caret  :function(){ APPLYS(EL.CARET,EL,this,arguments); },
+		trigger:function(name){ CALL(EL.TRIGGER,EL,this,name); return this; },
+		on     :function(){ APPLYS(EL.ON,EL,this,arguments); return this; },
+		off    :function(){ APPLYS(EL.OFF,EL,this,arguments); return this; },
+		onetime:function(){ APPLYS(EL.ONETIME,EL,this,arguments); return this; },
+		data   :function(name){
+			if(arguments.length > 1){
+				APPLYS(EL.DATA,EL,this,arguments);
+				return this;
+			} else {
+				if(arguments.length == 0) return CALL(EL.DATA,EL,this);
+				return CALL(EL.DATA,EL,this,name);
+			}
+		},
+		disabled:function(){ APPLYS(EL.DISABLED,EL,this,arguments); return this; },
+		readonly:function(){ APPLYS(EL.READONLY,EL,this,arguments); return this; },
+	},function(select,parent){
+		this.setSource(FIND(select,parent));
+	});
+	
+	extendModule("Nody","Make",{},function(node,attr,parent){
+		this.setSource(GUT.CREATE(node,attr,parent));
+	});
 	
 	//여러 엘리먼트를 셀렉트하여 한번에 컨트롤
 	makeModule("Controls",{

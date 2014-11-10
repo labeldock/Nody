@@ -46,24 +46,19 @@ Nody.js
 
 <a name="introduce"/>
 # introduce #
-
-Nody.js is inline style DHTML javascript library.
-Now 'nody' is developement version.
-api change from time to time be until version 1.0.
-Api stated in document was completed.
-
-
-Nody.js는 DHTML 페이지를 만들기위한 라이브러리이다.
-개발버전이며 인터페이스를 완성하고 있으며 1.0이 될때까지 내부적으로 수시로 api가 변경될 예정이다.
-해당 도큐먼트에 노출된 API는 완성체이며 api변경은 없을 예정이다.
+Nody.js는 DHTML 페이지를 쉽게 구성하고 제작하기 위한 라이브러리이다.
 
 ### Attention #
-Nody는 jQuery와 같이 노드를 핸들링 하기 위한 라이브러리가 아니다. 
-본 라이브러리는 데이터의 관점에서 노드를 핸들링하기 편하도록 하기위해 만들어지고 있다.
+Nody는 jQuery와 달리 단순 노드를 핸들링 하기 위한 라이브러리가 아니다. 
+본 라이브러리는 데이터의 관점에서 노드를 핸들링하기 편하도록 함수나 컨트롤러가 제공된다.
 
 ### Compatibility #
 #### Recommend #
-IE10+, chrome4+, firefoe 16+, safari4+, opera 15+
+  - IE10+
+  - chrome4+
+  - firefoe 16+
+  - safari4+
+  - opera 15+
 
 #### Minimum #
   - Core Module : IE8+ 
@@ -71,28 +66,15 @@ IE10+, chrome4+, firefoe 16+, safari4+, opera 15+
 
 <a name="feature"/>
 ## Featrue #
-### English #
-1. Node create intuitive
-2. Line development-oriented
-3. Interface implementations exist
-4. Can imitate object-oriented development.
- 
-
-### Korean #
 1. 직관적인 Node 생성이 가능하다.
 2. 인라인 코딩을 지향한다.
-3. 각종 인터페이스 구현체가 존재한다.
-4. 코어만 따로 띄어내어 객체지향 개발을 흉내낼수도 있다.
-
-
-
+3. 뷰를 제어하기 위한 컨트롤러가 제공된다.
+4. 코어의 객체지향 모듈을 사용하여 제작되었다.
 
 
 <a name="orientation"/>
 ## Orientation #
-본 라이브러리는 로직의 통일성과 손쉬운 구현을 중요시여겨 객체지향 모델을 따라 만들어졌다.
-따라서 코드의 실행시간은 여타 성숙한 자바스크립트 라이브러리에 비해 느릴수 있으나 최적화 작업은 계속 진행되고 있다.
-
+본 라이브러리는 로직의 통일성과 손쉬운 구현을 중요시여겨 객체지향 모델로 만들어졌다.
 
 
 <a name="simple-showcase"/>
@@ -120,23 +102,32 @@ css 스타일로 구현 가능
         <div id="hello" class="world" my="code" disabled>foo</div>
 ```
 
+#### Case 2 #
+오브젝트를 값을 사용하여 만들수 있음
+```javascript
+        MAKE("div",{dataset:{hello:"world",data:"set"},"id":"hello","class":"world"}); 
+```
+```html
+        <div id="hello" class="world" data-hello="world" data-data="set"></div>
+```
+
 <a name="showcase-tag-generator-02"/>
-#### Case 2 #        
+#### Case 3 #        
 _[tagName] 방식으로 가능
 
 ```javascript
-        MAKE_LI("::helloWorld");
+        MAKE_LI(".list::helloWorld");
 ```
 ```html
-        <li>helloWorld</li>
+        <li class="list">helloWorld</li>
 ``` 
 
 <a name="showcase-tag-generator-03"/>
-#### Case 3 #
+#### Case 4 #
 파라메터를 중첩하여 생성가능
 
 ```javascript
-        MAKE_UL(
+        MAKE("ul",
           MAKE_LI(".item::list1"),
           MAKE_LI(".item::list2")
         );
@@ -149,22 +140,34 @@ _[tagName] 방식으로 가능
 ``` 
 
 <a name="showcase-tag-generator-04"/>
-#### Case 4 #
+#### Case 5 #
 테이블 생성예제
 
 ```javascript
         MAKE_TABLE("#my-table",
-            MAKE_A("::link1"),
-            MAKE_A("::link2"),
-            MAKE_A("::link3")
+            MAKE("a[href=#]::link1"),
+            MAKE("a[href=#]::link2"),
+            MAKE("a[href=#]::link3")
         );
 ```
 ```html
         <table id="my-table">
             <tbody>
-                <tr><td><a>link1</a></td></tr>
-                <tr><td><a>link2</a></td></tr>
-                <tr><td><a>link3</a></td></tr>
+                <tr>
+					<td>
+						<a href="#">link1</a>
+					</td>
+				</tr>
+                <tr>
+					<td>
+						<a href="#">link2</a>
+					</td>
+				</tr>
+                <tr>
+					<td>
+						<a href="#">link3</a>
+					</td>
+				</tr>
             </tbody>
         </table>
 ```
@@ -199,7 +202,7 @@ _[tagName] 방식으로 가능
 ### enumerate #
 
 <a name="showcase-enumerate-each"/>
-#### each #
+#### Each #
 ```javascript
        _Array([1,2,3]).each(function(value,index){
            console.log(value,index)
@@ -381,7 +384,7 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 
 <a name="showcase-module-veriable"/>
 #### default instance veriable 호출 #
-0.5에서 새로 추가되었습니다. 아직 테스트가 완료되지 않았습니다.
+
 ```javascript
         makeModule("Dog",{
             "var!name":"Dog name"
@@ -411,17 +414,13 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ```
 <a name="version-info"/>
 ## Version info #
-#### 0.7 변동예정 #
-- EL.. 함수들이 새로운 Nody와 Make모듈로 대체될 예정입니다. API도 jQuery스타일로 바뀝니다.
+  
+#### 0.7 변동사항 #
+ - EL..., Make 함수들을 Nody와 Make모듈로 컨트롤 할수 있습니다.
+ - 0.7 버전에서 API를 정리하고 브라우저 호환성을 IE8까지 올리는 작업을 진행합니다.
 
 #### 0.6 변동사항 #
   - 모듈인 "Type"이 제거되고 단순 함수 "IS"로 대체되었습니다.
   - DataGrid, DataRender, DataViewController 등의 이전 MVVM모듈이 제거되었습니다.
   - 완전히 새로 작성된 MVVM관련 모듈인 DataContext, ManagedData, ViewModel, DataContextViewController이 추가되었습니다. 이로서 메모리 관리가 최적화 되었고와 렌더링 프로세싱을 최소화 하였습니다.
   - ELDATA가 추가되었습니다. 노드의 DATASET에 접근할수 있습니다.
-  
-#### 0.5 변동사항 #
-  - 모듈 생성시 초기화 값 지정이 생겼습니다. {"var!name":value}로 지으면 됩니다.
-  - _EL 이 MAKE로 바뀌었습니다.
-  - _DIV 와 같은 표현을 MAKE_DIV로 바꾸었습니다.
-  - DHTML과 관련없는 API가 줄었습니다

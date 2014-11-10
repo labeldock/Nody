@@ -1,25 +1,3 @@
-makeGetter("CODE",function(){
-	return _Array(arguments).map(function(func){
-		if(ISELNODE(func)){
-			return _String(func.innerHTML).trimLine().getTabsAlign();
-		} else if(typeof func == "function"){
-			var hideSwitch = false;
-			return _String(UNWRAP((func+"").replace(/(^[^{]+)/g,""))).trimLine().tabsAlign().eachLine(function(line){
-				if(line.indexOf("/*break*/") > -1) return "";
-				if(line.indexOf("/*linehide*/") > -1) {
-					hideSwitch = hideSwitch ? false : true;
-					return undefined;
-				} 
-				return hideSwitch ? undefined : line;
-			});
-		}
-	}).compact().join("\n\n");
-});
-makeGetter("CODEBLOCK",function(node){
-	DATAEACH(node,function(){
-		hljs.highlightBlock(FINDZERO("code",node));
-	});
-});
 
 var menuContext = new Contexts("#header menu","a");
 
@@ -64,7 +42,6 @@ var appearOpen = function(){
 	/* CSS3 transform function for all browser */
 	var css3Transform = function(query,value){
 		",-webkit-,-moz-,-ms-,-o-".replace(/[^\,]*\,/g,function(s){ 
-			console.log("hi",query,s.replace(",","")+"transition",value)
 			$(query).css(s.replace(",","")+"transform",value);
 		});
 	}
