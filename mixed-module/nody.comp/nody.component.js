@@ -1,6 +1,184 @@
 // important!
 // It is lab version
+extendModule("String","AreaContent",{
+	getContentInfo:function(rLength){
+		var r = {"type":null,"value":null,"maxLength":null,"pattern":[0]};
+		// source :
+		// pattern : 
+		var pattern;
+		var source = this.Source.replace(/\|[^\|]*\|$/,function(s){
+			pattern = s.substr(1,s.length-2);
+			return "";
+		});
+		pattern = (typeof pattern=="undefined")?null:pattern.split("&&");
+		
+		//patterProgress
+		if( ISARRAY(pattern) ) if( !(pattern.length == 1 && pattern[0] == "") ){
+			r.pattern = [];
+			for(var pi=0,l=pattern.length;pi<l;pi++){
+				var pp = /([^\:]*)(\:(\~\+|\+\+|\+|\--|)(.*)|)/.exec(pattern[pi]);
+				if(!pp)console.warn("inValid pattern => ",pattern[pi]);
+				
+				// default relativeValue
+				var patternVar    = 0;
+				var patternRepeat = pp[1]=="" ? 1 : ZONERANGE(pp[1]);
+				var patternImp    = pp[3]==""?"+":pp[3];
+				var patternValue  = pp[4];
+				
+				//console.log("patternRepeat,patternVar,patternImp,patternValue",patternRepeat,patternVar,patternImp,patternValue);
+				
+				var patternArray = [];
+				switch(patternImp){
+					case "++":
+						for(var i=0;i<patternRepeat;i++){
+							patternVar += ZONERANGE(patternValue);
+							patternArray.push( patternVar );
+						}
+						break;
+					case "~+":
+						patternArray.push( patternVar );
+						for(var i=1;i<patternRepeat;i++){
+							patternVar += ZONERANGE(patternValue);
+							patternArray.push( patternVar );
+						}
+						break;
+					case "--":
+						for(var i=0;i<patternRepeat;i++){
+							patternVar -= ZONERANGE(patternValue);
+							patternArray.push( patternVar );
+						}
+					case "+": default:
+						for(var i=0;i<patternRepeat;i++) patternArray.push( ZONERANGE(patternValue) );
+						break;
+				}
+				if(patternArray.length){
+					r.pattern = r.pattern.concat( patternArray );
+				}
+			}
+		}
+		//number
+		if(/(\s|)(^\d+\~\d+|\d+)(\s|)$/.test(source)){				
+			r.type   = "rangeNumber";
+			r.value  = source;
+			r.maxLength = r.pattern.length;
+			return r;
+		}
+		//plain before
+		if(source.indexOf(",")>0){
+			if(typeof rLength == "number" && rLength != 1){
+				r.type   = "operatedArray";
+				r.value  = [];
+				TIMES(rLength,function(){ r.value.push(ZONECHOICE(source)); });
+				r.maxLength = r.value.length;
+			} else {
+				r.type   = "randomArray";
+				r.maxLength = 1;
+				r.value  = source;
+			}
+			return r;
+		}
+		//plain
+		if(typeof rLength == "number" && rLength != 1 ){
+			r.type   = "operatedArray";
+			r.value  = [];
+			TIMES(rLength,function(){ r.value.push(source) });
+			r.maxLength = r.value.length;;
+		} else {
+			r.type   = "plain";
+			r.maxLength = 1;
+			r.value  = source;
+		}
+		return r;
+	},
+	getLength:function(){
+		var info = this.getContentInfo();
+		if(info) switch(info.type){
+			case "rangeNumber": return info.maxLength; break;
+			case "randomArray": return info.maxLength; break;
+			case "plain"      : return info.maxLength; break;
+		}
+		return 0;
+	},
+	getContents:function(maxLength){
+		var info   = this.getContentInfo(maxLength);
+		//console.log("info## ",this.Source,TOSTRING(info),"ppl =>",maxLength);
+		if(info){
+			switch(info.type){
+				case "rangeNumber":
+					return DATAMAP(info.pattern,function(pvalue){
+						//console.log("info.value",info.value,ZONERANGE(info.value),pvalue);
+						return ZONERANGE(info.value) + pvalue;
+					});
+					break;
+				case "randomArray":
+					return [ZONECHOICE(info.value)];
+					break;
+				case "plain":
+					return [info.value];
+					break;
+				case "operatedArray":
+					return info.value;
+					break;
+				default:
+					
+					break;
+			}
+		}
+		return[];
+	},
+	getContent:function(index){return this.getContents()[TONUMBER(index)];}
+},function(param){
+	if( ISARRAY(param) ) param = param.join(",");
+	this._super(param);
+	this.Source = this.Source;
+},function(i){return this.getContent(i)});
 
+extendModule("Array","Area",{
+	getContents:function(length){
+		var maxLength=0;
+		if(typeof length == "number") maxLength = length;
+		else this.each(function(content){ var len = content.getLength(); if(len > maxLength) maxLength = len; });
+		//
+		var result = ARRAYINARRAY(maxLength);
+		this.each(function(content){
+			var tileData = content.getContents(maxLength);
+			for(var i=0,l=tileData.length;i<l;i++)result[i].push(tileData[i]);
+		});
+		return result;
+	},
+	getRowContents:function(index){
+		index = typeof index == "number" ? index : 0;
+		return this.getContents(index+1)[index];
+	},
+	getColumnContents:function(index,length){
+		index = typeof index == "number" ? index : 0;
+		return DATAMAP(this.getContents(length),function(row){
+			return row[index];
+		});
+	},
+	getJoinContents:function(joinText,length){
+		if(typeof joinText == "number"){
+			length   = joinText;
+			joinText = "";
+		} else {
+			joinText = typeof joinText == "string" ? joinText : "";
+		}
+		return DATAMAP(this.getContents(length),function(lineData){ return lineData.join(joinText); });
+	},
+	getLineContents:function(joinText,length){
+		var joinContents = this.getJoinContents(joinText,length);
+		for(var i=0,l=joinContents.length-1;i<l;i++){ joinContents[i] = joinContents[i]+"\n"; }
+		return joinContents.join("");
+	},
+	getStringContents:function(a,b){
+		return this.getLineContents(a,b);
+	}
+},function(){
+	var contents = Array.prototype.slice.call(arguments);
+	var pushData = [];
+	for(var i=0,l=contents.length;i<l;i++) pushData.push( new AreaContent(contents[i]) );
+	this.setSource(pushData);
+});
 
 makeSingleton("ActiveRecordPlugins",{
 	addPlugin:function(moduleName,moduleInit){

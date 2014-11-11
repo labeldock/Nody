@@ -1,14 +1,10 @@
 /*
 	sass style kit
-	auther        : hojugn ahn (open9.net)
-	version       : 0.8.2
-	concept       : interface set, auto preload image, easy hack, easy animation
+	auther        : hojugn ahn (https://github.com/labeldock/Nody_SASS)
+	version       : 1.0
+	concept       : easy hack, easy animation, interface set
 */
-/* mordern style fix */
-/* custom style */
-/* image load and preload module */
 /* animation */
-/* paragraph */
 /* layout set */
 #header { position: absolute; left: 0; top: 0; }
 #header nav menu a { display: block; width: 80px; height: 80px; border: 1px solid; line-height: 80px; border-top: none; }

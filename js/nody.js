@@ -7,8 +7,8 @@
 (+(function(W,NativeCore){
 	
 	// 버전
-	var version = "0.7.0";
-	var build   = "732";
+	var version = "0.7.1";
+	var build   = "733";
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
@@ -1005,7 +1005,7 @@
 			return TONUMBER(source);
 		},
 		// 1~4 => random any
-		"RNUMBER":function(source){
+		"ZONERANGE":function(source){
 			var numberSplit = /^([^\~]*)\~(.*)$/.exec(source);
 			if(numberSplit){
 				var ns1 = (new StringNumberInfo(numberSplit[1])).get();
@@ -1029,14 +1029,50 @@
 			}
 		},
 		// 1,2,3,4 => random any
-		"RCHOICE":function(value,split){
+		"ZONECHOICE":function(value,split){
 			if( ISARRAY(value) ) return value[Math.floor(Math.random()*(value.length))];
-			var cache = FUT.CACHEGET("RCHOICE",value+split);
+			var cache = FUT.CACHEGET("ZONECHOICE",value+split);
 			if(cache) return cache[Math.floor(Math.random()*(cache.length))];
 			var cachedata = value.split(typeof split == "string"?split:",");
-			FUT.CACHESET("RCHOICE",value+split,cachedata);
+			FUT.CACHESET("ZONECHOICE",value+split,cachedata);
 			return cachedata[Math.floor(Math.random()*(cachedata.length))];
 		},
+		"ZONEINFO":function(command){
+			var value,mutableType,type = (command.indexOf("\\!") == 0)?"fixed":(command.indexOf("\\?") == 0)?"mutable":"plain";
+			if(type != "plain"){
+				command = command.substr(2);
+				if(/\d\~\d/.test(command)){
+					mutableType = "range";
+					value = (type == "fixed") ? ZONERANGE(command) : command;
+				} else if( command.indexOf(",") > -1 ){
+					mutableType = "choice";
+					value = (type == "fixed") ? ZONECHOICE(command) : command;
+				} else {
+					console.error("setZoneParams:: 알수없는 명령어 입니다 ->",command);
+					value = command;
+				}
+			} else {
+				value = command;
+			}
+			return {value:value, type:type, mutableType:mutableType};
+		},
+		"ZONEVALUE":function(zone){
+			switch(zone.type){
+				case "fixed": case "plain":
+					return zone.value;
+					break;
+				case "mutable":
+					switch(zone.mutableType){
+						case "range":
+							return ZONERANGE(zone.value);
+							break;
+						case "choice":
+							return ZONECHOICE(zone.value);
+							break;
+					}
+					break;
+			}
+		}
 	});
 	SpecialFoundation.eachGetter();
 	
@@ -1758,186 +1794,6 @@
 		}
 	});
 	
-	extendModule("String","AreaContent",{
-		getContentInfo:function(rLength){
-			var r = {"type":null,"value":null,"maxLength":null,"pattern":[0]};
-			// source :
-			// pattern : 
-			var pattern;
-			var source = this.Source.replace(/\|[^\|]*\|$/,function(s){
-				pattern = s.substr(1,s.length-2);
-				return "";
-			});
-			pattern = (typeof pattern=="undefined")?null:pattern.split("&&");
-			
-			//patterProgress
-			if( ISARRAY(pattern) ) if( !(pattern.length == 1 && pattern[0] == "") ){
-				r.pattern = [];
-				for(var pi=0,l=pattern.length;pi<l;pi++){
-					var pp = /([^\:]*)(\:(\~\+|\+\+|\+|\--|)(.*)|)/.exec(pattern[pi]);
-					if(!pp)console.warn("inValid pattern => ",pattern[pi]);
-					
-					// default relativeValue
-					var patternVar    = 0;
-					var patternRepeat = pp[1]=="" ? 1 : RNUMBER(pp[1]);
-					var patternImp    = pp[3]==""?"+":pp[3];
-					var patternValue  = pp[4];
-					
-					//console.log("patternRepeat,patternVar,patternImp,patternValue",patternRepeat,patternVar,patternImp,patternValue);
-					
-					var patternArray = [];
-					switch(patternImp){
-						case "++":
-							for(var i=0;i<patternRepeat;i++){
-								patternVar += RNUMBER(patternValue);
-								patternArray.push( patternVar );
-							}
-							break;
-						case "~+":
-							patternArray.push( patternVar );
-							for(var i=1;i<patternRepeat;i++){
-								patternVar += RNUMBER(patternValue);
-								patternArray.push( patternVar );
-							}
-							break;
-						case "--":
-							for(var i=0;i<patternRepeat;i++){
-								patternVar -= RNUMBER(patternValue);
-								patternArray.push( patternVar );
-							}
-						case "+": default:
-							for(var i=0;i<patternRepeat;i++) patternArray.push( RNUMBER(patternValue) );
-							break;
-					}
-					if(patternArray.length){
-						r.pattern = r.pattern.concat( patternArray );
-					}
-				}
-			}
-			//number
-			if(/(\s|)(^\d+\~\d+|\d+)(\s|)$/.test(source)){				
-				r.type   = "rangeNumber";
-				r.value  = source;
-				r.maxLength = r.pattern.length;
-				return r;
-			}
-			//plain before
-			if(source.indexOf(",")>0){
-				if(typeof rLength == "number" && rLength != 1){
-					r.type   = "operatedArray";
-					r.value  = [];
-					TIMES(rLength,function(){ r.value.push(RCHOICE(source)); });
-					r.maxLength = r.value.length;
-				} else {
-					r.type   = "randomArray";
-					r.maxLength = 1;
-					r.value  = source;
-				}
-				return r;
-			}
-			//plain
-			if(typeof rLength == "number" && rLength != 1 ){
-				r.type   = "operatedArray";
-				r.value  = [];
-				TIMES(rLength,function(){ r.value.push(source) });
-				r.maxLength = r.value.length;;
-			} else {
-				r.type   = "plain";
-				r.maxLength = 1;
-				r.value  = source;
-			}
-			return r;
-		},
-		getLength:function(){
-			var info = this.getContentInfo();
-			if(info) switch(info.type){
-				case "rangeNumber": return info.maxLength; break;
-				case "randomArray": return info.maxLength; break;
-				case "plain"      : return info.maxLength; break;
-			}
-			return 0;
-		},
-		getContents:function(maxLength){
-			var info   = this.getContentInfo(maxLength);
-			//console.log("info## ",this.Source,TOSTRING(info),"ppl =>",maxLength);
-			if(info){
-				switch(info.type){
-					case "rangeNumber":
-						return DATAMAP(info.pattern,function(pvalue){
-							//console.log("info.value",info.value,RNUMBER(info.value),pvalue);
-							return RNUMBER(info.value) + pvalue;
-						});
-						break;
-					case "randomArray":
-						return [RCHOICE(info.value)];
-						break;
-					case "plain":
-						return [info.value];
-						break;
-					case "operatedArray":
-						return info.value;
-						break;
-					default:
-						
-						break;
-				}
-			}
-			return[];
-		},
-		getContent:function(index){return this.getContents()[TONUMBER(index)];}
-	},function(param){
-		if( ISARRAY(param) ) param = param.join(",");
-		this._super(param);
-		this.Source = this.Source;
-	},function(i){return this.getContent(i)});
-	
-	extendModule("Array","Area",{
-		getContents:function(length){
-			var maxLength=0;
-			if(typeof length == "number") maxLength = length;
-			else this.each(function(content){ var len = content.getLength(); if(len > maxLength) maxLength = len; });
-			//
-			var result = ARRAYINARRAY(maxLength);
-			this.each(function(content){
-				var tileData = content.getContents(maxLength);
-				for(var i=0,l=tileData.length;i<l;i++)result[i].push(tileData[i]);
-			});
-			return result;
-		},
-		getRowContents:function(index){
-			index = typeof index == "number" ? index : 0;
-			return this.getContents(index+1)[index];
-		},
-		getColumnContents:function(index,length){
-			index = typeof index == "number" ? index : 0;
-			return DATAMAP(this.getContents(length),function(row){
-				return row[index];
-			});
-		},
-		getJoinContents:function(joinText,length){
-			if(typeof joinText == "number"){
-				length   = joinText;
-				joinText = "";
-			} else {
-				joinText = typeof joinText == "string" ? joinText : "";
-			}
-			return DATAMAP(this.getContents(length),function(lineData){ return lineData.join(joinText); });
-		},
-		getLineContents:function(joinText,length){
-			var joinContents = this.getJoinContents(joinText,length);
-			for(var i=0,l=joinContents.length-1;i<l;i++){ joinContents[i] = joinContents[i]+"\n"; }
-			return joinContents.join("");
-		},
-		getStringContents:function(a,b){
-			return this.getLineContents(a,b);
-		}
-	},function(){
-		var contents = Array.prototype.slice.call(arguments);
-		var pushData = [];
-		for(var i=0,l=contents.length;i<l;i++) pushData.push( new AreaContent(contents[i]) );
-		this.setSource(pushData);
-	});
-	
 	// Number
 	extendModule("String","Number",{
 		// number core
@@ -2258,6 +2114,72 @@
 		base36Random:function(length) { return this.base64Random(length,26,36); },
 		base36UniqueRandom:function(length) { return this.base64UniqueRandom(length,26,36); }
 	});
+	
+	
+	extendModule("String","ZString",{
+		setZoneParams:function(params){
+			if( IS(params,"array !nothing") ) this.ZoneParamsInfo = DATAMAP(params,function(command){ return ZONEINFO(command); });
+		},
+		getZContent:function(seed){
+			// d:Dynamic, e: Evaluation
+			seed = (typeof seed == "number")?seed:0;
+			var dPoint=[],ePoint=[];
+			var result = this.Source,zoneParamsInfo = this.ZoneParamsInfo;
+			
+			
+			result = result.replace(/\\\([^\)]*\)/g,function(s){
+				dPoint.push(s.substring(2,s.length-1));
+				return "@{$"+(dPoint.length-1)+"}" ;
+			});
+			
+			result = result.replace(/\\\{[^\}]*\}/g,function(s){
+				ePoint.push(s.substring(2,s.length-1));
+				return "@{#"+(ePoint.length-1)+"}" ;
+			});
+			
+			dPoint = DATAMAP(dPoint,function(v){ return ZONEVALUE(ZONEINFO("\\!"+v)); });
+			ePoint = DATAMAP(ePoint,function(v){ 
+				return eval(v.replace(/\$\i+/g,function(s){
+					return seed;
+				}).replace(/\$\d+/g,function(s){
+					var paramResult = zoneParamsInfo[parseInt(s.substr(1))];
+					if(paramResult){
+						paramResult = ZONEVALUE(paramResult);
+						return ISNUMBERTEXT(paramResult) ? paramResult : '"'+paramResult+'"' ;
+					}
+				}));
+			});
+			
+			result = result.replace(/\@\{\$\d+\}/g,function(s){
+				return dPoint[parseInt(s.substring(3,s.length-1))];
+			});
+			
+			result = result.replace(/\@\{\#\d+\}/g,function(s){
+				return ePoint[parseInt(s.substring(3,s.length-1))];
+			});
+			
+			return result;
+		},
+		toArray:function(length,startAt){
+			length  = (typeof length == "number")  ? length : 1;
+			var i = (typeof startAt == "number") ? startAt : 0;
+			var result = [];
+			for(var l=i+length;i<l;i++) result.push( this.getZContent(i) );
+			return result;
+		}
+	},function(param){
+		this.ZoneParams = Array.prototype.slice.call(arguments);
+		this._super(this.ZoneParams.shift());
+		this.setZoneParams(this.ZoneParams);
+		//this.ZoneParamsInfo = [];
+	},function(seed){
+		return this.getZContent(seed);
+	});
+	
+	makeGetter("ZSTRING",function(params){
+		return _ZString.apply(undefined,Array.prototype.slice.call(arguments)).get();
+	});
+	
 	
 	//******************
 	//ClientKit
@@ -6041,7 +5963,7 @@
 			this.axisYPositiveItems = [];
 			this.axisYNegativeItems = [];
 			
-			this.ClipView = MAKE("div.scroll-box-clip-view");
+			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
 			ELAPPEND(this.ClipView,this.Source.childNodes);
 			ELAPPEND(this.Source,this.ClipView);
 			//

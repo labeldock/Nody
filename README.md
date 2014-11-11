@@ -36,6 +36,11 @@ Nody.js
     - [String](#showcase-string)
       - [ByteSize](#showcase-string-01) 
       - [String Model](#showcase-string-02) 
+	- [ZString](#showcase-zstring)
+	  - [Basic](#showcase-zstring-01)
+	  - [With Param](#showcase-zstring-02)
+	  - [Random Param](#showcase-zstring-03)
+	  - [To many array](#showcase-zstring-05)
     - [Number](#showcase-number)
     - [Module](#showcase-module)
       - [Module::new](#showcase-module-new)
@@ -319,12 +324,62 @@ as 는 스트링 값만을 위한 api이다
 ```
 
 <a name="showcase-string-02"/>
-#### string model #
+#### String model #
 class attribute 같은 string의 추가제거에 사용가능하다.
 ```javascript
         _String("McDonald's").addModel("good").get(); //=>"McDonald's good"
         _String("McDonald's").removeModel("Mc").get(); //=>"McDonald's"
         _String("McDonald's").removeModel("McDonald's").get(); //=>""
+```
+
+<a name="showcase-zstring"/>
+### ZString #
+ZString은 렌덤 택스트 생성을 위해 만들어졌다. 첫번째 파라메터는 메인텍스트 그외 파라메터는 서브텍스트 이다. 
+메인 파라메터는 \\(), \\{} 규칙이 존재하고 서브파라메터는 \\! \\? 규칙이 존재한다.
+
+<a name="showcase-zstring-01"/>
+#### Basic #
+\\() 구문은 곧바로 값을 환산하여 뽑아준다.
+```javascript
+	//range param
+	_ZString("Total \\(10~20)%").get(); //=> "Total 17%"
+	_ZString("Total \\(10~20)%").get(); //=> "Total 12%"
+	_ZString("Total \\(10~20)%").get(); //=> "Total 15%"
+	//choice param
+	_ZString("\\(Boy,Girl) say \\(hello,bye,hi)").get(); //=> "Boy say hello"
+	_ZString("\\(Boy,Girl) say \\(hello,bye,hi)").get(); //=> "Girl say hi"
+	_ZString("\\(Boy,Girl) say \\(hello,bye,hi)").get(); //=> "Boy say bye"
+```
+
+<a name="showcase-zstring-02"/>
+#### With Param #
+\\{} 구문은 내부에서 연산후 값을 뽑는다
+```javascript
+	//range string
+	_ZString("Result : \\{$0+$1}","2","3").get(); //=> "Result : 5"
+	_ZString("Result : \\{$0-$1}","2","3").get(); //=> "Result : -1"
+	_ZString("Result : \\{$0*$1}","2","3").get(); //=> "Result : 6"
+	_ZString("Result : \\{$0/$1}","2","3").get(); //=> "Result : 0.6666666666666666"
+	_ZString("Result : \\{$0+' '+$1}","not","enough").get(); //=> "Result : not enough"
+```
+
+<a name="showcase-zstring-03"/>
+#### Random Param #
+파라메터 또한 랜덤값을 주어줄수 있다.
+```javascript
+	//range string
+	_ZString("\\(10~20) - \\{$0}","\\?20~30").get(); //=> "16 - 21"
+	_ZString("\\(10~20) - \\{$0}","\\?20~30").get(); //=> "17 - 23"
+	_ZString("\\(10~20) - \\{$0}","\\?20~30").get(); //=> "12 - 28"
+```
+
+<a name="showcase-zstring-03"/>
+#### To many array #
+$i 는 index값이다 toArray(길이)로 지정하여 많은 값이 생성 가능하다.
+```javascript
+	//range string
+	_ZString("Result[\\{$i+1}] : \\{10*$i+$0}","\\?1~9").toArray(5);
+	//=> ["Result[1] : 7", "Result[2] : 15", "Result[3] : 29", "Result[4] : 38", "Result[5] : 44"]
 ```
 
 <a name="showcase-number"/>
@@ -417,6 +472,7 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
   
 #### 0.7 변동사항 #
  - EL..., Make 함수들을 Nody와 Make모듈로 컨트롤 할수 있습니다.
+ - Area, AreaContent 모듈이 제거되었고 ZString 모듈로 대체되었습니다.
  - 0.7 버전에서 API를 정리하고 브라우저 호환성을 IE8까지 올리는 작업을 진행합니다.
 
 #### 0.6 변동사항 #

@@ -28,13 +28,13 @@ var appearLoad = function(){
 	
 	/* Actions */
 	FIND("#green-box",ELON,"click",function(){
-		css3Transform(".gage-box-line-container","rotate("+ _Area("-80~-20").getStringContents()+"deg)");
+		css3Transform(".gage-box-line-container",ZSTRING("rotate(\\(-80~20)deg)"));
 	});
 	FIND("#yellow-box",ELON,"click",function(){
-		css3Transform(".gage-box-line-container","rotate("+ _Area("-20~20").getStringContents()+"deg)");
+		css3Transform(".gage-box-line-container",ZSTRING("rotate(\\(-20~20)deg)"));
 	});
 	FIND("#red-box",ELON,"click",function(){
-		css3Transform(".gage-box-line-container","rotate("+ _Area("20~80").getStringContents()+"deg)");
+		css3Transform(".gage-box-line-container",ZSTRING("rotate(\\(20~80)deg)"));
 	});
 };
 var appearOpen = function(){
@@ -58,7 +58,7 @@ var appearOpen = function(){
 		},
 		function(){
 			setTimeout(function(){
-				css3Transform(".gage-box-line-container","rotate("+ _Area("-60~60").getStringContents()+"deg)");
+				css3Transform(".gage-box-line-container",ZSTRING("rotate(\\(-60~60)deg)"));
 			},500);
 		}
 	)

@@ -1,21 +1,17 @@
 @charset "UTF-8";
 /*
 	sass style kit
-	auther        : hojugn ahn (open9.net)
-	version       : 0.8.2
-	concept       : interface set, auto preload image, easy hack, easy animation
+	auther        : hojugn ahn (https://github.com/labeldock/Nody_SASS)
+	version       : 1.0
+	concept       : easy hack, easy animation, interface set
 */
-/* mordern style fix */
-/* custom style */
-/* image load and preload module */
 /* animation */
-/* paragraph */
 /* layout set */
 /*
-	modernizer & look and feel support
-	auther        : hojugn ahn (open9.net)
+	modernizer support
+	auther        : hojugn ahn (https://github.com/labeldock/Nody_SASS)
 	target-compatibility : IE8+;
-	version       : 1.9.1
+	version       : 2.0
 */
 /***************************** mordernizer */
 /* must none boxsizing-target is table tags! */
@@ -36,7 +32,9 @@ article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, 
 
 audio, canvas, progress, video { display: inline; zoom: 1; display: inline-block; }
 
-template, .hidden, .template, .folder { display: none; }
+template.show, .hidden.show, .template.show { display: block; }
+template.inline.show, .hidden.inline.show, .template.inline.show { display: inline; }
+template.inline-block.show, .hidden.inline-block.show, .template.inline-block.show { display: inline; zoom: 1; display: inline-block; }
 
 /* baseline */
 .baseline { display: table; width: 100%; border-collapse: separate; table-layout: fixed; height: auto; }
@@ -61,27 +59,6 @@ menu > li > a, menu > li > a:hover, ul.menu > li > a, ul.menu > li > a:hover { c
 .inline-menu > li { display: inline; zoom: 1; display: inline-block; list-style: none; cursor: pointer; }
 .inline-menu > li > a, .inline-menu > li > a:hover { color: inherit; text-decoration: inherit; }
 
-/*************************
-html5 template extention */
-template.show, .hidden.show, .template.show, .folder.show { display: block; }
-template.show.inline-block, .hidden.show.inline-block, .template.show.inline-block, .folder.show.inline-block { display: inline; zoom: 1; display: inline-block; }
-template.show.inline, .hidden.show.inline, .template.show.inline, .folder.show.inline { display: inline; }
-template.active, .hidden.active, .template.active, .folder.active { display: block; }
-template.active.inline-block, .hidden.active.inline-block, .template.active.inline-block, .folder.active.inline-block { display: inline; zoom: 1; display: inline-block; }
-template.active.inline, .hidden.active.inline, .template.active.inline, .folder.active.inline { display: inline; }
-
-/***************************** tool-group */
-.tool-group > *, .tool-group-inline > * { display: none; }
-
-.tool-group > .show, .tool-group > .active { display: block; }
-
-.tool-group-inline > .show, .tool-group-inline > .active { display: inline; zoom: 1; display: inline-block; }
-
-.tool { display: none; }
-.tool.active { display: block; }
-.tool.active.inline-block { display: inline; zoom: 1; display: inline-block; }
-.tool.active.inline { display: inline; }
-
 /***************************** - frame은 공간이다. - layer는 계층이다.
 */
 .frame, .layer { position: relative; }
@@ -96,42 +73,17 @@ template.active.inline, .hidden.active.inline, .template.active.inline, .folder.
 
 /***************************** - table - toolbar - bar - caption
 */
-.fieldset, .fieldset-top, .fieldset-bottom { position: relative; width: 100%; }
-.fieldset:after, .fieldset-top:after, .fieldset-bottom:after { content: ""; display: table; clear: both; }
-.fieldset-center, .fieldset-top-center, .fieldset-bottom-center { display: inline; zoom: 1; display: inline-block; margin-left: auto !important; margin-right: auto !important; text-align: center; }
-.fieldset-center > *, .fieldset-top-center > *, .fieldset-bottom-center > * { vertical-align: middle; }
-.fieldset-left, .fieldset-top-left, .fieldset-bottom-left { display: inline; zoom: 1; display: inline-block; float: left; }
-.fieldset-left > *, .fieldset-top-left > *, .fieldset-bottom-left > * { vertical-align: middle; }
-.fieldset-right, .fieldset-top-right, .fieldset-bottom-right { display: inline; zoom: 1; display: inline-block; float: right; }
-.fieldset-right > *, .fieldset-top-right > *, .fieldset-bottom-right > * { vertical-align: middle; }
-.fieldset-top-left, .fieldset-top-right, .fieldset-top-top-left, .fieldset-top-top-right, .fieldset-bottom-top-left, .fieldset-bottom-top-right { vertical-align: top; }
-.fieldset-middle-left, .fieldset-middle-right, .fieldset-top-middle-left, .fieldset-top-middle-right, .fieldset-bottom-middle-left, .fieldset-bottom-middle-right { vertical-align: middle; }
-.fieldset-bottom-left, .fieldset-bottom-right, .fieldset-top-bottom-left, .fieldset-top-bottom-right, .fieldset-bottom-bottom-left, .fieldset-bottom-bottom-right { vertical-align: bottom; }
-
-.fieldset-top, .layout-top, .toolbar-top, .bar-top, .caption-top { margin-bottom: 10px; }
-.fieldset-bottom, .layout-bottom, .toolbar-bottom, .bar-bottom, .caption-bottom { margin-top: 10px; }
-.fieldset-middle, .layout-middle, .toolbar-middle, .bar-middle, .caption-middle { margin-bottom: 10px; margin-top: 10px; }
-.fieldset-middle-sm, .layout-middle-sm, .toolbar-middle-sm, .bar-middle-sm, .caption-middle-sm { margin-bottom: 5px; margin-top: 5px; }
-.fieldset-middle-right, .layout-middle-right, .toolbar-middle-right, .bar-middle-right, .caption-middle-right { padding-right: 10px; }
-.fieldset-middle-right-sm, .layout-middle-right-sm, .toolbar-middle-right-sm, .bar-middle-right-sm, .caption-middle-right-sm { padding-right: 5px; }
-.fieldset-top-sm, .layout-top-sm, .toolbar-top-sm, .bar-top-sm, .caption-top-sm { margin-bottom: 5px; }
-.fieldset-bottom-sm, .layout-bottom-sm, .toolbar-bottom-sm, .bar-bottom-sm, .caption-bottom-sm { margin-top: 5px; }
-
-fieldset, .layout, .caption { position: relative; width: 100%; }
-fieldset:after, .layout:after, .caption:after { content: ""; display: table; clear: both; }
-fieldset-center, .layout-center, .caption-center { display: inline; zoom: 1; display: inline-block; margin-left: auto !important; margin-right: auto !important; text-align: center; }
-fieldset-center > *, .layout-center > *, .caption-center > * { vertical-align: middle; }
-fieldset-left, .layout-left, .caption-left { display: inline; zoom: 1; display: inline-block; float: left; }
-fieldset-left > *, .layout-left > *, .caption-left > * { vertical-align: middle; }
-fieldset-right, .layout-right, .caption-right { display: inline; zoom: 1; display: inline-block; float: right; }
-fieldset-right > *, .layout-right > *, .caption-right > * { vertical-align: middle; }
-fieldset-top-left, fieldset-top-right, .layout-top-left, .layout-top-right, .caption-top-left, .caption-top-right { vertical-align: top; }
-fieldset-middle-left, fieldset-middle-right, .layout-middle-left, .layout-middle-right, .caption-middle-left, .caption-middle-right { vertical-align: middle; }
-fieldset-bottom-left, fieldset-bottom-right, .layout-bottom-left, .layout-bottom-right, .caption-bottom-left, .caption-bottom-right { vertical-align: bottom; }
-
-table.layout { table-layout: fixed; width: 100%; border-spacing: 0px; border-collapse: collapse; }
-table.layout td, table.layout th { padding: 0px; vertical-align: baseline; border: none; }
-table.layout td input, table.layout th input { margin: 0px; }
+fieldset, .layout { position: relative; width: 100%; }
+fieldset:after, .layout:after { content: ""; display: table; clear: both; }
+fieldset-center, .layout-center { display: inline; zoom: 1; display: inline-block; margin-left: auto !important; margin-right: auto !important; text-align: center; }
+fieldset-center > *, .layout-center > * { vertical-align: middle; }
+fieldset-left, .layout-left { display: inline; zoom: 1; display: inline-block; float: left; }
+fieldset-left > *, .layout-left > * { vertical-align: middle; }
+fieldset-right, .layout-right { display: inline; zoom: 1; display: inline-block; float: right; }
+fieldset-right > *, .layout-right > * { vertical-align: middle; }
+fieldset-top-left, fieldset-top-right, .layout-top-left, .layout-top-right { vertical-align: top; }
+fieldset-middle-left, fieldset-middle-right, .layout-middle-left, .layout-middle-right { vertical-align: middle; }
+fieldset-bottom-left, fieldset-bottom-right, .layout-bottom-left, .layout-bottom-right { vertical-align: bottom; }
 
 /********
 block */
@@ -294,49 +246,6 @@ block */
 .badge-danger.in-set-sm { border-radius: 2px; }
 .badge-danger.in-set-lg { border-radius: 5px; }
 .badge-danger.in-set-xl { border-radius: 10px; }
-
-/******** grid */
-table.grid { table-layout: fixed; width: 100%; border-spacing: 0px; border-collapse: collapse; }
-table.grid td, table.grid th { vertical-align: middle; border: none; }
-table.grid td input, table.grid th input { margin: 0px; }
-table.grid th, table.grid td { vertical-align: top; }
-
-table.grid-default > thead > tr > th, table.grid-default > thead > tr > td, table.grid-default > tbody > tr > th, table.grid-default > tbody > tr > td, table.grid-default > tfoot > tr > th, table.grid-default > tfoot > tr > td { border-width: 0 !important; }
-
-table.grid-top th, table.grid-top td, tbody.grid-top th, tbody.grid-top td, thead.grid-top th, thead.grid-top td, tfoot.grid-top th, tfoot.grid-top td, tr.grid-top th, tr.grid-top td { vertical-align: top; }
-
-.grid-top { vertical-align: top !important; }
-
-table.grid-middle th, table.grid-middle td, tbody.grid-middle th, tbody.grid-middle td, thead.grid-middle th, thead.grid-middle td, tfoot.grid-middle th, tfoot.grid-middle td, tr.grid-middle th, tr.grid-middle td { vertical-align: middle; }
-
-.grid-middle { vertical-align: middle !important; }
-
-table.grid-bottom th, table.grid-bottom td, tbody.grid-bottom th, tbody.grid-bottom td, thead.grid-bottom th, thead.grid-bottom td, tfoot.grid-bottom th, tfoot.grid-bottom td, tr.grid-bottom th, tr.grid-bottom td { vertical-align: bottom; }
-
-.grid-bottom { vertical-align: bottom !important; }
-
-/*grid*/
-.grid-10 th, .grid-10 td { height: 10px; }
-
-.grid-15 th, .grid-15 td { height: 15px; }
-
-.grid-20 th, .grid-20 td { height: 20px; }
-
-.grid-25 th, .grid-25 td { height: 25px; }
-
-.grid-30 th, .grid-30 td { height: 30px; }
-
-.grid-35 th, .grid-35 td { height: 35px; }
-
-.grid-40 th, .grid-40 td { height: 40px; }
-
-.grid-45 th, .grid-45 td { height: 45px; }
-
-.grid-50 th, .grid-50 td { height: 50px; }
-
-.grid-55 th, .grid-55 td { height: 55px; }
-
-.grid-60 th, .grid-60 td { height: 60px; }
 
 /******** table */
 .table-fixed { table-layout: fixed; }
@@ -638,56 +547,6 @@ article .article-footer .article-footer-commands i img, article .article-footer 
 article .article-footer:after, .article .article-footer:after { content: " "; display: block; height: 0; clear: both; }
 article .article-body, .article .article-body { position: relative; }
 
-hgorup .hgroup-header, .hgroup .hgroup-header { position: relative; width: 100%; }
-hgorup .hgroup-header *, .hgroup .hgroup-header * { margin-bottom: 0; }
-hgorup .hgroup-header .hgroup-header-title, hgorup .hgroup-header .hgroup-header-left, .hgroup .hgroup-header .hgroup-header-title, .hgroup .hgroup-header .hgroup-header-left { float: left; }
-hgorup .hgroup-header .hgroup-header-title i, hgorup .hgroup-header .hgroup-header-left i, .hgroup .hgroup-header .hgroup-header-title i, .hgroup .hgroup-header .hgroup-header-left i { margin-right: 3px; }
-hgorup .hgroup-header .hgroup-header-title i img, hgorup .hgroup-header .hgroup-header-left i img, .hgroup .hgroup-header .hgroup-header-title i img, .hgroup .hgroup-header .hgroup-header-left i img { vertical-align: baseline; }
-hgorup .hgroup-header .hgroup-header-commands, hgorup .hgroup-header .hgroup-header-right, .hgroup .hgroup-header .hgroup-header-commands, .hgroup .hgroup-header .hgroup-header-right { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; float: right; }
-hgorup .hgroup-header .hgroup-header-commands > *, hgorup .hgroup-header .hgroup-header-right > *, .hgroup .hgroup-header .hgroup-header-commands > *, .hgroup .hgroup-header .hgroup-header-right > * { display: inline; zoom: 1; display: inline-block; position: relative; }
-hgorup .hgroup-header .hgroup-header-commands p, hgorup .hgroup-header .hgroup-header-right p, .hgroup .hgroup-header .hgroup-header-commands p, .hgroup .hgroup-header .hgroup-header-right p { cursor: default; margin: 0; }
-hgorup .hgroup-header .hgroup-header-commands li, hgorup .hgroup-header .hgroup-header-commands a, hgorup .hgroup-header .hgroup-header-right li, hgorup .hgroup-header .hgroup-header-right a, .hgroup .hgroup-header .hgroup-header-commands li, .hgroup .hgroup-header .hgroup-header-commands a, .hgroup .hgroup-header .hgroup-header-right li, .hgroup .hgroup-header .hgroup-header-right a { cursor: pointer; text-decoration: none; }
-hgorup .hgroup-header .hgroup-header-commands i, hgorup .hgroup-header .hgroup-header-right i, .hgroup .hgroup-header .hgroup-header-commands i, .hgroup .hgroup-header .hgroup-header-right i { margin-right: 3px; }
-hgorup .hgroup-header .hgroup-header-commands i img, hgorup .hgroup-header .hgroup-header-right i img, .hgroup .hgroup-header .hgroup-header-commands i img, .hgroup .hgroup-header .hgroup-header-right i img { vertical-align: baseline; }
-hgorup .hgroup-header:after, .hgroup .hgroup-header:after { content: " "; display: block; height: 0; clear: both; }
-hgorup .hgroup-heading, .hgroup .hgroup-heading { position: relative; width: 100%; }
-hgorup .hgroup-heading *, .hgroup .hgroup-heading * { margin-bottom: 0; }
-hgorup .hgroup-heading .hgroup-heading-title, hgorup .hgroup-heading .hgroup-heading-left, .hgroup .hgroup-heading .hgroup-heading-title, .hgroup .hgroup-heading .hgroup-heading-left { float: left; }
-hgorup .hgroup-heading .hgroup-heading-title i, hgorup .hgroup-heading .hgroup-heading-left i, .hgroup .hgroup-heading .hgroup-heading-title i, .hgroup .hgroup-heading .hgroup-heading-left i { margin-right: 3px; }
-hgorup .hgroup-heading .hgroup-heading-title i img, hgorup .hgroup-heading .hgroup-heading-left i img, .hgroup .hgroup-heading .hgroup-heading-title i img, .hgroup .hgroup-heading .hgroup-heading-left i img { vertical-align: baseline; }
-hgorup .hgroup-heading .hgroup-heading-commands, hgorup .hgroup-heading .hgroup-heading-right, .hgroup .hgroup-heading .hgroup-heading-commands, .hgroup .hgroup-heading .hgroup-heading-right { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; float: right; }
-hgorup .hgroup-heading .hgroup-heading-commands > *, hgorup .hgroup-heading .hgroup-heading-right > *, .hgroup .hgroup-heading .hgroup-heading-commands > *, .hgroup .hgroup-heading .hgroup-heading-right > * { display: inline; zoom: 1; display: inline-block; position: relative; }
-hgorup .hgroup-heading .hgroup-heading-commands p, hgorup .hgroup-heading .hgroup-heading-right p, .hgroup .hgroup-heading .hgroup-heading-commands p, .hgroup .hgroup-heading .hgroup-heading-right p { cursor: default; margin: 0; }
-hgorup .hgroup-heading .hgroup-heading-commands li, hgorup .hgroup-heading .hgroup-heading-commands a, hgorup .hgroup-heading .hgroup-heading-right li, hgorup .hgroup-heading .hgroup-heading-right a, .hgroup .hgroup-heading .hgroup-heading-commands li, .hgroup .hgroup-heading .hgroup-heading-commands a, .hgroup .hgroup-heading .hgroup-heading-right li, .hgroup .hgroup-heading .hgroup-heading-right a { cursor: pointer; text-decoration: none; }
-hgorup .hgroup-heading .hgroup-heading-commands i, hgorup .hgroup-heading .hgroup-heading-right i, .hgroup .hgroup-heading .hgroup-heading-commands i, .hgroup .hgroup-heading .hgroup-heading-right i { margin-right: 3px; }
-hgorup .hgroup-heading .hgroup-heading-commands i img, hgorup .hgroup-heading .hgroup-heading-right i img, .hgroup .hgroup-heading .hgroup-heading-commands i img, .hgroup .hgroup-heading .hgroup-heading-right i img { vertical-align: baseline; }
-hgorup .hgroup-heading:after, .hgroup .hgroup-heading:after { content: " "; display: block; height: 0; clear: both; }
-hgorup .hgroup-foot, .hgroup .hgroup-foot { position: relative; width: 100%; }
-hgorup .hgroup-foot *, .hgroup .hgroup-foot * { margin-bottom: 0; }
-hgorup .hgroup-foot .hgroup-foot-title, hgorup .hgroup-foot .hgroup-foot-left, .hgroup .hgroup-foot .hgroup-foot-title, .hgroup .hgroup-foot .hgroup-foot-left { float: left; }
-hgorup .hgroup-foot .hgroup-foot-title i, hgorup .hgroup-foot .hgroup-foot-left i, .hgroup .hgroup-foot .hgroup-foot-title i, .hgroup .hgroup-foot .hgroup-foot-left i { margin-right: 3px; }
-hgorup .hgroup-foot .hgroup-foot-title i img, hgorup .hgroup-foot .hgroup-foot-left i img, .hgroup .hgroup-foot .hgroup-foot-title i img, .hgroup .hgroup-foot .hgroup-foot-left i img { vertical-align: baseline; }
-hgorup .hgroup-foot .hgroup-foot-commands, hgorup .hgroup-foot .hgroup-foot-right, .hgroup .hgroup-foot .hgroup-foot-commands, .hgroup .hgroup-foot .hgroup-foot-right { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; float: right; }
-hgorup .hgroup-foot .hgroup-foot-commands > *, hgorup .hgroup-foot .hgroup-foot-right > *, .hgroup .hgroup-foot .hgroup-foot-commands > *, .hgroup .hgroup-foot .hgroup-foot-right > * { display: inline; zoom: 1; display: inline-block; position: relative; }
-hgorup .hgroup-foot .hgroup-foot-commands p, hgorup .hgroup-foot .hgroup-foot-right p, .hgroup .hgroup-foot .hgroup-foot-commands p, .hgroup .hgroup-foot .hgroup-foot-right p { cursor: default; margin: 0; }
-hgorup .hgroup-foot .hgroup-foot-commands li, hgorup .hgroup-foot .hgroup-foot-commands a, hgorup .hgroup-foot .hgroup-foot-right li, hgorup .hgroup-foot .hgroup-foot-right a, .hgroup .hgroup-foot .hgroup-foot-commands li, .hgroup .hgroup-foot .hgroup-foot-commands a, .hgroup .hgroup-foot .hgroup-foot-right li, .hgroup .hgroup-foot .hgroup-foot-right a { cursor: pointer; text-decoration: none; }
-hgorup .hgroup-foot .hgroup-foot-commands i, hgorup .hgroup-foot .hgroup-foot-right i, .hgroup .hgroup-foot .hgroup-foot-commands i, .hgroup .hgroup-foot .hgroup-foot-right i { margin-right: 3px; }
-hgorup .hgroup-foot .hgroup-foot-commands i img, hgorup .hgroup-foot .hgroup-foot-right i img, .hgroup .hgroup-foot .hgroup-foot-commands i img, .hgroup .hgroup-foot .hgroup-foot-right i img { vertical-align: baseline; }
-hgorup .hgroup-foot:after, .hgroup .hgroup-foot:after { content: " "; display: block; height: 0; clear: both; }
-hgorup .hgroup-footer, .hgroup .hgroup-footer { position: relative; width: 100%; }
-hgorup .hgroup-footer *, .hgroup .hgroup-footer * { margin-bottom: 0; }
-hgorup .hgroup-footer .hgroup-footer-title, hgorup .hgroup-footer .hgroup-footer-left, .hgroup .hgroup-footer .hgroup-footer-title, .hgroup .hgroup-footer .hgroup-footer-left { float: left; }
-hgorup .hgroup-footer .hgroup-footer-title i, hgorup .hgroup-footer .hgroup-footer-left i, .hgroup .hgroup-footer .hgroup-footer-title i, .hgroup .hgroup-footer .hgroup-footer-left i { margin-right: 3px; }
-hgorup .hgroup-footer .hgroup-footer-title i img, hgorup .hgroup-footer .hgroup-footer-left i img, .hgroup .hgroup-footer .hgroup-footer-title i img, .hgroup .hgroup-footer .hgroup-footer-left i img { vertical-align: baseline; }
-hgorup .hgroup-footer .hgroup-footer-commands, hgorup .hgroup-footer .hgroup-footer-right, .hgroup .hgroup-footer .hgroup-footer-commands, .hgroup .hgroup-footer .hgroup-footer-right { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; float: right; }
-hgorup .hgroup-footer .hgroup-footer-commands > *, hgorup .hgroup-footer .hgroup-footer-right > *, .hgroup .hgroup-footer .hgroup-footer-commands > *, .hgroup .hgroup-footer .hgroup-footer-right > * { display: inline; zoom: 1; display: inline-block; position: relative; }
-hgorup .hgroup-footer .hgroup-footer-commands p, hgorup .hgroup-footer .hgroup-footer-right p, .hgroup .hgroup-footer .hgroup-footer-commands p, .hgroup .hgroup-footer .hgroup-footer-right p { cursor: default; margin: 0; }
-hgorup .hgroup-footer .hgroup-footer-commands li, hgorup .hgroup-footer .hgroup-footer-commands a, hgorup .hgroup-footer .hgroup-footer-right li, hgorup .hgroup-footer .hgroup-footer-right a, .hgroup .hgroup-footer .hgroup-footer-commands li, .hgroup .hgroup-footer .hgroup-footer-commands a, .hgroup .hgroup-footer .hgroup-footer-right li, .hgroup .hgroup-footer .hgroup-footer-right a { cursor: pointer; text-decoration: none; }
-hgorup .hgroup-footer .hgroup-footer-commands i, hgorup .hgroup-footer .hgroup-footer-right i, .hgroup .hgroup-footer .hgroup-footer-commands i, .hgroup .hgroup-footer .hgroup-footer-right i { margin-right: 3px; }
-hgorup .hgroup-footer .hgroup-footer-commands i img, hgorup .hgroup-footer .hgroup-footer-right i img, .hgroup .hgroup-footer .hgroup-footer-commands i img, .hgroup .hgroup-footer .hgroup-footer-right i img { vertical-align: baseline; }
-hgorup .hgroup-footer:after, .hgroup .hgroup-footer:after { content: " "; display: block; height: 0; clear: both; }
-hgorup .hgroup-body, .hgroup .hgroup-body { position: relative; }
-
 aside .aside-header, .aside .aside-header { position: relative; width: 100%; }
 aside .aside-header *, .aside .aside-header * { margin-bottom: 0; }
 aside .aside-header .aside-header-title, aside .aside-header .aside-header-left, .aside .aside-header .aside-header-title, .aside .aside-header .aside-header-left { float: left; }
@@ -737,53 +596,3 @@ aside .aside-footer .aside-footer-commands i, aside .aside-footer .aside-footer-
 aside .aside-footer .aside-footer-commands i img, aside .aside-footer .aside-footer-right i img, .aside .aside-footer .aside-footer-commands i img, .aside .aside-footer .aside-footer-right i img { vertical-align: baseline; }
 aside .aside-footer:after, .aside .aside-footer:after { content: " "; display: block; height: 0; clear: both; }
 aside .aside-body, .aside .aside-body { position: relative; }
-
-fieldset .fieldset-header, .fieldset .fieldset-header { position: relative; width: 100%; }
-fieldset .fieldset-header *, .fieldset .fieldset-header * { margin-bottom: 0; }
-fieldset .fieldset-header .fieldset-header-title, fieldset .fieldset-header .fieldset-header-left, .fieldset .fieldset-header .fieldset-header-title, .fieldset .fieldset-header .fieldset-header-left { float: left; }
-fieldset .fieldset-header .fieldset-header-title i, fieldset .fieldset-header .fieldset-header-left i, .fieldset .fieldset-header .fieldset-header-title i, .fieldset .fieldset-header .fieldset-header-left i { margin-right: 3px; }
-fieldset .fieldset-header .fieldset-header-title i img, fieldset .fieldset-header .fieldset-header-left i img, .fieldset .fieldset-header .fieldset-header-title i img, .fieldset .fieldset-header .fieldset-header-left i img { vertical-align: baseline; }
-fieldset .fieldset-header .fieldset-header-commands, fieldset .fieldset-header .fieldset-header-right, .fieldset .fieldset-header .fieldset-header-commands, .fieldset .fieldset-header .fieldset-header-right { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; float: right; }
-fieldset .fieldset-header .fieldset-header-commands > *, fieldset .fieldset-header .fieldset-header-right > *, .fieldset .fieldset-header .fieldset-header-commands > *, .fieldset .fieldset-header .fieldset-header-right > * { display: inline; zoom: 1; display: inline-block; position: relative; }
-fieldset .fieldset-header .fieldset-header-commands p, fieldset .fieldset-header .fieldset-header-right p, .fieldset .fieldset-header .fieldset-header-commands p, .fieldset .fieldset-header .fieldset-header-right p { cursor: default; margin: 0; }
-fieldset .fieldset-header .fieldset-header-commands li, fieldset .fieldset-header .fieldset-header-commands a, fieldset .fieldset-header .fieldset-header-right li, fieldset .fieldset-header .fieldset-header-right a, .fieldset .fieldset-header .fieldset-header-commands li, .fieldset .fieldset-header .fieldset-header-commands a, .fieldset .fieldset-header .fieldset-header-right li, .fieldset .fieldset-header .fieldset-header-right a { cursor: pointer; text-decoration: none; }
-fieldset .fieldset-header .fieldset-header-commands i, fieldset .fieldset-header .fieldset-header-right i, .fieldset .fieldset-header .fieldset-header-commands i, .fieldset .fieldset-header .fieldset-header-right i { margin-right: 3px; }
-fieldset .fieldset-header .fieldset-header-commands i img, fieldset .fieldset-header .fieldset-header-right i img, .fieldset .fieldset-header .fieldset-header-commands i img, .fieldset .fieldset-header .fieldset-header-right i img { vertical-align: baseline; }
-fieldset .fieldset-header:after, .fieldset .fieldset-header:after { content: " "; display: block; height: 0; clear: both; }
-fieldset .fieldset-heading, .fieldset .fieldset-heading { position: relative; width: 100%; }
-fieldset .fieldset-heading *, .fieldset .fieldset-heading * { margin-bottom: 0; }
-fieldset .fieldset-heading .fieldset-heading-title, fieldset .fieldset-heading .fieldset-heading-left, .fieldset .fieldset-heading .fieldset-heading-title, .fieldset .fieldset-heading .fieldset-heading-left { float: left; }
-fieldset .fieldset-heading .fieldset-heading-title i, fieldset .fieldset-heading .fieldset-heading-left i, .fieldset .fieldset-heading .fieldset-heading-title i, .fieldset .fieldset-heading .fieldset-heading-left i { margin-right: 3px; }
-fieldset .fieldset-heading .fieldset-heading-title i img, fieldset .fieldset-heading .fieldset-heading-left i img, .fieldset .fieldset-heading .fieldset-heading-title i img, .fieldset .fieldset-heading .fieldset-heading-left i img { vertical-align: baseline; }
-fieldset .fieldset-heading .fieldset-heading-commands, fieldset .fieldset-heading .fieldset-heading-right, .fieldset .fieldset-heading .fieldset-heading-commands, .fieldset .fieldset-heading .fieldset-heading-right { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; float: right; }
-fieldset .fieldset-heading .fieldset-heading-commands > *, fieldset .fieldset-heading .fieldset-heading-right > *, .fieldset .fieldset-heading .fieldset-heading-commands > *, .fieldset .fieldset-heading .fieldset-heading-right > * { display: inline; zoom: 1; display: inline-block; position: relative; }
-fieldset .fieldset-heading .fieldset-heading-commands p, fieldset .fieldset-heading .fieldset-heading-right p, .fieldset .fieldset-heading .fieldset-heading-commands p, .fieldset .fieldset-heading .fieldset-heading-right p { cursor: default; margin: 0; }
-fieldset .fieldset-heading .fieldset-heading-commands li, fieldset .fieldset-heading .fieldset-heading-commands a, fieldset .fieldset-heading .fieldset-heading-right li, fieldset .fieldset-heading .fieldset-heading-right a, .fieldset .fieldset-heading .fieldset-heading-commands li, .fieldset .fieldset-heading .fieldset-heading-commands a, .fieldset .fieldset-heading .fieldset-heading-right li, .fieldset .fieldset-heading .fieldset-heading-right a { cursor: pointer; text-decoration: none; }
-fieldset .fieldset-heading .fieldset-heading-commands i, fieldset .fieldset-heading .fieldset-heading-right i, .fieldset .fieldset-heading .fieldset-heading-commands i, .fieldset .fieldset-heading .fieldset-heading-right i { margin-right: 3px; }
-fieldset .fieldset-heading .fieldset-heading-commands i img, fieldset .fieldset-heading .fieldset-heading-right i img, .fieldset .fieldset-heading .fieldset-heading-commands i img, .fieldset .fieldset-heading .fieldset-heading-right i img { vertical-align: baseline; }
-fieldset .fieldset-heading:after, .fieldset .fieldset-heading:after { content: " "; display: block; height: 0; clear: both; }
-fieldset .fieldset-foot, .fieldset .fieldset-foot { position: relative; width: 100%; }
-fieldset .fieldset-foot *, .fieldset .fieldset-foot * { margin-bottom: 0; }
-fieldset .fieldset-foot .fieldset-foot-title, fieldset .fieldset-foot .fieldset-foot-left, .fieldset .fieldset-foot .fieldset-foot-title, .fieldset .fieldset-foot .fieldset-foot-left { float: left; }
-fieldset .fieldset-foot .fieldset-foot-title i, fieldset .fieldset-foot .fieldset-foot-left i, .fieldset .fieldset-foot .fieldset-foot-title i, .fieldset .fieldset-foot .fieldset-foot-left i { margin-right: 3px; }
-fieldset .fieldset-foot .fieldset-foot-title i img, fieldset .fieldset-foot .fieldset-foot-left i img, .fieldset .fieldset-foot .fieldset-foot-title i img, .fieldset .fieldset-foot .fieldset-foot-left i img { vertical-align: baseline; }
-fieldset .fieldset-foot .fieldset-foot-commands, fieldset .fieldset-foot .fieldset-foot-right, .fieldset .fieldset-foot .fieldset-foot-commands, .fieldset .fieldset-foot .fieldset-foot-right { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; float: right; }
-fieldset .fieldset-foot .fieldset-foot-commands > *, fieldset .fieldset-foot .fieldset-foot-right > *, .fieldset .fieldset-foot .fieldset-foot-commands > *, .fieldset .fieldset-foot .fieldset-foot-right > * { display: inline; zoom: 1; display: inline-block; position: relative; }
-fieldset .fieldset-foot .fieldset-foot-commands p, fieldset .fieldset-foot .fieldset-foot-right p, .fieldset .fieldset-foot .fieldset-foot-commands p, .fieldset .fieldset-foot .fieldset-foot-right p { cursor: default; margin: 0; }
-fieldset .fieldset-foot .fieldset-foot-commands li, fieldset .fieldset-foot .fieldset-foot-commands a, fieldset .fieldset-foot .fieldset-foot-right li, fieldset .fieldset-foot .fieldset-foot-right a, .fieldset .fieldset-foot .fieldset-foot-commands li, .fieldset .fieldset-foot .fieldset-foot-commands a, .fieldset .fieldset-foot .fieldset-foot-right li, .fieldset .fieldset-foot .fieldset-foot-right a { cursor: pointer; text-decoration: none; }
-fieldset .fieldset-foot .fieldset-foot-commands i, fieldset .fieldset-foot .fieldset-foot-right i, .fieldset .fieldset-foot .fieldset-foot-commands i, .fieldset .fieldset-foot .fieldset-foot-right i { margin-right: 3px; }
-fieldset .fieldset-foot .fieldset-foot-commands i img, fieldset .fieldset-foot .fieldset-foot-right i img, .fieldset .fieldset-foot .fieldset-foot-commands i img, .fieldset .fieldset-foot .fieldset-foot-right i img { vertical-align: baseline; }
-fieldset .fieldset-foot:after, .fieldset .fieldset-foot:after { content: " "; display: block; height: 0; clear: both; }
-fieldset .fieldset-footer, .fieldset .fieldset-footer { position: relative; width: 100%; }
-fieldset .fieldset-footer *, .fieldset .fieldset-footer * { margin-bottom: 0; }
-fieldset .fieldset-footer .fieldset-footer-title, fieldset .fieldset-footer .fieldset-footer-left, .fieldset .fieldset-footer .fieldset-footer-title, .fieldset .fieldset-footer .fieldset-footer-left { float: left; }
-fieldset .fieldset-footer .fieldset-footer-title i, fieldset .fieldset-footer .fieldset-footer-left i, .fieldset .fieldset-footer .fieldset-footer-title i, .fieldset .fieldset-footer .fieldset-footer-left i { margin-right: 3px; }
-fieldset .fieldset-footer .fieldset-footer-title i img, fieldset .fieldset-footer .fieldset-footer-left i img, .fieldset .fieldset-footer .fieldset-footer-title i img, .fieldset .fieldset-footer .fieldset-footer-left i img { vertical-align: baseline; }
-fieldset .fieldset-footer .fieldset-footer-commands, fieldset .fieldset-footer .fieldset-footer-right, .fieldset .fieldset-footer .fieldset-footer-commands, .fieldset .fieldset-footer .fieldset-footer-right { -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; float: right; }
-fieldset .fieldset-footer .fieldset-footer-commands > *, fieldset .fieldset-footer .fieldset-footer-right > *, .fieldset .fieldset-footer .fieldset-footer-commands > *, .fieldset .fieldset-footer .fieldset-footer-right > * { display: inline; zoom: 1; display: inline-block; position: relative; }
-fieldset .fieldset-footer .fieldset-footer-commands p, fieldset .fieldset-footer .fieldset-footer-right p, .fieldset .fieldset-footer .fieldset-footer-commands p, .fieldset .fieldset-footer .fieldset-footer-right p { cursor: default; margin: 0; }
-fieldset .fieldset-footer .fieldset-footer-commands li, fieldset .fieldset-footer .fieldset-footer-commands a, fieldset .fieldset-footer .fieldset-footer-right li, fieldset .fieldset-footer .fieldset-footer-right a, .fieldset .fieldset-footer .fieldset-footer-commands li, .fieldset .fieldset-footer .fieldset-footer-commands a, .fieldset .fieldset-footer .fieldset-footer-right li, .fieldset .fieldset-footer .fieldset-footer-right a { cursor: pointer; text-decoration: none; }
-fieldset .fieldset-footer .fieldset-footer-commands i, fieldset .fieldset-footer .fieldset-footer-right i, .fieldset .fieldset-footer .fieldset-footer-commands i, .fieldset .fieldset-footer .fieldset-footer-right i { margin-right: 3px; }
-fieldset .fieldset-footer .fieldset-footer-commands i img, fieldset .fieldset-footer .fieldset-footer-right i img, .fieldset .fieldset-footer .fieldset-footer-commands i img, .fieldset .fieldset-footer .fieldset-footer-right i img { vertical-align: baseline; }
-fieldset .fieldset-footer:after, .fieldset .fieldset-footer:after { content: " "; display: block; height: 0; clear: both; }
-fieldset .fieldset-body, .fieldset .fieldset-body { position: relative; }

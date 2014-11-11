@@ -1,10 +1,10 @@
 @charset "UTF-8";
 @import 'nody-kit';
 /*
-	modernizer & look and feel support
-	auther        : hojugn ahn (open9.net)
+	modernizer support
+	auther        : hojugn ahn (https://github.com/labeldock/Nody_SASS)
 	target-compatibility : IE8+;
-	version       : 1.9.1
+	version       : 2.0
 */
 
 /*****************************
@@ -27,36 +27,20 @@ a   { text-decoration:none; }
  HTML5fix */
 article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary, command, fieldset{ display:block; }
 audio,canvas,progress,video {@include inline-block;}
-template,.hidden,.template,.folder { 
-	display: none; 
+template,.hidden,.template {
+	@include show-toggle-veriant(".show",block);
+	&.inline { @include show-toggle-veriant(".show",inline); }
+	&.inline-block { @include show-toggle-veriant(".show",inline-block); }
 }
 
 /* baseline */
-.baseline { @include baseline-group(auto,"div,th,td"); }
+.baseline { @include baseline-veriant(auto,"div,th,td"); }
 
 /*****************************
  menu style */
-menu,ul.menu { @include menu-style; }
-.block-menu  { @include menu-style(left,block);}
-.inline-menu { @include menu-style(left,inline-block);}
-
-/*************************
-html5 template extention */
-template,.hidden,.template,.folder {
-	@include hidden-appearance(".show");
-	@include hidden-appearance(".active");
-}
-
-/*****************************
- tool-group */
-.tool-group,.tool-group-inline{ > * { display:none; } }
-.tool-group { > .show ,> .active { display:block; } }
-.tool-group-inline { > .show ,> .active { @include inline-block; } }
-.tool {
-	display:none;
-	@include hidden-appearance(".active");
-}
-
+menu,ul.menu { @include menu-veriant; }
+.block-menu  { @include menu-veriant(left,block);}
+.inline-menu { @include menu-veriant(left,inline-block);}
 
 /*****************************
  - frame은 공간이다.
@@ -73,35 +57,12 @@ template,.hidden,.template,.folder {
  - bar
  - caption
 */
-.fieldset{
-	&,&-top,&-bottom { @include common-layout-setting(expend); }
-}
-.fieldset,.layout,.toolbar,.bar,.caption { 
-	&-top    { margin-bottom:10px; }
-	&-bottom { margin-top:10px; }
-	
-	&-middle { 
-		margin-bottom:10px; 
-		margin-top:10px;
-		
-	}
-	&-middle-sm { 
-		margin-bottom:5px; 
-		margin-top:5px;
-	}
-	&-middle-right {
-		padding-right:10px;
-		&-sm { padding-right:5px; }
-	}
-	&-top-sm    { margin-bottom:5px; }
-	&-bottom-sm { margin-top:5px; }
-}
-fieldset,.layout,.caption { @include common-layout-setting(expend); }
-table.layout { @include grid-table(baseline,0px,0px); }
+fieldset,.layout { @include layout-container-veriant(expend); }
 
 /********
 block */
-.block { display:block;
+.block { 
+	display:block;
 	&-center{ margin-left:auto;margin-right:auto;}
 	&-left{ margin-right:auto;margin-left:0px;}
 	&-right{ margin-left:auto;margin-right:0px;}
@@ -197,6 +158,7 @@ $xl:20px;
 	.text-#{$direction}{text-align:#{$direction} !important;} 
 	
 }
+
 /*text weight*/
 .text-weak  {font-weight:200    !important;}
 .text-normal{font-weight:normal !important;}
@@ -227,28 +189,6 @@ $xl:20px;
 	&danger  { @include badge-in-set; color: #fff; background-color:#d9534f;}
 }
 
-
-/********
- grid */
-table.grid{ @include grid-table; th,td{ vertical-align:top; } }
-table.grid-default{ >thead,>tbody,>tfoot{>tr{>th,>td{border-width:0 !important;}}}}
-table.grid-top, tbody.grid-top, thead.grid-top, tfoot.grid-top, tr.grid-top{ 
-	th,td{ vertical-align:top; } 
-}
-.grid-top{ vertical-align:top !important; }
-table.grid-middle, tbody.grid-middle, thead.grid-middle, tfoot.grid-middle, tr.grid-middle{ 
-	th,td{ vertical-align:middle; } 
-}
-.grid-middle{ vertical-align:middle !important; }
-table.grid-bottom, tbody.grid-bottom, thead.grid-bottom, tfoot.grid-bottom, tr.grid-bottom{ 
-	th,td{ vertical-align:bottom; } 
-}
-.grid-bottom{ vertical-align:bottom !important; }
-/*grid*/
-@for $i from 2 to 13 {
-	$c:#{$i*5};
-	.grid-#{$c} th,.grid-#{$c} td{height:#{$c}px;}
-}
 /********
  table */
 .table-fixed{table-layout:fixed;}
@@ -326,6 +266,6 @@ span.ellipsis { @include inline-block;margin:0px;padding:0px;width:100%; }
 					 ('main','main,.main'),
 					 ('section','section,.section'),
 					 ('article','article,.article'),
-					 ('hgroup','hgorup,.hgroup'),
 					 ('aside','aside,.aside'),
-					 ('fieldset','fieldset,.fieldset') { @include paragraphModel($model,$sel); }
+{ @include panel-veriant($model,$sel); }
+
