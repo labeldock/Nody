@@ -4,23 +4,23 @@
 // lincense    // MIT lincense
 // GIT         // https://github.com/labeldock/Nody
 //Nody CoreFoundation
-(+(function(W,NativeCore){
-	
+
+(function(W,NGetters,NSingletons,NModules,NStructure){
 	// 버전
-	var version = "0.7.5";
-	var build   = "731";
+	var version = new String("0.7.7");
+	var build   = new String("733");
 	
 	// 이미 불러온 버전이 있는지 확인
-	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); return ; } else { W.nody = version; }
+	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	
 	// 코어버전
-	var nodyCoreVersion = "1.6";
-	var nodyCoreBuild   = "71";
+	var nodyCoreVersion = new String("1.7");
+	var nodyCoreBuild   = new String("72");
 	
 	// 콘솔설정 : ie에러 고침 : adobe air
 	if (typeof W.console !== "object"){W.console = {};} 'log info warn error count assert dir clear profile profileEnd"'.replace(/\S+/g,function(n){ 
 		if(!(n in W.console)){W.console[n] = function(){
-			if(typeof air == "object")if("trace" in air){
+			if(typeof air === "object") if("trace" in air){
 				var args = Array.prototype.slice.call(arguments);
 				var traces = [];
 				for(var i=0,l=args.length;i<l;i++){
@@ -42,7 +42,7 @@
 	});
 	
 	// MARK("name") 두번호출하면 시간을 측정할수 있음
-	var MARKO = {};W.MARK = function(name){ if(typeof name == "string" || typeof name == "number") { name = name+""; if(typeof MARKO[name] == "number") { console.info("MARK::"+name+" => "+ (+new Date() - MARKO[name])); delete MARKO[name]; } else { console.info("MARK START::"+name); MARKO[name] = +new Date(); } } };
+	var MARKO = {};W.MARK = function(name){ if(typeof name === "string" || typeof name === "number") { name = name+""; if(typeof MARKO[name] === "number") { console.info("MARK::"+name+" => "+ (+new Date() - MARKO[name])); delete MARKO[name]; } else { console.info("MARK START::"+name); MARKO[name] = +new Date(); } } };
 	
 	//IE8 TRIM FIX
 	if(!String.prototype.trim) String.prototype.trim = function() { return this.replace(/(^\s*)|(\s*$)/gi, ""); };
@@ -61,54 +61,69 @@
 			return W.TOSTRING(obj,Number.POSITIVE_INFINITY,true);
  		}
 	};
-	if(typeof W.JSON == "undefined"){W.JSON = aJSON;};
+	if(typeof W.JSON === "undefined"){W.JSON = aJSON;}
 	
 	//IE8 Success FIX
-	if (typeof W.success == "function"){W.success = "success";};
+	if (typeof W.success === "function"){W.success = "success";}
 	
 	//IE8 function bind FIX
 	if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { /* closest thing possible to the ECMAScript 5 internal IsCallable function */ throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments,1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }
 	
 	//NativeCore console trace
 	W.NativeModule   = function(name){
-		if (NativeCore.Modules[name]) {
-			var result = name + "(" + /\(([^\)]*)\)/.exec( ((NativeCore.Modules[name].prototype["set"])+"") )[1] + ")"
+		if (NModules[name]) {
+			var result = name + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype["set"])+"") )[1] + ")";
 			var i2 = 0;
-			for(protoName in NativeCore.Modules[name].prototype ) switch(protoName){
+			for(var protoName in NModules[name].prototype ) switch(protoName){
 				case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__GlobalConstructor__":
 					break;
 				default:
-					if(typeof NativeCore.Modules[name].prototype[protoName] == "function") result += "\n    " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NativeCore.Modules[name].prototype[protoName])+"") )[1] + ")" ;
+					if(typeof NModules[name].prototype[protoName] === "function") result += "\n    " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype[protoName])+"") )[1] + ")" ;
 					i2++;
 					break;
 			}
 			return result;
 		} else {
-			return name + " module is not found."
+			return name + " module is not found.";
 		}
 	};
 	
 	W.NativeTrace = function(){ 
-		var logText = [];
+		var i,key,logText = [];
 		//Getter
 		var getterText = "# Native Getter";
-		for (var i=0,l=NativeCore.Getters.length;i<l;i++) getterText += "\n" + i + " : " + NativeCore.Getters[i];
-		logText.push(getterText)
+		for (i=0,l=NGetters.length;i<l;i++){
+			getterText += "\n";
+			getterText += i;
+			getterText += " : ";
+			getterText += NGetters[i];
+		}
+		
+		logText.push(getterText);
 		//Sigletons
 		var singletonText = "# Native Singleton";
-		var i=0;
-		for ( key in NativeCore.Singletons ) {
-			singletonText += "\n" + i + " : " + key ;
-			var i2=0;
+		i=0;
+		for (key in NSingletons ) {
+			singletonText += "\n";
+			singletonText += i;
+			singletonText += " : ";
+			singletonText += key;
+			
+			var protoName,i2=0;
 			switch(key){
 				case "SpecialFoundation": case "ELUT": case "NODY": case "FINDEL": case "ElementFoundation": case "ElementGenerator":
 					var count = 0;
-					for( protoName in NativeCore.Singletons[key].constructor.prototype) count++;
-					singletonText += "\n    [" + count + "]...";
+					for(protoName in NSingletons[key].constructor.prototype) count++;
+					singletonText += "\n    [";
+					singletonText += count;
+					singletonText += "]...";
 					break;
 				default:
-					for( protoName in NativeCore.Singletons[key].constructor.prototype) {
-						singletonText += "\n    " + i2 + " : " + protoName;
+					for(protoName in NSingletons[key].constructor.prototype) {
+						singletonText += "\n";
+						singletonText += i2;
+						singletonText += " : ";
+						singletonText += protoName;
 						i2++;
 					}
 					break;
@@ -118,9 +133,12 @@
 		logText.push(singletonText);
 		//Module
 		var moduleText = "# Native Module";
-		var i=0;
-		for ( key in NativeCore.Modules ) {
-			moduleText += "\n " + i + " : " + W.NativeModule(key);
+		i=0;
+		for (key in NModules ) {
+			moduleText += "\n " ;
+			moduleText += i;
+			moduleText += " : ";
+			moduleText += W.NativeModule(key);
 			i++;
 		}
 		logText.push(moduleText);
@@ -129,42 +147,40 @@
 	
 	//NativeCore Start
 	var NativeFactoryObject = function(type,name,sm,gm){
-		if( !(name in NativeCore.Modules) ){
+		if( !(name in NModules) ){
 			var nativeProto,setter,getter;
 			switch(type){
 				case "object":
 					nativeProto = {};
-					setter      = typeof sm == "function" ? function(v){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : function(v){ this.Source = v; return this; };
+					setter      = typeof sm === "function" ? function(v){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : function(v){ this.Source = v; return this; };
 					getter      = gm?gm:function(){return this.Source;};
 					break;
 				case "array":
 					nativeProto = [];
-					setter      = typeof sm == "function" ? sm : function(v){ return this.setSource(v); };
+					setter      = typeof sm === "function" ? sm : function(v){ return this.setSource(v); };
 					getter      = function(){ return this.toArray.apply(this,arguments); };
 					break;
 				
-				default:
-					throw new Error("NativeFactoryObject :: 옳지않은 타입이 이니셜라이징 되고 있습니다. => " + type)
-					break;	
+				default: throw new Error("NativeFactoryObject :: 옳지않은 타입이 이니셜라이징 되고 있습니다. => " + type);
 			}
-			var nativeConstructor = function(){ if(typeof this.set == "function"){ for(protoKey in NativeCore.Modules[name].prototype){ if(protoKey.indexOf("var!") == 0) this[protoKey.substr(4)] = NativeCore.Modules[name].prototype[protoKey]; }; this.set.apply(this,Array.prototype.slice.apply(arguments)); } };
-			NativeCore.Modules[name]               = nativeConstructor;
-			NativeCore.Modules[name].prototype     = nativeProto;
-			NativeCore.Modules[name].prototype.set = setter;
-			NativeCore.Modules[name].prototype.get = getter;
+			var nativeConstructor = function(){ if(typeof this.set === "function"){ for(var protoKey in NModules[name].prototype){ if(protoKey.indexOf("var!") == 0) this[protoKey.substr(4)] = NModules[name].prototype[protoKey]; }; this.set.apply(this,Array.prototype.slice.apply(arguments)); } };
+			NModules[name]               = nativeConstructor;
+			NModules[name].prototype     = nativeProto;
+			NModules[name].prototype.set = setter;
+			NModules[name].prototype.get = getter;
 			//native concept
-			NativeCore.Modules[name].prototype.__NativeType__        = type;
-			NativeCore.Modules[name].prototype.__NativeHistroy__     = [name];
-			NativeCore.Modules[name].prototype.__NativeClass__       = function(n){ return this.__NativeHistroy__[this.__NativeHistroy__.length - 1] == n };
+			NModules[name].prototype.__NativeType__        = type;
+			NModules[name].prototype.__NativeHistroy__     = [name];
+			NModules[name].prototype.__NativeClass__       = function(n){ return this.__NativeHistroy__[this.__NativeHistroy__.length - 1] == n };
 			//
-			NativeCore.Modules[name].prototype.constructor = nativeConstructor;
-			NativeCore.Modules[name].prototype._super = function(){
+			NModules[name].prototype.constructor = nativeConstructor;
+			NModules[name].prototype._super = function(){
 				//scope start
 				var currentScopeDepth,currentScopeModuleName,currentScopePrototype,currentMethodName,currentCallMethod=arguments.callee.caller,superScope = 0;
 				for(scopeMax=this.__NativeHistroy__.length;superScope<scopeMax;superScope++){
 					currentScopeDepth      = (this.__NativeHistroy__.length - 1) - superScope ;
 					currentScopeModuleName = this.__NativeHistroy__[currentScopeDepth];
-					currentScopePrototype  = NativeCore.Modules[currentScopeModuleName].prototype.constructor.prototype;
+					currentScopePrototype  = NModules[currentScopeModuleName].prototype.constructor.prototype;
 					currentMethodName;
 					for(var key in currentScopePrototype){
 						if(key !== "_super" && currentScopePrototype[key] == currentCallMethod){
@@ -174,7 +190,7 @@
 					}
 					if(typeof currentMethodName !== "undefined"){ break; }
 				}
-				if(typeof currentMethodName == "undefined"){
+				if(typeof currentMethodName === "undefined"){
 					console.error("NodyNativeCore::_super::해당 함수에 그러한 프로토타입이 존재하지 않습니다.",currentCallMethod);
 					return undefined;
 				}
@@ -183,11 +199,11 @@
 				for(var i=0,l=currentScopeDepth;i<l;i++){
 					var nextScopeDepth       = this.__NativeHistroy__.length - superScope - 2;
 					var nextScopeName        = this.constructor.prototype.__NativeHistroy__[nextScopeDepth];
-					var nextScopeConstructor = NativeCore.Modules[nextScopeName];
+					var nextScopeConstructor = NModules[nextScopeName];
 					var nextScopePrototype   = nextScopeConstructor.prototype;
 					var nextSuperMethod      = nextScopeConstructor.prototype[currentMethodName];
 					superScope++;
-					if(typeof nextSuperMethod == "function"){
+					if(typeof nextSuperMethod === "function"){
 						if(currentCallMethod !== nextSuperMethod){
 							result = nextSuperMethod.apply(this,Array.prototype.slice.call(arguments));
 							break;
@@ -205,10 +221,10 @@
 		}
 	};
 	var NativeFactoryExtend = function(name,methods,setflag,getflag){
-		if( (typeof methods == "object") && (name in NativeCore.Modules)){
-			var protoObject = NativeCore.Modules[name].prototype;
-			if(typeof setflag == "function"){ methods.set = setflag; setflag = true; }
-			if(typeof getflag == "function"){ methods.get = getflag; getflag = true; }
+		if( (typeof methods === "object") && (name in NModules)){
+			var protoObject = NModules[name].prototype;
+			if(typeof setflag === "function"){ methods.set = setflag; setflag = true; }
+			if(typeof getflag === "function"){ methods.get = getflag; getflag = true; }
 			for(var key in methods){ switch(key){
 				case "constructor":case "_super":
 					break;
@@ -226,18 +242,18 @@
 		}
 	};
 	var NativeFactoryDeploy = function(name){
-		if(name in NativeCore.Modules) {
+		if(name in NModules) {
 			//shortcutConstructor\
 			W["_"+name] = function(){
 				var scArgs = Array.prototype.slice.call(arguments);
-				scArgs.unshift(NativeCore.Modules[name]);
-				return new (Function.prototype.bind.apply(NativeCore.Modules[name],scArgs)); 
+				scArgs.unshift(NModules[name]);
+				return new (Function.prototype.bind.apply(NModules[name],scArgs)); 
 			};
-			NativeCore.Modules[name].prototype.__GlobalConstructor__ = window["_"+name];
+			NModules[name].prototype.__GlobalConstructor__ = window["_"+name];
 			//newConstructor
-			W[ (/^(Object|Array|String|Number)$/.test(name) ? "A"+name : name) ] = NativeCore.Modules[name];
+			W[ (/^(Object|Array|String|Number)$/.test(name) ? "A"+name : name) ] = NModules[name];
 		}
-	}
+	};
 	W.makeModule = function(name,proto,setter,getter){
 		if(NativeFactoryObject("object",name)){
 			NativeFactoryExtend(name,proto,setter,getter);
@@ -251,15 +267,12 @@
 		}
 	};
 	W.extendModule = function(parentName,name,methods,setter,getter){
-		var parentConstructor = NativeCore.Modules[parentName];
-		if(typeof parentConstructor == "undefined"){
-			throw new Error("확장할 behavior ("+parentName+")가 없습니다"+TOSTRING(NativeCore.Modules));
-			return false;
-		}
+		var parentConstructor = NModules[parentName];
+		if(typeof parentConstructor === "undefined") throw new Error("확장할 behavior ("+parentName+")가 없습니다"+TOSTRING(NModules));
 		
 		//새 오브젝트 만들기
 		if(NativeFactoryObject(parentConstructor.prototype.__NativeType__,name)){
-			var extendConstructor = NativeCore.Modules[name];
+			var extendConstructor = NModules[name];
 			NativeFactoryExtend(name,parentConstructor.prototype,true,true);
 			NativeFactoryExtend(name,methods,setter,getter);
 			extendConstructor.prototype["__NativeHistroy__"].push(name);
@@ -268,7 +281,7 @@
 		}
 	};
 	//Getter:Core
-	W.makeGetter    = function(n,m){ var name=n.toUpperCase(); W[name]=m; NativeCore.Getters.push(name); };
+	W.makeGetter    = function(n,m){ var name=n.toUpperCase(); W[name]=m; NGetters.push(name); };
 	structruePrototype = {
 		"get":function(key){ if(key) return this.Source[key]; return this.Source; },
 		"empty":function(){ for(var k in this.Source) delete this.Source[k]; return this.Source; },
@@ -280,10 +293,10 @@
 	};
 	W.makeStructure = function(n,m){
 		if(typeof n !== "string" || typeof m !== "function") return console.warn("makeStructure::worng arguments!");
-		NativeCore.Structure[n]=function(){ this.Source={};m.apply(this,Array.prototype.slice.call(arguments)); };
-		NativeCore.Structure[n].prototype = {"constructor":m};
-		for(var key in structruePrototype) NativeCore.Structure[n].prototype[key] = structruePrototype[key];
-		window[n] = NativeCore.Structure[n];
+		NStructure[n]=function(){ this.Source={};m.apply(this,Array.prototype.slice.call(arguments)); };
+		NStructure[n].prototype = {"constructor":m};
+		for(var key in structruePrototype) NStructure[n].prototype[key] = structruePrototype[key];
+		window[n] = NStructure[n];
 	};
 	//Data가 
 	StructureInit = function(n,o){ return (o instanceof W[n]) ? o : new W[n](o); };
@@ -291,7 +304,7 @@
 	W.makeSingleton = function(n,m,i){
 		var o=i?i:function(){};
 		for(var cname in m) {
-			if(typeof cname == "string" && cname.indexOf("Structure#")==0){
+			if(typeof cname === "string" && cname.indexOf("Structure#")===0){
 				var dataName = cname.substr(10);
 				if( dataName.length > 0) W.makeStructure(dataName,m[cname]);
 				delete m[cname];
@@ -300,21 +313,25 @@
 		o.prototype=m;
 		o.prototype.constructor=o;
 		o.prototype.eachGetterWithPrefix=function(){
-			for(var k in o.prototype) switch(k){
-				case "eachGetter":case "eachGetterWithPrefix":case "constructor":break;
-				default: W.makeGetter(n+k,o.prototype[k]); break;
+			for(var k in o.prototype){
+				switch(k){
+					case "eachGetter":case "eachGetterWithPrefix":case "constructor":break;
+					default: W.makeGetter(n+k,o.prototype[k]); break;
+				}
 			}
-		}
+		};
 		o.prototype.eachGetter=function(){
-			for(var k in o.prototype) switch(k){
-				case "eachGetter":case "eachGetterWithPrefix":case "constructor":break;
-				default: W.makeGetter(k,o.prototype[k]); break;
+			for(var k in o.prototype){
+				switch(k){
+					case "eachGetter":case "eachGetterWithPrefix":case "constructor":break;
+					default: W.makeGetter(k,o.prototype[k]); break;
+				}
 			}
 		};
 		W[n]=new o();
-		NativeCore.Singletons[n]=W[n];
+		NSingletons[n]=W[n];
 	};
-	W.makeGetters   = function(o){ if(typeof o == "object") for(var k in o) W.makeGetter(k,o[k]); };
+	W.makeGetters   = function(o){ if(typeof o === "object") for(var k in o) W.makeGetter(k,o[k]); };
 	
 	// Foundation UTility
 	var FUT_CACHE;
@@ -323,42 +340,36 @@
 		"CONTINUTILITY":function(func,over,owner){
 			return function(){
 				var args = Array.prototype.slice.apply(arguments);
-				for(var i=TONUMBER(over,1),l=args.length;i<l;i++) if(typeof args[i] == "function"){
+				for(var i=TONUMBER(over,1),l=args.length;i<l;i++) if(typeof args[i] === "function"){
 					return args[i].apply(owner,[func.apply(owner,args.slice(0,i))].concat(args.slice(i+1,l))); 
 					break;
 				}
 				return func.apply(owner,args);
-			}
+			};
 		},
 		//URL Info
 		"PAGEURLINFO":function(url){
-			if(typeof url == "object") {
-				if( url["ConstructorMark"] ==  ("ClientURLInfo" + W.nody)){
-					return url;
-				} else {
-					null;
-				}
-			}
+			if(typeof url === "object") return ( url["ConstructorMark"] === ("ClientURLInfo" + W.nody)) ? url : null;
 			try {
 				var info = /([\w]+)(\:[\/]+)([^/]*\@|)([\w\d\.\-\_\+]+)(\:[\d]+|)(\/|)([\w\d\.\/\-\_]+|)(\?[\d\w\=\&\%]+|)(\#[\d\w]*|)/.exec(url?url:this.url());
-				return {
-					"ConstructorMark" : "ClientURLInfo" + W.nody,
-					"url"      : this.url(),
-					"protocol" : info[1],
-					"divider"  : info[2],
-					"userinfo" : info[3],
-					"hostname" : info[4],
-					"port"     : info[5].substring(1),
-					"path"     : info[6]+info[7],
-					"query"    : info[8],
-					"fragment" : info[9],
-					"filename" : /(\/|)([\w\d\.\-\_]+|)$/.exec(info[6]+info[7])[2]
-				}
 			} catch(e) {
 				return null;
 			}
+			return {
+				"ConstructorMark" : "ClientURLInfo" + W.nody,
+				"url"      : this.url(),
+				"protocol" : info[1],
+				"divider"  : info[2],
+				"userinfo" : info[3],
+				"hostname" : info[4],
+				"port"     : info[5].substring(1),
+				"path"     : info[6]+info[7],
+				"query"    : info[8],
+				"fragment" : info[9],
+				"filename" : /(\/|)([\w\d\.\-\_]+|)$/.exec(info[6]+info[7])[2]
+			};
 		},
-		"PAGEROOT":function(url){ var h = FUT.PAGEURLINFO(url); return h.protocol + h.divider + h.hostname + (h.port != ""?":"+h.port:h.port) + (slash==false?"":"/"); },
+		"PAGEROOT":function(url){ var h = FUT.PAGEURLINFO(url); return h.protocol + h.divider + h.hostname + (h.port !== ""?":"+h.port:h.port) + (slash===false?"":"/"); },
 		//current loading page info
 		"LOADINGSCRIPTURL":function(){ 
 			var scripts = document.getElementsByTagName('script');
@@ -375,16 +386,16 @@
 		},
 		"LOADINGSCRIPTROOT":function(){ return FUT.LOADINGSCRIPTURL().replace(/([^\/]+$)/,""); },
 		"INCLUDE":function(aFilename){
-			var filetype = /\.([^\.]+)$/.exec(aFilename)[1];
-			if (filetype=="js"){ 
+			var fileref,filetype = /\.([^\.]+)$/.exec(aFilename)[1];
+			if (filetype==="js"){ 
 				//if aFilename is a external JavaScript file
-				var fileref=document.createElement('script');
+				fileref=document.createElement('script');
 				fileref.setAttribute("type","text/javascript");
 				fileref.setAttribute("src", aFilename);
 			}
-			else if (filetype=="css") {
+			else if (filetype==="css") {
 				//if aFilename is an external CSS file
-				var fileref=document.createElement("link");
+				fileref=document.createElement("link");
 				fileref.setAttribute("rel", "stylesheet");
 				fileref.setAttribute("type", "text/css");
 				fileref.setAttribute("href", aFilename);
@@ -398,7 +409,7 @@
 		},
 		"CACHESET"  :function(s,n,v){ if( !(s in FUT_CACHE) ) FUT_CACHE[s] = {}; FUT_CACHE[s][n] = v; },
 		"CACHEGET"  :function(s,n)  { if( this.CACHEIN(s,n) ) return FUT_CACHE[s][n]; },
-		"CACHECLEAR":function()     { FUT_CACHE = {"SELECTINFO":{"":{}},"AreaContent":{}}},
+		"CACHECLEAR":function()     { FUT_CACHE = {"SELECTINFO":{"":{}},"AreaContent":{}}; },
 		"CACHETRACE":function()     { return JSON.stringify(FUT_CACHE); }
 	});
 	FUT.CACHECLEAR();
@@ -417,37 +428,38 @@
 		"nothing"     : "ISNOTHING",
 		"meaning"     : "ISMEANING",
 		"enough"     : "ISENOUGH"
-	}
+	};
+	
 	makeSingleton("TypeBase",{
 		// // 데이터 타입 검사
 		"ISUNDEFINED": function (t) {return typeof t === "undefined" ? true : false ;},
 		"ISDEFINED"  : function (t) {return typeof t !== "undefined" ? true : false ;},
 		"ISNULL"     : function (t) {return t === null ? true : false;},
-		"ISNIL"      : function (t) {return ((t === null) || (typeof t == "undefined")) ? true : false;},
+		"ISNIL"      : function (t) {return ((t === null) || (typeof t === "undefined")) ? true : false;},
 		
-		"ISFUNCTION" : function (t) {return typeof t == "function" ? true : false;},
-		"ISBOOLEAN"  : function (t) {return typeof t == "boolean"  ? true : false;},
-		"ISOBJECT"   : function (t) {return typeof t == "object"   ? true : false;},
-		"ISSTRING"   : function (t) {return typeof t == "string"   ? true : false;},
-		"ISNUMBER"   : function (t) {return typeof t == "number"   ? true : false;},
-		"ISNUMBERTEXT" : function (t) {return (typeof t == "number") ? true : ((typeof t == "string") ? (parseFloat(t)+"") == (t+"") : false );},
+		"ISFUNCTION" : function (t) {return typeof t === "function" ? true : false;},
+		"ISBOOLEAN"  : function (t) {return typeof t === "boolean"  ? true : false;},
+		"ISOBJECT"   : function (t) {return typeof t === "object"   ? true : false;},
+		"ISSTRING"   : function (t) {return typeof t === "string"   ? true : false;},
+		"ISNUMBER"   : function (t) {return typeof t === "number"   ? true : false;},
+		"ISNUMBERTEXT" : function (t) {return (typeof t === "number") ? true : ((typeof t === "string") ? (parseFloat(t)+"") == (t+"") : false );},
 		
-		"ISJQUERY"   : function(o){ return (typeof o == "object" && o !== null ) ? ("jquery" in o) ? true : false : false; },
-		"ISARRAY"    : function(a){ return (typeof a == "object" || typeof a == "function") ? ( a !== null && ((a instanceof Array || a instanceof NodeList || ISJQUERY(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) ) ? true : false) : false; },
+		"ISJQUERY"   : function(o){ return (typeof o === "object" && o !== null ) ? ("jquery" in o) ? true : false : false; },
+		"ISARRAY"    : function(a){ return (typeof a === "object" || typeof a === "function") ? ( a !== null && ((a instanceof Array || a instanceof NodeList || ISJQUERY(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) ) ? true : false) : false; },
 		"ISEMAIL"    : function(t){ return TypeBase.ISTEXT(t) ? /^[\w]+\@[\w]+\.[\.\w]+/.test(t) : false;},
 		"ISASCII"    : function(t){ return TypeBase.ISTEXT(t) ? /^[\x00-\x7F]*$/.test(t)         : false;},
 		"ISTRUE"     : function(t){ return !!t ? true : false;},
 		"ISFALSE"    : function(t){ return  !t ? false : true;},
 		
 		//문자나 숫자이면 참
-		"ISTEXT" :function(v){ return (typeof v == "string" || typeof v == "number") ? true : false; },
+		"ISTEXT" :function(v){ return (typeof v === "string" || typeof v === "number") ? true : false; },
 		
 		// // 엘리먼트 유형 검사
-		"ISWINDOW"  :function(a){ if(typeof a == "object") return "navigator" in a; return false; },
-		"ISDOCUMENT":function(a){ return typeof a == "object" ? a.nodeType == 9 ? true : false : false; },
-		"ISELNODE"  :function(a){ if(a == null) return false; if(typeof a == "object") if(a.nodeType == 1 || ISDOCUMENT(a) ) return true; return false;},
+		"ISWINDOW"  :function(a){ if(typeof a === "object") return "navigator" in a; return false; },
+		"ISDOCUMENT":function(a){ return typeof a === "object" ? a.nodeType == 9 ? true : false : false; },
+		"ISELNODE"  :function(a){ if(a == null) return false; if(typeof a === "object") if(a.nodeType == 1 || ISDOCUMENT(a) ) return true; return false;},
 		"HASELNODE" :function(a){ if( ISARRAY(a) ){ for(var i=0,l=a.length;i<l;i++) if(ISELNODE(a[i])) return true; return false; } else { return ISELNODE(a); } },
-		"ISTEXTNODE":function(a){ if(a == null) return false; if(typeof a == "object") if(a.nodeType == 3 || a.nodeType == 8) return true; return false;},
+		"ISTEXTNODE":function(a){ if(a == null) return false; if(typeof a === "object") if(a.nodeType == 3 || a.nodeType == 8) return true; return false;},
 		// // 브라우저 유형 검사
 		"ISUNDERBROWSER":function(o){
 			var v = o?o:9;
@@ -457,9 +469,9 @@
 		// // 값 유형 검사
 		// 0, "  ", {}, [] 등등 value가 없는 값을 검사합니다.
 		"ISNOTHING":function(o){ 
-	        if (typeof o == "undefined")return true;
-			if (typeof o == "string")return o.trim().length < 1 ? true : false;
-			if (typeof o == "object"){
+	        if (typeof o === "undefined")return true;
+			if (typeof o === "string")return o.trim().length < 1 ? true : false;
+			if (typeof o === "object"){
 				if(o instanceof RegExp) return false;
 				if(ISELNODE(o)) return false;
 				if(o == null ) return true;
@@ -469,9 +481,9 @@
 		            var count = 0; for (var prop in o) { count = 1; break; } o = count;
 				}
 			}
-	        if (typeof o == "number")return o < 1 ? true : false;
-	        if (typeof o == "function")return false;
-			if (typeof o == "boolean")return !this.Source;
+	        if (typeof o === "number")return o < 1 ? true : false;
+	        if (typeof o === "function")return false;
+			if (typeof o === "boolean")return !this.Source;
 			console.warn("ISNOTHING::이 타입에 대해 알아내지 못했습니다. nothing으로 간주합니다.",o);
 	        return true;
 		},
@@ -560,13 +572,13 @@
 	// Nody Super base
 	W.makeSingleton("NodyBase",{
 		//배열이 아니면 배열로 만들어줌
-		"TOARRAY":function(t,s){ if(typeof t=="undefined" && arguments.length < 2) return []; if(typeof t == "string" && typeof s == "string"){ return t.split(s); } else if(ISARRAY(t) == true) { return t; } else { return [t]; } },
+		"TOARRAY":function(t,s){ if(typeof t=="undefined" && arguments.length < 2) return []; if(typeof t === "string" && typeof s === "string"){ return t.split(s); } else if(ISARRAY(t) == true) { return t; } else { return [t]; } },
 		//배열을 복사
 		"CLONEARRAY":function(v) { var mvArray = []; if( ISARRAY(v) ) { if("toArray" in v){ Array.prototype.splice.apply(mvArray,v.toArray()); } else { for(var i=0,l=v.length;i<l;i++) mvArray.push(v[i]); } } else { if(v||v==0) mvArray.push(v); return this; } return mvArray; },
 		//배열안에 배열을 길이만큼 추가
 		"ARRAYINARRAY":function(l) { l=TONUMBER(l);var aa=[];for(var i=0;i<l;i++){ aa.push([]); }return aa; },
 		//배열의 하나추출
-		"ZERO"   :function(t){ return typeof t == "object" ? typeof t[0] == "undefined" ? undefined : t[0] : t; },
+		"ZERO"   :function(t){ return typeof t === "object" ? typeof t[0] === "undefined" ? undefined : t[0] : t; },
 		//배열의 뒤
 		"LAST"   :function(t){ return ISARRAY(t) ? t[t.length-1] : t; },
 		//숫자로 변환합니다. 디폴트 값이나 0으로 반환합니다.
@@ -593,8 +605,8 @@
 		// false를 호출하면 배열에서 제거합니다.
 		"DATAFILTER":function(inData,filterMethod){
 			var data = TOARRAY(inData);
-			if(typeof filterMethod == "undefined") { filterMethod = function(a){ return typeof a == "undefined" ? false : true; }; } 
-			if(typeof filterMethod == "function"){
+			if(typeof filterMethod === "undefined") { filterMethod = function(a){ return typeof a === "undefined" ? false : true; }; } 
+			if(typeof filterMethod === "function"){
 				var result=[];
 				DATAEACH(data,function(v,i){ if(filterMethod(v,i)==true) result.push(v); });
 				return result;
@@ -606,10 +618,10 @@
 		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 		"SPRINGINDEX":function(index,maxIndex){ index = TONUMBER(index); maxIndex = TONUMBER(maxIndex); return (index == 0 || (Math.floor(index/maxIndex)%2 == 0))?index%maxIndex:maxIndex-(index%maxIndex); },
 		//오브젝트의 key를 each열거함
-		"ENUMERATION":FUT.CONTINUTILITY(function(v,f){if((typeof v == "object") && (typeof f == "function")){for(k in v) {f(v[k],k)}}; return v; },2),
+		"ENUMERATION":FUT.CONTINUTILITY(function(v,f){if((typeof v === "object") && (typeof f === "function")){for(k in v) {f(v[k],k)}}; return v; },2),
 		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
 		"APPLY" : function(f,owner,args) { 
-			if(typeof f == "function"){ 
+			if(typeof f === "function"){ 
 				var mvArgs = CLONEARRAY(args);
 				if(mvArgs.length > 0){ 
 					return f.apply(owner,mvArgs); 
@@ -627,7 +639,7 @@
 			 APPLY(f,owner,DATAFLATTEN(args));
 		},
 		"CALL" : function(f,owner) { 
-			if(typeof f == "function"){ if(typeof APPLY == "undefined"){ alert("apply가 존재하지 않음"); } var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } 
+			if(typeof f === "function"){ if(typeof APPLY === "undefined"){ alert("apply가 존재하지 않음"); } var args = Array.prototype.slice.apply(arguments); args.shift(); args.shift(); return APPLY(f,owner,args); } 
 		},
 		//무엇이든 문자열로 넘김
 		"TOSTRING":function(tosv,depth,jsonfy){
@@ -635,7 +647,7 @@
 				case "string" : return jsonfy==true ? '"' + (tosv+"") + '"' :tosv+""; break;
 				case "number" : return (tosv+""); break;
 				case "object" : 
-					if(typeof depth == "undefined") depth = 10;
+					if(typeof depth === "undefined") depth = 10;
 					if(depth < 1) return "...";
 					if(tosv==null){
 						return jsonfy==true ? '"null"' : "null";
@@ -680,9 +692,9 @@
 		"TOS"  : function(tosv,jsonfy){ return TOSTRING(tosv,4,jsonfy); },
 		//어떠한 객체의 길이를 조절함
 		"MAX"  : function(target,length,suffix){
-			if(typeof target == "string"){
+			if(typeof target === "string"){
 				length = isNaN(length) ? 100 : parseInt(length);
-				suffix = typeof suffix == "string" ? suffix : "...";
+				suffix = typeof suffix === "string" ? suffix : "...";
 				if( target.length > length ){
 					return target.substr(0,length) + suffix;
 				}
@@ -712,7 +724,7 @@
 				if(t instanceof v) return true;
 			} catch(e){
 				//tName
-				var vn = ((typeof v == "function") ? v["__NatvieContstructorName__"] : v);
+				var vn = ((typeof v === "function") ? v["__NatvieContstructorName__"] : v);
 				//inspect
 				if( (typeof t=="object") && (typeof vn=="string") ) if("__NativeHistroy__" in t) {
 					var his = t["__NativeHistroy__"];
@@ -727,12 +739,7 @@
 	});
 	NodyBase.eachGetter();
 	
-})(window,{
-	Getters:[],
-	Singletons:{},
-	Modules:{},
-	Structure:{}
-}));
+})(window,[],{},{},{});
 
 //Nody Foundation
 (+(function(W){
@@ -742,7 +749,7 @@
 		// 데이터의 갯수를 샘
 		"DATACOUNT" : function(v){
 			if( v == undefined || v == null ) return 0;
-			if( typeof v == "object"){
+			if( typeof v === "object"){
 				if( ISARRAY(v) ) return v.length;
 				var count = 0;
 				for(var key in v) count++;
@@ -770,15 +777,15 @@
 			return result;
 		},
 		//래핑된 텍스트를 제거
-		"ISWRAP":function(c,w){ if(typeof c == "string"){ c = c.trim(); w = typeof w !== "undefined" ? TOARRAY(w) : ['""',"''","{}","[]"]; for(var i=0,l=w.length;i<l;i++){ var wf = w[i].substr(0,w[i].length-1); var we = w[i].substr(w[i].length-1); if(c.indexOf(wf)==0 && c.substr(c.length-1) == we) return true; } } return false; },
-		"UNWRAP":function(c,w){ if(typeof c == "string"){ c = c.trim(); w = typeof w !== "undefined" ? TOARRAY(w) : ['""',"''","{}","[]","<>"]; for(var i=0,l=w.length;i<l;i++) if(ISWRAP(c,w[i])) return c.substring(w[i].substr(0,w[i].length-1).length,c.length-1); } return c; },
-		"WRAP":function(c,w){ if(!ISWRAP(c,w)){ c = typeof c == "string" ? c.trim() : ""; w = typeof w == "string" ? w.length > 1 ? w : '""' : '""'; return w.substr(0,w.length-1) + c + w.substr(w.length-1); } return c; },
+		"ISWRAP":function(c,w){ if(typeof c === "string"){ c = c.trim(); w = typeof w !== "undefined" ? TOARRAY(w) : ['""',"''","{}","[]"]; for(var i=0,l=w.length;i<l;i++){ var wf = w[i].substr(0,w[i].length-1); var we = w[i].substr(w[i].length-1); if(c.indexOf(wf)==0 && c.substr(c.length-1) == we) return true; } } return false; },
+		"UNWRAP":function(c,w){ if(typeof c === "string"){ c = c.trim(); w = typeof w !== "undefined" ? TOARRAY(w) : ['""',"''","{}","[]","<>"]; for(var i=0,l=w.length;i<l;i++) if(ISWRAP(c,w[i])) return c.substring(w[i].substr(0,w[i].length-1).length,c.length-1); } return c; },
+		"WRAP":function(c,w){ if(!ISWRAP(c,w)){ c = typeof c === "string" ? c.trim() : ""; w = typeof w === "string" ? w.length > 1 ? w : '""' : '""'; return w.substr(0,w.length-1) + c + w.substr(w.length-1); } return c; },
 		//쿼테이션을 무조건 적용
-		"DQURT":function(c){ if(typeof c == "string"){ if(ISWRAP(c,'""')) return c; return '"'+UNWRAP(c,"''")+'"'; } return c; },
-		"SQURT":function(c){ if(typeof c == "string"){ if(ISWRAP(c,"''")) return c; return "'"+UNWRAP(c,'""')+"'"; } return c; },
+		"DQURT":function(c){ if(typeof c === "string"){ if(ISWRAP(c,'""')) return c; return '"'+UNWRAP(c,"''")+'"'; } return c; },
+		"SQURT":function(c){ if(typeof c === "string"){ if(ISWRAP(c,"''")) return c; return "'"+UNWRAP(c,'""')+"'"; } return c; },
 		//첫번째 택스트 값에 대한 두번째 매칭되는 값의 index나열
 		"INDEXES":function(c,s){
-			if(typeof c == "string" || typeof c == "number"){
+			if(typeof c === "string" || typeof c === "number"){
 				var idx = [],mvc = c+"",s = s+"",prog = 0,next;
 				do {
 					var i = mvc.indexOf(s,prog);
@@ -795,7 +802,7 @@
 		},
 		// 아래 INDEXES 함수들은 어떠한 위치를 제외한 인덱싱을 위해 존재함
 		"SPLITINDEXES":function(c,idx){
-			if(typeof c == "string" && ISARRAY(idx)){
+			if(typeof c === "string" && ISARRAY(idx)){
 				var indexes = CLONE(idx);
 				indexes.push(c.length);
 				var result  = [];
@@ -827,10 +834,10 @@
 				do {
 					var fiv = f[fi];
 					var eiv = e[ei];
-					if(typeof fiv == "undefined" && typeof eiv == "undefined"){
+					if(typeof fiv === "undefined" && typeof eiv === "undefined"){
 						next = false;
 					} else {
-						if(typeof eiv == "undefined" || (eiv > fiv)){
+						if(typeof eiv === "undefined" || (eiv > fiv)){
 							flag.push(true);
 							value.push(fiv);
 							fi++;
@@ -852,7 +859,7 @@
 						pos.push(value[i]);
 					} else {
 						neg.push(value[i]);
-						if(neg.length >= pos.length && (nFlag==true || typeof nFlag == "undefined")){
+						if(neg.length >= pos.length && (nFlag==true || typeof nFlag === "undefined")){
 							for(var ii=0,ll=neg.length;ii<ll;ii++){
 								if(pos.length == 0){
 									neg.length = 0;
@@ -866,7 +873,7 @@
 					}
 				}
 				return result;
-			} else if(ISARRAY(f) && typeof e == "undefined"){
+			} else if(ISARRAY(f) && typeof e === "undefined"){
 				var result = [];
 				var stack  = [];
 				for(var i=0,l=f.length;i<l;i++){
@@ -879,7 +886,7 @@
 			}
 		},
 		"OUTERSPLIT":function(c,s,w){
-			if(typeof c == "string"){
+			if(typeof c === "string"){
 				if(typeof s !== "string" || s.length == 0) s=",";
 				if(s.length > 1){
 					console.wran("OUTERSPLIT:: 두번째 파라메터는 1글자만 지원합니다. => ",s);
@@ -917,7 +924,7 @@
 			}
 		},
 		//Helper of PASCAL,CAMEL,SNAKE,KEBAB
-		"CASEARRAY":function(s,c){ if(typeof c == "string") return s.split(c) ; if(typeof s !== "string")return console.error("CASEARRAY::첫번째 파라메터는 반드시 String이여야 합니다. // s =>",s); s = s.replace(/^\#/,""); /*kebab*/ var k = s.split("-"); if(k.length > 1) return k; /*snake*/ var _ = s.split("_"); if(_.length > 1) return _; /*Cap*/ return s.replace(/[A-Z][a-z]/g,function(s){return "%@"+s;}).replace(/^\%\@/,"").split("%@"); },
+		"CASEARRAY":function(s,c){ if(typeof c === "string") return s.split(c) ; if(typeof s !== "string")return console.error("CASEARRAY::첫번째 파라메터는 반드시 String이여야 합니다. // s =>",s); s = s.replace(/^\#/,""); /*kebab*/ var k = s.split("-"); if(k.length > 1) return k; /*snake*/ var _ = s.split("_"); if(_.length > 1) return _; /*Cap*/ return s.replace(/[A-Z][a-z]/g,function(s){return "%@"+s;}).replace(/^\%\@/,"").split("%@"); },
 		//to PascalCase
 		"PASCAL":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); return words.join(""); },
 		//to camelCase
@@ -933,7 +940,7 @@
 				case "string":case "number": base = v; break;
 				case "object":if(ISARRAY(v)){base = v;}else{ console.warn("DATATILE::Array만 가능합니다."); return v;} break;
 			}
-			if(typeof base == "undefined"){ return ; } else {
+			if(typeof base === "undefined"){ return ; } else {
 				var baseLength = TOLENGTH(v);
 				var result,len = TONUMBER(l,baseLength);
 				switch(typeof base){
@@ -1002,7 +1009,7 @@
 		},
 		// 글자안의 숫자를 뽑아냅니다.
 		"TEXTNUMBER":function(source){
-			if(typeof source == "string"){
+			if(typeof source === "string"){
 				var info = (new StringNumberInfo(source)).get();
 				if(!!info.prefix || !!info.prefixZero || !!info.suffix) return source;
 			}
@@ -1037,7 +1044,7 @@
 			if( ISARRAY(value) ) return value[Math.floor(Math.random()*(value.length))];
 			var cache = FUT.CACHEGET("ZONECHOICE",value+split);
 			if(cache) return cache[Math.floor(Math.random()*(cache.length))];
-			var cachedata = value.split(typeof split == "string"?split:",");
+			var cachedata = value.split(typeof split === "string"?split:",");
 			FUT.CACHESET("ZONECHOICE",value+split,cachedata);
 			return cachedata[Math.floor(Math.random()*(cachedata.length))];
 		},
@@ -1085,7 +1092,7 @@
 	var objectCommonInterface = {
 		"getKeys":function(rule){
 			var r = [];
-			if(typeof rule == "string"){
+			if(typeof rule === "string"){
 				this.each(function(v,k){ if(k.indexOf(rule) > -1){ r.push(k); }});
 			} else if(rule instanceof RegExp) {
 				this.each(function(v,k){ if(rule.test(k)){ r.push(k) }});
@@ -1179,8 +1186,8 @@
 		// 리턴한 요소를 누적하여 차례로 전달함
 		inject:function(firstValue,method) { for(var i = 0,l = this.length;i<l;i++) { var returnValue = method(this[i],firstValue,i); if(typeof returnValue !== "undefined") firstValue = returnValue; } return firstValue; },
 		// 리턴되는 오브젝트로 새 배열은 만들어냅니다.
-		mapUtil: { "&":function(owner,param){ return owner.getMap(function(a){ if(typeof a == "object") return a[param]; return undefined;}); }},
-		getMap : function(process,start) { if(typeof process=="function"){var result=[];for(var i=(typeof start == "number" ? start : 0),l=this.length;i<l;i++)result.push(process(this[i],i,this.length));return _Array(result);}else if(typeof getOrder=="string"){process=process.trim();for(var key in this.mapUtil)if(process.indexOf(key)==0){var tokenWith=process[key.length]==":"?true:false;var param=tokenWith?process.substr(key.length+1):process.substr(key.length);return _Array(this.mapUtil[key](this,param));}}return _Array(); },
+		mapUtil: { "&":function(owner,param){ return owner.getMap(function(a){ if(typeof a === "object") return a[param]; return undefined;}); }},
+		getMap : function(process,start) { if(typeof process=="function"){var result=[];for(var i=(typeof start === "number" ? start : 0),l=this.length;i<l;i++)result.push(process(this[i],i,this.length));return _Array(result);}else if(typeof getOrder=="string"){process=process.trim();for(var key in this.mapUtil)if(process.indexOf(key)==0){var tokenWith=process[key.length]==":"?true:false;var param=tokenWith?process.substr(key.length+1):process.substr(key.length);return _Array(this.mapUtil[key](this,param));}}return _Array(); },
 		map : function(process) { return this.setSource(this.getMap(process)); },
 		
 		// index가 maxIndex한계값이 넘으면 index가 재귀되어 반환된다.
@@ -1193,8 +1200,8 @@
 		},
 		// true를 반환하면 새 배열에 담아 리턴합니다.
 		getFilter   : function(filterMethod) { 
-			if(typeof filterMethod == "undefined") { filterMethod = function(a){ return typeof a == "undefined" ? false : true; }; } 
-			if(typeof filterMethod == "function"){
+			if(typeof filterMethod === "undefined") { filterMethod = function(a){ return typeof a === "undefined" ? false : true; }; } 
+			if(typeof filterMethod === "function"){
 				var result=[]; 
 				this.each(function(v,i){ if(true==filterMethod(v,i)){ result.push(v); } });
 				return _Array(result);
@@ -1263,7 +1270,7 @@
 		// 컨스트럭터를 비교하기 위한
 		getEqualClass:function(v){
 			this.getFilter(function(ref){
-				if(typeof ref == "object" || typeof ref == "function"){
+				if(typeof ref === "object" || typeof ref === "function"){
 					if(ref.constructor == v) return true;
 				}
 			});
@@ -1287,7 +1294,7 @@
 		isNothing:function(){ if(this.length == 0) return true; return false; },
 		isEnough:function(){ if(this.length > 0) return true; return false;   },
 		//요소안의 string까지 split하여 flaatten을 실행
-		getStringFlatten:function(){ return this.save().map(function(t){ if(typeof t == "string") return t.split(" "); if(ISARRAY(t)) return _Array(t).flatten().type("string"); }).remove(undefined).flatten(); },
+		getStringFlatten:function(){ return this.save().map(function(t){ if(typeof t === "string") return t.split(" "); if(ISARRAY(t)) return _Array(t).flatten().type("string"); }).remove(undefined).flatten(); },
 		stringFlatten:function(){ return this.setSource( this.getStringFlatten() ); },
 		getDeepFlatten:function(){function arrayFlatten(_array){var result=_Array();_array.each(function(value){if( ISARRAY(value) ){result.concat(arrayFlatten(_Array(value)));}else{result.push(value);}});return result;}return arrayFlatten(this);},
 		deepFlatten:function(){ return this.setSource(this.getDeepFlatten()); },
@@ -1304,7 +1311,7 @@
 		grouping:function(length,reverse){ return this.setSource(this.getGrouping(length,reverse)); },
 		//랜덤으로 내용을 뽑아줌
 		getRandom:function(length){
-			if(typeof length == "undefined") return this[Math.floor(Math.random() * this.length)];
+			if(typeof length === "undefined") return this[Math.floor(Math.random() * this.length)];
 			if(length > this.length) length = this.length;
 			var result = _Array();
 			var targets = this.save();
@@ -1323,7 +1330,7 @@
 			if (!ISTEXT(value)) value = "value";
 			var r = {};
 			this.each(function(data){
-				if(typeof data == "object" || typeof data == "function"){
+				if(typeof data === "object" || typeof data === "function"){
 					if(key in data){
 						r[data[key]] = data[value];
 						return r;
@@ -1340,7 +1347,7 @@
 		},
 		ratio:function(joinText){
 			var ratioValue    = this.getRatio(joinText);
-			return this.setSource((typeof ratioValue == "string")?[ratioValue]:ratioValue);
+			return this.setSource((typeof ratioValue === "string")?[ratioValue]:ratioValue);
 		}
 	});
 	
@@ -1356,9 +1363,9 @@
 		//마지막 요소 반환.
 		last:function(){ var keys = this.getKeys(); return this.Source[keys[keys.length-1]];},
 		// 값을 추가한다
-		push:function(value,key){ if( typeof key == "string" || typeof key == "number" ){ this.Source[key] = value; } else { var i = 0; var ex = true; do { if(i in this.Source){ i++; } else { ex = false; this.Source[i] = value; } } while (ex); } return this; },
+		push:function(value,key){ if( typeof key === "string" || typeof key === "number" ){ this.Source[key] = value; } else { var i = 0; var ex = true; do { if(i in this.Source){ i++; } else { ex = false; this.Source[i] = value; } } while (ex); } return this; },
 		setSource:function(obj,k){ 
-			obj = TOOBJECT(obj,k); if(typeof obj == "object"){ for(var key in this.Source) delete this.Source[key]; for(var k in obj) this.Source[k] = obj[k]; } return this; 
+			obj = TOOBJECT(obj,k); if(typeof obj === "object"){ for(var key in this.Source) delete this.Source[key]; for(var k in obj) this.Source[k] = obj[k]; } return this; 
 		},
 		select:function(obj){
 			
@@ -1380,7 +1387,7 @@
 				return this;
 			} else if (ISTEXT(k)) { 
 				return this.Source[k];
-			} else if(typeof k == "object"){
+			} else if(typeof k === "object"){
 				for(var kk in key) this.prop(kk,key[kk]);
 				return this;
 			} else {
@@ -1405,7 +1412,7 @@
 		
 		//map
 		getMap:function(f,ksel){ 
-			if(typeof f == "function"){
+			if(typeof f === "function"){
 				var result = CLONE(this.Source);
 				var keys   = this.getKeys(ksel);
 				for(var i=0,l=keys.length;i<l;i++) result[keys[i]] = f(this.Source[keys[i]],keys[i]);
@@ -1416,12 +1423,12 @@
 		},
 		map:function() { return this.setSource( this.getMap.apply(this,arguments) ); },
 		//inject 
-		inject:function(o,f,ksel){ if(typeof f == "function") { this.getMap(function(v,k){ var or = f(v,o,k); if(typeof or !== "undefined") { o=or; } },ksel); return o; } },
+		inject:function(o,f,ksel){ if(typeof f === "function") { this.getMap(function(v,k){ var or = f(v,o,k); if(typeof or !== "undefined") { o=or; } },ksel); return o; } },
 		//key getter
 		data:function(k,v){
 			if(typeof v !== "function" && typeof v !== "undefined") { throw new Error("Object::data 메서드는 setter가 아닙니다."); };
-			if (typeof k == "string"){
-				if(typeof v == "function"){
+			if (typeof k === "string"){
+				if(typeof v === "function"){
 					return v(this.Source[k]);
 				} else {
 					return this.Source[k];
@@ -1440,15 +1447,15 @@
 		//오브젝트를 배열로 반환함
 		hashes:function(key,val){ key = typeof key !== "string" ? "key" : key; val = typeof val !== "string" ? "value" : val; var r=[]; for(var k in this.Source){ var o = {}; o[key] = k; o[val] = this.Source[k]; r.push(o); } return r; },
 		//
-		join:function(a,b){ a = typeof a == "string" ? a : ":"; b = typeof b == "string" ? b : ","; return this.inject([],function(v,i,k){ i.push(k+a+TOSTRING(v)); }).join(b); },
+		join:function(a,b){ a = typeof a === "string" ? a : ":"; b = typeof b === "string" ? b : ","; return this.inject([],function(v,i,k){ i.push(k+a+TOSTRING(v)); }).join(b); },
 		//toParam
 		getEncodeObject : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : _String(key).getEncode()) ] = (useEncode == false ? val : _String(val).getEncode()); }); },
 		encodeObject    : function(){ return this.setSource(this.getEncodeObject.apply(this,arguments)); },
 		//jsonString으로 반환
 		stringify:function(){ return JSON.stringify(this.Source); },
-		changeKey:function(original, change){ if(typeof original == "string" && typeof change == "string") { this.Source[change] = this.Source[original]; delete this.Source[original]; } return this.Source; },
+		changeKey:function(original, change){ if(typeof original === "string" && typeof change === "string") { this.Source[change] = this.Source[original]; delete this.Source[original]; } return this.Source; },
 		//String의 순차적으로 오브젝트 반환  "1 2 3 4" => {"1":"2","3":"4"}
-		getKvo:function(arg,split){ split = typeof split == "string" ? split : " "; arg = arg.split(split); var source = CLONE(this.Source); var keyName = undefined; _Array(arg).turning(2,function(value,i){ if(i == 0) { keyName = value; } else if(i == 1) { if(typeof keyName !== "undefined") { switch(value){ case "''": case '""': case "'": case '"': source[keyName] = ""; break; default : source[keyName] = value; break ; } } keyName = undefined; } }); return source; },
+		getKvo:function(arg,split){ split = typeof split === "string" ? split : " "; arg = arg.split(split); var source = CLONE(this.Source); var keyName = undefined; _Array(arg).turning(2,function(value,i){ if(i == 0) { keyName = value; } else if(i == 1) { if(typeof keyName !== "undefined") { switch(value){ case "''": case '""': case "'": case '"': source[keyName] = ""; break; default : source[keyName] = value; break ; } } keyName = undefined; } }); return source; },
 		kvo:function(arg){ return this.setSource(this.getKvo.call(this,arg)); },
 		//오브젝트의 키를 지우고자 할때
 		removeAll:function(){ for( var key in this.Source ) delete this.Source[key]; return this.Source; },
@@ -1470,7 +1477,7 @@
 		getSafeConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ _Object(arguments[i]).each(function(v,k){ if( (k in result) == false) result[k] = v; }); } return result; },
 		safeConcat:function(){ this.setSource(this.getSafeConcat.apply(this,arguments)); return this; }
 	}, function(p,n,s){
-		if(typeof s == "string"){
+		if(typeof s === "string"){
 			this.Source = {};
 			this[s].apply(this,_Array(arguments).subarr(0,2).toArray());
 		} else {
@@ -1481,9 +1488,9 @@
 	W._Split = function(text,s){
 		if( ISARRAY(text) ) return new AArray(text);
 		
-		if(typeof text == "string"){
+		if(typeof text === "string"){
 			var result;
-			if((typeof s == "string") || typeof s == "number") {
+			if((typeof s === "string") || typeof s === "number") {
 				s = s+"";
 				result = text.split(s);
 			} else {
@@ -1498,12 +1505,12 @@
 	
 	extendModule("Array","Range",{},function(a,b,c){
 		var ok,left,right,plusCount;
-		if((typeof a == "number") && (typeof b == "number")){
+		if((typeof a === "number") && (typeof b === "number")){
 			left = a;
 			right = b;
 			plusCount = c;
 			ok = true;
-		} else if(typeof a == "string") {
+		} else if(typeof a === "string") {
 			if( /(\d+)\~(\d+)/.test(a) == true ){
 				var result = /(\d+)\~(\d+)/.exec(a);
 				left   = parseInt(result[1]);
@@ -1560,7 +1567,7 @@
 			return _Split(this.Source,"\n").toArray();
 		},
 		eachLine:function(f,j){
-			if(typeof f == "function") return _Array(this.getLines()).map(function(s,i){ return f(s,i); }).compact().join( (j?j:"\n") );
+			if(typeof f === "function") return _Array(this.getLines()).map(function(s,i){ return f(s,i); }).compact().join( (j?j:"\n") );
 		},
 		//한줄의 탭사이즈를 구함
 		getTabSize:function(){
@@ -1571,7 +1578,7 @@
 		},
 		//한줄의 탭을 정렬함
 		getTabAbsolute:function(tabSize,tabString){
-			if(typeof tabSize == "number" || typeof tabSize == "string" ) tabSize = parseInt(tabSize);
+			if(typeof tabSize === "number" || typeof tabSize === "string" ) tabSize = parseInt(tabSize);
 			if(typeof tabSize != "number") tabSize = this.getTabSize();
 			if(typeof tabString !== "string") tabString = "\t";
 			if(tabSize < 0) tabSize = 0;
@@ -1582,7 +1589,7 @@
 		//각각의 탭음 밀어냄
 		getTabsOffset:function(offset,tabString){
 			offset = parseInt(offset);
-			if(typeof offset == "number") return _Split(this.Source,"\n").map(function(text){
+			if(typeof offset === "number") return _Split(this.Source,"\n").map(function(text){
 				return _String(text).getTabAbsolute(_String(text).getTabSize() + offset,tabString);
 			}).join("\n");
 			return this.Source;
@@ -1688,7 +1695,7 @@
 		reverse    : function()   { this.Source = this.getReverse(); return this; },
 		//printf
 		getPrintf:function(f){
-			if(typeof f == "object"){
+			if(typeof f === "object"){
 				if(f instanceof RegExp){
 					if( f.test(this.Source) ) {
 						f = f.exec(this.Source);
@@ -1702,7 +1709,7 @@
 				for(var i=1,l=arguments.length;i<l;i++){
 					switch(typeof arguments[i]){
 						case "object":
-							if(typeof arguments[i][0] == "string" || typeof arguments[i][0] == "number") if(arguments[i][0] in f) result = result + f[arguments[i][0]];
+							if(typeof arguments[i][0] === "string" || typeof arguments[i][0] === "number") if(arguments[i][0] in f) result = result + f[arguments[i][0]];
 							break;
 						case "number": case "string":
 							result = result + arguments[i];
@@ -1711,12 +1718,12 @@
 					}
 				}
 				return result;
-			} else if(typeof f == "string" || typeof f == "number"){
+			} else if(typeof f === "string" || typeof f === "number"){
 				var i = -1;
 				var p = Array.prototype.slice.call(arguments);
 				return this.Source.replace(/%@/gi,function(){
 					i++;
-					if(typeof p[i] == "string" || typeof p[i] == "number"){
+					if(typeof p[i] === "string" || typeof p[i] === "number"){
 						return p[i]+"";
 					} else {
 						return "";
@@ -1767,9 +1774,9 @@
 			return this;
 		},
 		//prefix suffix
-		getFix:function(p,s){ return (typeof p == "string"?p:"") + this.Source + (typeof s == "string"?s:""); }
+		getFix:function(p,s){ return (typeof p === "string"?p:"") + this.Source + (typeof s === "string"?s:""); }
 	},function(param,jsonfy){
-		if( typeof param == "undefined" || param == null ){
+		if( typeof param === "undefined" || param == null ){
 			this.Source = ""
 		} else {
 			this.Source = TOSTRING(param,10,jsonfy);
@@ -1780,8 +1787,8 @@
 	//developement......
 	makeGetter("DATEVALUE",function(source){
 		if(source instanceof Date){ return +new Date();}
-		if(typeof source == "number") return source;
-		if(typeof source == "string"){
+		if(typeof source === "number") return source;
+		if(typeof source === "string"){
 			var TS = {Y:1970,M:1,D:1,h:0,m:0,s:0};
 			//년월일
 			var orient = /^(\d{4}|\d{2})[^\d](\d{1,2})[^\d](\d{1,2})/.exec(source);
@@ -1811,7 +1818,7 @@
 			info.fixNumberInfo();
 			
 			//result
-			if(typeof spot == "number") switch(spot){
+			if(typeof spot === "number") switch(spot){
 				case 0: return info.get("prefix"); break;
 				case 2: return info.get("integer"); break;
 				case 3: return info.get("floatValue"); break;
@@ -1826,7 +1833,7 @@
 				"floatValue" : info.get("floatValue"), 
 				"number"     : info.get("number")
 			};
-			if(typeof spot == "string") return info.get(spot);
+			if(typeof spot === "string") return info.get(spot);
 			return info;
 		},
 		setNumberInfo : function(value,position){
@@ -1847,9 +1854,9 @@
 		getNumber  : function()  { return this.getNumberInfo(5); },
 		getPrefix  : function()  { return this.getNumberInfo(1); }, 
 		getSuffix  : function()  { return this.getNumberInfo(4); },
-		integer    : function() { var p = this.getInteger(); return typeof p == "string" ? p*1 : this;},
-		floatValue : function() { var p = this.getFloat();   return typeof p == "string" ? p*1 : this;},
-		number     : function() { var p = this.getNumber();  return typeof p == "string" ? p*1 : this;},
+		integer    : function() { var p = this.getInteger(); return typeof p === "string" ? p*1 : this;},
+		floatValue : function() { var p = this.getFloat();   return typeof p === "string" ? p*1 : this;},
+		number     : function() { var p = this.getNumber();  return typeof p === "string" ? p*1 : this;},
 		// already not support minus
 		getTrunc : function(s) { var n = this.number(); return isNaN(s) ? (Math[n > 0 ? "floor" : "ceil"](n)) : (Math[n > 0 ? "floor" : "ceil"](n * Math.pow(0.1,parseInt(s))) * Math.pow(10,parseInt(s))); },
 		trunc    : function(s){ this.setNumberInfo( this.getTrunc(s) , 5 ); return this; },
@@ -1879,7 +1886,7 @@
 				result = isNaN(result) ? 0 : result;
 			}
 		
-			if(typeof trunc == "number"){return _Number(result).getTrunc(trunc);}
+			if(typeof trunc === "number"){return _Number(result).getTrunc(trunc);}
 			return result;
 		},
 		// expression
@@ -1901,7 +1908,7 @@
 				case "?//": result = this.getSuffix(); break;
 				case "//?": result = this.getPrefix(); break;
 			}
-			if(typeof targetPoint == "string"){
+			if(typeof targetPoint === "string"){
 				var execResult = /(\+\=|)([0-9]+)(\.[0-9]|)/.exec(targetPoint);
 				if(execResult[1] == "+="){
 					if(execResult[3] == ""){
@@ -2048,7 +2055,7 @@
 		// P1 전체 그룹의 갯수
 		// P2 전체 그룹의 current는 몇번째 그룹인지
 		getGroupsCount:function(groupLength,current){
-			if(typeof current == "undefined") return Math.ceil(this.integer() / groupLength);
+			if(typeof current === "undefined") return Math.ceil(this.integer() / groupLength);
 			return Math.floor(current / groupLength);
 		},
 		getTurning:function(cIndex){
@@ -2068,18 +2075,13 @@
 	makeSingleton("_Util",{
 		encodeString:function(v){ return TOSTRING(v,99,true); },
 		decodeString:function(v){ 
-			if(typeof v == "string") { 
-				try{ 
-					if(typeof v == "string"){
-						if( v.charAt(0)=="\"" && v.charAt(v.length-1)=="\"" ){
-							return v.substr(1,v.length-2);
-						} else {
-							return eval("(" + v + ")");
-						}
-					}
-				} catch(e) {
-					console.error("decodeString::디코딩실패 ->",v,"<-");throw e;
+			if(typeof v === "string") { 
+				if( v.charAt(0)=="\"" && v.charAt(v.length-1)=="\"" ){
+					return v.substr(1,v.length-2);
+				} else {
+					return eval("(" + v + ")");
 				}
+				console.error("decodeString::디코딩실패 ->",v,"<-");throw e;
 			}
 			return v; 
 		},
@@ -2130,7 +2132,7 @@
 		},
 		getZContent:function(seed){
 			// d:Dynamic, e: Evaluation
-			seed = (typeof seed == "number")?seed:0;
+			seed = (typeof seed === "number")?seed:0;
 			var dPoint=[],ePoint=[];
 			var result = this.Source,zoneParamsInfo = this.ZoneParamsInfo;
 			
@@ -2169,8 +2171,8 @@
 			return result;
 		},
 		toArray:function(length,startAt){
-			length  = (typeof length == "number")  ? length : 1;
-			var i = (typeof startAt == "number") ? startAt : 0;
+			length  = (typeof length === "number")  ? length : 1;
+			var i = (typeof startAt === "number") ? startAt : 0;
 			var result = [];
 			for(var l=i+length;i<l;i++) result.push( this.getZContent(i) );
 			return result;
@@ -2194,18 +2196,20 @@
 	makeSingleton("_Client",{
 		
 		agent :function(t){ 
-			return (typeof t == "string") ? ((navigator.userAgent||navigator.vendor||window.opera).toLowerCase().indexOf(t.toLowerCase()) > -1) : (navigator.userAgent||navigator.vendor||window.opera);
+			return (typeof t === "string") ? ((navigator.userAgent||navigator.vendor||window.opera).toLowerCase().indexOf(t.toLowerCase()) > -1) : (navigator.userAgent||navigator.vendor||window.opera);
 		},
 		info:function(){
 			var info = {};
 			var support,tester  = document.createElement('div');
 				
 			// Operating system
-			try {
-				info.os = (/(win|mac|linux|iphone)/.exec(navigator.platform.toLowerCase())[0].replace("sunos", "solaris"));
-			} catch(e) {
+			info.os = /(win|mac|linux|iphone)/.exec(navigator.platform.toLowerCase());
+			
+			if (info.os !== null){
+				info.os = info.os[0].replace("sunos", "solaris");
+			} else {
 				info.os = "unknown";
-			}
+			} 
 			
 			// Browser Name
 			//http://stackoverflow.com/questions/5916900/detect-version-of-browser 191
@@ -2293,7 +2297,7 @@
 		scriptPath : function(url) { return this.scriptInfo(url).path     },
 		scriptRoot : function(url) { return /(.*\/|\/|)[^\/]*$/.exec(this.scriptInfo(url).path)[1]; },
 		//cookie
-		setCookie:function (name, value, expire, path) { document.cookie = name + "=" + escape(value) + ((expire == undefined) ?"" : ("; expires=" + expire.toGMTString())) + ";path=" + (typeof path == "undefined"?"/":escape(path)) },
+		setCookie:function (name, value, expire, path) { document.cookie = name + "=" + escape(value) + ((expire == undefined) ?"" : ("; expires=" + expire.toGMTString())) + ";path=" + (typeof path === "undefined"?"/":escape(path)) },
 		getCookie:function (name,path) {
 		  var search = name + "="; 
 		  if (document.cookie.length > 0) {
@@ -2322,7 +2326,7 @@
 			}
 			return false;
 		},
-		removeCookie:function(name,path){ path = ";path=" + (typeof path == "undefined"? "/" : escape(path)); document.cookie=name+"="+path+";expires=Thu, 01 Jan 1970 00:00:01 GMT"; },
+		removeCookie:function(name,path){ path = ";path=" + (typeof path === "undefined"? "/" : escape(path)); document.cookie=name+"="+path+";expires=Thu, 01 Jan 1970 00:00:01 GMT"; },
 		setLocalData:function(k,v){
 			if(this.agent("adobeair")){
 				 var utf8v = new air.ByteArray();
@@ -2476,7 +2480,7 @@
 	W.ManagedUIDObjectData = [];
 	makeSingleton("UID",{
 		get:function(idObject){
-			if(typeof idObject == "object" || typeof idObject == "function"){
+			if(typeof idObject === "object" || typeof idObject === "function"){
 				for(var i=0,l=W.ManagedUIDObjectData.length;i<l;i++) if(W.ManagedUIDObjectData[i] == idObject) return i;
 				W.ManagedUIDObjectData.push(idObject);
 				return W.ManagedUIDObjectData.length - 1;
@@ -2512,15 +2516,15 @@
 		data    :function(v){ if(this.isValid()){ return W.ManagedMetaObjectData[this.Source]; } },
 		getOwner:function() { if(this.isValid()) return UID.getObject(this.Source); },
 		//prop
-		getProp :function(propName){ if(typeof propName == "string" || typeof propName == "number"){ return W.ManagedMetaObjectData[this.Source][propName]; } },
+		getProp :function(propName){ if(typeof propName === "string" || typeof propName === "number"){ return W.ManagedMetaObjectData[this.Source][propName]; } },
 		getProps:function(propExpression) {
 			var regexp = new RegExp(propExpression);
 			var result = [];
 			for (key in W.ManagedMetaObjectData[this.Source]) if (key.match(regexp)) result.push(W.ManagedMetaObjectData[this.Source][key]);
 			return result;
 		},
-		setProp :function(propName,value){ if(typeof propName == "string" || typeof propName == "number"){ W.ManagedMetaObjectData[this.Source][propName] = value;} return this; },
-		hasProp :function(propName){ if(typeof propName == "string" || typeof propName == "number") return (propName in W.ManagedMetaObjectData[this.Source]); return false; },
+		setProp :function(propName,value){ if(typeof propName === "string" || typeof propName === "number"){ W.ManagedMetaObjectData[this.Source][propName] = value;} return this; },
+		hasProp :function(propName){ if(typeof propName === "string" || typeof propName === "number") return (propName in W.ManagedMetaObjectData[this.Source]); return false; },
 		removeProp:function(propName){ if( this.hasProp(propName) ) delete W.ManagedMetaObjectData[this.Source][propName]; return this; },
 		keyChange:function(keys,toKeys){
 			var meta    = this;
@@ -2556,12 +2560,12 @@
 		lastData:function(){ var r = this.data(); this.destroy(); return r; },
 		destroyTimeout:function(time){ var own = this; setTimeout(function(){ own.destroy(); },TONUMBER(time));}
 	},function(v,d){
-		if(typeof v == "object" || typeof v == "function"){
+		if(typeof v === "object" || typeof v === "function"){
 			this.Source = UID.get(v);
 			if(!(this.Source in W.ManagedMetaObjectData)){
-				if(typeof d == "object"){
+				if(typeof d === "object"){
 					W.ManagedMetaObjectData[this.Source] = CLONE(d);
-				} else if(typeof d == "undefined"){
+				} else if(typeof d === "undefined"){
 					W.ManagedMetaObjectData[this.Source] = {};
 				} else {
 					console.warn("Meta::init::Meta의 셋팅할 property값은 Object만 가능합니다. => ",v,d)
@@ -2579,10 +2583,15 @@
 			var pushString = MAX(TOSTRING(W.ManagedUIDObjectData[i]),40) + "  =>  ";
 			var pushLength = 0;
 			ENUMERATION(W.ManagedMetaObjectData[i],function(data,key){
-				pushString += "\n    " + key + " : " + MAX(TOSTRING(data),40);
+				pushString += "\n    ";
+				pushString += key;
+				pushString += " : ";
+				pushString += MAX(TOSTRING(data),40);
 				pushLength++;
 			});
-			pushString += "\n    ["+pushLength+"] length";
+			pushString += "\n    [";
+			pushString += pushLength;
+			pushString += "] length";
 			r.push(pushString);
 		}
 		return r.join("\n");
@@ -2596,7 +2605,7 @@
 		//테그의 속성을 text로 표현합니다.
 		"SELECTINFO"   : function(tagProperty,attrValue){
 			//selectInfoCahche
-			if(typeof tagProperty == "string" && typeof attrValue=="undefined"){
+			if((typeof tagProperty === "string") && (typeof attrValue === "undefined")){
 				var tp = tagProperty.trim();
 				var cache = FUT.CACHEGET(tp);
 				if( cache ) return CLONEOBJECT( cache );
@@ -2604,11 +2613,11 @@
 			}
 			
 			//name refactory
-			var name = (typeof tagProperty == "undefined") ? "" : tagProperty ;
+			var name = (typeof tagProperty === "undefined") ? "" : tagProperty ;
 			name = name.trim();
 			
 			var attributedToken = {};
-			attributedToken.tagName  = "";
+			attributedToken.tagName  = new String("");
 	
 			//value attr in tagMeta & tagValue("::")
 			name = name.replace(/(\:[\w\-]+\([\S]+\)|\:\:.*$|\:[\w\-]+)/gi,function(s){ 
@@ -2636,11 +2645,11 @@
 							attributedToken[":"][ls.substr(1)] = null;
 							break;
 						default :
-							try{
+							if( /([\w]+)\(([\S\,]+)\)/i.test(ls) ){
 								var capture = /([\w]+)\(([\S\,]+)\)/i.exec(ls);
 								if(ISNOTHING(capture)) throw new Error("unsupported");
 								attributedToken[capture[1]] = UNWRAP(capture[2],["",'']);
-							} catch(e){
+							} else {
 								console.warn("SELECTINFO::지원하지 않는 메타키 입니다. => ",s," <=",tagProperty);
 							}
 							break;
@@ -2683,11 +2692,12 @@
 			
 			//attribute class
 			name.replace(/(\.[\w\-]+)/gi,function(s){ 
-				if (typeof attributedToken["class"] == "undefined") {
+				if (typeof attributedToken["class"] === "undefined") {
 					attributedToken["class"] = "";						
-					attributedToken["class"] = attributedToken["class"] + s.substr(1);
+					attributedToken["class"] += s.substr(1);
 				} else {
-					attributedToken["class"] = attributedToken["class"] + " " + s.substr(1);
+					attributedToken["class"] += " ";
+					attributedToken["class"] += s.substr(1)
 				}
 			});
 	
@@ -2728,37 +2738,55 @@
 				default:
 					var atValue = tagInfo[name];
 					if(typeof atValue == undefined || atValue == null){
-						attributedTexts = attributedTexts + (" " + name);
+						attributedTexts += new String(" ");
+						attributedTexts += name;
 					} else {
-						attributedTexts = attributedTexts + (" " + name + '="'+ (atValue+"").trim() +'"');
+						attributedTexts += new String(" ");
+						attributedTexts += name;
+						attributedTexts += new String('="');
+						attributedTexts += (atValue+"").trim();
+						attributedTexts += '"';
 					}
 					break;
 			}
 			attributedTexts = attributedTexts.trim();
 	
 			//common attribute process
-			var name     = "<" + tagInfo.tagName + (attributedTexts.length < 1 ? "" : (" " + attributedTexts));
+			var name = new String("<");
+			name += tagInfo.tagName;
+			name += (attributedTexts.length < 1 ? "" : (" " + attributedTexts));
 			
-			var tagValue = "::" in tagInfo ? tagInfo["::"] : "";
+			var tagValue = "::" in tagInfo ? tagInfo["::"] : new String("");
 
 			//close tag
 			if(tagInfo.tagName.toLowerCase() == "input"){
 				if(tagValue){
-					name = name + ' value="' + tagValue + '"/>';
+					name += ' value="';
+					name += tagValue;
+					name += '"/>';
 				} else {
-					name = name + '/>';
+					name += '/>';
 				}
 			} else {
-				name = name + '>' + tagValue + '</' + tagInfo.tagName + '>';
+				name += '>';
+				name += tagValue;
+				name += '</';
+				name += tagInfo.tagName;
+				name += '>';
 			}
 			return name;
 		},
 		"TAGSTACKS":function(){
-			var stakes = "",stakee = "";
+			var stakes = new String(""),stakee = new String("");
 			for(var i=0,l=arguments.length;i<l;i++){
-				if(typeof arguments[i] == "string"){
-					stakes = stakes + ("<" + arguments[i] + ">");
-					stakee = ("</" + arguments[i] + ">") + stakee;
+				if(typeof arguments[i] === "string"){
+					stakes += new String("<");
+					stakes += arguments[i];
+					stakes += new String(">");
+					var ee = new String("</");
+					ee += arguments[i];
+					ee += new String(">");
+					stakee = ee + stakee;
 				} else {
 					console.warn("TAGSTAKE:: 허용하지 않습니다.")
 				}
@@ -2766,7 +2794,7 @@
 			return [stakes,stakee]; 
 		},
 		"HTMLTOEL":function(html,vt){
-			var baseTag = typeof baseTag == "string" ? baseTag : "div";
+			var baseTag = typeof baseTag === "string" ? baseTag : "div";
 			var makeWrapper = document.createElement(baseTag);
 			makeWrapper.innerHTML = html;
 			return CLONEARRAY(makeWrapper.children);
@@ -2777,10 +2805,10 @@
 	makeSingleton("NUT",{
 		"ATTR":function(node,v1,v2){
 			if(!ISELNODE(node)) { console.error("NUT.ATTR은 element만 가능합니다. => 들어온값" + TOS(node)); return null; }
-			if(typeof v1 == "object") {
+			if(typeof v1 === "object") {
 				for(var k in v1) node.setAttribute(k,k1[v]);
-			} else if(typeof v1 == "string"){
-				var readMode   = typeof v2 == "undefined";
+			} else if(typeof v1 === "string"){
+				var readMode   = typeof v2 === "undefined";
 				var lowerKey = v1.toLowerCase();
 				switch(lowerKey){
 					case "readonly":
@@ -2846,7 +2874,7 @@
 					case "class":
 						var nodeClass = ELATTR(node,key);
 						var infoClass = tagInfo[key];
-						if(typeof nodeClass == "string"){
+						if(typeof nodeClass === "string"){
 							var hasNotClass = false;
 						
 							nodeClass = nodeClass.split(" ");
@@ -2955,7 +2983,7 @@
 			//
 			if(!ISELNODE(node)) return false;
 			if(value == "*" || value == "") return true;
-			if(typeof value == "undefined") return true;
+			if(typeof value === "undefined") return true;
 			
 			var judgement, inspectData = StructureInit("QueryDataInfo",value);
 
@@ -3039,7 +3067,7 @@
 			if(typeof filter !== "function") console.error("DATAFEEDDOWN 두번째 파라메터는 function이여야 합니다");
 			var feeddownMethod;
 			switch(typeof feeddown){case "function":feeddownMethod=feeddown;break;case "string":feeddownMethod=function(fd){return fd[feeddown];};break;default:return;break;}
-			if(typeof feeder == "object") NUT.FEEDERDOWN_WHILE(feeder,filter,feeddownMethod,2);
+			if(typeof feeder === "object") NUT.FEEDERDOWN_WHILE(feeder,filter,feeddownMethod,2);
 		},
 		"MEMBER":function(node,offset){
 			var target = node;
@@ -3092,11 +3120,11 @@
 			return target.parentNode.children[currentIndex+offset];
 		},
 		"FIND" : FUT.CONTINUTILITY(function(find,root,eq){
-			if(typeof root == "number"){
+			if(typeof root === "number"){
 				eq   = root;
 				root = undefined;
 			}
-			if(typeof eq == "number"){
+			if(typeof eq === "number"){
 				return FINDFUNCTION(find,root)[eq];
 			} else {
 				return FINDFUNCTION(find,root);
@@ -3128,7 +3156,7 @@
 		"FINDPARENT" :FUT.CONTINUTILITY(function(el,require){
 			var node = FINDFUNCTION(el)[0];
 			if(!ISELNODE(node)) return ;
-			if(typeof require == "string"){
+			if(typeof require === "string"){
 				var parents = NUT.PARENTS(node);
 				for(var i in parents) if( NUT.IS(parents[i],require) ) return parents[i];
 				return undefined;
@@ -3143,11 +3171,11 @@
 		"CREATE" :function(name,attrValue,parent){
 			var element;
 			var dataset;
-			name = (typeof name == "undefined") ? "" : name ;
-			if(typeof name == "string"){
+			name = (typeof name === "undefined") ? "" : name ;
+			if(typeof name === "string"){
 				name = name.trim();
 				
-				if(typeof attrValue == "object") if("dataset" in attrValue){
+				if(typeof attrValue === "object") if("dataset" in attrValue){
 					dataset   = attrValue["dataset"];
 					attrValue = CLONE(attrValue);
 					delete attrValue["dataset"];
@@ -3220,27 +3248,27 @@
 			}	
 		},1),
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
-		"MAKECOLS":function(){ return _Array(arguments).inject(CREATE("colgroup"),function(colvalue,parent){ if(typeof colvalue == "string" || typeof colvalue == "number") ELAPPEND(parent,CREATE("col",{width:colvalue})); }); },
+		"MAKECOLS":function(){ return _Array(arguments).inject(CREATE("colgroup"),function(colvalue,parent){ if(typeof colvalue === "string" || typeof colvalue === "number") ELAPPEND(parent,CREATE("col",{width:colvalue})); }); },
 		"TOOBJECT":function(param,es,kv){
 			if(typeof param=="object") return param;
-			if(kv == true && ( typeof param == "string" || typeof es == "string")){ var r = {}; r[es] = param; return r; }
+			if(kv == true && ( typeof param === "string" || typeof es === "string")){ var r = {}; r[es] = param; return r; }
 			if(typeof param=="string" || typeof param=="boolean") {
 				try {
 					if(JSON == aJSON) throw new Error("not json supported browser");
 					var jp = JSON.parse(param);
 					if(typeof jp !== "object") throw new Error("pass");
 				} catch(e) {
-					if(_String(param).isDataContent()=="plain"){var esv=(typeof es == "string" ? es : "value");
+					if(_String(param).isDataContent()=="plain"){var esv=(typeof es === "string" ? es : "value");
 					var reo={};reo[esv]=param;return reo;}return _String(param).getDataContent();
 				}
 			}
 			return{};
 		},
-		"CLONEOBJECT":function(inv){ if(typeof inv == "object"){ var result = {}; for(var k in inv) result[k] = inv[k]; return result; } return TOOBJECT(inv); },
+		"CLONEOBJECT":function(inv){ if(typeof inv === "object"){ var result = {}; for(var k in inv) result[k] = inv[k]; return result; } return TOOBJECT(inv); },
 		//오브젝트 혹은 element를 반환합니다.
 		"DATACONTEXT":function(target){
-			if ( typeof target == "string" ) target = FINDZERO(target);
-			if ( typeof target == "object" ) {
+			if ( typeof target === "string" ) target = FINDZERO(target);
+			if ( typeof target === "object" ) {
 				if( this.ISARRAY(target) ){
 					var findElement = FINDZERO(target);
 					if(findElement) return findElement;
@@ -3255,20 +3283,20 @@
 	var ElementGeneratorPrototype = {};
 	var MakeElementGenerator      = function(name,tag,feature){
 		var funcName = "MAKE_"+name;
-		var initTag  = (typeof tag == "string" && typeof feature == "string") ? tag+"?"+feature : tag;
+		var initTag  = (typeof tag === "string" && typeof feature === "string") ? tag+"?"+feature : tag;
 		ElementGeneratorPrototype[funcName] = function(topElement){
 			//arguments
 			var args = Array.prototype.slice.apply(arguments);
 			//tagName
-			if(typeof topElement == "undefined"){
+			if(typeof topElement === "undefined"){
 				var rename = initTag;
 				args.shift();
 				args.unshift(rename);
-			} else if(typeof topElement == "string"){
-				var rename = tag + (typeof feature == "string"?"?"+feature:"") + topElement.replace(/^[^\?\.\#\[\:]+/,"");
+			} else if(typeof topElement === "string"){
+				var rename = tag + (typeof feature === "string"?"?"+feature:"") + topElement.replace(/^[^\?\.\#\[\:]+/,"");
 				args.shift();
 				args.unshift(rename);
-			} else if( typeof topElement == "object" && !ISELNODE(topElement) ) {
+			} else if( typeof topElement === "object" && !ISELNODE(topElement) ) {
 				args.unshift(tag);
 			} else {
 				args.unshift(tag);
@@ -3276,7 +3304,7 @@
 			var i = 1;
 			//makeElement
 			var resultElement;
-			if(typeof args[1] == "object" && !ISELNODE(args[1]) && !ISTEXTNODE(args[1]) && !ISARRAY(args[1])){
+			if(typeof args[1] === "object" && !ISELNODE(args[1]) && !ISTEXTNODE(args[1]) && !ISARRAY(args[1])){
 				i = 2;
 				resultElement = CREATE(args[0], args[1]);
 			} else {
@@ -3356,7 +3384,7 @@
 						if( ISELNODE(selNode) ) return selNode.value;
 						return node.value;
 					} else {
-						if(typeof value == "undefined") return node.value;
+						if(typeof value === "undefined") return node.value;
 					}
 				
 				
@@ -3377,7 +3405,7 @@
 					}
 					break;
 				case "select":
-					if(typeof value == "undefined") return node.value;
+					if(typeof value === "undefined") return node.value;
 					var valEl = FIND("[value="+ value +"]",node);
 					if(valEl.length > 0) {
 						var selEl = ZERO(valEl);
@@ -3388,7 +3416,7 @@
 					return false;
 					break;
 				default :
-					if(typeof value == "undefined") return node.innerText;
+					if(typeof value === "undefined") return node.innerText;
 					node.innerText = value;
 				break;
 			}
@@ -3416,7 +3444,7 @@
 					b = ELATTR(t,"id");    if(b) r = r + "#"+b;
 					b = ELATTR(t,"class"); if(b) r = r + "."+b.split(" ").join(".");
 					b = ELATTR(t,"name");  if(b) r = r + "[name="+b+"]"
-					if( ((typeof sign == "undefined") && (withValue == true)) || ((sign == true) && (typeof withValue == "undefined")) ){
+					if( ((typeof sign === "undefined") && (withValue == true)) || ((sign == true) && (typeof withValue === "undefined")) ){
 						b = ELVALUE(t); if(!ISNOTHING(b)) r = r + ":" + b;
 					}
 					return r;
@@ -3427,7 +3455,7 @@
 			}
 		},
 		"CALL":function(node,f){
-			if(typeof f == "function"){
+			if(typeof f === "function"){
 				var nodes = FIND(node);
 				DATAEACH(nodes,function(n,i){
 					f.call(n,n,i);
@@ -3581,8 +3609,8 @@
 			}
 			return target;
 		},
-		"BEFOREALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index == "number") for(var i=0,l=index;i<l;i++) result.push(node.parentNode.children[i]); return result; },
-		"AFTERALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index == "number") for(var i=index+1,l=node.parentNode.children.length;i<l;i++) result.push(node.parentNode.children[i]); return result; },
+		"BEFOREALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index === "number") for(var i=0,l=index;i<l;i++) result.push(node.parentNode.children[i]); return result; },
+		"AFTERALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index === "number") for(var i=index+1,l=node.parentNode.children.length;i<l;i++) result.push(node.parentNode.children[i]); return result; },
 		"REPLACE":function(target,replaceNode){
 			var replaceTarget = FINDZERO(replaceNode);
 			ELAFTER(target,replaceTarget);
@@ -3599,11 +3627,11 @@
 			var nodeStyles = document.defaultView.getComputedStyle ? document.defaultView.getComputedStyle(target) : target.style;
 			if(ISELNODE(target)){
 				var marge;
-				if(typeof styleName == "undefined") return nodeStyles;
-				if(typeof styleName == "object")    marge = styleName;
-				if(typeof styleName == "string"){
+				if(typeof styleName === "undefined") return nodeStyles;
+				if(typeof styleName === "object")    marge = styleName;
+				if(typeof styleName === "string"){
 					//get
-					if(typeof value == "undefined") return nodeStyles[CAMEL(styleName)];
+					if(typeof value === "undefined") return nodeStyles[CAMEL(styleName)];
 					//set
 					marge = {};
 					marge[CAMEL(styleName)] = value;
@@ -3701,12 +3729,15 @@
 			    e.initEvent(eventName, true, true);
 			    node.dispatchEvent(e);
 			} else {
+				node.fireEvent("on"+eventName);
+				/*
+				성능이슈로 블럭처리
 				try{
 					node.fireEvent("on"+eventName);
 				} catch(e) {
 					console.warn("존재하지 않는 이벤트 호출 error => ",e.message);
 				}
-			
+				*/
 			}
 			return node;
 		},
@@ -3753,7 +3784,7 @@
 		},
 		//한번만 발생하는 이벤트입니다.
 		"ONETIME":function(node, eventName, eventHandler, time){
-			if(typeof eventHandler == "function"){
+			if(typeof eventHandler === "function"){
 				console.error("ELTIME:: eventHandler는 만드시 존재해야 합니다");
 			} else {
 				var timeManager = (function(time){ this.time = time; })( isNaN(time) ? 1 : parseInt(time) );
@@ -3786,7 +3817,7 @@
 			} else {
 				elf.each(function(el){
 					if("disabled" in el){
-						if(typeof status == "undefined") return el.disabled;
+						if(typeof status === "undefined") return el.disabled;
 						if(status == true || status == "true"){
 							el.disabled = true;
 							return el;
@@ -3807,7 +3838,7 @@
 			} else {
 				elf.each(function(el){
 					if( "readOnly" in el ){
-						if(typeof status == "undefined") return el.readOnly;
+						if(typeof status === "undefined") return el.readOnly;
 						if(status == true || status == "true"){
 							el.readOnly = true;
 							return el;
@@ -3925,7 +3956,7 @@
 		removePartClass:function(rmClass,filter,req){
 			var r = this.statusFunction(function(node,param){
 				var classes = ELATTR(node,"class");
-				if(typeof classes == "string"){
+				if(typeof classes === "string"){
 					classes = _String(classes).getRemoveModel(eval("/^"+param+"/"));
 					ELATTR(node,"class",classes);
 					return node;
@@ -3948,15 +3979,13 @@
 	
 	// 폼은 일정 폼 노드들을 컨트롤 하기위해 사용됩니다.
 	extendModule("Controls","Form",{
-		isValid        :function(f){ if(typeof f == "function") return f.call(this); return ISELNODE(this.Source); },
+		isValid        :function(f){ if(typeof f === "function") return f.call(this); return ISELNODE(this.Source); },
 		getSelects     :function(){ return FIND(this.SelectRule,this.Source); },
 		getSelectTokens:function(){
 			return _Array(this.SelectRule.split(",")).map(function(selString){
-				try {
-					return /\[([^\[\]+]+)\]/.exec(selString)[1];
-				} catch(e){
-					return ;
-				}
+				var execResult = /\[([^\[\]+]+)\]/.exec(selString);
+				if( execResult === null) return ;
+				return execResult[1];
 			}).filter().toArray();
 		},
 		//체크아웃 대상 (key와 무관)
@@ -3989,13 +4018,13 @@
 			}).get();
 		},
 		checkin:function(hashMap,v2){
-			if(typeof hashMap == "string"){
+			if(typeof hashMap === "string"){
 				if(typeof v2 !== "string") v2 = TOSTRING(v2);
 				var map      = {};
 				map[hashMap] = v2;
 				hashMap      = map;
 			}
-			if(typeof hashMap == "object"){
+			if(typeof hashMap === "object"){
 				var checkin_targets = this.getCheckoutElementsWithToken()
 				for(var key in hashMap) if(key in checkin_targets) {
 					ELVALUE(checkin_targets[key], hashMap[key]);
@@ -4011,7 +4040,7 @@
 		//options
 		//Polymorphism
 		var r,f;
-		if(typeof selectRule == "object" && typeof selectRule !== "object"){ r = undefined; f = selectRule; } else { r = selectRule; f = filter; }
+		if(typeof selectRule === "object" && typeof selectRule !== "object"){ r = undefined; f = selectRule; } else { r = selectRule; f = filter; }
 		//SelectRule
 		switch(typeof rule){
 			case "string":
@@ -4022,7 +4051,7 @@
 				break;
 		}
 		//CommandFilter
-		this.CommandFilter = typeof filter == "object" ? filter : {} ;
+		this.CommandFilter = typeof filter === "object" ? filter : {} ;
 	});
 	
 	//하나의 엘리먼트만 컨트롤
@@ -4128,7 +4157,7 @@
 			return this;
 		},
 		trace : function(way) {
-			way = typeof way == "string" ? way : "console.log";
+			way = typeof way === "string" ? way : "console.log";
 			switch(way) {
 				case "a":
 				case "alert":
@@ -4188,7 +4217,7 @@
 		getGroup  :function(eq){ return this.getGroups()[eq]; },
 		onSelects :function(event,func,otherFunc){
 			var own = this;
-			if(typeof event=="string" && typeof func == "number"){
+			if(typeof event=="string" && typeof func === "number"){
 				var selNode = this.getSelect(func);
 				if(ISELNODE(selNode)){
 					ELTRIGGER(selNode,event);
@@ -4197,14 +4226,14 @@
 				}
 				return this;
 			}
-			if(typeof event=="string" && typeof func == "function"){
+			if(typeof event=="string" && typeof func === "function"){
 				ELON(this.getContexts(),event,function(e){
 					var curSel = _Array( own.getSelects() );
 					if(curSel.has(e.target)){
 						//버블이 잘 왔을때
 						var curfuncresult = func.call(e.target,e,curSel.indexOf(e.target),own);
 						if(curfuncresult == false){ return false; }
-						if(typeof otherFunc == "function") curSel.each(function(otherObj,index){ if(e.target !== otherObj) return otherFunc.call(otherObj,e,index,own); });
+						if(typeof otherFunc === "function") curSel.each(function(otherObj,index){ if(e.target !== otherObj) return otherFunc.call(otherObj,e,index,own); });
 						return curfuncresult;
 					} else {
 						//버블링이 중간에 멈췄을때
@@ -4261,7 +4290,7 @@
 			console.error("Model :: 시리얼라이저 다음 초기화 인자가 올바르지 않습니다. => ", target);
 		},
 		replace:function(key,value){
-			if(typeof key == "string"){
+			if(typeof key === "string"){
 				switch(typeof value){
 					case "number" : case "string" :
 						this.Source[key] = value;
@@ -4299,10 +4328,10 @@
 	//피드가능한 노드오브젝트 인터페이스
 	makeModule("FeedNode",{
 		//최상위 노드에게 메서드 호출
-		feedFromTop:function(f,d){ d=(typeof d == "number")?d++:0; if(this.NodeParent) return this.NodeParent.feedToTop(f,d); return f.call(this,d); },
+		feedFromTop:function(f,d){ d=(typeof d === "number")?d++:0; if(this.NodeParent) return this.NodeParent.feedToTop(f,d); return f.call(this,d); },
 		//아래부터 현재까지 메서드 호출
 		feedup:function(ff,depth,infinityTop){
-			depth = (typeof depth == "undefined" ? 0 : depth ); 
+			depth = (typeof depth === "undefined" ? 0 : depth ); 
 			if(depth == infinityTop) return undefined;
 			var feedData = [];
 			this.NodeChildrens.each(function(feednode){
@@ -4313,7 +4342,7 @@
 		},
 		//현재부터 아래로 호출
 		feeddown:function(ff,cutIndex,depth,feedData){
-			depth = (typeof depth == "undefined" ? 0 : depth ); 
+			depth = (typeof depth === "undefined" ? 0 : depth ); 
 			var feedData = [];
 			if(depth == cutIndex) return undefined;
 			this.NodeChildrens.each(function(feednode){
@@ -4379,7 +4408,7 @@
 			getPreviousStatus:function(){ return this.PreviousViewStatus; },
 			//상환관련
 			getStatus:function(status){
-				if( typeof status == "string" || typeof status == "number" ){
+				if( typeof status === "string" || typeof status === "number" ){
 					return this.CurrentViewStatus == status;
 				} else {
 					return this.CurrentViewStatus;
@@ -4395,12 +4424,12 @@
 			},
 			notStatus:function(statusName){ return !this.isStatus(statusName); },
 			frameStatusSetter:function(setStatus,forced,touched){
-				if(typeof setStatus == "string" || typeof setStatus == "number"){
+				if(typeof setStatus === "string" || typeof setStatus === "number"){
 					if( IS(setStatus,"text>0") ) {
-						if(typeof setStatus == "string") setStatus = setStatus.trim();
+						if(typeof setStatus === "string") setStatus = setStatus.trim();
 						if(forced || this.CurrentViewStatus !== setStatus){
 							if(setStatus in this.ViewStatus){
-								if(typeof this.ViewStatus[setStatus] == "function"){
+								if(typeof this.ViewStatus[setStatus] === "function"){
 									this.PreviousViewStatus = this.CurrentViewStatus;
 									this.CurrentViewStatus  = setStatus;
 									var result               = this.ViewStatus[setStatus].apply(this,_Array(arguments).subarr(3).toArray());
@@ -4419,9 +4448,9 @@
 				} else {
 					console.warn("FrameController::frameStatusSetter:: 불러올 status값은 숫자나 문자여야 합니다. 올바르지 않습니다.",setStatus);
 				}
-				if(typeof setStatus == "string" || typeof setStatus == "number"){
-					if(typeof setStatus == "string") setStatus = setStatus.trim();
-					if( AS(setStatus,"text>0") ) if(setStatus in this.ViewStatus) if(typeof this.ViewStatus[setStatus] == "function") {
+				if(typeof setStatus === "string" || typeof setStatus === "number"){
+					if(typeof setStatus === "string") setStatus = setStatus.trim();
+					if( AS(setStatus,"text>0") ) if(setStatus in this.ViewStatus) if(typeof this.ViewStatus[setStatus] === "function") {
 						var result = this.ViewStatus[setStatus].apply(this,_Array(arguments).subarr(1).toArray());
 						this.CurrentViewStatus = setStatus;
 						return result;
@@ -4491,11 +4520,11 @@
 			// default Data
 			//default Data가 있는지 확인
 			hasDefaultData:function(name){
-				name = (typeof name == "string" || typeof name == "number") ? name  : "defualtData" ;
-				return (typeof this.DefaultDataModels[name] == "undefined") ? false : true ;
+				name = (typeof name === "string" || typeof name === "number") ? name  : "defualtData" ;
+				return (typeof this.DefaultDataModels[name] === "undefined") ? false : true ;
 			},
 			setDefaultDataWithName:function(data,name){
-				if(typeof name == "string" || typeof name == "number"){
+				if(typeof name === "string" || typeof name === "number"){
 					this.DefaultDataModels[name] = data;
 				} else {
 					console.warn("FrameController::setDefaultDataWithName 두번째 파라메터값은 반드시 String이나 Number이여야 합니다. param => ",data,name);
@@ -4503,7 +4532,7 @@
 			},
 			getDefaultDataList:function(){ return CLONE(this.DefaultDataModels); },
 			getDefaultData:function(index){
-				if( typeof index == "undefined") {
+				if( typeof index === "undefined") {
 					//아무거나 나옴
 					if("defualtData" in this.DefaultDataModels) return CLONE(this.DefaultDataModels[key]);
 					for(var key in this.DefaultDataModels) return CLONE(this.DefaultDataModels[key]);
@@ -4517,10 +4546,10 @@
 				return this.FrameControllerHasData;
 			},
 			getControllerData:function(key){
-				if( typeof key == "undefined" ){
+				if( typeof key === "undefined" ){
 					return this.FrameControllerHasData;
 				} else {
-					if(typeof this.FrameControllerHasData == "object"){
+					if(typeof this.FrameControllerHasData === "object"){
 						return this.FrameControllerHasData[key];
 					}
 				}
@@ -4561,18 +4590,18 @@
 			//뷰에 있는 데이터를 데이터 모델로 가져옵니다.
 			updateControllerData:function(overwrite){
 				var d = this.modelOfControllerView().data()
-				if (typeof this.FrameControllerUpdateDataFilter == "function") d = this.FrameControllerUpdateDataFilter(d);
+				if (typeof this.FrameControllerUpdateDataFilter === "function") d = this.FrameControllerUpdateDataFilter(d);
 				
 				if( this.hasControllerData () == false || overwrite == true){
 					this.setControllerData(d);
 				} else {
-					if(typeof this.FrameControllerHasData == "object"){
+					if(typeof this.FrameControllerHasData === "object"){
 						_Object(this.FrameControllerHasData).concat(d);
 					} else {
 						console.error("FrameController::다음 데이터에 updateControllerData를 실행 할 수 없습니다.",this.FrameControllerHasData);
 					}
 				}
-				if(typeof overwrite == "function"){
+				if(typeof overwrite === "function"){
 					return overwrite(this.getControllerData());
 				} else {
 					return this.getControllerData();
@@ -4582,7 +4611,7 @@
 			exportsControllerData:function(){
 				if( this.hasControllerData () == true ){
 					var d = this.getControllerData();
-					if (typeof this.FrameControllerExportsDataFilter == "function") d = this.FrameControllerExportsDataFilter(d);
+					if (typeof this.FrameControllerExportsDataFilter === "function") d = this.FrameControllerExportsDataFilter(d);
 					_Model(d).exports(this.ControllerElement);
 				} else {
 					console.warn("프레임 데이터가 존재하지 않아 뷰로 적용되지 못하였습니다.");
@@ -4590,7 +4619,7 @@
 			},
 			getMemberController:function(s){
 				var pn = this.getParentNode();
-				if(pn && (typeof s == "string" || typeof s == "number")){
+				if(pn && (typeof s === "string" || typeof s === "number")){
 					if("get" in pn){
 						return pn.get(s);
 					} else {
@@ -4635,7 +4664,7 @@
 			this.setTreeParent(parentViewController);
 			
 			//init
-			if( ("init" in this) && (typeof this.init == "function") ){
+			if( ("init" in this) && (typeof this.init === "function") ){
 				this.init.call(this,this,c,this.parentViewController);
 				delete this["init"];
 			}
@@ -4654,7 +4683,7 @@
 			var touchLiteral = function(){ 
 				return own.touch();
 			}; 
-			if(ISARRAY(this.Source) && typeof f == "function"){ 
+			if(ISARRAY(this.Source) && typeof f === "function"){ 
 				_Array(this.Source).each(function(data,index){ return CALL(f,own,data,index,touchLiteral); }); 
 			} else { 
 				console.warn("Fire::조건이 충족되지 못해 fire를 실행하지 못하였습니다. source=> ",this.Source,"each f=>",f); 
@@ -4684,16 +4713,16 @@
 				dataTrace:undefined,
 				dataTraceMax:400
 			}
-			var debugTrace = typeof moduleOption["debugTrace"] == "function" ? moduleOption["debugTrace"] : false;
+			var debugTrace = typeof moduleOption["debugTrace"] === "function" ? moduleOption["debugTrace"] : false;
 			if(debugTrace){
 				var getOption = debugTrace(debugObject);
-				if(typeof getOption == "object"){
+				if(typeof getOption === "object"){
 					debugObject = getOption;
 				} else {
 					console.error("Request::debugTrace시 결과값은 반드시 Object이여야 합니다");
 				}
 			}
-			debugObject["dataTrace"] = (typeof debugObject.data == "undefined") ? "none" : debugObject.data;
+			debugObject["dataTrace"] = (typeof debugObject.data === "undefined") ? "none" : debugObject.data;
 			console.info("Request::Success:: [\n - method => "
 						,debugObject.method
 						,"\n - url    => "
@@ -4717,7 +4746,7 @@
 			var requestHandler = CALL(moduleOption["requestSuccess"],moduleOption.scope,data);
 
 			//리퀘스트 컨트롤러의 석세스 이후 에러처리
-			if(typeof requestHandler == "string") {
+			if(typeof requestHandler === "string") {
 				 if( requestHandler.indexOf("error") > -1 ){
 					console.error("Request::통신을 완료하였지만 [requestSuccess]에서 dataError를 보고하고 있습니다. => ",requestHandler.substr(5));
 					CALL(this.option,undefined,requestHandler);
@@ -4728,7 +4757,7 @@
 			//석세스 처리가 정상적으로 진행될 경우 아닌경우
 			if (requestHandler !== false) {
 				//CustomRequestControl;
-				if(typeof this.option.success == "function"){
+				if(typeof this.option.success === "function"){
 					finalData = this.option.success.apply(moduleOption.scope,[data,param]);
 				} else {
 					console.warn("Request::통신을 완료하였지만 [success] 후처리가 없습니다. data => ",{"responseText":TOS(data)});
@@ -4742,7 +4771,7 @@
 			var result = CALL(moduleOption["requestError"],moduleOption.scope,xhr,textError,data );
 			var finalData;
 			if(result !== false) {
-				if(typeof error == "function") var resultIn = this.option.error(xhr,textError,data);
+				if(typeof error === "function") var resultIn = this.option.error(xhr,textError,data);
 				if(resultIn !== false) console.error("Request::load : '"+ this.url +"' 호출이 실패되었습니다. JSON 파라메터와 에러코드를 출력합니다. ==> \n------\n" ,TOS(this.option) ,"\n------\n", textError, TOS(this.option.data));
 				finalData = resultIn;
 			}
@@ -4759,7 +4788,6 @@
 									try {
 										response = JSON.parse(requestObject.responseText);
 									} catch(e){
-										throw new Error(TOSTRING(this));
 										console.error("json 포멧이 올바르지 않습니다. =>",requestObject.status,"::",requestObject.responseText);
 										throw e;
 									}
@@ -4793,14 +4821,14 @@
 			}
 		},
 		requestForm:function(requestOption){
-			if( typeof requestOption == "function" ) requestOption = {success:requestOption};
+			if( typeof requestOption === "function" ) requestOption = {success:requestOption};
 			
 			requestOption = TOOBJECT(requestOption,"method");
 			
 			var openForm = {};
 			var recallLoop = false;
 			// 메서드의 형식
-			openForm.method     = typeof requestOption.method == "string" ? requestOption.method : "get"  ;
+			openForm.method     = typeof requestOption.method === "string" ? requestOption.method : "get"  ;
 			// success시 data형태
 			openForm.dataType = requestOption.dataType ? requestOption.dataType : "html" ;
 			//if jsonp call blocked
@@ -4822,15 +4850,15 @@
 		},
 		send:function(success,error){
 			//new handler
-			if(typeof success == "function") this.option.success = success;
-			if(typeof error   == "function") this.option.error   = error;
+			if(typeof success === "function") this.option.success = success;
+			if(typeof error   === "function") this.option.error   = error;
 			if( !("success" in this.option) ) console.warn("Request Warning :: success메서드가 정의되지 않은 상태로 호출되었습니다.");
 		
 			//request Object만들기
 			var newRequest = this.getRequestObject();
 		
 			//data 처리
-			var requestData   = _Object((typeof this.moduleOption.constData == "object") ? _Object(this.moduleOption.constData).concat(this.option.data) : this.option.data);
+			var requestData   = _Object((typeof this.moduleOption.constData === "object") ? _Object(this.moduleOption.constData).concat(this.option.data) : this.option.data);
 			var requestString = _Object(requestData.getEncodeObject()).join("=","&");
 			
 			// request params (기록용)
@@ -4861,7 +4889,7 @@
 	},function(url,requestOption,moduleOption){
 		//리퀘스트 디폴트
 		this.url = url;
-		if ((typeof requestOption == "string") && (typeof moduleOption == "function")) {
+		if ((typeof requestOption === "string") && (typeof moduleOption === "function")) {
 			// request option setup
 			this.option = this.requestForm({
 				dataType:requestOption,
@@ -4946,13 +4974,13 @@
 				}
 			});
 			
-			if(typeof this.LoaderEvents.LoaderLoadEvent[loadEnum] == "string"){
+			if(typeof this.LoaderEvents.LoaderLoadEvent[loadEnum] === "string"){
 				if(/(\.js|\.js\s)$/.test(currentLoadEvent)){
 					var scriptPath = _Client.getAbsolutePath(currentLoadEvent,_Client.scriptUrl());
 					new Open(scriptPath,function(javascript){
 						try {
 							var r = eval("("+javascript+")");
-							if(typeof r == "function"){ r.apply(own.LoaderContainer,loadArguments); }
+							if(typeof r === "function"){ r.apply(own.LoaderContainer,loadArguments); }
 						} catch(e1) {
 							try {
 								eval(javascript);
@@ -5014,20 +5042,20 @@
 					var loadPath       = this.Source[loadEnum];
 					
 					//함수일때
-					if(typeof loadPath == "function"){
+					if(typeof loadPath === "function"){
 						var result = loadPath(loadEnum);
-						if(ISELNODE(result) || (typeof result == "string") ) loadPath = result;
+						if(ISELNODE(result) || (typeof result === "string") ) loadPath = result;
 					}
 					
 					//ELEMENT(s) or URL
-					if( typeof loadPath == "string" ){
+					if( typeof loadPath === "string" ){
 						
 						//indicator
 						var contextBound = {width:ELSTYLE(this.LoaderContainer,"width"),height:ELSTYLE(this.LoaderContainer,"height")};
 						var indicator;
 						var drawArguments = [contextBound,loadEnum].concat(loadArguments);
 						
-						if(typeof this.drawIndicator == "function"){
+						if(typeof this.drawIndicator === "function"){
 							indicator = this.drawIndicator.apply(own,drawArguments);
 							if(ISELNODE(indicator)) {
 								ELAPPEND(this.LoaderContainer);
@@ -5116,9 +5144,9 @@
 			var _ = this;
 			DATAEACH(eventName,function(eventName){
 				if(eventName == "!global"){
-					if(typeof method == "function") _.LoaderEvents[eventType] = method;
+					if(typeof method === "function") _.LoaderEvents[eventType] = method;
 				} else {
-					if((typeof eventName == "string") && (typeof method == "function")) 
+					if((typeof eventName === "string") && (typeof method === "function")) 
 					return  _.LoaderEvents[eventType][eventName] = method;
 				}
 			});
@@ -5178,7 +5206,7 @@
 		},
 		notification:function(methodName,params){
 			DATAEACH(this.notificationObservers,function(observer){
-				if (typeof observer[methodName] == "function"){
+				if (typeof observer[methodName] === "function"){
 					observer[methodName].apply(observer,params);
 				} else {
 					console.warn("DataContextNotificationCenter",methodName," : 노티피케이션 api가 존재하지 않습니다. =>",observer);
@@ -5204,7 +5232,7 @@
 			}
 		},
 		managedDataBindEventLock:function(flag){
-			if(typeof flag == "boolean") this.notificationBindEventLock = flag
+			if(typeof flag === "boolean") this.notificationBindEventLock = flag
 		}
 	},function(){
 		this.notificationObservers = _Array();
@@ -5220,33 +5248,30 @@
 		_clearPath:function(path){
 			if (ISARRAY(path)) {
 				return path;
-			} else if((typeof path) == "string"){
+			} else if((typeof path) === "string"){
 				path = path.trim();
 				path = path.indexOf("/") == 0 ? path.substr(1) : path;
 				path = this.ID + "/" + path;
 			} else {
 				throw new Error("DataContext::_clearPath::1:Invaild path => "+path);
 			}
-			try {
-				var result    = _Array();
-				var splitPath = path.split("/");
-				
-				DATAEACH(splitPath,function(keyPath){
-					var numberMatch = keyPath.match(/\d/g);
-					if(numberMatch != null) {
-						if(numberMatch.join("") == keyPath){
-							result.push( parseInt(keyPath) );
-							return;
-						}
+			
+			var result    = _Array();
+			var splitPath = path.split("/");
+			
+			DATAEACH(splitPath,function(keyPath){
+				var numberMatch = keyPath.match(/\d/g);
+				if(numberMatch != null) {
+					if(numberMatch.join("") == keyPath){
+						result.push( parseInt(keyPath) );
+						return;
 					}
-					result.push( keyPath );
-				});
-				
-				result.remove("");
-				return result;
-			} catch(e) {
-				throw new Error("DataContext::_clearPath::2:Invaild path => "+path+e);
-			}
+				}
+				result.push( keyPath );
+			});
+			
+			result.remove("");
+			return result;
 		},
 		// 글자로된 패스를 반환한다.
 		_clearStringPath:function(path){
@@ -5258,7 +5283,7 @@
 		},
 		_clearData:function(data){
 			var data = CLONE(data);
-			if( (typeof data) == "object" ) {
+			if( (typeof data) === "object" ) {
 				if(ISARRAY(data)) {
 					return {};
 				} else {
@@ -5267,12 +5292,12 @@
 			}
 		},
 		_childrenData:function(data){
-			if( typeof data == "object" ) {
+			if( typeof data === "object" ) {
 				if(ISARRAY(data)) {
 					return CLONE(data);
 				} else {
 					var childKeyData = data[this.SourceChildrenKey];
-					if(typeof childKeyData == "object"){
+					if(typeof childKeyData === "object"){
 						if(ISARRAY(childKeyData)) {
 							return CLONE(childKeyData);
 						} else {
@@ -5292,7 +5317,7 @@
 				
 				DATAEACH(path,function(pathKey){
 					
-					if (typeof pathKey == "string") {
+					if (typeof pathKey === "string") {
 						switch(pathKey){
 							case "/": case owner.ID:
 								// 아무것도 하지 않음
@@ -5307,7 +5332,7 @@
 								}).flatten().remove(undefined);
 								break;
 						}
-					} else if(typeof pathKey == "number") {
+					} else if(typeof pathKey === "number") {
 						selectData = _Array(selectData).getMap(function(data){
 							if (ISARRAY(data)){
 								return data[pathKey];
@@ -5328,7 +5353,7 @@
 		//자식연쇄 메니지드 데이터를 준비합니다.
 		feedDownManagedDataMake:function(data,parent){
 			
-			if( typeof data == "object" ){
+			if( typeof data === "object" ){
 				
 				var makeManagedData = ISARRAY(data) ? new ManagedData(this,this._clearData(data),"array") : new ManagedData(this,this._clearData(data),"object");
 				
@@ -5341,7 +5366,7 @@
 						if(child) childrens.push(child);
 					});
 				}
-				if(typeof parent == "object") parent.appendChild(makeManagedData);
+				if(typeof parent === "object") parent.appendChild(makeManagedData);
 				
 				return makeManagedData;
 			} else {
@@ -5378,26 +5403,20 @@
 			var thisRoot = this.RootManagedData;
 			
 			var selectedManagedData;
-			try {
-				DATAEACH(paths,function(path){
-					if(thisID == path) {
-						selectedManagedData = thisRoot;
-					} else {
-						selectedManagedData = selectedManagedData.Childrens[parseInt(path)];
-					}
-				});
-			} catch(e) {
-				console.error("존재하지 않는 path를 선택한듯 합니다.",path,e);
-			}
+			
+			DATAEACH(paths,function(path){
+				if(thisID == path) {
+					selectedManagedData = thisRoot;
+				} else {
+					selectedManagedData = selectedManagedData.Childrens[parseInt(path)];
+				}
+			});
+			
 			return selectedManagedData;
 		},
 		getManagedDataWithOffset:function(path,offset){
-			try {
-				var value = /(.*)\/([\d]+)$/.exec(path);
-			} catch(e) {
-				console.error("getNextManagedData 에러",path);
-				return undefined;
-			}
+			var value = /(.*)\/([\d]+)$/.exec(path);
+			if(value === null)console.error("getNextManagedData 에러",path);return;
 			var nextManagedData = this.getManagedData(value[1]+"/"+(parseInt(value[2])+offset));
 			if(ISARRAY(nextManagedData)) nextManagedData = nextManagedData[0];
 			return nextManagedData;
@@ -5415,7 +5434,7 @@
 	
 	makeModule("ViewModel",{
 		needRenderView:function(depth,managedData,feedViews,viewController){
-			if (typeof this.Source[depth] == "function") {
+			if (typeof this.Source[depth] === "function") {
 				var renderResult = this.Source[depth].call(managedData,managedData,feedViews);
 				if(ISELNODE(renderResult)){
 					return renderResult;
@@ -5427,14 +5446,14 @@
 			}
 			return MAKE_DIV({html:TOSTRING(managedData.Source)},feedViews);
 		},
-		whenSelectItem:function(m)  { if(typeof m == "function") this.shouldSelectItem = m; },
-		whenDeselectItem:function(m){ if(typeof m == "function") this.shouldDeselectItem = m; },
+		whenSelectItem:function(m)  { if(typeof m === "function") this.shouldSelectItem = m; },
+		whenDeselectItem:function(m){ if(typeof m === "function") this.shouldDeselectItem = m; },
 		whenSelectToggle:function(se,de){ this.whenSelectItem(se); this.whenDeselectItem(de); },
 		"var!shouldSelectItem"  :function(node,depth){ ELSTYLE(node,"background","#dae8f2"); },
 		"var!shouldDeselectItem":function(node,depth){ ELSTYLE(node,"background","none") }
 	},function(renderDepth){
 		this.Source = _Array(arguments).map(function(a){
-			if(typeof a == "string"){
+			if(typeof a === "string"){
 				return function(args){
 					return ELAPPEND(E(a),args);
 				}
@@ -5479,7 +5498,7 @@
 			method(this,depth-1);
 		},
 		chainUpMangedData:function(method){
-			if(typeof method == "function"){
+			if(typeof method === "function"){
 				method.call(this);
 				if( this.Parent ) this.Parent.chainUpMangedData(method);
 			}
@@ -5505,7 +5524,7 @@
 		bind:function(dataKey,bindElement,optional){
 			if(this.scope) {
 				//엘리먼트 기본설정값
-				var element = typeof bindElement == "undefined" ? CREATE("input!"+bindElement) : CREATE(bindElement);
+				var element = typeof bindElement === "undefined" ? CREATE("input!"+bindElement) : CREATE(bindElement);
 				this.scope.addBindNode(element,this,dataKey, optional);
 				return element;
 			} else {
@@ -5597,8 +5616,8 @@
 		},
 		//하위 데이터를 추가함
 		managedDataAppend:function(data){
-			if(typeof data == "function") data = data();
-			if(typeof data == "object") {
+			if(typeof data === "function") data = data();
+			if(typeof data === "object") {
 				this.context.feedDownManagedDataMake(data,this);
 				DataContextNotificationCenter.managedDataAppend(this.BindID,this.Childrens.getLast());
 			} else {
@@ -5620,14 +5639,14 @@
 	makeModule("DataContextViewController",{
 		"var!events":{
 			"up":function(managedData,arg){
-				if(typeof arg == "function") {
+				if(typeof arg === "function") {
 					if( arg(managedData,element) != false ) managedData.managedDataDecrease();
 				} else {
 					managedData.managedDataDecrease();
 				}
 			},
 			"down":function(managedData,arg){
-				if(typeof arg == "function") {
+				if(typeof arg === "function") {
 					if( arg(managedData,element) != false ) managedData.managedDataIncrease();
 				} else {
 					managedData.managedDataIncrease();
@@ -5641,7 +5660,7 @@
 			}
 		},
 		addEvent:function(name,method){
-			if(typeof name == "string", typeof method == "function"){
+			if(typeof name === "string", typeof method === "function"){
 				this.events[name] = method;
 			}
 		},
@@ -5703,7 +5722,7 @@
 			if(acceptDidChange == true ) CALL(this.dataDidChange,this);
 		},
 		addPlaceholderNode:function(bindID,placeholderNode){
-			if( typeof bindID == "string" && ISELNODE(placeholderNode) ){
+			if( typeof bindID === "string" && ISELNODE(placeholderNode) ){
 				this.placeholderNodes[bindID] = placeholderNode;
 			}
 		},
@@ -5745,7 +5764,7 @@
 		addActionNode:function(actionName,element,managedData,arg){
 			var viewController = this;
 			ELON(element,"click", function(){
-				if (typeof viewController.events[actionName] == "function") {
+				if (typeof viewController.events[actionName] === "function") {
 					viewController.events[actionName].call(
 						viewController.events,
 						managedData,
@@ -5898,8 +5917,8 @@
 			return CLONE(this.selectIndexes);
 		},
 		//이벤트
-		whenItemDidChange:function(m){ if((typeof m == "function") || m == undefined) this.selectItemDidChange = m; },
-		whenDataDidChange:function(m){ if((typeof m == "function") || m == undefined) this.dataDidChange = m; },
+		whenItemDidChange:function(m){ if((typeof m === "function") || m == undefined) this.selectItemDidChange = m; },
+		whenDataDidChange:function(m){ if((typeof m === "function") || m == undefined) this.dataDidChange = m; },
 		"var!selectItemDidChange":undefined,
 		"var!dataDidChange":undefined
 	},function(view,managedData,viewModel){
@@ -6022,7 +6041,7 @@
 			//if(ScrollH != this.Source.scrollHeight)needScrollingOffsetY((this.Source.scrollHeight - ScrollH) / 2);
 			
 		},
-		needZoomOffset:function(offset){ if( typeof this.StartZoom == "number" ) this.needZoom(this.StartZoom + offset); },
+		needZoomOffset:function(offset){ if( typeof this.StartZoom === "number" ) this.needZoom(this.StartZoom + offset); },
 		//
 		// var _drawAxisYItem
 		drawAxisYItem:function(rend){
@@ -6030,22 +6049,22 @@
 		},
 		// true == infinite
 		setAllowMakeAxisYItem:function(positive,negative){
-			if (typeof positive == "boolean") {
+			if (typeof positive === "boolean") {
 				this.axisYPositiveLength = positive ? 100 : 0;
-			} else if(typeof positive == "number") {
+			} else if(typeof positive === "number") {
 				this.axisYPositiveLength = positive;
 			}
 			
-			if (typeof negative == "boolean") {
+			if (typeof negative === "boolean") {
 				this.axisYNegativeLength = negative ? 100 : 0;
-			} else if(typeof negative == "number") {
+			} else if(typeof negative === "number") {
 				this.axisYNegativeLength = negative;
 			}
 			
 			this.needPositiveDrawItem();
 		},
 		needPositiveDrawItem:function(){
-			if(typeof this._drawAxisYItem == "function"){
+			if(typeof this._drawAxisYItem === "function"){
 				for(var i=this.axisYPositiveItems.length,l=this.axisYPositiveLength;i<l;i++){
 					var node = this._drawAxisYItem(i);
 					
@@ -6061,7 +6080,7 @@
 			}
 		},
 		needNegativeDrawItem:function(){
-			if(typeof this._drawAxisYItem == "function"){
+			if(typeof this._drawAxisYItem === "function"){
 				if(this.axisYNegativeItems.length < this.axisYNegativeLength){
 					var i = ((this.axisYNegativeItems.length * -1) -1);
 					var node = this._drawAxisYItem(i);
