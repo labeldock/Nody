@@ -73,7 +73,7 @@ loader.setLoadEvent("appear",function(){
 	
 	appearLoad();
 })
-loader.setSwitchEvent("appear",function(){	
+loader.setToggleEvent("appear",function(){	
 	appearOpen();
 },function(){
 	FIND(".appear-ready",DATAEACH,function(node,i){
@@ -118,14 +118,14 @@ loader.setLoadEvent("mvvm",function(){
   	  						  	MAKE("label",this.action("append",MAKE("button",MAKE("span.glyphicon.glyphicon-plus")),function(){ return {title:"Item"+itemIndex++};}))
   						  )
   						),
-						this.container("td")
+						this.placeholder("td")
   					)
   				)
   	  		)
   	  	  );
   	  },
   	  function(){
-  		  return this.container("ul.menu")
+  		  return this.placeholder("ul.menu")
   	  }
     );
 	//뷰를 그리고 이벤트를 등록함
@@ -155,7 +155,7 @@ var viewModels = {
 			MAKE("img",{src:this.data("image")})
 		);
 	},function(){
-		return this.container("ul");
+		return this.placeholder("ul");
 	}),
 	"large":new ViewModel(function(){
 		return MAKE("li.inline-box.text-center",
@@ -165,7 +165,7 @@ var viewModels = {
 		
 		
 	},function(){
-		return this.container("ul");
+		return this.placeholder("ul");
 	}),
 	"list":new ViewModel(function(){
 		return MAKE("tr",
@@ -182,7 +182,7 @@ var viewModels = {
 					MAKE("th::image")
 				)
 			),
-			this.container("tbody")
+			this.placeholder("tbody")
 		);
 	})
 }
@@ -223,7 +223,7 @@ loader.setLoadEvent("multiselect",function(){
 			)
 		);
 	},function(){
-		return this.container("div.row-fluid");
+		return this.placeholder("div.row-fluid");
 	});
 	multiViewModel.whenSelectToggle(
 		function(node){
@@ -267,7 +267,7 @@ loader.setLoadEvent("selectbind",function(){
 			this.bind("native","p.list-group-item-text")
 		)
 	},function(){
-		return this.container("div.menu.list-group")
+		return this.placeholder("div.menu.list-group")
 	});
 	
 	listViewModel.whenSelectToggle(function(node){
@@ -328,5 +328,5 @@ loader.setLoadEvent("scroll",function(){
 			)
 		);
 	});
-	calendarBox.setAxisYRange(200,200);
+	calendarBox.setAllowMakeAxisYItem(200,200);
 });
