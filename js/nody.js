@@ -6,9 +6,10 @@
 //Nody CoreFoundation
 
 (function(W,NGetters,NSingletons,NModules,NStructure){
+	
 	// 버전
-	var version = new String("0.8.0");
-	var build   = new String("752");
+	var version = new String("0.8.1");
+	var build   = new String("755");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -3913,16 +3914,39 @@
 	});
 	
 	extendModule("Nody","Template",{
-		newTemplate:function(){
-			return _Template.apply(Template,this.TemplateOrder);
+		create:function(partialData){
+			return _Template.call(Template,this.TemplateNode,partialData);
+		},
+		// 키를 지우면서
+		partialAttr:function(attrKey,method){
+			this.find("["+attrKey+"]").each(function(node){
+				//attrValue, node
+				method(node.getAttribute(attrKey),node,attrKey);
+				node.removeAttribute(attrKey);
+			});
+			return this;
+		},
+		partialData:function(data){
+			if(typeof data !== "object") { return console.error("partialData의 파라메터는 object이여야 합니다"); }
+			this.partialAttr("partial-value",function(attrValue,node){
+				ELVALUE(node,data[attrValue]);
+			});
+			this.partialAttr("partial-src",function(attrValue,node){
+				node.setAttribute("src",data[attrValue]);
+			});
+			this.partialAttr("partial-href",function(attrValue,node){
+				node.setAttribute("href",data[attrValue]);
+			});
+			return this;
 		}
-	},function(node,parent,cancel){
-		this.TemplateOrder = Array.prototype.slice.call(arguments,0,2);
+	},function(node,partialData,cancel){
+		this.TemplateNode  = node;
 		if(cancel !== false){
-			var findNode = FIND(this.TemplateOrder[0],this.TemplateOrder[1]);
+			var findNode = FIND(this.TemplateNode);
 			if (findNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",node)
 			if (findNode.length !== 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",findNode);
 			this.setSource(IMPORTNODE(ZERO(findNode)));
+			if(typeof partialData == "object") this.partialData(partialData);
 		}
 	});
 	
@@ -5542,29 +5566,23 @@
 		},
 		configWithTemplate:function(_template){
 			var _ = this;
-			var templateNode = _template.newTemplate().selectFirst();
+			var templateNode = _template.create().selectFirst();
+			
 			if(templateNode.isEmpty()) console.error("configWithTemplate :: 렌더링할 template를 찾을수 없습니다");
 			
-			templateNode.find("[data]").each(function(node){
-				var dataKey = node.getAttribute("data");
+			templateNode.partialAttr("data",function(dataKey,node){
 				ELVALUE(node,dataKey,_.data(dataKey));
-				node.removeAttribute("data");
 			});
-			templateNode.find("[data-bind]").each(function(node){
-				var dataKey = node.getAttribute("data-bind");
+			templateNode.partialAttr("data-bind",function(dataKey,node){
 				_.bind(dataKey,node)
-				node.removeAttribute("data-bind");
-			});;
-			templateNode.find("[data-action]").each(function(node){
-				var dataKey   = node.getAttribute("data-action");
+			});
+			templateNode.partialAttr("data-action",function(dataKey,node){
 				var dataParam = node.getAttribute("data-param");
 				_.action(dataKey,node,TOOBJECT(dataParam,"value"));
-				node.removeAttribute("data-action");
-				if("data-param" in node.attributes) node.removeAttribute("data-param");;
+				if("data-param" in node.attributes) node.removeAttribute("data-param");;	
 			});
-			templateNode.find("[data-placeholder]").selectFirst().each(function(node){
+			templateNode.partialAttr("data-placeholder",function(dataKey,node){
 				_.placeholder(node);
-				delete node.removeAttribute["data-placeholder"];
 			});
 			return templateNode.zero();
 		},
