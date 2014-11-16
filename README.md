@@ -114,6 +114,7 @@ css 스타일로 구현 가능
         <div id="hello" class="world" my="code" disabled>foo</div>
 ```
 
+<a name="showcase-tag-generator-02"/>
 #### Case 2 #
 오브젝트를 값을 사용하여 만들수 있음
 ```javascript
@@ -123,25 +124,14 @@ css 스타일로 구현 가능
         <div id="hello" class="world" data-hello="world" data-data="set"></div>
 ```
 
-<a name="showcase-tag-generator-02"/>
-#### Case 3 #        
-_[tagName] 방식으로 가능
-
-```javascript
-        MAKE_LI(".list::helloWorld");
-```
-```html
-        <li class="list">helloWorld</li>
-``` 
-
 <a name="showcase-tag-generator-03"/>
-#### Case 4 #
+#### Case 3 #
 파라메터를 중첩하여 생성가능
 
 ```javascript
         MAKE("ul",
-          MAKE_LI(".item::list1"),
-          MAKE_LI(".item::list2")
+          MAKE("li.item::list1"),
+          MAKE("li.item::list2")
         );
 ```
 ```html
@@ -152,11 +142,11 @@ _[tagName] 방식으로 가능
 ``` 
 
 <a name="showcase-tag-generator-04"/>
-#### Case 5 #
+#### Case 4 #
 테이블 생성예제
 
 ```javascript
-        MAKE_TABLE("#my-table",
+        MAKE("table#my-table",
             MAKE("a[href=#]::link1"),
             MAKE("a[href=#]::link2"),
             MAKE("a[href=#]::link3")

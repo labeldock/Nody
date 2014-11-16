@@ -178,6 +178,8 @@
         &lt;div id="hello" class="world" my="code" disabled&gt;foo&lt;/div&gt;
 </code></p>
 
+<p><a name="showcase-tag-generator-02"/></p>
+
 <h4>Case 2</h4>
 
 <p>오브젝트를 값을 사용하여 만들수 있음
@@ -188,29 +190,16 @@
         &lt;div id="hello" class="world" data-hello="world" data-data="set"&gt;&lt;/div&gt;
 </code></p>
 
-<p><a name="showcase-tag-generator-02"/></p>
-
-<h4>Case 3 #</h4>
-
-<p>_[tagName] 방식으로 가능</p>
-
-<p><code>javascript
-        MAKE_LI(".list::helloWorld");
-</code>
-<code>html
-        &lt;li class="list"&gt;helloWorld&lt;/li&gt;
-</code></p>
-
 <p><a name="showcase-tag-generator-03"/></p>
 
-<h4>Case 4</h4>
+<h4>Case 3</h4>
 
 <p>파라메터를 중첩하여 생성가능</p>
 
 <p><code>javascript
         MAKE("ul",
-          MAKE_LI(".item::list1"),
-          MAKE_LI(".item::list2")
+          MAKE("li.item::list1"),
+          MAKE("li.item::list2")
         );
 </code>
 <code>html
@@ -222,12 +211,12 @@
 
 <p><a name="showcase-tag-generator-04"/></p>
 
-<h4>Case 5</h4>
+<h4>Case 4</h4>
 
 <p>테이블 생성예제</p>
 
 <p><code>javascript
-        MAKE_TABLE("#my-table",
+        MAKE("table#my-table",
             MAKE("a[href=#]::link1"),
             MAKE("a[href=#]::link2"),
             MAKE("a[href=#]::link3")
