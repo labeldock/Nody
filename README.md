@@ -230,6 +230,8 @@ Result
 ```html
 		<ul id="container">
 			<li class="foo">bar</li>
+			<li class="foo">bar</li>
+			<li class="foo">bar</li>
 		</ul>
 ```
 
