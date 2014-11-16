@@ -215,8 +215,10 @@ _[tagName] 방식으로 가능
 #### Create template node #
 Tag
 ```html
-		<ul id="container">
-		</ul>
+		<!-- Container -->
+		<ul id="container"></ul>
+		
+		<!-- Template -->
 		<template id="li-temp">
 			<li class="foo">bar</li>
 		</template>
@@ -255,7 +257,8 @@ Script
 			"spanValueKey"  : "InnerHTML value",
 			"inputValueKey" : "Input value"
 		};
-		_Template("template#menu-item");
+		
+		_Template("template#menu-item",data); => Result
 ```
 Result
 ```html

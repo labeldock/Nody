@@ -295,26 +295,30 @@
 <h4>Create template node</h4>
 
 <p>Tag
-<code>html
-        &lt;ul id="container"&gt;
-        &lt;/ul&gt;
-        &lt;template id="li-temp"&gt;
-            &lt;li class="foo"&gt;bar&lt;/li&gt;
-        &lt;/template&gt;
-</code>
+```html
+        <!-- Container -->
+        <ul id="container"></ul></p>
+
+<pre><code>    &lt;!-- Template --&gt;
+    &lt;template id="li-temp"&gt;
+        &lt;li class="foo"&gt;bar&lt;/li&gt;
+    &lt;/template&gt;
+</code></pre>
+
+<p><code>
 Script
-<code>javascript
-        var ul = ZFIND("ul#container");
-        for(var i=0,l=3;i&lt;l;i++) ul.appendChild( _Template("template#li-temp") );
-</code>
+</code>javascript
+        var ul = ZFIND(&ldquo;ul#container&rdquo;);
+        for(var i=0,l=3;i&lt;l;i++) ul.appendChild( _Template(&ldquo;template#li-temp&rdquo;) );
+<code>
 Result
-<code>html
-        &lt;ul id="container"&gt;
-            &lt;li class="foo"&gt;bar&lt;/li&gt;
-            &lt;li class="foo"&gt;bar&lt;/li&gt;
-            &lt;li class="foo"&gt;bar&lt;/li&gt;
-        &lt;/ul&gt;
-</code></p>
+</code>html
+        <ul id="container">
+            <li class="foo">bar</li>
+            <li class="foo">bar</li>
+            <li class="foo">bar</li>
+        </ul>
+```</p>
 
 <p><a name="showcase-template-02"/></p>
 
@@ -331,23 +335,26 @@ Result
         &lt;/template&gt;
 </code>
 Script
-<code>javascript
+```javascript
         var data = {
-            "hrefKey"       : "#first",
-            "srcKey"        : "somewhere.png",
-            "spanValueKey"  : "InnerHTML value",
-            "inputValueKey" : "Input value"
-        };
-        _Template("template#menu-item");
-</code>
+            &ldquo;hrefKey&rdquo;       : &ldquo;#first&rdquo;,
+            &ldquo;srcKey&rdquo;        : &ldquo;somewhere.png&rdquo;,
+            &ldquo;spanValueKey&rdquo;  : &ldquo;InnerHTML value&rdquo;,
+            &ldquo;inputValueKey&rdquo; : &ldquo;Input value&rdquo;
+        };</p>
+
+<pre><code>    _Template("template#menu-item",data); =&gt; Result
+</code></pre>
+
+<p><code>
 Result
-<code>html
-    &lt;a href="#first"&gt;
-        &lt;img src="somewhere.png"&gt;
-        &lt;span&gt;InnerHTML value&lt;/span&gt;
-        &lt;input type="text" value="Input value"&gt;
-    &lt;/a&gt;
-</code>
+</code>html
+    <a href="#first">
+        <img src="somewhere.png">
+        <span>InnerHTML value</span>
+        <input type="text" value="Input value">
+    </a>
+```
 <a name="showcase-mvvm"/></p>
 
 <h3>MVVM</h3>
