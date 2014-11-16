@@ -74,8 +74,7 @@ Nody는...
   - opera 15+
 
 #### Minimum #
-  - Core Module : IE8+ 
-  - Node Module : IE9+
+  - 일반적으로 IE9에서 동작되는것으로 확인되나 IE8까지 지원하도록 노력하고 있습니다.
 
 <a name="feature"/>
 ## Featrue #
