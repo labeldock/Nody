@@ -21,8 +21,15 @@ Nody.js
       - [Case3](#showcase-tag-generator-03)
       - [Case4](#showcase-tag-generator-04)
     - [셀렉트](#showcase-select)
-      - [Case1](#showcase-select-01)
-      - [Case2](#showcase-select-02)
+      - [Select](#showcase-select-01)
+	  - [Return node](#showcase-select-02)
+      - [Switch to other selector](#showcase-select-03)
+    - [Template partial](#showcase-template)
+      - [Create template node](#showcase-template-01)
+      - [Partial template node](#showcase-template-02)
+    - [MVVM](#showcase-mvvm)
+      - [Basic](#showcase-template-01)
+      - [With template](#showcase-template-02)
     - [Enumerate](#showcase-enumerate)
       - [Each](#showcase-enumerate-each)
       - [Map](#showcase-enumerate-map)
@@ -181,26 +188,187 @@ _[tagName] 방식으로 가능
 ### 셀렉트 #
 
 <a name="showcase-select-01"/>
-#### 선택방법 1 #
+#### Select #
 ```javascript
         FIND("div.target");
-        //result=> [div.target,div.target...]  <= native array
-        //
+        //result => [div.target,div.target...]  <= native array
 ```
 
 <a name="showcase-select-02"/>
-#### 선택방법 2 #
+#### Return node #
+```javascript
+		// Z(ero)Find
+		ZFIND("div.target");
+		//result => Element (<div class="target"></div>)
+```
+
+<a name="showcase-select-03"/>
+#### Switch to other selector #
 ```javascript
         FIND("div.target",jQuery);
-        //result=> jQuery Object
+        //result=> [object jQuery]
 ```
-응용
+<a name="showcase-template"/>
+### Template partial #
+
+<a name="showcase-template-01"/>
+#### Create template node #
+Tag
 ```html
-        <div class="target" foo="bar"></div>
-        <script>
-            FIND("div.target",jQuery).attr("foo");
-            //result=> bar
-        </script>
+		<ul id="container">
+		</ul>
+		<template id="li-temp">
+			<li class="foo">bar</li>
+		</template>
+```
+Script
+```javascript
+		var ul = ZFIND("ul#container");
+		for(var i=0,l=3;i<l;i++) ul.appendChild( _Template("template#li-temp") );
+```
+Result
+```html
+		<ul id="container">
+			<li class="foo">bar</li>
+		</ul>
+```
+
+<a name="showcase-template-02"/>
+#### Partial template node #
+Tag
+```html
+		<template id="menu-item">
+			<a partial-href="hrefKey">
+				<img partial-src="srcKey">
+				<span partial-value="spanValueKey"></span>
+				<input type="text" partial-value="inputValueKey">
+			</a>
+		</template>
+```
+Script
+```javascript
+		var data = {
+			"hrefKey"       : "#first",
+			"srcKey"        : "somewhere.png",
+			"spanValueKey"  : "InnerHTML value",
+			"inputValueKey" : "Input value"
+		};
+		_Template("template#menu-item");
+```
+Result
+```html
+	<a href="#first">
+		<img src="somewhere.png">
+		<span>InnerHTML value</span>
+		<input type="text" value="Input value">
+	</a>
+```
+<a name="showcase-mvvm"/>
+### MVVM #
+
+특징
+  - 다중의 뎁스구조 지원
+  - 데이터 모델의 구조를 미리 정의하지 않음
+  - 일부만 따로 렌더링 할 수 있음
+  - 실시간 바인드 지원
+
+<a name="showcase-mvvm-01"/>  
+#### Basic #
+```javascript
+	// Original data
+	var data = [
+		{index:"1",value:"one"},
+		{index:"2",value:"two"},
+		{index:"3",value:"three"}
+	];
+	
+	// Presentation object
+	var dataContext = _DataContext(data);
+	
+	// Draw model
+	var viewModel = _ViewModel(
+	//depth1
+	function(){
+		return this.placeholder("ul.top");
+	},
+	//depth2
+	function(){
+		return MAKE("li",MAKE("span",{href:this.data("index")}),this.bind("value","input?text"));
+	});
+	
+	// View controller
+	var viewController = _DataContextViewController("#container",dataContext,viewModel);
+	viewController.needDisplay(); // draw view start
+	
+	//Get data
+	dataContext.getJSONObject(); => [{index:"1",value:"one"},{index:"2",value:"two"},{index:"3",value:"three"}]
+```
+Result
+```html
+		<section id="container">
+			<ul class="top">
+				<li><span>1</span><input type="text" value="one"></li>
+				<li><span>2</span><input type="text" value="two"></li>
+				<li><span>3</span><input type="text" value="three"></li>
+			</ul>
+		</section>
+```
+
+<a name="showcase-mvvm-02"/>  
+#### With template #
+
+```html
+	<template id="table" hidden>
+		<table>
+			<thead>
+				<tr>
+					<th>index</th>
+					<th>value</th>
+				</tr>
+			</thead>
+			<tbody data-placeholder></tbody>
+		</table>
+	</template>
+	<template id="tbody-item">
+		<tr>
+			<td data-value="index"></td>
+			<td data-value="value"></td>
+		</tr>
+	</template>
+	
+```
+```javascript
+		var dataContext = _DataContext(data);
+		var viewModel = _ViewModel("template#table","template#tbody-item");
+		var viewController = _DataContextViewController("#container",dataContext,viewModel);
+		viewController.needDisplay();
+```
+Result
+```html
+	<section id="container">
+		<table>
+			<thead>
+				<tr>
+					<th>index</th>
+					<th>value</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>1</td>
+					<td>one</td>
+				</tr>
+				<tr>
+					<td>2</td>
+					<td>two</td>
+				</tr>
+				<tr>
+					<td>3</td>
+					<td>three</td>
+				</tr>
+			</tbody>
+		</table>
+	</section>
 ```
 
 <a name="showcase-enumerate"/>

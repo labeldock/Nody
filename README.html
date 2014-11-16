@@ -31,8 +31,23 @@
 <li><a href="#showcase-select">셀렉트</a>
 
 <ul>
-<li><a href="#showcase-select-01">Case1</a></li>
-<li><a href="#showcase-select-02">Case2</a></li>
+<li><a href="#showcase-select-01">Select</a></li>
+<li><a href="#showcase-select-02">Return node</a></li>
+<li><a href="#showcase-select-03">Switch to other selector</a></li>
+</ul>
+</li>
+<li><a href="#showcase-template">Template partial</a>
+
+<ul>
+<li><a href="#showcase-template-01">Create template node</a></li>
+<li><a href="#showcase-template-02">Partial template node</a></li>
+</ul>
+</li>
+<li><a href="#showcase-mvvm">MVVM</a>
+
+<ul>
+<li><a href="#showcase-template-01">Basic</a></li>
+<li><a href="#showcase-template-02">With template</a></li>
 </ul>
 </li>
 <li><a href="#showcase-enumerate">Enumerate</a>
@@ -246,30 +261,204 @@
 
 <p><a name="showcase-select-01"/></p>
 
-<h4>선택방법 1</h4>
+<h4>Select</h4>
 
 <p><code>javascript
         FIND("div.target");
-        //result=&gt; [div.target,div.target...]  &lt;= native array
-        //
+        //result =&gt; [div.target,div.target...]  &lt;= native array
 </code></p>
 
 <p><a name="showcase-select-02"/></p>
 
-<h4>선택방법 2</h4>
+<h4>Return node</h4>
+
+<p><code>javascript
+        // Z(ero)Find
+        ZFIND("div.target");
+        //result =&gt; Element (&lt;div class="target"&gt;&lt;/div&gt;)
+</code></p>
+
+<p><a name="showcase-select-03"/></p>
+
+<h4>Switch to other selector</h4>
 
 <p><code>javascript
         FIND("div.target",jQuery);
-        //result=&gt; jQuery Object
+        //result=&gt; [object jQuery]
 </code>
-응용
+<a name="showcase-template"/></p>
+
+<h3>Template partial</h3>
+
+<p><a name="showcase-template-01"/></p>
+
+<h4>Create template node</h4>
+
+<p>Tag
 <code>html
-        &lt;div class="target" foo="bar"&gt;&lt;/div&gt;
-        &lt;script&gt;
-            FIND("div.target",jQuery).attr("foo");
-            //result=&gt; bar
-        &lt;/script&gt;
+        &lt;ul id="container"&gt;
+        &lt;/ul&gt;
+        &lt;template id="li-temp"&gt;
+            &lt;li class="foo"&gt;bar&lt;/li&gt;
+        &lt;/template&gt;
+</code>
+Script
+<code>javascript
+        var ul = ZFIND("ul#container");
+        for(var i=0,l=3;i&lt;l;i++) ul.appendChild( _Template("template#li-temp") );
+</code>
+Result
+<code>html
+        &lt;ul id="container"&gt;
+            &lt;li class="foo"&gt;bar&lt;/li&gt;
+        &lt;/ul&gt;
 </code></p>
+
+<p><a name="showcase-template-02"/></p>
+
+<h4>Partial template node</h4>
+
+<p>Tag
+<code>html
+        &lt;template id="menu-item"&gt;
+            &lt;a partial-href="hrefKey"&gt;
+                &lt;img partial-src="srcKey"&gt;
+                &lt;span partial-value="spanValueKey"&gt;&lt;/span&gt;
+                &lt;input type="text" partial-value="inputValueKey"&gt;
+            &lt;/a&gt;
+        &lt;/template&gt;
+</code>
+Script
+<code>javascript
+        var data = {
+            "hrefKey"       : "#first",
+            "srcKey"        : "somewhere.png",
+            "spanValueKey"  : "InnerHTML value",
+            "inputValueKey" : "Input value"
+        };
+        _Template("template#menu-item");
+</code>
+Result
+<code>html
+    &lt;a href="#first"&gt;
+        &lt;img src="somewhere.png"&gt;
+        &lt;span&gt;InnerHTML value&lt;/span&gt;
+        &lt;input type="text" value="Input value"&gt;
+    &lt;/a&gt;
+</code>
+<a name="showcase-mvvm"/></p>
+
+<h3>MVVM</h3>
+
+<p>특징
+  - 다중의 뎁스구조 지원
+  - 데이터 모델의 구조를 미리 정의하지 않음
+  - 일부만 따로 렌더링 할 수 있음
+  - 실시간 바인드 지원</p>
+
+<p><a name="showcase-mvvm-01"/></p>
+
+<h4>Basic</h4>
+
+<p>```javascript
+    // Original data
+    var data = [
+        {index:&ldquo;1&rdquo;,value:&ldquo;one&rdquo;},
+        {index:&ldquo;2&rdquo;,value:&ldquo;two&rdquo;},
+        {index:&ldquo;3&rdquo;,value:&ldquo;three&rdquo;}
+    ];</p>
+
+<pre><code>// Presentation object
+var dataContext = _DataContext(data);
+
+// Draw model
+var viewModel = _ViewModel(
+//depth1
+function(){
+    return this.placeholder("ul.top");
+},
+//depth2
+function(){
+    return MAKE("li",MAKE("span",{href:this.data("index")}),this.bind("value","input?text"));
+});
+
+// View controller
+var viewController = _DataContextViewController("#container",dataContext,viewModel);
+viewController.needDisplay(); // draw view start
+
+//Get data
+dataContext.getJSONObject(); =&gt; [{index:"1",value:"one"},{index:"2",value:"two"},{index:"3",value:"three"}]
+</code></pre>
+
+<p><code>
+Result
+</code>html
+        <section id="container">
+            <ul class="top">
+                <li><span>1</span><input type="text" value="one"></li>
+                <li><span>2</span><input type="text" value="two"></li>
+                <li><span>3</span><input type="text" value="three"></li>
+            </ul>
+        </section>
+```</p>
+
+<p><a name="showcase-mvvm-02"/></p>
+
+<h4>With template</h4>
+
+<p>```html
+    <template id="table" hidden>
+        <table>
+            <thead>
+                <tr>
+                    <th>index</th>
+                    <th>value</th>
+                </tr>
+            </thead>
+            <tbody data-placeholder></tbody>
+        </table>
+    </template>
+    <template id="tbody-item">
+        <tr>
+            <td data-value="index"></td>
+            <td data-value="value"></td>
+        </tr>
+    </template></p>
+
+<p><code>
+</code>javascript
+        var dataContext = <em>DataContext(data);
+        var viewModel = </em>ViewModel(&ldquo;template#table&rdquo;,&ldquo;template#tbody-item&rdquo;);
+        var viewController = _DataContextViewController(&ldquo;#container&rdquo;,dataContext,viewModel);
+        viewController.needDisplay();
+<code>
+Result
+</code>html
+    <section id="container">
+        <table>
+            <thead>
+                <tr>
+                    <th>index</th>
+                    <th>value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>one</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>two</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>three</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+```</p>
 
 <p><a name="showcase-enumerate"/></p>
 
