@@ -368,21 +368,30 @@ Result
 
 <a name="showcase-enumerate"/>
 ### enumerate #
+참고 : 대문자로 호출하는 함수는 _Array,_Object 와 같은 모듈보다 훨씬 빠르다.
 
 <a name="showcase-enumerate-each"/>
 #### Each #
 ```javascript
-       _Array([1,2,3]).each(function(value,index){
-           console.log(value,index)
-       });
-       //log => 1,0
-       //log => 2,1
-       //log => 3,2
+		DATAEACH([1,2,3],function(value,index){
+			console.log(value,index)
+		});
+		//or
+		_Array([1,2,3]).each(function(value,index){
+			console.log(value,index)
+		});
+		//log => 1,0
+		//log => 2,1
+		//log => 3,2
 ```
 
 <a name="showcase-enumerate-map"/>
 #### Map #
 ```javascript
+		DATAMAP([1,3,5],function(v){
+			return v+1;
+		});
+		//or
         _Array([1,3,5]).map(function(v){
             return v+1;
         });
@@ -392,6 +401,14 @@ Result
 <a name="showcase-enumerate-inject"/>
 #### Inject #
 ```javascript
+		INJECTOBJECT([2,4,6],function(injectObject,value,index){
+			injectObject[index] = value;
+		});
+		//or
+		INJECTOBJECT([2,4,6],function(injectObject,value,index){
+			injectObject[index] = value;
+		},{});
+		//or
         _Array([2,4,6]).inject({},function(injectObject,value,index){
             injectObject[index] = value;
         });
@@ -401,26 +418,35 @@ Result
 <a name="showcase-enumerate-eachback"/>
 #### Eachback #
 ```javascript
-       _Array([1,2,3]).eachback(function(value,index){
-           console.log(value,index)
-       });
-       //log => 3,2
-       //log => 2,1
-       //log => 1,0
+		DATAEACHBACK([1,2,3],function(){
+			console.log(value,index)
+		});
+		//or
+		_Array([1,2,3]).eachback(function(value,index){
+		   console.log(value,index)
+		});
+		//log => 3,2
+		//log => 2,1
+		//log => 1,0
 ```
 
 <a name="showcase-enumerate-object-each"/>
 #### Object each #
 _Array와 마찬가지로 _Object도 동일하게 동작하도록 하는게 원칙입니다.
 ```javascript
+		
         var sample = [];
         _Object({1:2,2:3,4:5}).each(function(value,key){
             sample.push(key+value);
         });
         console.log(sample);
         //=>["12", "23", "45"]
+		
+		//or
+		ENUMERATION({1:2,2:3,4:5},function(value,key){
+			console.log(key+value);
+		});
 ```
-
 
 <a name="showcase-parsing"/>
 ### Parsing #
@@ -434,7 +460,6 @@ TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브�
         */
         //but top case is 10x more fast (native json parsing)
 ```
-
 
 <a name="showcase-type-inspect"/>
 ### TypeInsepct #

@@ -457,17 +457,23 @@ Result
 
 <h3>enumerate</h3>
 
+<p>참고 : 대문자로 호출하는 함수는 <em>Array,</em>Object 와 같은 모듈보다 훨씬 빠르다.</p>
+
 <p><a name="showcase-enumerate-each"/></p>
 
 <h4>Each</h4>
 
 <p><code>javascript
-       _Array([1,2,3]).each(function(value,index){
-           console.log(value,index)
-       });
-       //log =&gt; 1,0
-       //log =&gt; 2,1
-       //log =&gt; 3,2
+        DATAEACH([1,2,3],function(value,index){
+            console.log(value,index)
+        });
+        //or
+        _Array([1,2,3]).each(function(value,index){
+            console.log(value,index)
+        });
+        //log =&gt; 1,0
+        //log =&gt; 2,1
+        //log =&gt; 3,2
 </code></p>
 
 <p><a name="showcase-enumerate-map"/></p>
@@ -475,6 +481,10 @@ Result
 <h4>Map</h4>
 
 <p><code>javascript
+        DATAMAP([1,3,5],function(v){
+            return v+1;
+        });
+        //or
         _Array([1,3,5]).map(function(v){
             return v+1;
         });
@@ -486,6 +496,14 @@ Result
 <h4>Inject</h4>
 
 <p><code>javascript
+        INJECTOBJECT([2,4,6],function(injectObject,value,index){
+            injectObject[index] = value;
+        });
+        //or
+        INJECTOBJECT([2,4,6],function(injectObject,value,index){
+            injectObject[index] = value;
+        },{});
+        //or
         _Array([2,4,6]).inject({},function(injectObject,value,index){
             injectObject[index] = value;
         });
@@ -497,12 +515,16 @@ Result
 <h4>Eachback</h4>
 
 <p><code>javascript
-       _Array([1,2,3]).eachback(function(value,index){
+        DATAEACHBACK([1,2,3],function(){
+            console.log(value,index)
+        });
+        //or
+        _Array([1,2,3]).eachback(function(value,index){
            console.log(value,index)
-       });
-       //log =&gt; 3,2
-       //log =&gt; 2,1
-       //log =&gt; 1,0
+        });
+        //log =&gt; 3,2
+        //log =&gt; 2,1
+        //log =&gt; 1,0
 </code></p>
 
 <p><a name="showcase-enumerate-object-each"/></p>
@@ -510,14 +532,22 @@ Result
 <h4>Object each</h4>
 
 <p><em>Array와 마찬가지로 </em>Object도 동일하게 동작하도록 하는게 원칙입니다.
-<code>javascript
-        var sample = [];
-        _Object({1:2,2:3,4:5}).each(function(value,key){
-            sample.push(key+value);
-        });
-        console.log(sample);
-        //=&gt;["12", "23", "45"]
-</code></p>
+```javascript</p>
+
+<pre><code>    var sample = [];
+    _Object({1:2,2:3,4:5}).each(function(value,key){
+        sample.push(key+value);
+    });
+    console.log(sample);
+    //=&gt;["12", "23", "45"]
+
+    //or
+    ENUMERATION({1:2,2:3,4:5},function(value,key){
+        console.log(key+value);
+    });
+</code></pre>
+
+<p>```</p>
 
 <p><a name="showcase-parsing"/></p>
 
