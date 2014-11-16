@@ -61,8 +61,9 @@ Nody.js
 Nody.js는 DHTML 페이지를 쉽게 구성하고 제작하기 위한 라이브러리이다.
 
 ### Attention #
-Nody는 jQuery와 달리 단순 노드를 핸들링 하기 위한 라이브러리가 아니다. 
-본 라이브러리는 데이터의 관점에서 노드를 핸들링하기 편하도록 함수나 컨트롤러가 제공된다.
+Nody는...
+  - 데이터의 관점에서 노드를 핸들링하기 편하도록 함수나 컨트롤러가 제공된다.
+  - 객체지향을 구현하고 있고 함수 호출이 잦기때문에 매우 빠른 연산이 필요한 경우 배제하는것이 좋다.
 
 ### Compatibility #
 #### Recommend #
@@ -97,7 +98,7 @@ To understand the basic concepts of this library for example.
 
 <a name="showcase-tag-generator"/>
 ### Tag Generator #
-MAKE, 또는 MAKE_[태그이름] 을 사용하여 태그생성이 가능하다.
+MAKE("...")이나 _Make("...") 태그생성이 가능하다.
 ```
 아래 html결과물은 실질적으로 개행이 되지 않으나 이해를 돕기위해 개행과 들여쓰기를 집어넣었다.
 ```
