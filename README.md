@@ -469,13 +469,19 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ```
 <a name="version-info"/>
 ## Version info #
-  
-#### 0.7 변동사항 #
- - EL..., Make 함수들을 Nody와 Make모듈로 컨트롤 할수 있습니다.
- - Area, AreaContent 모듈이 제거되었고 ZString 모듈로 대체되었습니다.
- - 성능을 높이기 위한 작업이 되었습니다.
 
-#### 0.6 변동사항 #
+#### 0.8 변동사항 # 
+  - template 지원 강화
+    - _Tamplate 모듈이 추가되었습니다.
+	- ViewModel에 Template를 사용하여 직관적인 개발과 퍼포먼스를 향상에 초점을 맞추었습니다.
+	- ViewModel의 나열이 역전되었습니다. 이제부터 부모부터 열거해야합니다.
+  - FINDZERO가 ZFIND로 이름이 바뀌었습니다.
+  
+#### 0.7까지 변동사항 #
+  - EL, _[tag]... 함수들이 제거되었고 Nody와 Make모듈로 MAKE함수로 대체되었습니다.
+  - ViewModel의 렌더링 파라메터의 순서가 역전되었습니다.
+  - Area, AreaContent 모듈이 제거되었고 ZString 모듈로 대체되었습니다.
+  - 성능을 높이기 위한 작업이 되었습니다.
   - 모듈인 "Type"이 제거되고 단순 함수 "IS"로 대체되었습니다.
   - DataGrid, DataRender, DataViewController 등의 이전 MVVM모듈이 제거되었습니다.
   - 완전히 새로 작성된 MVVM관련 모듈인 DataContext, ManagedData, ViewModel, DataContextViewController이 추가되었습니다. 이로서 메모리 관리가 최적화 되었고와 렌더링 프로세싱을 최소화 하였습니다.

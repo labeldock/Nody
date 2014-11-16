@@ -84,5 +84,4 @@
 	// load moment
 	var root  = FUT.LOADINGSCRIPTROOT();
 	FUT.INCLUDE(root + "moment-with-locales.js");
-	FUT.INCLUDE(root + "moment-timezone-with-data.js");
 })();

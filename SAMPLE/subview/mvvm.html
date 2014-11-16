@@ -28,3 +28,40 @@
     </div>
   </div>
 </div>
+<template id="mvvm-ul" hidden>
+	<ul data-placeholder></ul>
+</template>
+<template id="mvvm-list" hidden>
+	<li>
+		<table>
+			<tbody>
+				<tr>
+					<td class="in-set-sm">
+						<div class="inline-box green">
+							<div>
+								<input class="full-width" data-bind="title">
+							</div>
+							<div>
+								<input class="full-width" data-bind="description" placeholder="Description">
+							</div>
+							<button data-action="up"><span class="glyphicon glyphicon-arrow-up"></span></button>
+							<button data-action="down"><span class="glyphicon glyphicon-arrow-down"></span></button>
+							<button data-action="append" data-param="title:New Item">
+								<span class="glyphicon glyphicon-plus"></span>
+							</button>
+						</div>
+					</td>
+					<td data-placeholder></td>
+				</tr>
+			</tbody>
+		</table>
+	</li>
+</template>
+<template id="mvvm-td" hidden>
+	<div class="inline-box blue">
+		<input class="full-width" data-bind="title">
+		<button data-action="delete">
+			<span class="span glyphicon glyphicon-trash"></span>
+		</button>
+	</div>
+</template>

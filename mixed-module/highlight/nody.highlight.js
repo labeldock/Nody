@@ -19,7 +19,7 @@
 	
 	makeGetter("CODEBLOCK",function(node){
 		DATAEACH(node,function(){
-			hljs.highlightBlock(FINDZERO("code",node));
+			hljs.highlightBlock(ZFIND("code",node));
 		});
 	});
 	

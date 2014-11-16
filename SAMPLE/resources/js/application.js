@@ -65,7 +65,7 @@ var appearOpen = function(){
 };
 
 loader.setLoadEvent("appear",function(){
-	FIND(".code-block-1 code",ELVALUE,CODE(FINDZERO(".read-block-1")));
+	FIND(".code-block-1 code",ELVALUE,CODE(ZFIND(".read-block-1")));
 	CODEBLOCK(".code-block-1");
 	
 	FIND(".code-block-2 code",ELVALUE,CODE(appearOpen,appearLoad));
@@ -97,37 +97,7 @@ loader.setLoadEvent("mvvm",function(){
 	
 	//뷰를 그리는 방법을 정의
 	var itemIndex = 10;
-    var viewModel = new ViewModel(
-  	  function(){
-  		  return MAKE("div.inline-box.blue",
-  			this.bind("title","input.full-width"),
-			this.action("delete",MAKE("button",MAKE("span.glyphicon.glyphicon-trash")))
-		 );
-  	  },
-  	  function(){
-  		  return MAKE("li",
-  		  	MAKE("table",
-  				MAKE("tbody",
-  					MAKE("tr",
-  						MAKE("td.in-set-sm",
-  							MAKE("div.inline-box.green",
-								MAKE("div",this.bind("title","input.full-width")),
-								MAKE("div",this.bind("description","input.full-width[placeholder=Description]",true)),
-  	  						  	MAKE("label",this.action("up",MAKE("button",MAKE("span.glyphicon.glyphicon-arrow-up")))),
-  	  						  	MAKE("label",this.action("down",MAKE("button",MAKE("span.glyphicon.glyphicon-arrow-down")))),
-  	  						  	MAKE("label",this.action("append",MAKE("button",MAKE("span.glyphicon.glyphicon-plus")),function(){ return {title:"Item"+itemIndex++};}))
-  						  )
-  						),
-						this.placeholder("td")
-  					)
-  				)
-  	  		)
-  	  	  );
-  	  },
-  	  function(){
-  		  return this.placeholder("ul.menu")
-  	  }
-    );
+	var viewModel = new ViewModel("template#mvvm-ul","template#mvvm-list","template#mvvm-td");
 	//뷰를 그리고 이벤트를 등록함
     var listViewController = new DataContextViewController("#listContainer",dataContext.getRootManagedData(),viewModel);
 	listViewController.dataDidChange = function(){
@@ -151,29 +121,21 @@ var viewDataContext = new DataContext(viewData);
 
 var viewModels = {
 	"small":new ViewModel(function(){
+		return this.placeholder("ul");
+	},function(){
 		return MAKE("li.inline-box.small-box.text-center",
 			MAKE("img",{src:this.data("image")})
 		);
-	},function(){
-		return this.placeholder("ul");
 	}),
 	"large":new ViewModel(function(){
+		return this.placeholder("ul");
+	},function(){
 		return MAKE("li.inline-box.text-center",
 			MAKE("img",{src:this.data("image")}),
 			this.bind("native","p")
 		);
-		
-		
-	},function(){
-		return this.placeholder("ul");
 	}),
 	"list":new ViewModel(function(){
-		return MAKE("tr",
-			MAKE("td",this.bind("name","input.full-width")),
-			MAKE("td",this.bind("native","input.full-width")),
-			MAKE("td",this.bind("image","p"))
-		)
-	},function(){
 		return MAKE("table.table",
 			MAKE("thead",
 				MAKE("tr",
@@ -184,6 +146,13 @@ var viewModels = {
 			),
 			this.placeholder("tbody")
 		);
+	},function(){
+		
+		return MAKE("tr",
+			MAKE("td",this.bind("name","input.full-width")),
+			MAKE("td",this.bind("native","input.full-width")),
+			MAKE("td",this.bind("image","p"))
+		)	
 	})
 }
 
@@ -213,6 +182,8 @@ loader.setLoadEvent("viewmodel",function(){
 
 loader.setLoadEvent("multiselect",function(){
 	var multiViewModel = new ViewModel(function(){
+		return this.placeholder("div.row-fluid");
+	},function(){
 		return MAKE("div.col-sm-6",
 			MAKE("div.thumbnail",
 				MAKE("img",{src:this.data("image")}),
@@ -222,8 +193,6 @@ loader.setLoadEvent("multiselect",function(){
 				)
 			)
 		);
-	},function(){
-		return this.placeholder("div.row-fluid");
 	});
 	multiViewModel.whenSelectToggle(
 		function(node){
@@ -262,12 +231,12 @@ loader.setLoadEvent("selectbind",function(){
 	// view model
 	var listViewModel = new ViewModel(
 	function(){
+		return this.placeholder("div.menu.list-group");
+	},function(){
 		return MAKE("a.list-group-item",
 			MAKE("h4.list-group-item-heading",MAKE("img",{src:this.data("image")}),MAKE("span",{html:"&nbsp;"}),this.bind("name","span")),
 			this.bind("native","p.list-group-item-text")
-		)
-	},function(){
-		return this.placeholder("div.menu.list-group")
+		);
 	});
 	
 	listViewModel.whenSelectToggle(function(node){

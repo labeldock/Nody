@@ -7,8 +7,8 @@
 
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	// 버전
-	var version = new String("0.7.7");
-	var build   = new String("733");
+	var version = new String("0.8.0");
+	var build   = new String("752");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -1122,8 +1122,10 @@
 				if("toArray" in v){
 					Array.prototype.splice.apply(this,[0,this.length].concat(v.toArray()));
 				} else {
-					this.length = 0;
-					for(var i=0,l=v.length;i<l;i++) Array.prototype.push.call(this,v[i]);
+					this.splice(0,this.length);
+					for(var i=0,l=v.length;i<l;i++) {
+						Array.prototype.push.call(this,v[i]);
+					}
 				}
 				return this;
 			} else {
@@ -1133,9 +1135,9 @@
 			}
 		},
 		//
-		isEmpty:function(){ return (this.length == 1) ? true : false },
+		isEmpty:function(){ return (this.length === 0) ? true : false },
 		isMulti:function(){ return (this.length > 1) ? true : false },
-		isSingle:function(){ return (this.length == 1) ? true : false },
+		isSingle:function(){ return (this.length === 1) ? true : false },
 		//선택된 값으로 배열이 재정렬 됩니다.
 		selectValue:function(value){ var selects = []; DATAEACH(this,function(v){ if(v == value) selects.push(v); }); this.setSource(selects); },
 		selectIndex:function(index){ return this.setSource(this[index]); },
@@ -3106,13 +3108,13 @@
 		},
 		
 		"IFRAMEDOCUMENT":function(iframe){
-			var iframe = FINDZERO(iframe);
+			var iframe = ZFIND(iframe);
 			if(iframe.tagName == "IFRAME") return iframe.contentDocument || iframe.contentWindow.document;
 			if(ISDOCUMENT(iframe)) return iframe;
 		},
 		
 		"FINDMEMBER":function(sel,offset){
-			var target = FINDZERO(sel);
+			var target = ZFIND(sel);
 			if(!ISELNODE(target)) return;
 			if(typeof offset !== "number") return TOARRAY(node.parentElement.children);
 			var currentIndex = -1;
@@ -3131,7 +3133,7 @@
 			}
 		}),		
 		// 배열이라면 엘리먼트의 하나 추출
-		"FINDZERO" : FUT.CONTINUTILITY(function(find,root){
+		"ZFIND" : FUT.CONTINUTILITY(function(find,root){
 			return FINDFUNCTION(find,root)[0];
 		}),
 		"FINDIN" : FUT.CONTINUTILITY(function(root,find){
@@ -3186,30 +3188,30 @@
 				switch(name.substr(0,3)){
 					case "<tr" :
 						var sWrap = TAGSTACKS("table","tbody");
-						element = FINDZERO("tr",HTMLTOEL(sWrap[0] + name + sWrap[1]));
+						element = ZFIND("tr",HTMLTOEL(sWrap[0] + name + sWrap[1]));
 						break;
 					case "<td" : case "<th" :
 						if(name.substr(0,6) == "<thead"){
 							var sWrap = TAGSTACKS("table");
-							element = FINDZERO("thead",HTMLTOEL(sWrap[0] + name + sWrap[1]));
+							element = ZFIND("thead",HTMLTOEL(sWrap[0] + name + sWrap[1]));
 						} else {
 							var sWrap = TAGSTACKS("table","tbody");
-							element = FINDZERO(name.substr(1,2),HTMLTOEL(sWrap[0] + name + sWrap[1]));
+							element = ZFIND(name.substr(1,2),HTMLTOEL(sWrap[0] + name + sWrap[1]));
 						}
 						break;
 					case "<tb" : case "<tf" :
 						if(name.substr(0,6) == "<tbody" || name.substr(0,6) == "<tfoot"){
 							var sWrap = TAGSTACKS("table");
-							element = FINDZERO(name.substr(1,5),HTMLTOEL(sWrap[0] + name + sWrap[1]));
+							element = ZFIND(name.substr(1,5),HTMLTOEL(sWrap[0] + name + sWrap[1]));
 						}
 						break;
 					case "<co" :
 						if(name.substr(0,9) == "<colgroup" ){
 							var sWrap = TAGSTACKS("table");
-							element = FINDZERO("colgroup",HTMLTOEL(sWrap[0] + name + sWrap[1]));
+							element = ZFIND("colgroup",HTMLTOEL(sWrap[0] + name + sWrap[1]));
 						} else if (name.substr(0,4) == "<col" ) {
 							var sWrap = TAGSTACKS("table","colgroup");
-							element = FINDZERO("col",HTMLTOEL(sWrap[0] + name + sWrap[1]));
+							element = ZFIND("col",HTMLTOEL(sWrap[0] + name + sWrap[1]));
 						}
 						break;
 					default:
@@ -3264,13 +3266,26 @@
 			}
 			return{};
 		},
+		//노드 배열을 복사함
+		"CLONENODES":function(node){
+			return DATAMAP(FIND(node),function(findNode){ return findNode.cloneNode(findNode,true); });
+		},
+		//하위의 노드를 모두 복사함
+		"IMPORTNODE":function(node){
+			node = FIND(node);
+			if( node.length === 0) return undefined;
+			if( node.length !== 1 ) console.warn("IMPORTNODE:: 한개의 노드만 복사할수 있습니다.",node);
+			node = ZERO(node);
+			if('content' in node) return FIND(document.importNode(node.content,true).childNodes);
+			return CLONENODES(node.children);
+		},
 		"CLONEOBJECT":function(inv){ if(typeof inv === "object"){ var result = {}; for(var k in inv) result[k] = inv[k]; return result; } return TOOBJECT(inv); },
 		//오브젝트 혹은 element를 반환합니다.
 		"DATACONTEXT":function(target){
-			if ( typeof target === "string" ) target = FINDZERO(target);
+			if ( typeof target === "string" ) target = ZFIND(target);
 			if ( typeof target === "object" ) {
 				if( this.ISARRAY(target) ){
-					var findElement = FINDZERO(target);
+					var findElement = ZFIND(target);
 					if(findElement) return findElement;
 				}
 				return target;
@@ -3280,60 +3295,15 @@
 	})
 	GUT.eachGetter();
 	
-	var ElementGeneratorPrototype = {};
-	var MakeElementGenerator      = function(name,tag,feature){
-		var funcName = "MAKE_"+name;
-		var initTag  = (typeof tag === "string" && typeof feature === "string") ? tag+"?"+feature : tag;
-		ElementGeneratorPrototype[funcName] = function(topElement){
-			//arguments
-			var args = Array.prototype.slice.apply(arguments);
-			//tagName
-			if(typeof topElement === "undefined"){
-				var rename = initTag;
-				args.shift();
-				args.unshift(rename);
-			} else if(typeof topElement === "string"){
-				var rename = tag + (typeof feature === "string"?"?"+feature:"") + topElement.replace(/^[^\?\.\#\[\:]+/,"");
-				args.shift();
-				args.unshift(rename);
-			} else if( typeof topElement === "object" && !ISELNODE(topElement) ) {
-				args.unshift(tag);
-			} else {
-				args.unshift(tag);
-			}
-			var i = 1;
-			//makeElement
-			var resultElement;
-			if(typeof args[1] === "object" && !ISELNODE(args[1]) && !ISTEXTNODE(args[1]) && !ISARRAY(args[1])){
-				i = 2;
-				resultElement = CREATE(args[0], args[1]);
-			} else {
-				resultElement = CREATE(args[0]);
-			}
-			//result
-			for(var l=args.length;i<l;i++){ ELAPPEND(resultElement,args[i]); } 
-			return resultElement;
-		};
-	}
-	
-	"title base link meta style script noscript body section nav article aside h1 h2 h3 h4 h5 h6 header footer template address main p hr pre blockquote ol ul li dl dt dd figure figcaption div a em strong small s cite q dfn abbr data time datetime code var samp kbd sub sup i b u mark ruby rt rp bdi bdo span class lang dir br wbr ins del img iframe embed object param video audio source track canvas map area svg math table caption colgroup col tbody thead tfoot tr td th form fieldset legend label input button select datalist optgroup option textarea keygen output progress meter details summary menuitem menu".replace(/\w+/g,function(s){
-		MakeElementGenerator(s,s);
-	});
-	"checkbox file hidden image number password radio reset submit text".replace(/\w+/g,function(s){
-		MakeElementGenerator(s,"input",s);
-	});
-	makeSingleton("ElementGenerator",ElementGeneratorPrototype);
-	ElementGenerator.eachGetter();
-	
 	makeSingleton("EL",{
 		//포커스 상태인지 검사합니다.
-		"HASFOCUS":function(sel){ return document.activeElement == FINDZERO(sel); },
+		"HASFOCUS":function(sel){ return document.activeElement == ZFIND(sel); },
 		//케럿을 움직일수 있는 상태인지 검새합니다.
-		"CARETPOSSIBLE":function(sel){ var node = FINDZERO(sel); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
+		"CARETPOSSIBLE":function(sel){ var node = ZFIND(sel); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
 		//어트리뷰트값을 읽거나 변경합니다.
-		"ATTR":function(sel,v1,v2){ var node = FINDZERO(sel); return NUT.ATTR(node,v1,v2); },
+		"ATTR":function(sel,v1,v2){ var node = ZFIND(sel); return NUT.ATTR(node,v1,v2); },
 		//css스타일로 el의 상태를 확인합니다.
-		"IS":function(sel,value){ var node = FINDZERO(sel); return NUT.IS(node,value); },
+		"IS":function(sel,value){ var node = ZFIND(sel); return NUT.IS(node,value); },
 		//선택한 element중 대상만 남깁니다.
 		"FILTER":function(sel,filter){
 			var targets = FIND(sel);
@@ -3359,12 +3329,12 @@
 					//read write
 					if(!ISNOTHING(nodeZeroName)){
 						if(ISTEXT(value)){
-							var findEl = FINDZERO(ELFILTER(nodes,"[type=radio][name="+nodeZeroName+"]::"+value));
+							var findEl = ZFIND(ELFILTER(nodes,"[type=radio][name="+nodeZeroName+"]::"+value));
 							if(findEl) findEl.checked = true;
 							return findEl;
 						} else {
 							var checkedEl  = ELFILTER(nodes,"[type=radio][name="+nodeZeroName+"]:checked");
-							var selectedEl = FINDZERO(checkedEl);
+							var selectedEl = ZFIND(checkedEl);
 							if(selectedEl){
 								return selectedEl.value;
 							} else {
@@ -3423,14 +3393,14 @@
 			return node;
 		},
 		"HASATTR":function(sel,name,hideConsole){
-			var node = FINDZERO(sel);
+			var node = ZFIND(sel);
 			if( ISELNODE(node) ) { return ELATTR(sel,name) == null ? false : true; }
 			if(hideConsole !== true) console.error("ELHASATTR:: 알수없는 node값 입니다. => " + TOS(node) );
 			return false;
 		},
 		//get css style tag info
 		"TRACE"   :function(target,sign,withValue){
-			var t = FINDZERO(target);
+			var t = ZFIND(target);
 			if( ISELNODE(t) ){
 				switch(sign){
 				case "tag"   : return t.tagName.toLowerCase(); break;
@@ -3465,12 +3435,12 @@
 			return [];
 		},
 		"INDEX":function(el){
-			var node = FINDZERO(el);
+			var node = ZFIND(el);
 			var parent = FINDPARENT(node);
 			if(parent) return DATAINDEX(parent.children,node);
 		},
 		"APPEND":function(parentIn,childs){
-			var parent = FINDZERO(parentIn);
+			var parent = ZFIND(parentIn);
 			if(!ISELNODE(parent)) return parentIn;
 			var appendTarget  = FIND(childs);
 			var parentTagName = parent.tagName.toLowerCase();
@@ -3540,7 +3510,7 @@
 			return parent;
 		},
 		"PREPEND":function(parentIn,childs){
-			var parent = FINDZERO(parentIn);
+			var parent = ZFIND(parentIn);
 			var appendTarget = FIND(childs);
 			if(ISMEANING(parent),ISMEANING(appendTarget)){
 				ELAPPEND(parent,appendTarget);
@@ -3552,9 +3522,9 @@
 				}
 			}
 		},
-		"APPENDTO":function(targets,parentEL){ return ELAPPEND(FINDZERO(parentEL),targets); },
+		"APPENDTO":function(targets,parentEL){ return ELAPPEND(ZFIND(parentEL),targets); },
 		"PUT":function(sel){
-			var node = FINDZERO(sel);
+			var node = ZFIND(sel);
 			if(!ISELNODE(node)) return console.warn("ELPUT:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
 			ELEMPTY(node);
 			var newContents = [];
@@ -3584,7 +3554,7 @@
 		//이전 엘리먼트를 찾습니다.
 		"BEFORE":function(node,appendNodes){ 
 			var target;
-			target = FINDZERO(node);
+			target = ZFIND(node);
 			if(!ISELNODE(target)) return node;
 			if(arguments.length < 2) return FINDMEMBER(target,-1);
 			var appendTarget = FIND(appendNodes);
@@ -3595,7 +3565,7 @@
 		},
 		//이후 엘리먼트를 찾습니다.
 		"AFTER" : function(target,appendNodes){ 
-			target = FINDZERO(target); 
+			target = ZFIND(target); 
 			if(!ISELNODE(target))    return target; 
 			if(arguments.length < 2) return FINDMEMBER(target,1);
 			var appendTarget = FIND(appendNodes);
@@ -3609,10 +3579,10 @@
 			}
 			return target;
 		},
-		"BEFOREALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index === "number") for(var i=0,l=index;i<l;i++) result.push(node.parentNode.children[i]); return result; },
-		"AFTERALL":function(node){ node = FINDZERO(node); var index = ELINDEX(node); var result = []; if(typeof index === "number") for(var i=index+1,l=node.parentNode.children.length;i<l;i++) result.push(node.parentNode.children[i]); return result; },
+		"BEFOREALL":function(node){ node = ZFIND(node); var index = ELINDEX(node); var result = []; if(typeof index === "number") for(var i=0,l=index;i<l;i++) result.push(node.parentNode.children[i]); return result; },
+		"AFTERALL":function(node){ node = ZFIND(node); var index = ELINDEX(node); var result = []; if(typeof index === "number") for(var i=index+1,l=node.parentNode.children.length;i<l;i++) result.push(node.parentNode.children[i]); return result; },
 		"REPLACE":function(target,replaceNode){
-			var replaceTarget = FINDZERO(replaceNode);
+			var replaceTarget = ZFIND(replaceNode);
 			ELAFTER(target,replaceTarget);
 			ELREMOVE(target);
 			return replaceTarget;
@@ -3623,7 +3593,7 @@
 		"DOWN" : function(target){if(!ISELNODE(target))return target;var parent=target.parentNode;if(!ISELNODE(parent))return target;var next=target.nextSibling;if(!ISELNODE(next))return target;ELAFTER(next,target);},
 		//스타일을 얻어냅니다.
 		"STYLE": function(target,styleName,value){
-			var target = FINDZERO(target);
+			var target = ZFIND(target);
 			var nodeStyles = document.defaultView.getComputedStyle ? document.defaultView.getComputedStyle(target) : target.style;
 			if(ISELNODE(target)){
 				var marge;
@@ -3643,11 +3613,11 @@
 		//내무의 내용을 지웁니다.
 		"EMPTY"  : function(target){ return FIND(target,DATAMAP,function(node){ if("innerHTML" in node) node.innerHTML = ""; return node; }); },
 		//대상 객체를 제거합니다.
-		"REMOVE" : function(node,childs){ var target = FINDZERO(node); if(!ISELNODE(target)) return target; if(!ISELNODE(target.parentNode)) return target; target.parentNode.removeChild(target); return target; },
+		"REMOVE" : function(node,childs){ var target = ZFIND(node); if(!ISELNODE(target)) return target; if(!ISELNODE(target.parentNode)) return target; target.parentNode.removeChild(target); return target; },
 		//케럿의 위치를 찾습니다.
 		"CARET":function(select,pos){
 			//
-			var node = FINDZERO(select);
+			var node = ZFIND(select);
 			var editable = node.contentEditable === 'true';
 			var r1,r2,ran;
 			//get
@@ -3721,7 +3691,7 @@
 			if(ISWINDOW(node)){
 				node = W;
 			} else {
-				node = FINDZERO(node);
+				node = ZFIND(node);
 				if(ISNOTHING(node)) throw new Error("ELTRIGGER는 element를 찾을수 없습니다. => 들어온값" + TOS(node));
 			}
 			if ("createEvent" in document) {
@@ -3743,7 +3713,7 @@
 		},
 	
 		//이벤트 타겟을 찾아냅니다.
-		"ONTARGET":function(node){ if(ISWINDOW(node)){ node = W; } else { node = FINDZERO(node); if(!ISELNODE(node)) throw new Error("ELONTARGET::Element이 여야합니다." + TOS(node)); } return node; },
+		"ONTARGET":function(node){ if(ISWINDOW(node)){ node = W; } else { node = ZFIND(node); if(!ISELNODE(node)) throw new Error("ELONTARGET::Element이 여야합니다." + TOS(node)); } return node; },
 		"ON":function(node, eventName, eventHandler, useCapture){
 			// 메타이벤트를 임시 삭제함
 			node = ELONTARGET(node);
@@ -3855,6 +3825,7 @@
 	EL.eachGetterWithPrefix();
 	
 	extendModule("Array","Nody",{
+		find:function(selector){ return _Nody(selector,this); },
 		hasFocus:function(){ return EL.HASFOCUS(this); },
 		caretPossible:function(){ return EL.CARETPOSSIBLE(this); },
 		attr:function(name){ 
@@ -3939,6 +3910,20 @@
 	
 	extendModule("Nody","Make",{},function(node,attr,parent){
 		this.setSource(GUT.CREATE(node,attr,parent));
+	});
+	
+	extendModule("Nody","Template",{
+		newTemplate:function(){
+			return _Template.apply(Template,this.TemplateOrder);
+		}
+	},function(node,parent,cancel){
+		this.TemplateOrder = Array.prototype.slice.call(arguments,0,2);
+		if(cancel !== false){
+			var findNode = FIND(this.TemplateOrder[0],this.TemplateOrder[1]);
+			if (findNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",node)
+			if (findNode.length !== 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",findNode);
+			this.setSource(IMPORTNODE(ZERO(findNode)));
+		}
 	});
 	
 	//여러 엘리먼트를 셀렉트하여 한번에 컨트롤
@@ -4035,7 +4020,7 @@
 			return this;
 		}
 	},function(context,selectRule,filter){
-		this.Source = FINDZERO(context);
+		this.Source = ZFIND(context);
 		if( !ISELNODE(this.Source) ) { console.error( "Frame::Context를 처리할 수 없습니다. => ",this.Source," <= ", context); }
 		//options
 		//Polymorphism
@@ -4091,7 +4076,7 @@
 		getValue:function(){ return ELVALUE(this.Source); },
 		number  :function(){ return _Number(ELVALUE(this.Source)).number(); }
 	},function(el){
-		this.Source = FINDZERO(el);
+		this.Source = ZFIND(el);
 		if(!this.Source) console.warn("Inside의 초기값을 설정하지 못했습니다. command =>",el);
 	});
 	
@@ -4239,7 +4224,7 @@
 						//버블링이 중간에 멈췄을때
 						var eventCapture; 
 						curSel.each(function(sel){
-							if(FINDZERO(e.target,sel)){
+							if(ZFIND(e.target,sel)){
 								eventCapture = sel;
 								return false;
 							}
@@ -4632,7 +4617,7 @@
 		},function(context,property,viewStatus,parentViewController){
 			this._super();
 			// view context
-			var c = FINDZERO(context);
+			var c = ZFIND(context);
 			if( ISELNODE(c) == false ) console.error("FrameController::context => 현재 Context안에 해당 영역을 찾지 못했습니다. \ncontext는 고정적인 element에 지정하는것이 좋습니다. params =>",context,property,viewStatus);
 			this.ControllerElement = c;
 			this.view              = c;
@@ -5187,7 +5172,7 @@
 		// loadEvent  => navs key과 같은 데이터가 불러와질때 호출되는 이벤트
 		this.Source          = navs;
 		this.LoaderCurrent   = undefined;
-		this.LoaderContainer = FINDZERO(container);
+		this.LoaderContainer = ZFIND(container);
 		// 로드될때 이벤트입니다.
 		this.LoaderEvents = {
 			"LoaderGlobalLoadEvent":undefined,
@@ -5434,7 +5419,9 @@
 	
 	makeModule("ViewModel",{
 		needRenderView:function(depth,managedData,feedViews,viewController){
-			if (typeof this.Source[depth] === "function") {
+			if (ISTYPE(this.Source[depth],"Template") == true) {
+				return managedData.configWithTemplate(this.Source[depth]);
+			} else if (typeof this.Source[depth] === "function") {
 				var renderResult = this.Source[depth].call(managedData,managedData,feedViews);
 				if(ISELNODE(renderResult)){
 					return renderResult;
@@ -5442,9 +5429,9 @@
 					console.warn("경고::ViewModel의 렌더값이 올바르지 않습니다. =>",renderResult, this.Source[depth]);
 				}
 			} else {
-				console.warn("경고::",depth,"depth의 ViewModel뷰모델의 렌더값이 입력되지 않았습니다.");
+				console.warn("경고::",depth,"depth의 ViewModel뷰모델의 렌더값이 입력되지 않았습니다.",this.Source[depth]);
 			}
-			return MAKE_DIV({html:TOSTRING(managedData.Source)},feedViews);
+			return MAKE("div",{html:TOSTRING(managedData.Source)},feedViews);
 		},
 		whenSelectItem:function(m)  { if(typeof m === "function") this.shouldSelectItem = m; },
 		whenDeselectItem:function(m){ if(typeof m === "function") this.shouldDeselectItem = m; },
@@ -5452,14 +5439,17 @@
 		"var!shouldSelectItem"  :function(node,depth){ ELSTYLE(node,"background","#dae8f2"); },
 		"var!shouldDeselectItem":function(node,depth){ ELSTYLE(node,"background","none") }
 	},function(renderDepth){
-		this.Source = _Array(arguments).map(function(a){
+		var args = Array.prototype.slice.call(arguments);
+		
+		//tempate 타겟을 설정
+		this.Source = _Array(args).getMap(function(a){ 
 			if(typeof a === "string"){
-				return function(args){
-					return ELAPPEND(E(a),args);
-				}
+				var findTemplate = ZFIND(a);
+				return _Template(findTemplate,undefined,false);
 			}
-			return a;
-		}).reverse();
+			return a; 
+		});
+			
 	});
 	
 	makeModule("ManagedData",{
@@ -5524,7 +5514,7 @@
 		bind:function(dataKey,bindElement,optional){
 			if(this.scope) {
 				//엘리먼트 기본설정값
-				var element = typeof bindElement === "undefined" ? CREATE("input!"+bindElement) : CREATE(bindElement);
+				var element = ISELNODE(bindElement) ? bindElement : typeof bindElement === "undefined" ? CREATE("input!"+bindElement) : CREATE(bindElement);
 				this.scope.addBindNode(element,this,dataKey, optional);
 				return element;
 			} else {
@@ -5545,10 +5535,38 @@
 		},
 		placeholder:function(tagname){
 			if(this.scope){
-				var placeholderElement = CREATE(tagname);
+				var placeholderElement = ISELNODE(tagname) ? tagname : CREATE(tagname);
 				this.scope.addPlaceholderNode(this.BindID,placeholderElement);
 				return placeholderElement;
 			}
+		},
+		configWithTemplate:function(_template){
+			var _ = this;
+			var templateNode = _template.newTemplate().selectFirst();
+			if(templateNode.isEmpty()) console.error("configWithTemplate :: 렌더링할 template를 찾을수 없습니다");
+			
+			templateNode.find("[data]").each(function(node){
+				var dataKey = node.getAttribute("data");
+				ELVALUE(node,dataKey,_.data(dataKey));
+				node.removeAttribute("data");
+			});
+			templateNode.find("[data-bind]").each(function(node){
+				var dataKey = node.getAttribute("data-bind");
+				_.bind(dataKey,node)
+				node.removeAttribute("data-bind");
+			});;
+			templateNode.find("[data-action]").each(function(node){
+				var dataKey   = node.getAttribute("data-action");
+				var dataParam = node.getAttribute("data-param");
+				_.action(dataKey,node,TOOBJECT(dataParam,"value"));
+				node.removeAttribute("data-action");
+				if("data-param" in node.attributes) node.removeAttribute("data-param");;
+			});
+			templateNode.find("[data-placeholder]").selectFirst().each(function(node){
+				_.placeholder(node);
+				delete node.removeAttribute["data-placeholder"];
+			});
+			return templateNode.zero();
 		},
 		revertData:function(){
 			this.context.getDataWithPath(this.path);
@@ -5688,7 +5706,7 @@
 				//바인드값 삭제
 				var removeBindNodeTarget = _Array();
 				DATAEACH(this.bindValueNodes,function(bindNode){
-					var hasNode = FINDZERO(bindNode[2],owner.structureNodes[bindID])
+					var hasNode = ZFIND(bindNode[2],owner.structureNodes[bindID])
 					if(hasNode) removeBindNodeTarget.push(bindNode);
 				});
 				removeBindNodeTarget.each(function(bindNode){
@@ -5870,7 +5888,7 @@
 						if(e.target == node){
 							owner.triggingSelectItems(targetMangedData[index]);
 							return false;
-						} else if(FINDZERO(e.target,node)) {
+						} else if(ZFIND(e.target,node)) {
 							owner.triggingSelectItems(targetMangedData[index]);
 							return false;
 						}
@@ -5922,7 +5940,7 @@
 		"var!selectItemDidChange":undefined,
 		"var!dataDidChange":undefined
 	},function(view,managedData,viewModel){
-		this.view          = FINDZERO(view);
+		this.view          = ZFIND(view);
 		if(managedData)this.setManagedData(managedData);
 		this.viewModel     = viewModel || new ViewModel();
 		//선택관련 인자
@@ -5948,7 +5966,7 @@
 		whenPinch:function(method){ this.GestureListener["pinch"] = method; },
 		whenTouchMove:function(method){ this.GestureListener["touchMove"] = method; }
 	},function(gestureView){
-		this.Source = FINDZERO(gestureView);
+		this.Source = ZFIND(gestureView);
 		this.GestureListener = {};
 		this.StartPinchValue;
 		this.StartTouchMoveX;
@@ -6097,7 +6115,7 @@
 		whenScroll:function(event){ this.ScrollEvent = event; },
 		whenZoom:function(event){ this.ZoomEvent = event; }
 	},function(node){
-		this.Source = FINDZERO(node);
+		this.Source = ZFIND(node);
 		
 		if(this.Source){
 			//
