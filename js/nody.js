@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.8.1");
-	var build   = new String("755");
+	var version = new String("0.8.4");
+	var build   = new String("764");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -1656,7 +1656,11 @@
 			if( (absoluteWrap == true && ISWRAP(this.Source,"{}")) || (o > 0 && o >= c && o >= p) ){
 				return "object";
 			} 
-			if(p > 0) return "parameter";
+			if(p > 0) {
+				//태그일수도 있으니 확인
+				if( /^<\w+/i.test(this.Source) && /\w+>$/i.test(this.Source) ) return "plain";
+				return "parameter";
+			}
 			if(o > 0) return "css";
 			return "plain";
 		},
@@ -2190,7 +2194,25 @@
 	});
 	
 	makeGetter("ZSTRING",function(params){
-		return _ZString.apply(undefined,Array.prototype.slice.call(arguments)).get();
+		return _ZString.apply(ZString,Array.prototype.slice.call(arguments)).get();
+	});
+	
+	makeGetter("ZNUMBER",function(params){
+		if(arguments.length === 1){
+			//console.log("single mode")
+			var sn = "\\(";
+				sn+= params;
+				sn+= ")";
+			return TONUMBER(_ZString.call(ZString,sn).get());
+		} else {
+			//console.log("dual mode");
+			var args = Array.prototype.slice.call(arguments);
+			var sn = "\\{";
+				sn+= args[0];
+				sn+= "}";
+			args[0] = sn;
+			return TONUMBER(_ZString.apply(ZString,args).get());
+		}
 	});
 	
 	
@@ -2607,7 +2629,7 @@
 	makeSingleton("ELUT",{
 		//테그의 속성을 text로 표현합니다.
 		"SELECTINFO"   : function(tagProperty,attrValue){
-			//selectInfoCahche
+			//캐쉬를 이용해 잦은 표현에 대한 오버해드를 줄입니다.
 			if((typeof tagProperty === "string") && (typeof attrValue === "undefined")){
 				var tp = tagProperty.trim();
 				var cache = FUT.CACHEGET(tp);
@@ -2729,10 +2751,18 @@
 			return attributedToken;
 		},
 		//css스타일 태그를 html스타일 태그로 바꿉니다.
-		"TAG"      : function(tagProperty,attrValue){
+		"TAG" : function(tagProperty,attrValue){
 			
+			//TAG중첩을 지원하기 위한 것
+			if((typeof attrValue === "string") && arguments.length > 2){
+				DATAEACH(arguments,function(v,i){
+					if(i < 2) return;
+					attrValue += v;
+				});
+			}
 			//tagInfo
 			var tagInfo = SELECTINFO(tagProperty,attrValue);
+			
 			if(!("tagName" in tagInfo) || tagInfo.tagName == "*") tagInfo.tagName = "div";
 			//make attribute text
 			var attributedTexts = "";
@@ -3252,6 +3282,12 @@
 		},1),
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 		"MAKECOLS":function(){ return _Array(arguments).inject(CREATE("colgroup"),function(colvalue,parent){ if(typeof colvalue === "string" || typeof colvalue === "number") ELAPPEND(parent,CREATE("col",{width:colvalue})); }); },
+		"MAKETEMP":function(innerHTML,id){
+			var temphtml = (typeof id === "string") ? ('<template id="' + id + '">') : '<template>' ;
+				temphtml += innerHTML;
+				temphtml += '</template>';
+			return HTMLTOEL(temphtml)[0];
+		},
 		"TOOBJECT":function(param,es,kv){
 			if(typeof param=="object") return param;
 			if(kv == true && ( typeof param === "string" || typeof es === "string")){ var r = {}; r[es] = param; return r; }
@@ -3926,21 +3962,45 @@
 			});
 			return this;
 		},
+		//
 		partialData:function(data){
 			if(typeof data !== "object") { return console.error("partialData의 파라메터는 object이여야 합니다"); }
+			var _partials = this.TemplatePartials;
+			// 파셜 노드 수집 (두번째의 경우 수집한 노드를 다시 수집)
 			this.partialAttr("partial-value",function(attrValue,node){
-				ELVALUE(node,data[attrValue]);
+				if (!_partials.value[attrValue]) _partials.value[attrValue] = [];
+				_partials.value[attrValue].push(node);
 			});
 			this.partialAttr("partial-src",function(attrValue,node){
-				node.setAttribute("src",data[attrValue]);
+				if (!_partials.src[attrValue]) _partials.src[attrValue] = [];
+				_partials.src[attrValue].push(node);
 			});
 			this.partialAttr("partial-href",function(attrValue,node){
-				node.setAttribute("href",data[attrValue]);
+				if (!_partials.href[attrValue]) _partials.href[attrValue] = [];
+				_partials.href[attrValue].push(node);
+			});
+			this.partialAttr("partial-placeholder",function(attrValue,node){
+				if (!_partials.placeholder[attrValue]) _partials.placeholder[attrValue] = [];
+				_partials.placeholder[attrValue].push(node);
+			});
+			// 파셜 데이터 입력
+			ENUMERATION(_partials,function(partialData,partialCase){
+				ENUMERATION(partialData,function(nodelist,attrValue){
+					if(attrValue in data) DATAEACH(nodelist,function(node){
+						switch(partialCase){
+							case "value":ELVALUE(node,data[attrValue]);break;
+							case "src"  :node.setAttribute("src",data[attrValue]);break;
+							case "href" :node.setAttribute("href",data[attrValue]);break;
+							case "placeholder": ELEMPTY(node);ELAPPEND(node,data[attrValue]);break;
+						}
+					});
+				});
 			});
 			return this;
 		}
 	},function(node,partialData,cancel){
 		this.TemplateNode  = node;
+		this.TemplatePartials = {value:{},src:{},href:{},placeholder:{}};
 		if(cancel !== false){
 			var findNode = FIND(this.TemplateNode);
 			if (findNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",node)
@@ -3948,6 +4008,9 @@
 			this.setSource(IMPORTNODE(ZERO(findNode)));
 			if(typeof partialData == "object") this.partialData(partialData);
 		}
+	},function(){
+		//get 함수입니다. Template모듈은 기본적으로 노드를 반환합니다.
+		return ZFIND(this);
 	});
 	
 	//여러 엘리먼트를 셀렉트하여 한번에 컨트롤
@@ -6124,8 +6187,9 @@
 						this.axisYNegativeItems.push(node);
 						ELPREPEND(this.ClipView,node);
 						this.Source.scrollTop = this.Source.scrollTop + node.offsetHeight;
+					} else {
+						return console.warn("drawAxisYItem의 값이 잘못되었습니다 노드를 반환해주세요",node);
 					}
-					
 				}
 			}
 		},

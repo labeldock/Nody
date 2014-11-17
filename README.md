@@ -13,7 +13,6 @@ Nody.js
 # Table of Contents
   - [Introduce](#introduce)
   - [Featrue](#feature)
-  - [Orientation](#orientation)
   - [Simple showcase](#simple-showcase)
     - [Tag Generator](#showcase-tag-generator)
       - [Case1](#showcase-tag-generator-01)
@@ -24,8 +23,8 @@ Nody.js
       - [Select](#showcase-select-01)
 	  - [Return node](#showcase-select-02)
       - [Switch to other selector](#showcase-select-03)
-    - [Template partial](#showcase-template)
-      - [Create template node](#showcase-template-01)
+    - [Template & Partial](#showcase-template)
+      - [Import template node](#showcase-template-01)
       - [Partial template node](#showcase-template-02)
     - [MVVM](#showcase-mvvm)
       - [Basic](#showcase-template-01)
@@ -79,15 +78,6 @@ Nody는...
 
 #### Minimum #
   - 일반적으로 IE9에서 동작되는것으로 확인되나 IE8까지 지원하도록 노력하고 있습니다.
-
-
-
-
-
-<a name="orientation"/>
-## Orientation #
-본 라이브러리는 로직의 통일성과 손쉬운 구현을 중요시여겨 객체지향 모델로 만들어졌다.
-
 
 <a name="simple-showcase"/>
 ## Simple showcase #
@@ -199,10 +189,10 @@ css 스타일로 구현 가능
         //result=> [object jQuery]
 ```
 <a name="showcase-template"/>
-### Template partial #
+### Template & Partial #
 
 <a name="showcase-template-01"/>
-#### Create template node #
+#### Import template node #
 Tag
 ```html
 		<!-- Container -->
@@ -258,6 +248,23 @@ Result
 		<input type="text" value="Input value">
 	</a>
 ```
+#### create template node #
+자바스크립트로 Template태그를 만들수 있다.
+```javascript
+		var template = MAKETEMP(TAG("ul.list",
+			TAG("li.item"),
+			TAG("li.item"),
+			TAG("li.item")
+		));
+		
+		// import node
+		document.importNode(template.content);
+		//or
+		_Template(template).get();
+		//or
+		IMPORTNODE(template);
+```
+
 <a name="showcase-mvvm"/>
 ### MVVM #
 
@@ -663,11 +670,12 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
     - _Tamplate 모듈이 추가되었습니다.
 	- ViewModel에 Template를 사용하여 직관적인 개발과 퍼포먼스를 향상에 초점을 맞추었습니다.
 	- ViewModel의 나열이 역전되었습니다. 이제부터 부모부터 열거해야합니다.
+	- MAKETEMP 함수 추가 Template 태그를 생성함
+	- TAG함수 강화
   - FINDZERO가 ZFIND로 이름이 바뀌었습니다.
   
 #### 0.7까지 변동사항 #
   - EL, _[tag]... 함수들이 제거되었고 Nody와 Make모듈로 MAKE함수로 대체되었습니다.
-  - ViewModel의 렌더링 파라메터의 순서가 역전되었습니다.
   - Area, AreaContent 모듈이 제거되었고 ZString 모듈로 대체되었습니다.
   - 성능을 높이기 위한 작업이 되었습니다.
   - 모듈인 "Type"이 제거되고 단순 함수 "IS"로 대체되었습니다.

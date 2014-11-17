@@ -15,7 +15,6 @@
 <ul>
 <li><a href="#introduce">Introduce</a></li>
 <li><a href="#feature">Featrue</a></li>
-<li><a href="#orientation">Orientation</a></li>
 <li><a href="#simple-showcase">Simple showcase</a>
 
 <ul>
@@ -36,10 +35,10 @@
 <li><a href="#showcase-select-03">Switch to other selector</a></li>
 </ul>
 </li>
-<li><a href="#showcase-template">Template partial</a>
+<li><a href="#showcase-template">Template &amp; Partial</a>
 
 <ul>
-<li><a href="#showcase-template-01">Create template node</a></li>
+<li><a href="#showcase-template-01">Import template node</a></li>
 <li><a href="#showcase-template-02">Partial template node</a></li>
 </ul>
 </li>
@@ -138,12 +137,6 @@
 <li>일반적으로 IE9에서 동작되는것으로 확인되나 IE8까지 지원하도록 노력하고 있습니다.</li>
 </ul>
 
-
-<p><a name="orientation"/></p>
-
-<h2>Orientation</h2>
-
-<p>본 라이브러리는 로직의 통일성과 손쉬운 구현을 중요시여겨 객체지향 모델로 만들어졌다.</p>
 
 <p><a name="simple-showcase"/></p>
 
@@ -272,11 +265,11 @@
 </code>
 <a name="showcase-template"/></p>
 
-<h3>Template partial</h3>
+<h3>Template &amp; Partial</h3>
 
 <p><a name="showcase-template-01"/></p>
 
-<h4>Create template node</h4>
+<h4>Import template node</h4>
 
 <p>Tag
 ```html
@@ -338,8 +331,29 @@ Result
         <span>InnerHTML value</span>
         <input type="text" value="Input value">
     </a>
-```
-<a name="showcase-mvvm"/></p>
+```</p>
+
+<h4>create template node</h4>
+
+<p>자바스크립트로 Template태그를 만들수 있다.
+```javascript
+        var template = MAKETEMP(TAG(&ldquo;ul.list&rdquo;,
+            TAG(&ldquo;li.item&rdquo;),
+            TAG(&ldquo;li.item&rdquo;),
+            TAG(&ldquo;li.item&rdquo;)
+        ));</p>
+
+<pre><code>    // import node
+    document.importNode(template.content);
+    //or
+    _Template(template).get();
+    //or
+    IMPORTNODE(template);
+</code></pre>
+
+<p>```</p>
+
+<p><a name="showcase-mvvm"/></p>
 
 <h3>MVVM</h3>
 
@@ -808,6 +822,8 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 <li>_Tamplate 모듈이 추가되었습니다.</li>
 <li>ViewModel에 Template를 사용하여 직관적인 개발과 퍼포먼스를 향상에 초점을 맞추었습니다.</li>
 <li>ViewModel의 나열이 역전되었습니다. 이제부터 부모부터 열거해야합니다.</li>
+<li>MAKETEMP 함수 추가 Template 태그를 생성함</li>
+<li>TAG함수 강화</li>
 </ul>
 </li>
 <li>FINDZERO가 ZFIND로 이름이 바뀌었습니다.</li>
@@ -818,7 +834,6 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <ul>
 <li>EL, _[tag]&hellip; 함수들이 제거되었고 Nody와 Make모듈로 MAKE함수로 대체되었습니다.</li>
-<li>ViewModel의 렌더링 파라메터의 순서가 역전되었습니다.</li>
 <li>Area, AreaContent 모듈이 제거되었고 ZString 모듈로 대체되었습니다.</li>
 <li>성능을 높이기 위한 작업이 되었습니다.</li>
 <li>모듈인 &ldquo;Type"이 제거되고 단순 함수 "IS"로 대체되었습니다.</li>
