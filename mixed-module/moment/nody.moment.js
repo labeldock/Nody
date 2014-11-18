@@ -1,3 +1,10 @@
+/* include tag
+
+<script src="moment/moment-with-locales.js"></script>
+<script src="moment/nody.moment.js"></script>
+
+*/
+
 (function(){
 	
 	makeModule("MixedMoment",{
@@ -31,26 +38,28 @@
 			}));
 		},
 		drawCalendarBodyRows:function(){
-			var owner       = this;
-			var firstMoment = this.Source.clone().date(1);
-			var year=firstMoment.year(),month=firstMoment.month()+1;
-			var lastMoment  = firstMoment.clone().add(1,'months').date(0);
-
-			var startDay   = TURNINDEX(firstMoment.day()-this.CalendarStartDay,7);
-			var beforeDate = firstMoment.clone().date(0).date() - startDay;
-
+			var owner          = this;
+			var firstMoment    = this.Source.clone().date(1);
+			var year           = firstMoment.year();
+			var month          = firstMoment.month()+1;
+			var lastMoment     = firstMoment.clone().add(1,'months').date(0);
+			var startDay       = TURNINDEX(firstMoment.day()-this.CalendarStartDay,7);
+			var beforeDate     = firstMoment.clone().date(0).date() - startDay;
 			var calendarBodies = ARRAYINARRAY(6);
 			
+			
 			// before month
-			for(var i=0,l=startDay;i<l;i++) calendarBodies[0].push(MAKE("td.before",{html:beforeDate+i+1}));
+			var tdtempbefore = _Template(TAG("td.before[partial-value=html]"),false);
+			for(var i=0,l=startDay;i<l;i++) calendarBodies[0].push( tdtempbefore.generate({html:beforeDate+i+1}) );
 		
 			//
 			var count = lastMoment.date()+startDay;
-		
+			
 			// current month
+			var tdtemp = _Template(TAG("td[partial-value=html][partial-dataset=dataset]"),false);
 			for(var i=startDay,l=count;i<l;i++){
 				var date    = i-startDay+1;
-				var makedTd = MAKE("td",{html:date,dataset:{"year":year,"month":month,"date":date}});
+				var makedTd = tdtemp.generate({html:date,dataset:{"year":year,"month":month,"date":date}});
 				calendarBodies[ Math.floor(i/7) ].push(makedTd);
 				ELON(makedTd,"click",function(){
 					owner.calendarToggle(parseInt(ELDATA(this,"year")),parseInt(ELDATA(this,"month")),parseInt(ELDATA(this,"date")));
@@ -58,9 +67,9 @@
 			} 
 		
 			// after month
-		
+			var tdtempafter = _Template(TAG("td.after[partial-value=html]"),false);
 			for(var i=count,l=42,ai=1;i<l;i++){
-				calendarBodies[ Math.floor(i/7) ].push(MAKE("td.after",{html:ai}));
+				calendarBodies[ Math.floor(i/7) ].push(tdtempafter.generate({html:ai}));
 				ai++;
 			}
 			

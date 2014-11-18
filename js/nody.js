@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.8.4");
-	var build   = new String("764");
+	var version = new String("0.8.7");
+	var build   = new String("783");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -43,7 +43,7 @@
 	});
 	
 	// MARK("name") 두번호출하면 시간을 측정할수 있음
-	var MARKO = {};W.MARK = function(name){ if(typeof name === "string" || typeof name === "number") { name = name+""; if(typeof MARKO[name] === "number") { console.info("MARK::"+name+" => "+ (+new Date() - MARKO[name])); delete MARKO[name]; } else { console.info("MARK START::"+name); MARKO[name] = +new Date(); } } };
+	var MARKO = {};W.MARK = function(name){ if(typeof name === "string" || typeof name === "number") { name = name+""; if(typeof MARKO[name] === "number") { var time = (+new Date() - MARKO[name]);console.info("MARK::"+name+" => "+time) ; delete MARKO[name]; return time  } else { console.info("MARK START::"+name); MARKO[name] = +new Date(); } } };
 	
 	//IE8 TRIM FIX
 	if(!String.prototype.trim) String.prototype.trim = function() { return this.replace(/(^\s*)|(\s*$)/gi, ""); };
@@ -802,15 +802,25 @@
 			}
 		},
 		// 아래 INDEXES 함수들은 어떠한 위치를 제외한 인덱싱을 위해 존재함
-		"SPLITINDEXES":function(c,idx){
+		"SPLITINDEXES":function(c,idx,safe){
 			if(typeof c === "string" && ISARRAY(idx)){
 				var indexes = CLONE(idx);
 				indexes.push(c.length);
 				var result  = [];
 				var past    = 0;
-				for(var i=0,l=indexes.length;i<l;i++){
-					result.push(c.substring(past,indexes[i]));
-					past = indexes[i]+1;
+				if(safe == true){
+					for(var i=0,l=indexes.length;i<l;i++) {
+						if(i){
+							result.push(c.substring(past-1,indexes[i]));
+							past = indexes[i]+1;
+						}
+					}
+				} else {
+					for(var i=0,l=indexes.length;i<l;i++){					
+						//위에선 i가 0이 아닐때인데 이걸 고치면 작동이 이상해서 일단 납둠
+						result.push(c.substring(past,indexes[i]));
+						past = indexes[i]+1;
+					}
 				}
 				return result;
 			}
@@ -886,7 +896,7 @@
 				console.warn("INDEXESRANGE::두번째까지 파라메터는 array여야 합니다.",f,e);
 			}
 		},
-		"OUTERSPLIT":function(c,s,w){
+		"OUTERSPLIT":function(c,s,w,safe){
 			if(typeof c === "string"){
 				if(typeof s !== "string" || s.length == 0) s=",";
 				if(s.length > 1){
@@ -921,7 +931,7 @@
 					}
 					if(pass == true) splitIndexes.push(point);
 				}
-				return SPLITINDEXES(c,splitIndexes);
+				return SPLITINDEXES(c,splitIndexes,safe);
 			}
 		},
 		//Helper of PASCAL,CAMEL,SNAKE,KEBAB
@@ -2625,130 +2635,133 @@
 //Nody DHTML Foundation
 (+(function(W){
 	if(W.nodyLoadException==true){ throw new Error("Nody DHTML Foundation init cancled"); return;}
+	var ELUT_REGEX = new RegExp("("+ [
+		//tag
+		"^[\\w\\-\TA\_]+",
+		//id
+		"\\#[\\w\\-\\_]*",
+		//class
+		"\\.[\\w\\-\\_]*",
+		//attr
+		"\\[[\\w\\-\\_]+\\]|\\[\\\'[\\w\\-\\_]+\\\'\\]|\\[\\\"[\\w\\-\\_]+\\\"\\]",
+		//attr2
+		"\\[[\\w\\-\\_]+\\=[\\w\\-\\_]+\\]|\\[\\\'[\\w\\-\\_]+\\\'\\=\\\'[\\w\\-\\_]+\\\'\\]|\\[\\\"[\\w\\-\\_]+\\\"\\=\\\"[\\w\\-\\_]+\\\"\\]",
+		//special?
+		"\\?[\\w\\-\\_]*",
+		//special!
+		"\\![\\w\\-\\_]*",
+		//html
+		"::.*$"
+	].join("|") +")","gi");
 	
 	makeSingleton("ELUT",{
 		//테그의 속성을 text로 표현합니다.
-		"SELECTINFO"   : function(tagProperty,attrValue){
+		"SELECTINFO"   : function(tagProperty,attrValue){ 
+			tagProperty = (typeof tagProperty !== "string") ? "" : tagProperty;
+			
 			//캐쉬를 이용해 잦은 표현에 대한 오버해드를 줄입니다.
-			if((typeof tagProperty === "string") && (typeof attrValue === "undefined")){
-				var tp = tagProperty.trim();
-				var cache = FUT.CACHEGET(tp);
-				if( cache ) return CLONEOBJECT( cache );
-				var selectInfoCacheEnabled = tp;
-			}
+			var result = FUT.CACHEGET("SELECTINFO",tagProperty);
+			if( result ) {
+				result = CLONEOBJECT( result );
+			} else {
+				var result  = {};
+				var matches = [];
+				var rest    = tagProperty;
 			
-			//name refactory
-			var name = (typeof tagProperty === "undefined") ? "" : tagProperty ;
-			name = name.trim();
-			
-			var attributedToken = {};
-			attributedToken.tagName  = new String("");
-	
-			//value attr in tagMeta & tagValue("::")
-			name = name.replace(/(\:[\w\-]+\([\S]+\)|\:\:.*$|\:[\w\-]+)/gi,function(s){ 
-				if(s.indexOf("::") == 0){
-					attributedToken["::"] = s.substr(2);
-				} else {
-					var la = /(\:[\w\-\_]+|[\w\-\_]+)(\(.*\)|)$/.exec( s.toLowerCase().trim() );
-					var ls = la[1].trim();
-					var lv = la[2].substr(1,la[2].length-2).trim();
-					
-					switch(ls){
-						case ":disabled": case ":readonly": case ":checked":
-							attributedToken[ls.toLowerCase().substr(1)] = true;
+				//find regular expression
+				rest = rest.replace(ELUT_REGEX,function(ms){
+					if(ms)matches.push(ms);
+					return "";
+				});
+				
+				var tagprop = matches.concat(OUTERSPLIT(rest,":","()",true));
+				for(var i=0,l=tagprop.length;i<l;i++){
+					var sinfo = /(.?)((.?).*)/.exec(tagprop[i]);
+					// div ["div","d","iv","i"]
+					switch(sinfo[1]){
+						//id
+						case "#" :
+							//attr value 우선
+							if(!result["id"]) result["id"] = sinfo[2];
 							break;
-						case ":eq": case ":nth-child":
-							if(!(":" in attributedToken)) attributedToken[":"] = {};
-							attributedToken[":"][ls.substr(1)] = (lv == "even" || lv == "odd" ) ? lv : TONUMBER(lv);
-							break;
-						case ":contains": case ":has": case ":not":
-							if(!(":" in attributedToken)) attributedToken[":"] = {};
-							attributedToken[":"][ls.substr(1)] = lv;
-							break;
-						case ":first-child": case ":last-child": case ":only-child": case ":even": case ":odd": case ":hover":
-							if(!(":" in attributedToken)) attributedToken[":"] = {};
-							attributedToken[":"][ls.substr(1)] = null;
-							break;
-						default :
-							if( /([\w]+)\(([\S\,]+)\)/i.test(ls) ){
-								var capture = /([\w]+)\(([\S\,]+)\)/i.exec(ls);
-								if(ISNOTHING(capture)) throw new Error("unsupported");
-								attributedToken[capture[1]] = UNWRAP(capture[2],["",'']);
+						//class
+						case "." :
+							if(result["class"]) {
+								result["class"] += " ";
+								result["class"] += sinfo[2];
 							} else {
-								console.warn("SELECTINFO::지원하지 않는 메타키 입니다. => ",s," <=",tagProperty);
+								result["class"] = sinfo[2];
+							}
+							break;
+						case ":" :
+							//html
+							if(sinfo[3] == ":"){
+								result["::"] = sinfo[0].substr(2);
+							} else {
+								//metaAttribute
+								if(!result[":"]) result[":"] = {};
+								var attrInfo = /(:([\w\-\_]+))(\((.*)\)$|)/.exec(sinfo[0]);
+								//"hello(world)" => [":hello(world)", ":hello", "hello", "(world)", "world"]
+								switch(attrInfo[1]){
+									case ":disabled": case ":readonly": case ":checked":
+										result[":"][attrInfo[2]] = true;
+										break;
+									case ":nth-child":
+										result[":"][attrInfo[2]] = (attrInfo[4] === undefined) ? null : attrInfo[4].match(/^(even|odd)$/) ? attrInfo[4] : TONUMBER(attrInfo[4]) 
+										break;
+									case ":contains": case ":has": case ":not":
+										result[":"][attrInfo[2]] = attrInfo[4];
+										break;
+									case ":first-child": case ":last-child": case ":only-child": case ":even": case ":odd": case ":hover":
+										result[":"][attrInfo[2]] = null;
+										break;
+									default :
+										result[":"][attrInfo[2]] = attrInfo[4];
+										break;
+								}
+							}
+							break;
+						//name
+						case "!" : result["name"] = sinfo[2]; break;
+						//type
+						case "?" : result["type"] = sinfo[2]; break;
+						//attr
+						case "[" :
+							var attr = /\[([\"\'\w\-\_]+)(=|~=|)(.*|)\]$/.exec(sinfo[0]);
+							//"['tag-is'=my_any value  ]" => ["['tag-is'=my_any value  ]", "'tag-is'", "=", "my_any value  "]
+							result[UNWRAP(attr[1],["''",'""'])] = (attr[3])? UNWRAP(attr[3],["''",'""']) : null;
+						break;
+						//tagname
+						default : 
+							switch(sinfo[0].toLowerCase()){
+								case "checkbox": case "file": case "hidden": case "hidden": case "password": case "radio": case "submit": case "text": case "reset": case "image": case "number" :
+									result["tagName"] = "input";
+									result["type"]    = sinfo[0];
+									break;
+								default:
+									result["tagName"] = sinfo[0].toLowerCase();
+									break;
 							}
 							break;
 					}
+					
 				}
-				return "";
-			});
-			
-			//both attribute case
-			name = name.replace(/\[([\w\-]+)\=([^\]]*)\]/gi,function(s){
-				var attr = /\[([\w\-]+)\=([^\]]*)\]/gi.exec(s);
-				attributedToken[attr[1]] = attr[2];
-				return "";
-			});
-	
-			//single attribute case
-			name = name.replace(/\[([\w\-^\=]+)\]/gi,function(s){
-				var attr = /\[([\w\-^\=]+)\]/gi.exec(s);
-				attributedToken[attr[1]] = null;
-				return "";
-			});
-	
-			//tag
-			name.replace(/^([\w\*]*)/gi,function(s){attributedToken.tagName = s;});
-			
-			if(attributedToken.tagName == ""){
-				delete attributedToken["tagName"];
-			} else {
-				attributedToken.tagName = attributedToken.tagName.toLowerCase();
-				switch(attributedToken.tagName){
-					case "input" : break;
-					case "checkbox": case "file": case "hidden": case "hidden": case "password": case "radio": case "submit": case "text": case "reset": case "image": case "number" :
-						attributedToken["type"] = attributedToken.tagName;
-						attributedToken.tagName = "input";
-					default: break;
-				}
+				
+				//cache save
+				FUT.CACHESET("SELECTINFO",tagProperty,CLONEOBJECT(result));
 			}
-			//attribute id
-			name.replace(/(\#[\w\-]+)/i,function(s){ attributedToken["id"] = s.substr(1); });
 			
-			//attribute class
-			name.replace(/(\.[\w\-]+)/gi,function(s){ 
-				if (typeof attributedToken["class"] === "undefined") {
-					attributedToken["class"] = "";						
-					attributedToken["class"] += s.substr(1);
-				} else {
-					attributedToken["class"] += " ";
-					attributedToken["class"] += s.substr(1)
-				}
-			});
-	
-			//attribute name
-			name.replace(/(\![\w\-]+)/i,function(s){ 
-				if(attributedToken["tagName"] == "option"){
-					attributedToken["value"] = s.substr(1); 
-				} else {
-					attributedToken["name"] = s.substr(1); 
-				}
-			});
-	
-			//attribute type
-			name.replace(/(\?[\w\-]+)/i,function(s){ attributedToken["type"] = s.substr(1); });
-	
-			//value attr in attrValue
-			var attrvals = CLONE(TOOBJECT(attrValue,"html"));
-			if(attrvals["html"]) { attributedToken["::"] = attrvals["html"]; delete attrvals["html"];  }
+			// 두번째 파라메터 처리
+			var attr = CLONE(TOOBJECT(attrValue,"html"));
 			
-			for(var key in attrvals) { attributedToken[key] = attrvals[key]; };
-	
-			//cache save
-			if(selectInfoCacheEnabled) FUT.CACHESET("SELECTINFO",selectInfoCacheEnabled,CLONEOBJECT(attributedToken));
+			if("html" in attr){
+				attr["::"] = attr["html"];
+				delete attr["html"];
+			} 
 			
-			//result 
-			return attributedToken;
+			for(var key in attr) result[key] = attr[key];
+			
+			return result;
 		},
 		//css스타일 태그를 html스타일 태그로 바꿉니다.
 		"TAG" : function(tagProperty,attrValue){
@@ -2760,7 +2773,21 @@
 					attrValue += v;
 				});
 			}
-			//tagInfo
+			
+			//캐쉬를 이용해 잦은 표현에 대한 오버해드를 줄입니다.
+			var tagInfo,cacheName,enableCache = (typeof attrValue === "string" || typeof attrValue === "undefined") ? true : false;
+			
+			if(enableCache){
+				cacheName = tagProperty;
+				//캐쉬가 존재하면 바로 리턴
+				var result = FUT.CACHEGET("TAG",cacheName);
+				if(result)if(attrValue){
+					return result[0]+attrValue+result[1];
+				} else {
+					return result[0]+result[1];
+				}
+			}
+			
 			var tagInfo = SELECTINFO(tagProperty,attrValue);
 			
 			if(!("tagName" in tagInfo) || tagInfo.tagName == "*") tagInfo.tagName = "div";
@@ -2769,45 +2796,28 @@
 			for(var name in tagInfo) switch(name){
 				case "tagName":case "::":case ":": break;
 				default:
-					var atValue = tagInfo[name];
-					if(typeof atValue == undefined || atValue == null){
-						attributedTexts += new String(" ");
-						attributedTexts += name;
-					} else {
-						attributedTexts += new String(" ");
-						attributedTexts += name;
-						attributedTexts += new String('="');
-						attributedTexts += (atValue+"").trim();
-						attributedTexts += '"';
-					}
+					attributedTexts += ((typeof tagInfo[name] == undefined || tagInfo[name] == null) ? " " + name : " " + name + '="' + tagInfo[name] + '"');
 					break;
 			}
 			attributedTexts = attributedTexts.trim();
 	
 			//common attribute process
-			var name = new String("<");
-			name += tagInfo.tagName;
-			name += (attributedTexts.length < 1 ? "" : (" " + attributedTexts));
+			var name = "<" + tagInfo.tagName + (attributedTexts.length < 1 ? "" : (" " + attributedTexts));
+			var tagValue = tagInfo["::"] || "";
+			var cachePrefix,cacheSuffix
 			
-			var tagValue = "::" in tagInfo ? tagInfo["::"] : new String("");
-
-			//close tag
-			if(tagInfo.tagName.toLowerCase() == "input"){
-				if(tagValue){
-					name += ' value="';
-					name += tagValue;
-					name += '"/>';
-				} else {
-					name += '/>';
-				}
+			if(tagInfo.tagName == "input"){
+				cachePrefix = name + ' value="';
+				cacheSuffix = '"/>';
 			} else {
-				name += '>';
-				name += tagValue;
-				name += '</';
-				name += tagInfo.tagName;
-				name += '>';
+				cachePrefix = name + '>';
+				cacheSuffix = '</' + tagInfo.tagName + '>';
 			}
-			return name;
+			
+			if(cacheName) FUT.CACHESET("TAG",cacheName,[cachePrefix,cacheSuffix]);
+			
+			
+			return (cachePrefix + tagValue + cacheSuffix);
 		},
 		"TAGSTACKS":function(){
 			var stakes = new String(""),stakee = new String("");
@@ -3078,18 +3088,28 @@
 			});
 			return judgement;
 		},
-		"QUERY":function(query,root){
-			if(typeof query !== "string" || ISNOTHING(query)) return [];
-			var root      = ISDOCUMENT(root)?document.body.parentElement:ISELNODE(root)?root:document.body.parentElement;			
-			var queryData = StructureInit("QueryDataInfo",query);
-			var result = [];
-			NUT.FEEDERDOWN(
-				root,
-				function(node){ if( NUT.IS(this,queryData) ) result.push(this); },
-				"children"
-			);
-			return result;
-		},
+		//쿼리셀렉터와 약간 다른점은 부모도 쿼리 셀렉터에 포함된다는 점
+		"QUERY":(function(){
+			if( ISUNDERBROWSER(9) || !document.querySelectorAll ){
+				console.warn("Nody의 노드셀렉터 관용모드 시작");
+				return function(query,root){
+					if(typeof query !== "string" || (query.trim().length == 0)) return [];
+					var root      = ISDOCUMENT(root)?document.body.parentElement:ISELNODE(root)?root:document.body.parentElement;			
+					var queryData = StructureInit("QueryDataInfo",query);
+					var result = [];
+					NUT.FEEDERDOWN(root,function(node){ if( NUT.IS(this,queryData) ) result.push(this); },"children");
+					return result;
+				}
+			}
+			return function(query,root){
+				//upper browser
+				if(typeof query !== "string" || (query.trim().length == 0)) return [];
+				root = ((typeof root === "undefined")?document:ISELNODE(root)?root:document);
+				if(root == document)   return root.querySelectorAll(query);
+				if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(root.querySelectorAll(query)));
+				return root.querySelectorAll(query);
+			}
+		})(),
 		"FEEDERDOWN_WHILE":function(feeder,stopFilter,findChild){
 			if( stopFilter.call(feeder,feeder) !== false ){
 				var childs = TOARRAY(findChild.call(feeder,feeder));
@@ -3137,13 +3157,11 @@
 			}
 			return [];
 		},
-		
 		"IFRAMEDOCUMENT":function(iframe){
 			var iframe = ZFIND(iframe);
 			if(iframe.tagName == "IFRAME") return iframe.contentDocument || iframe.contentWindow.document;
 			if(ISDOCUMENT(iframe)) return iframe;
 		},
-		
 		"FINDMEMBER":function(sel,offset){
 			var target = ZFIND(sel);
 			if(!ISELNODE(target)) return;
@@ -3202,20 +3220,62 @@
 	
 	makeSingleton("GUT",{
 		"CREATE" :function(name,attrValue,parent){
-			var element;
-			var dataset;
-			name = (typeof name === "undefined") ? "" : name ;
-			if(typeof name === "string"){
-				name = name.trim();
-				
-				if(typeof attrValue === "object") if("dataset" in attrValue){
-					dataset   = attrValue["dataset"];
-					attrValue = CLONE(attrValue);
-					delete attrValue["dataset"];
+			var element,skipRender,name=(typeof name !== "string") ? "div" : name.trim();
+			var dataset,htmlvalue,cacheName=name,cacheEnable=false;
+			
+			//attr 최적화 작업
+			//데이터셋과 HTML은 CREATE에서 스스로 처리
+			switch(typeof attrValue){
+				case "object":
+					if("dataset" in attrValue){
+						dataset   = attrValue["dataset"];
+						attrValue = CLONE(attrValue);
+						delete attrValue["dataset"];
+					}
+					if("html" in attrValue){
+						htmlvalue = attrValue["html"];
+						delete attrValue["html"];
+					}
+					if("value" in attrValue){
+						htmlvalue = attrValue["value"];
+						delete attrValue["value"];
+					}
+					if(ISNOTHING(attrValue)){ 
+						cacheEnable = true; 
+						attrValue = undefined;
+					}
+					break;
+				case "number":
+				case "boolean":
+					attrValue = attrValue+"";
+				case "string":
+					htmlvalue   = attrValue;
+					cacheEnable = true;
+					attrValue   = undefined; 
+					break;
+				case "undefined":
+					cacheEnable = true;
+					break;
+				default:
+					console.warn("CREATE의 두번째 값은 글자나 오브젝트입니다. 들어온 값 ->",attrValue);
+					cacheEnable = true;
+					attrValue   = undefined;
+					break;
+			}
+			
+			//성능향상을 위한 캐시
+			if(cacheEnable){
+				var cacheNode = FUT.CACHEGET("CREATE",cacheName);
+				if(cacheNode) {
+					element    = CLONENODES(cacheNode)[0];
+					skipRender = true;
 				}
-				
+			}
+			
+			//랜더링 시작
+			if(!skipRender){
 				if(name.indexOf("<") !== 0) name = TAG(name,attrValue);
-	
+
 				switch(name.substr(0,3)){
 					case "<tr" :
 						var sWrap = TAGSTACKS("table","tbody");
@@ -3249,14 +3309,19 @@
 						element = HTMLTOEL(name)[0];
 						break;
 				}
-				
-				if(dataset) for(var key in dataset) element.dataset[key] = dataset[key];
-					
-			} else {
-				console.error("E::처리할수 없는 첫번째 파라메터가 들어왔습니다. string이여야 합니다.");
-				return undefined;
+				//캐시 저장
+				if(cacheEnable) FUT.CACHESET("CREATE",cacheName,CLONENODES(element)[0]);
 			}
-			// append parent
+			
+			//랜더링 후처리
+			if(dataset)   for(var key in dataset) element.dataset[key] = dataset[key];
+			if(htmlvalue) if("value" in element) {
+				element.setAttribute("value",htmlvalue)
+			} else {
+				element.innerHTML = htmlvalue;
+			}
+			
+			//부모에게 어팬딩함
 			if(ISELNODE(parent) == true){
 				if(parent){ 
 					if(parent==W.document) parent = W.document.getElementsByTagName("body")[0];
@@ -3298,7 +3363,8 @@
 					if(typeof jp !== "object") throw new Error("pass");
 				} catch(e) {
 					if(_String(param).isDataContent()=="plain"){var esv=(typeof es === "string" ? es : "value");
-					var reo={};reo[esv]=param;return reo;}return _String(param).getDataContent();
+					var reo={};reo[esv]=param;return reo;}
+					return _String(param).getDataContent();
 				}
 			}
 			return{};
@@ -3950,9 +4016,8 @@
 	});
 	
 	extendModule("Nody","Template",{
-		create:function(partialData){
-			return _Template.call(Template,this.TemplateNode,partialData);
-		},
+		clone    : function(partialData){ return _Template(this.TemplateNode,partialData); },
+		generate : function(partialData){ return _Template(this.TemplateNode,partialData).get(); },
 		// 키를 지우면서
 		partialAttr:function(attrKey,method){
 			this.find("["+attrKey+"]").each(function(node){
@@ -3964,25 +4029,18 @@
 		},
 		//
 		partialData:function(data){
+			if(!this.TemplatePartials)this.TemplatePartials = {value:{},src:{},dataset:{},href:{},placeholder:{}};
 			if(typeof data !== "object") { return console.error("partialData의 파라메터는 object이여야 합니다"); }
+			var _ = this;
 			var _partials = this.TemplatePartials;
 			// 파셜 노드 수집 (두번째의 경우 수집한 노드를 다시 수집)
-			this.partialAttr("partial-value",function(attrValue,node){
-				if (!_partials.value[attrValue]) _partials.value[attrValue] = [];
-				_partials.value[attrValue].push(node);
+			ENUMERATION(this.TemplatePartials,function(inject,name){
+				_.partialAttr("partial-"+name,function(attrValue,node){
+					if (!inject[attrValue]) inject[attrValue] = [];
+					inject[attrValue].push(node);
+				});
 			});
-			this.partialAttr("partial-src",function(attrValue,node){
-				if (!_partials.src[attrValue]) _partials.src[attrValue] = [];
-				_partials.src[attrValue].push(node);
-			});
-			this.partialAttr("partial-href",function(attrValue,node){
-				if (!_partials.href[attrValue]) _partials.href[attrValue] = [];
-				_partials.href[attrValue].push(node);
-			});
-			this.partialAttr("partial-placeholder",function(attrValue,node){
-				if (!_partials.placeholder[attrValue]) _partials.placeholder[attrValue] = [];
-				_partials.placeholder[attrValue].push(node);
-			});
+			
 			// 파셜 데이터 입력
 			ENUMERATION(_partials,function(partialData,partialCase){
 				ENUMERATION(partialData,function(nodelist,attrValue){
@@ -3992,22 +4050,23 @@
 							case "src"  :node.setAttribute("src",data[attrValue]);break;
 							case "href" :node.setAttribute("href",data[attrValue]);break;
 							case "placeholder": ELEMPTY(node);ELAPPEND(node,data[attrValue]);break;
+							case "dataset": ENUMERATION(data[attrValue],function(key,value){ node.dataset[key] = value; });break;
 						}
 					});
 				});
 			});
 			return this;
-		}
-	},function(node,partialData,cancel){
-		this.TemplateNode  = node;
-		this.TemplatePartials = {value:{},src:{},href:{},placeholder:{}};
-		if(cancel !== false){
-			var findNode = FIND(this.TemplateNode);
-			if (findNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",node)
-			if (findNode.length !== 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",findNode);
-			this.setSource(IMPORTNODE(ZERO(findNode)));
+		},
+		reset : function(partialData){
+			if (this.TemplateNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",node)
+			if (this.TemplateNode.length !== 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",findNode);
+			this.setSource(IMPORTNODE(ZERO(this.TemplateNode)));
 			if(typeof partialData == "object") this.partialData(partialData);
 		}
+	},function(node,partialData,cancel){
+		this.TemplateNode  = (typeof node === "string")?/^<.+>$/.test(node)?[MAKETEMP(node)]:FIND(node):FIND(node);
+		if(partialData === false || cancel === false) return;
+		this.reset(partialData);
 	},function(){
 		//get 함수입니다. Template모듈은 기본적으로 노드를 반환합니다.
 		return ZFIND(this);
@@ -5580,6 +5639,7 @@
 				if( this.Parent ) this.Parent.chainUpMangedData(method);
 			}
 		},
+		hasData:function(key){ return (key in this.Source); },
 		data:function(key,value,sender){
 			// Read
 			if( arguments.length == 0) return CLONE(this.Source);
@@ -5602,7 +5662,8 @@
 			if(this.scope) {
 				//엘리먼트 기본설정값
 				var element = ISELNODE(bindElement) ? bindElement : typeof bindElement === "undefined" ? CREATE("input!"+bindElement) : CREATE(bindElement);
-				this.scope.addBindNode(element,this,dataKey, optional);
+				//optional은 기존에 실제 존재하였는지 확인하여 입력
+				this.scope.addBindNode(element,this,dataKey,!this.hasData(dataKey));
 				return element;
 			} else {
 				console.warn("view컨트롤러 스코프 내에서만 bind를 사용할수 있습니다.");
@@ -5647,6 +5708,7 @@
 			templateNode.partialAttr("data-placeholder",function(dataKey,node){
 				_.placeholder(node);
 			});
+			
 			return templateNode.zero();
 		},
 		revertData:function(){
@@ -5918,9 +5980,7 @@
 					//루트에 추가
 					rootElement.appendChild(renderResult);
 					//컨테이너에 추가
-					if( viewController.placeholderNodes[managedData.BindID] ){
-						ELAPPEND(viewController.placeholderNodes[managedData.BindID],feedCollection[topLevel+1]);
-					} 
+					if( viewController.placeholderNodes[managedData.BindID] ) ELAPPEND(viewController.placeholderNodes[managedData.BindID],feedCollection[topLevel+1]);
 					
 					feedCollection[topLevel+1] = [];
 				} else if (depth < lastFeed) {

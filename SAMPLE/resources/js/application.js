@@ -7,7 +7,8 @@ var loader = new Loader("#main-container",{
 	"scroll":"subview/scroll.html",
 	"viewmodel":"subview/viewmodel.html",
 	"multiselect":"subview/multiselect.html",
-	"selectbind":"subview/selectbind.html"
+	"selectbind":"subview/selectbind.html",
+	"speedtest":"subview/speedtest.html"
 });
 
 menuContext.onSelects("click",function(){
@@ -98,8 +99,10 @@ loader.setLoadEvent("mvvm",function(){
 	//뷰를 그리는 방법을 정의
 	var itemIndex = 10;
 	var viewModel = new ViewModel("template#mvvm-ul","template#mvvm-list","template#mvvm-td");
+	window.vm = viewModel;
 	//뷰를 그리고 이벤트를 등록함
     var listViewController = new DataContextViewController("#listContainer",dataContext.getRootManagedData(),viewModel);
+	window.lvc = listViewController;
 	listViewController.dataDidChange = function(){
 		var xmpText = dataContext.getJSONString().replace(/\:\[/,":[\n\t").replace(/\}\]\}\,(\s|)/g,"}]},\n\t").replace("]}]}","]}\n]}");
 		mvvmXMP.text(xmpText);
@@ -299,3 +302,51 @@ loader.setLoadEvent("scroll",function(){
 	});
 	calendarBox.setAllowMakeAxisYItem(200,200);
 });
+
+var somenode = MAKE("div#one.two.three",MAKE("ul",MAKE("li.item"),MAKE("li.item"),MAKE("li.item")));
+var testset = [
+	function(){
+		IMPORTNODE( document.querySelectorAll("template#test")[0] );
+	},
+	function(){
+		IMPORTNODE( $("template#test")[0] );
+	},
+	function(){
+		MAKE("div#one.two.three",MAKE("ul",MAKE("li.item"),MAKE("li.item"),MAKE("li.item")));
+	},
+	function(){
+		CLONENODES(somenode)[0];
+	},
+	function(){
+		IMPORTNODE( 
+			MAKETEMP(
+				TAG("div#one.two.three",
+				TAG("ul",
+				TAG("li.item"),
+				TAG("li.item"),TAG("li.item")))  
+			) 
+		);
+	},
+	function(){
+		IMPORTNODE( ZFIND("template#test") );
+	},
+	function(){
+		_Template("template#test").get();
+	}
+]
+loader.setLoadEvent("speedtest",function(){
+	TIMES(testset.length,function(i){
+		FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset[i]));
+	});
+	
+	ELON("#teststart","click",function(){
+		DATAEACH(testset,function(method,i){
+			MARK("test"+i);
+			TIMES(2000,function(){
+				method();
+			});
+			FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
+		});
+	});
+});
+menuContext.onSelects("click",6);

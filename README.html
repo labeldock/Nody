@@ -708,7 +708,16 @@ Result
     //=&gt; ["Result[1] : 7", "Result[2] : 15", "Result[3] : 29", "Result[4] : 38", "Result[5] : 44"]
 </code></p>
 
-<p><a name="showcase-number"/></p>
+<h3>ZNumber</h3>
+
+<p>```javascript
+    ZNUMBER(&ldquo;20~30&rdquo;); //=> 21
+    ZNUMBER(&ldquo;20~30&rdquo;); //=> 28
+    ZNUMBER(&ldquo;$0 + $1&rdquo;,&ldquo;\?10~20&rdquo;,&ldquo;10&rdquo;); //=> 22
+    ZNUMBER(&ldquo;$0 + $1&rdquo;,&ldquo;\?10~20&rdquo;,&ldquo;10&rdquo;); //=> 30</p>
+
+<p>```
+<a name="showcase-number"/></p>
 
 <h3>숫자</h3>
 
@@ -827,6 +836,8 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 </ul>
 </li>
 <li>FINDZERO가 ZFIND로 이름이 바뀌었습니다.</li>
+<li>ZNUMBER 추가</li>
+<li>셀렉터와 캐쉬를 정책을 바꿔 일반적인 노드의 작업속도를 10 ~ 200배 정도 향상시켰습니다.</li>
 </ul>
 
 

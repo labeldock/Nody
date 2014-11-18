@@ -11,6 +11,17 @@
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
+	"\/js\/min\/nody-min.js": {
+		"fileType": 64,
+		"ignore": 1,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/js\/min\/nody-min.js",
+		"outputAbbreviatedPath": "\/js\/min\/min\/nody-min-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
 	"\/js\/nody.core.js": {
 		"fileType": 64,
 		"ignore": 0,
@@ -36,7 +47,7 @@
 	"\/js\/nody.js": {
 		"fileType": 64,
 		"ignore": 0,
-		"ignoreWasSetByUser": 0,
+		"ignoreWasSetByUser": 1,
 		"inputAbbreviatedPath": "\/js\/nody.js",
 		"outputAbbreviatedPath": "\/js\/nody.min.js",
 		"outputPathIsOutsideProject": 0,
@@ -837,14 +848,14 @@
 		},
 	"\/SAMPLE\/resources\/js\/application.js": {
 		"fileType": 64,
-		"ignore": 1,
-		"ignoreWasSetByUser": 1,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
 		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/application.js",
 		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/application-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
-		"syntaxCheckerStyle": 0
+		"syntaxCheckerStyle": 1
 		},
 	"\/SAMPLE\/resources\/js\/bootstrap-slider.js": {
 		"fileType": 64,
@@ -878,6 +889,17 @@
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 0
+		},
+	"\/SAMPLE\/resources\/js\/min\/application-min.js": {
+		"fileType": 64,
+		"ignore": 1,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/application-min.js",
+		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/min\/application-min-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
 		},
 	"\/SAMPLE\/resources\/js\/min\/paging-min.js": {
 		"fileType": 64,
@@ -990,6 +1012,15 @@
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"inputAbbreviatedPath": "\/SAMPLE\/subview\/selectbind.html",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/SAMPLE\/subview\/speedtest.html": {
+		"fileType": 8192,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/SAMPLE\/subview\/speedtest.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0

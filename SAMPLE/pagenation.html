@@ -41,6 +41,14 @@
 		</tr>
 	</talbe>
 	
+	<div class="photoContainer">
+		<p class="photo"><img src="http://image.solutus.co.kr/ilyoungWeb/bg_imgNone.png" alt="사진"  id="joinPhoto" /></p>
+		<div class="btnPhoto">
+	      	<input type="file" accept="image/*" name="file" id="profilePhoto" value="사진 변경" />
+	      	<input type="hidden" id="joinPhotoVal" value=""/>
+		</div>
+	</div>
+	
 	
 	
 	<script src="../js/nody.js"></script>
@@ -63,6 +71,42 @@
 		$(document).on("click","#lt1",function(){ pc.needPrevPageIndex(); });
 		$(document).on("click","#lt2",function(){ pc.needPrevPageCount(); });
 		$(document).on("click","#lt3",function(){ pc.needFirstPageCount(); });
+	</script>
+	<script>
+		$('#profilePhoto').change(function(){
+			if( /(\.png|\.jpeg|\.jpg|\.gif|\.bmp)$/.test($(this).val()) ){
+				//FileReader를 사용 가능한 경우
+				if (this.files && this.files[0]) {
+					var reader = new FileReader();
+					var sender = this;
+					reader.onload = function (e) {
+						$("p.photo img").attr("src",e.target.result).centerImage();
+					};
+					reader.readAsDataURL(this.files[0]);
+				} else {
+					var filePath = $(this).val();
+					//ie9 fix
+					if( filePath.match(/fakepath/) ) {
+						this.select();
+						var fullpath = document.selection.createRangeCollection()[0].text;
+						
+						$("p.photo img").attr("src","").css({
+							"filter":"progid:DXImageTransform.Microsoft.AlphaImageLoader(src='"+ fullpath + "', sizingMethod='scale')",
+							"width":"160px",
+							"height":"160px"
+						});
+					} 
+					//FileRender가 불가능한 경우(ie 구버전)
+					$("p.photo img").attr("src",filePath);
+				}
+				chgPhoto = true;
+			} else{
+				// 파일 확장자가 올바르지 않은경우
+				alert('선택된 파일은 반드시 이미지여야 합니다.');
+				$(this).val("");
+			}
+			$( '#joinPhoto' ).centerImage();
+		});
 	</script>
 	<!--
 	

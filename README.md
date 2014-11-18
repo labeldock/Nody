@@ -576,7 +576,14 @@ $i 는 index값이다 toArray(길이)로 지정하여 많은 값이 생성 가�
 	_ZString("Result[\\{$i+1}] : \\{10*$i+$0}","\\?1~9").toArray(5);
 	//=> ["Result[1] : 7", "Result[2] : 15", "Result[3] : 29", "Result[4] : 38", "Result[5] : 44"]
 ```
-
+### ZNumber #
+```javascript
+	ZNUMBER("20~30"); //=> 21
+	ZNUMBER("20~30"); //=> 28
+	ZNUMBER("$0 + $1","\\?10~20","10"); //=> 22
+	ZNUMBER("$0 + $1","\\?10~20","10"); //=> 30
+	
+```
 <a name="showcase-number"/>
 ### 숫자 #
 Nody는 글자사이의 숫자를 인식한다. 내부적으로 숫자를 글자로 취급한다.
@@ -673,6 +680,9 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 	- MAKETEMP 함수 추가 Template 태그를 생성함
 	- TAG함수 강화
   - FINDZERO가 ZFIND로 이름이 바뀌었습니다.
+  - ZNUMBER 추가
+  - 셀렉터를 querySelectAll 베이스로 바뀌었습니다.
+  - 일반적인 노드 작업속도가 5 ~ 150배 정도 빨라졌습니다.
   
 #### 0.7까지 변동사항 #
   - EL, _[tag]... 함수들이 제거되었고 Nody와 Make모듈로 MAKE함수로 대체되었습니다.
