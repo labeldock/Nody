@@ -9,7 +9,7 @@
 	
 	// 버전
 	var version = new String("0.8.8");
-	var build   = new String("785");
+	var build   = new String("786");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -2638,18 +2638,18 @@
 	var ELUT_REGEX = new RegExp("("+ [
 		//tag
 		"^[\\w\\-\TA\_]+",
-		//id
-		"\\#[\\w\\-\\_]*",
-		//class
-		"\\.[\\w\\-\\_]*",
 		//attr
 		"\\[[\\w\\-\\_]+\\]|\\[\\\'[\\w\\-\\_]+\\\'\\]|\\[\\\"[\\w\\-\\_]+\\\"\\]",
 		//attr2
-		"\\[[\\w\\-\\_]+\\=[\\w\\-\\_]+\\]|\\[\\\'[\\w\\-\\_]+\\\'\\=\\\'[\\w\\-\\_]+\\\'\\]|\\[\\\"[\\w\\-\\_]+\\\"\\=\\\"[\\w\\-\\_]+\\\"\\]",
+		"\\[[\\w\\-\\_]+\\=[^\\]]+\\]|\\[\\\'[\\w\\-\\_]+\\\'\\=\\\'[^\\]]+\\\'\\]|\\[\\\"[\\w\\-\\_]+\\\"\\=\\\"[^\\]]+\\\"\\]",
+		//id
+		"\\#[\\w\\-\\_]+",
+		//class
+		"\\.[\\w\\-\\_]+",
 		//special?
-		"\\?[\\w\\-\\_]*",
+		"\\?[\\w\\-\\_]+",
 		//special!
-		"\\![\\w\\-\\_]*",
+		"\\![\\w\\-\\_]+",
 		//html
 		"::.*$"
 	].join("|") +")","gi");
@@ -2794,7 +2794,16 @@
 			//make attribute text
 			var attributedTexts = "";
 			for(var name in tagInfo) switch(name){
-				case "tagName":case "::":case ":": break;
+				case "tagName":case "::":break;
+				case ":": 
+					for(inkey in tagInfo[name]){
+						switch(inkey){
+							case "disabled":case "checked":case "selected":
+								attributedTexts += (" " + inkey);
+								break;
+						}
+					}
+					break;
 				default:
 					attributedTexts += ((typeof tagInfo[name] == undefined || tagInfo[name] == null) ? " " + name : " " + name + '="' + tagInfo[name] + '"');
 					break;
