@@ -9,7 +9,7 @@
 	
 	// 버전
 	var version = new String("0.8.8");
-	var build   = new String("784");
+	var build   = new String("785");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -5693,7 +5693,7 @@
 		},
 		configWithTemplate:function(_template){
 			var _ = this;
-			var templateNode = _template.create().selectFirst();
+			var templateNode = _template.clone().selectFirst();
 			
 			if(templateNode.isEmpty()) console.error("configWithTemplate :: 렌더링할 template를 찾을수 없습니다");
 			
