@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.8.7");
-	var build   = new String("783");
+	var version = new String("0.8.8");
+	var build   = new String("784");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -3941,6 +3941,9 @@
 			}
 		},
 		hasAttr:function(){ return APPLYS(EL.ATTR,EL,this,arguments); },
+		addClass:function(name){ return this.hasAttr(name)?this.attr("class",_String(this.attr("class")).addModel(name)):this.attr("class",name); },
+		hasClass:function(name){ return this.hasAttr(name)?_String(this.attr("class")).hasModel(name):false;},
+		removeClass:function(name){ if(this.hasAttr(name))this.attr("class",_String(this.attr("class")).removeModel(name)); return this; },
 		is     :function(){ return APPLYS(EL.IS,EL,this,arguments); },
 		filter :function(){ this.replace(APPLYS(EL.FILTER,EL,this,arguments)); return this; },
 		value  :function(name){ 
@@ -6269,6 +6272,8 @@
 			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
 			ELAPPEND(this.ClipView,this.Source.childNodes);
 			ELAPPEND(this.Source,this.ClipView);
+			ELHASATTR(this.Source,"class") ? ELATTR(this.Source,"class",_String(ELATTR("class")).addModel("frame-scroll")) : ELATTR(this.Source,"class","frame-scroll");
+			
 			//
 			this.ScrollEvent;
 			this.ZoomEvent;
@@ -6286,8 +6291,9 @@
 			
 			//
 			this.StartZoom = undefined;
-			this.zoomMin = 0.5;
-			this.zoomMax = 2;
+			this.zoomMin   = 0.5;
+			this.zoomMax   = 2;
+
 			
 			this.Finger.whenPinchStart(function(){
 				if(owner.allowZoom) owner.StartZoom = TONUMBER(ELSTYLE(owner.ClipView,"zoom"));
