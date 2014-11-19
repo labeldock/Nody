@@ -303,50 +303,74 @@ loader.setLoadEvent("scroll",function(){
 	calendarBox.setAllowMakeAxisYItem(200,200);
 });
 
-var somenode = MAKE("div#one.two.three",MAKE("ul",MAKE("li.item"),MAKE("li.item"),MAKE("li.item")));
+var somenode = MAKE("div#one.two.three",MAKE("ul.list",MAKE("li.item"),MAKE("li.item"),MAKE("li.item")));
 var testset = [
-	function(){
-		IMPORTNODE( document.querySelectorAll("template#test")[0] );
-	},
-	function(){
-		IMPORTNODE( $("template#test")[0] );
-	},
-	function(){
-		MAKE("div#one.two.three",MAKE("ul",MAKE("li.item"),MAKE("li.item"),MAKE("li.item")));
-	},
-	function(){
-		CLONENODES(somenode)[0];
-	},
-	function(){
-		IMPORTNODE( 
-			MAKETEMP(
-				TAG("div#one.two.three",
-				TAG("ul",
+function(){
+IMPORTNODE( document.querySelectorAll("template#test")[0] );
+},
+function(){
+IMPORTNODE( $("template#test")[0] );
+},
+function(){
+var root = $("<div id='one' class='two three' />")
+$("<ul class='list' />").append(
+	$("<li/>",{"class":"item"}),
+	$("<li/>",{"class":"item"}),
+	$("<li/>",{"class":"item"})
+).appendTo(root);
+
+IMPORTNODE( root[0] );
+},
+function(){
+MAKE("div#one.two.three",
+	MAKE("ul.list",
+		MAKE("li.item"),
+		MAKE("li.item"),
+		MAKE("li.item")
+	)
+);
+},
+function(){
+CLONENODES(somenode)[0];
+},
+function(){
+IMPORTNODE( 
+	MAKETEMP(
+		TAG("div#one.two.three",
+			TAG("ul.list",
 				TAG("li.item"),
-				TAG("li.item"),TAG("li.item")))  
-			) 
-		);
-	},
-	function(){
-		IMPORTNODE( ZFIND("template#test") );
-	},
-	function(){
-		_Template("template#test").get();
-	}
+				TAG("li.item"),
+				TAG("li.item")
+			)
+		)  
+	) 
+);
+},
+function(){
+IMPORTNODE( ZFIND("template#test") );
+},
+function(){
+_Template("template#test").get();
+}
 ]
 loader.setLoadEvent("speedtest",function(){
-	TIMES(testset.length,function(i){
-		FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset[i]));
-	});
-	
-	ELON("#teststart","click",function(){
-		DATAEACH(testset,function(method,i){
-			MARK("test"+i);
-			TIMES(2000,function(){
-				method();
-			});
-			FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
+	setTimeout(function(){
+		TIMES(testset.length,function(i){
+			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset[i]));
+			CODEBLOCK(".code-block-"+ i);
 		});
-	});
+		FIND(".code-block-template code",ELVALUE,CODE("template#test"));
+		CODEBLOCK(ZFIND(".code-block-template"));
+	
+		ELON("#teststart","click",function(){
+			DATAEACH(testset,function(method,i){
+				MARK("test"+i);
+				TIMES(2000,function(){
+					method();
+				});
+				FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
+			});
+		});
+	},500);
 });
 menuContext.onSelects("click",6);
