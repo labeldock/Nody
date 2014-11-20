@@ -1,4 +1,4 @@
-// Author      // hojung ahn (open9.net)
+// Author      // hojung ahn
 // Concept     // DHTML RAD TOOL
 // tested in   // IE9 + (on 4.0) & webkit2 & air13
 // lincense    // MIT lincense
@@ -9,7 +9,7 @@
 	
 	// 버전
 	var version = new String("0.8.8");
-	var build   = new String("786");
+	var build   = new String("789");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -1557,31 +1557,9 @@
 		getDecode:function(){ return decodeURI(this.Source); },
 		encode:function(){this.Source = this.getEncode();return this;},
 		decode:function(){this.Source = this.getDecode();return this;},
-		getByteSize:function(){
-			//http://okjsp.net/bbs?seq=30371
-			var temp_estr = escape(this.Source);
-			var s_index   = 0;
-			var e_index   = 0;
-			var temp_str  = "";
-			var cnt       = 0;
-			// 문자열 중에서 유니코드를 찾아 제거하면서 갯수를 센다.
-			while ((e_index = temp_estr.indexOf("%u", s_index)) >= 0) {
-				// 제거할 문자열이 존재한다면
-				temp_str += temp_estr.substring(s_index, e_index);
-				s_index = e_index + 6;
-				cnt ++;
-			}
-			temp_str += temp_estr.substring(s_index);
-			temp_str = unescape(temp_str);  // 원래 문자열로 바꾼다.
-			// 유니코드는 2바이트 씩 계산하고 나머지는 1바이트씩 계산한다.
-			return ((cnt * 2) + temp_str.length) + "";
-		},
-		getLines:function(){
-			return _Split(this.Source,"\n").toArray();
-		},
-		eachLine:function(f,j){
-			if(typeof f === "function") return _Array(this.getLines()).map(function(s,i){ return f(s,i); }).compact().join( (j?j:"\n") );
-		},
+		getByteSize:function(){ return unescape(escape(this.Source).replace(/%u..../g,function(s){ return "uu"; })).length; },
+		getLines:function(){ return _Split(this.Source,"\n").toArray(); },
+		eachLine:function(f,j){ if(typeof f === "function") return _Array(this.getLines()).map(function(s,i){ return f(s,i); }).compact().join( (j?j:"\n") ); },
 		//한줄의 탭사이즈를 구함
 		getTabSize:function(){
 			var tabInfo = /^([\s\t]*)(.*)/.exec(this.Source);
@@ -1591,9 +1569,8 @@
 		},
 		//한줄의 탭을 정렬함
 		getTabAbsolute:function(tabSize,tabString){
-			if(typeof tabSize === "number" || typeof tabSize === "string" ) tabSize = parseInt(tabSize);
-			if(typeof tabSize != "number") tabSize = this.getTabSize();
-			if(typeof tabString !== "string") tabString = "\t";
+			tabSize = TONUMBER(tabSize);
+			if(arguments.length < 2) tabString = "\t";
 			if(tabSize < 0) tabSize = 0;
 			var result = "";
 			for(var i = 0; i < tabSize; i++) result += tabString;
@@ -3331,11 +3308,10 @@
 			}
 			
 			//부모에게 어팬딩함
-			if(ISELNODE(parent) == true){
-				if(parent){ 
-					if(parent==W.document) parent = W.document.getElementsByTagName("body")[0];
-					parent.appendChild(element);
-				}
+			parent = ZFIND(parent);
+			if(parent){
+				if(parent==W.document) parent = W.document.getElementsByTagName("body")[0];
+				parent.appendChild(element);
 			}
 			return element;	
 		},
@@ -3383,13 +3359,26 @@
 			return DATAMAP(FIND(node),function(findNode){ return findNode.cloneNode(findNode,true); });
 		},
 		//하위의 노드를 모두 복사함
-		"IMPORTNODE":function(node){
+		"IMPORTNODE":function(node,parent){
 			node = FIND(node);
 			if( node.length === 0) return undefined;
 			if( node.length !== 1 ) console.warn("IMPORTNODE:: 한개의 노드만 복사할수 있습니다.",node);
 			node = ZERO(node);
-			if('content' in node) return FIND(document.importNode(node.content,true).childNodes);
-			return CLONENODES(node.children);
+			
+			var result;
+			if('content' in node){
+				result = FIND(document.importNode(node.content,true).childNodes);
+			} else {
+				result = CLONENODES(node.children);
+			}
+			
+			if(parent){
+				parent = ZFIND(parent);
+				if(parent) ELAPPEND(parent,result);
+			}
+			
+			return result;
+			
 		},
 		"CLONEOBJECT":function(inv){ if(typeof inv === "object"){ var result = {}; for(var k in inv) result[k] = inv[k]; return result; } return TOOBJECT(inv); },
 		//오브젝트 혹은 element를 반환합니다.
@@ -6175,12 +6164,14 @@
 	
 	makeModule("ScrollBox",{
 		needScrollingOffsetX:function(offset){
+			if(!this.allowScrollX) return;
 			var needTo = this.Source.scrollLeft + (-offset);
 			if (needTo < 0) needTo = 0;
 			if (needTo > this.Source.scrollWidth) needTo = this.Source.scrollWidth;
 			if (this.Source.scrollLeft != needTo) this.Source.scrollLeft = needTo;
 		},
 		needScrollingOffsetY:function(offset){
+			if(!this.allowScrollY) return;
 			var needTo = this.Source.scrollTop + (-offset);
 			if (needTo < 0) {
 				this.needNegativeDrawItem();
@@ -6288,6 +6279,8 @@
 			this.ZoomEvent;
 			this.Finger = new Finger(this.Source);
 			this.allowZoom = true;
+			this.allowScrollX = true;
+			this.allowScrollY = true;
 			
 			ELSTYLE(this.Source,"overflow","hidden");
 			
