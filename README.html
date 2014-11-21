@@ -1,11 +1,5 @@
 <h1>Nody.js</h1>
 
-<h1>help me</h1>
-
-<p><code>
-    This is not a complete sentence in English. Please help me to write English
-</code></p>
-
 <h1>Sample</h1>
 
 <p><a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a></p>
@@ -40,6 +34,8 @@
 <ul>
 <li><a href="#showcase-template-01">Import template node</a></li>
 <li><a href="#showcase-template-02">Partial template node</a></li>
+<li><a href="#showcase-template-03">Create template node</a></li>
+<li><a href="#showcase-template-04">템플릿 안에 노드를 파셜하기</a></li>
 </ul>
 </li>
 <li><a href="#showcase-mvvm">MVVM</a>
@@ -331,16 +327,18 @@ Result
         <span>InnerHTML value</span>
         <input type="text" value="Input value">
     </a>
-```</p>
+```
+<a name="showcase-template-03"/></p>
 
-<h4>create template node</h4>
+<h4>Create template node</h4>
 
 <p>자바스크립트로 Template태그를 만들수 있다.
 ```javascript
-        var template = MAKETEMP(TAG(&ldquo;ul.list&rdquo;,
-            TAG(&ldquo;li.item&rdquo;),
-            TAG(&ldquo;li.item&rdquo;),
-            TAG(&ldquo;li.item&rdquo;)
+        var template = MAKETEMP(
+            TAG(&ldquo;ul.list&rdquo;,
+                TAG(&ldquo;li.item&rdquo;),
+                TAG(&ldquo;li.item&rdquo;),
+                TAG(&ldquo;li.item&rdquo;)
         ));</p>
 
 <pre><code>    // import node
@@ -351,7 +349,31 @@ Result
     IMPORTNODE(template);
 </code></pre>
 
-<p>```</p>
+<p>```
+<a name="showcase-template-04"/></p>
+
+<h4>템플릿 안에 노드를 파셜하기</h4>
+
+<p><code>html
+    &lt;div id="container"&gt;
+    &lt;/div&gt;
+    &lt;template id="part"&gt;
+        &lt;ul partial-placeholder="list"&gt;&lt;/ul&gt;
+    &lt;/template&gt;
+</code>
+<code>javascript
+    var partialNode = [MAKE("li.item::item1"),MAKE("li.item::item2")];
+    _Template("#part",{"list":partialNode}).appendTo("#container");
+</code>
+Result
+<code>html
+    &lt;div id="container"&gt;
+        &lt;ul partial-placeholder="list"&gt;
+            &lt;li class="item"&gt;item1&lt;/li&gt;
+            &lt;li class="item"&gt;item2&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+</code></p>
 
 <p><a name="showcase-mvvm"/></p>
 
@@ -825,7 +847,7 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 <h4>0.8 변동사항 #</h4>
 
 <ul>
-<li>template 지원 강화
+<li>template 태그 관련 지원 강화
 
 <ul>
 <li>_Tamplate 모듈이 추가되었습니다.</li>
@@ -838,7 +860,10 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 <li>FINDZERO가 ZFIND로 이름이 바뀌었습니다.</li>
 <li>ZNUMBER 추가</li>
 <li>셀렉터를 querySelectAll 베이스로 바뀌었습니다.</li>
-<li>일반적인 노드 작업속도가 20 ~ 150배 정도 빨라졌습니다.</li>
+<li>캐쉬를 사용하여 일반적인 노드 작업속도가 20 ~ 150배 정도 빨라졌습니다.</li>
+<li>Contexts 모듈이 간소화되었습니다.</li>
+<li>각 노드의 위치를 바꿔주는 ELCHANGE가 생겼습니다.</li>
+<li>Loader 모듈의 실용성을 높였습니다.</li>
 </ul>
 
 

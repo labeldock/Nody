@@ -1,11 +1,6 @@
 Nody.js
 =======
 
-# help me #
-```
-	This is not a complete sentence in English. Please help me to write English
-```
-
 # Sample #
 <a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a>
 
@@ -26,6 +21,8 @@ Nody.js
     - [Template & Partial](#showcase-template)
       - [Import template node](#showcase-template-01)
       - [Partial template node](#showcase-template-02)
+	  - [Create template node](#showcase-template-03)
+	  - [템플릿 안에 노드를 파셜하기](#showcase-template-04)
     - [MVVM](#showcase-mvvm)
       - [Basic](#showcase-template-01)
       - [With template](#showcase-template-02)
@@ -248,13 +245,15 @@ Result
 		<input type="text" value="Input value">
 	</a>
 ```
-#### create template node #
+<a name="showcase-template-03"/>
+#### Create template node #
 자바스크립트로 Template태그를 만들수 있다.
 ```javascript
-		var template = MAKETEMP(TAG("ul.list",
-			TAG("li.item"),
-			TAG("li.item"),
-			TAG("li.item")
+		var template = MAKETEMP(
+			TAG("ul.list",
+				TAG("li.item"),
+				TAG("li.item"),
+				TAG("li.item")
 		));
 		
 		// import node
@@ -263,6 +262,28 @@ Result
 		_Template(template).get();
 		//or
 		IMPORTNODE(template);
+```
+<a name="showcase-template-04"/>
+#### 템플릿 안에 노드를 파셜하기 #
+```html
+	<div id="container">
+	</div>
+	<template id="part">
+		<ul partial-placeholder="list"></ul>
+	</template>
+```
+```javascript
+	var partialNode = [MAKE("li.item::item1"),MAKE("li.item::item2")];
+	_Template("#part",{"list":partialNode}).appendTo("#container");
+```
+Result
+```html
+	<div id="container">
+		<ul partial-placeholder="list">
+			<li class="item">item1</li>
+			<li class="item">item2</li>
+		</ul>
+	</div>
 ```
 
 <a name="showcase-mvvm"/>
@@ -673,7 +694,7 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ## Version info #
 
 #### 0.8 변동사항 # 
-  - template 지원 강화
+  - template 태그 관련 지원 강화
     - _Tamplate 모듈이 추가되었습니다.
 	- ViewModel에 Template를 사용하여 직관적인 개발과 퍼포먼스를 향상에 초점을 맞추었습니다.
 	- ViewModel의 나열이 역전되었습니다. 이제부터 부모부터 열거해야합니다.
@@ -682,7 +703,11 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
   - FINDZERO가 ZFIND로 이름이 바뀌었습니다.
   - ZNUMBER 추가
   - 셀렉터를 querySelectAll 베이스로 바뀌었습니다.
-  - 일반적인 노드 작업속도가 20 ~ 150배 정도 빨라졌습니다.
+  - 캐쉬를 사용하여 일반적인 노드 작업속도가 20 ~ 150배 정도 빨라졌습니다.
+  - Contexts 모듈이 간소화되었습니다.
+  - 각 노드의 위치를 바꿔주는 ELCHANGE가 생겼습니다.
+  - Loader 모듈의 실용성을 높였습니다.
+  
   
 #### 0.7까지 변동사항 #
   - EL, _[tag]... 함수들이 제거되었고 Nody와 Make모듈로 MAKE함수로 대체되었습니다.

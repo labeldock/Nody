@@ -9,7 +9,7 @@
 	
 	// 버전
 	var version = new String("0.8.8");
-	var build   = new String("789");
+	var build   = new String("792");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -3680,6 +3680,30 @@
 			}
 			return target;
 		},
+		"CHANGE":function(left,right){
+			left  = ZFIND(left);
+			right = ZFIND(right);
+			if(left && right ){
+				var lp = left.parentNode;
+				var rp = right.parentNode;
+				if(lp && rp){
+					var helper = MAKE("div");
+					var li = DATAINDEX(lp.children,left);
+					var ri = DATAINDEX(rp.children,right);
+					
+					rp.insertBefore(helper,right);
+					lp.insertBefore(right,left);
+					rp.insertBefore(left,helper);
+					rp.removeChild(helper);
+					
+				} else {
+					console.warn("has not parent",left,lp,right,rp);
+				}
+			} else {
+				console.warn("not found",left,right);
+			}
+			return [left,right];
+		},
 		"BEFOREALL":function(node){ node = ZFIND(node); var index = ELINDEX(node); var result = []; if(typeof index === "number") for(var i=0,l=index;i<l;i++) result.push(node.parentNode.children[i]); return result; },
 		"AFTERALL":function(node){ node = ZFIND(node); var index = ELINDEX(node); var result = []; if(typeof index === "number") for(var i=index+1,l=node.parentNode.children.length;i<l;i++) result.push(node.parentNode.children[i]); return result; },
 		"REPLACE":function(target,replaceNode){
@@ -4269,9 +4293,6 @@
 	
 	// 컨텍스트 컨트롤러
 	makeModule("Contexts",{
-		whereIsContexts : function(index) { var s = this.contexts , _ = _Element , f = "flash" ; if(s[index]) { _(s[index])[f](); } else { s.each (function(e){ _(e)[f](); }); } return this; },
-		whereIsSelects  : function(index) { var s = this.selects  , _ = _Element , f = "flash" ; if(s[index]) { _(s[index])[f](); } else { s.each (function(e){ _(e)[f](); }); } return this; },
-		whereIsTargets  : function(index) { var s = this.targets  , _ = _Element , f = "flash" ; if(s[index]) { _(s[index])[f](); } else { s.each (function(e){ _(e)[f](); }); } return this; },
 		setContexts : function(contextsOrder,selectsOrder,targetsOrder) {
 			this.initCall[0] = contextsOrder;
 			if(selectsOrder)this.setSelects(selectsOrder,targetsOrder);
@@ -4348,7 +4369,8 @@
 		getTarget :function(eq){ return this.getTargets()[eq]; },
 		getGroup  :function(eq){ return this.getGroups()[eq]; },
 		onSelects :function(event,func,otherFunc){
-			var own = this;
+			var _ = this;
+			// 이벤트와 번호가 들어오면
 			if(typeof event=="string" && typeof func === "number"){
 				var selNode = this.getSelect(func);
 				if(ISELNODE(selNode)){
@@ -4360,12 +4382,12 @@
 			}
 			if(typeof event=="string" && typeof func === "function"){
 				ELON(this.getContexts(),event,function(e){
-					var curSel = _Array( own.getSelects() );
+					var curSel = _Array( _.getSelects() );
 					if(curSel.has(e.target)){
 						//버블이 잘 왔을때
-						var curfuncresult = func.call(e.target,e,curSel.indexOf(e.target),own);
+						var curfuncresult = func.call(e.target,e,curSel.indexOf(e.target),_);
 						if(curfuncresult == false){ return false; }
-						if(typeof otherFunc === "function") curSel.each(function(otherObj,index){ if(e.target !== otherObj) return otherFunc.call(otherObj,e,index,own); });
+						if(typeof otherFunc === "function") curSel.each(function(otherObj,index){ if(e.target !== otherObj) return otherFunc.call(otherObj,e,index,_); });
 						return curfuncresult;
 					} else {
 						//버블링이 중간에 멈췄을때
@@ -4392,7 +4414,6 @@
 		this.initCall = [cSel,sSel,tSel];
 		this.setContexts(cSel,sSel,tSel);
 	});
-	window.whereis = function(name,index) { var m = _Contexts(name,index).whereIsContexts(index); return m; };
 	
 	// Model은 순수 데이터 모델에 접근하기 위해 사용합니다.
 	extendModule("Object","Model",{
@@ -5312,7 +5333,13 @@
 			this.setDisappearEvent(eventName,disappearMethod);
 		},
 		"var!drawIndicator":function(bound){ return MAKE("div::Loading..."); }, /*function(bound){ return node }*/
-		"var!drawError":function(bound){ return MAKE("div::error load"); }
+		"var!drawError":function(bound){ return MAKE("div::error load"); },
+		getCurrentName:function(){
+			return this.LoaderCurrent;
+		},
+		getCurrentURI:function(){
+			return this.Source[this.LoaderCurrent];
+		}
 	},function(container,navs){
 		// context    => 컨텐츠를 채울 곳
 		// navs       => object: key value로 해당이 호출되면 context에 내용이 체워짐
