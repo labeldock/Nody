@@ -203,7 +203,7 @@ Tag
 Script
 ```javascript
 		var ul = ZFIND("ul#container");
-		for(var i=0,l=3;i<l;i++) ul.appendChild( _Template("template#li-temp") );
+		for(var i=0,l=3;i<l;i++) _Template("template#li-temp").appendTo(ul);
 ```
 Result
 ```html

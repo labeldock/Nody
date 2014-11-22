@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.8.8");
-	var build   = new String("792");
+	var version = new String("0.8.8.2");
+	var build   = new String("795");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -3315,6 +3315,7 @@
 			}
 			return element;	
 		},
+		"CREATETO":function(node,parent){ return CREATE(node,undefined,parent); },
 		//get text node element
 		"MAKETEXT":FUT.CONTINUTILITY(function(t){ return W.document.createTextNode(t); },1),
 		"MAKE":FUT.CONTINUTILITY(function(name,attr,third){
@@ -3402,9 +3403,9 @@
 		//케럿을 움직일수 있는 상태인지 검새합니다.
 		"CARETPOSSIBLE":function(sel){ var node = ZFIND(sel); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
 		//어트리뷰트값을 읽거나 변경합니다.
-		"ATTR":function(sel,v1,v2){ var node = ZFIND(sel); return NUT.ATTR(node,v1,v2); },
+		"ATTR":function(sel,v1,v2){ var node = ZFIND(sel); if(node)return NUT.ATTR(node,v1,v2);  },
 		//css스타일로 el의 상태를 확인합니다.
-		"IS":function(sel,value){ var node = ZFIND(sel); return NUT.IS(node,value); },
+		"IS":function(sel,value){ var node = ZFIND(sel); if(node)return NUT.IS(node,value); },
 		//선택한 element중 대상만 남깁니다.
 		"FILTER":function(sel,filter){
 			var targets = FIND(sel);
@@ -3836,42 +3837,50 @@
 			}
 			return node;
 		},
-	
-		//이벤트 타겟을 찾아냅니다.
-		"ONTARGET":function(node){ if(ISWINDOW(node)){ node = W; } else { node = ZFIND(node); if(!ISELNODE(node)) throw new Error("ELONTARGET::Element이 여야합니다." + TOS(node)); } return node; },
+		//이벤트 등록이 가능한 타겟을 찾아냅니다.
+		"ONTARGET":function(node){ 
+			var ontarget;
+			if(ISWINDOW(node)){ 
+				ontarget = W; 
+			} else { 
+				ontarget = ZFIND(node); 
+				if(!ISELNODE(ontarget)) throw new Error("ELONTARGET::Element이 여야합니다. 들어온 값 => " + node); 
+			} 
+			return ontarget; 
+		},
 		"ON":function(node, eventName, eventHandler, useCapture){
 			// 메타이벤트를 임시 삭제함
 			node = ELONTARGET(node);
-			if(!node || !eventHandler) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.");
+			if(!node || !(typeof eventHandler == "function")) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.",node, eventName, eventHandler);
 		
 			var events = eventName.split(" ");
 			//var eventMeta = _Meta(eventHandler);
-			var handler = function(e){eventHandler.call(node,e)};
+			//var handler = function(e){eventHandler.call(node,e)};
 			for(var i=0,l=events.length;i<l;i++){
 				//eventMeta.setProp(events[i],function(e){eventHandler.call(node,e);});
 				if (node.addEventListener){
-					node.addEventListener(events[i], handler, useCapture==true ? true : false); 
+					node.addEventListener(events[i], eventHandler, useCapture==true ? true : false); 
 					 //node.addEventListener(events[i], eventMeta.getProp(events[i]), false); 
 				} else if (node.attachEvent){
-					node.attachEvent('on'+events[i], handler);
+					node.attachEvent('on'+events[i], eventHandler);
 				    //node.attachEvent('on'+events[i], eventMeta.getProp(events[i]));
 				}
 			}
 			return node;
 		},
-		"OFF":function(node, eventName, eventHandler){
+		"OFF":function(node, eventName, eventHandler, useCapture){
 			node = ELONTARGET(node);
-			if(!node || !eventHandler) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.");
+			if(!node || !(typeof eventHandler == "function")) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.",node, eventName, eventHandler);
 		
 			var events = eventName.split(" ");
 			//var eventMeta = _Meta(eventHandler);
-			var handler = function(e){eventHandler.call(node,e)};
+			//var handler = function(e){eventHandler.call(node,e)};
 			for(var i=0,l=events.length;i<l;i++){
 				if (node.removeEventListener){
-					node.removeEventListener(events[i], handler, false); 
+					node.removeEventListener(events[i], eventHandler, useCapture==true ? true : false); 
 					//node.removeEventListener(events[i], eventMeta.getProp(events[i]), false); 
 				} else if (node.detachEvent){
-					node.detachEvent('on'+events[i], handler);
+					node.detachEvent('on'+events[i], eventHandler);
 				    //node.detachEvent('on'+events[i], eventMeta.getProp(events[i]));
 				}
 			}
@@ -5337,7 +5346,7 @@
 		getCurrentName:function(){
 			return this.LoaderCurrent;
 		},
-		getCurrentURI:function(){
+		getCurrentURL:function(){
 			return this.Source[this.LoaderCurrent];
 		}
 	},function(container,navs){
@@ -6131,9 +6140,80 @@
 				Math.pow((fy1-fy2),2)
 			)
 		},
+		applyTouchEvent:function(flag){
+			if(typeof flag !== "boolean") return;
+			if(typeof this._applyTouchEvent === "undefined") {
+				var _ = this;
+				this._currentTouchStartEvent = function(e){
+					if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
+						_.StartTouchMoveX = e.touches[0].pageX;
+						_.StartTouchMoveY = e.touches[0].pageY;
+					}
+					if (_.GestureListener["touchStart"] && (e.touches.length === 1)) {
+						CALL(_.GestureListener["touchStart"],_.Source,e.touches[0].pageX,e.touches[0].pageY,e);
+					}
+					if (_.GestureListener["pinch"] && (e.touches.length === 2)) {
+						_.StartPinchValue = _.getPinchDistance(
+							 e.touches[0].pageX,
+							 e.touches[0].pageY,
+							 e.touches[1].pageX,
+							 e.touches[1].pageY
+						);
+						CALL(_.GestureListener["pinchStart"],_.Source,e);
+					}
+				};
+				this._currentTouchMoveEvent = function(e){
+					//1 _
+					if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
+						var moveX = e.touches[0].pageX - _.StartTouchMoveX;
+						var moveY = e.touches[0].pageY - _.StartTouchMoveY;
+						_.StartTouchMoveX = e.touches[0].pageX;
+						_.StartTouchMoveY = e.touches[0].pageY;
+						CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e);
+					}
+					//2 _
+					if(_.GestureListener["pinch"] && _.StartPinchValue && (e.touches.length === 2)){
+						var currentDistance = _.getPinchDistance(
+							 e.touches[0].pageX,
+							 e.touches[0].pageY,
+							 e.touches[1].pageX,
+							 e.touches[1].pageY
+						);
+						CALL(_.GestureListener["pinch"],_.Source,-((_.StartPinchValue / currentDistance) - 1))
+						//_.StartPinchValue = currentDistance;
+					}
+				};
+				this._currentTouchEndEvent = function(e){
+					_.StartTouchMoveX = undefined;
+					_.StartTouchMoveY = undefined;
+					_.StartPinchValue = undefined;
+					if (_.GestureListener["touchEnd"] && (e.touches.length === 1)) {
+						CALL(_.GestureListener["touchEnd"],_.Source,e.touches[0].pageX,e.touches[0].pageY,e);
+					}
+				};
+				
+				this._applyTouchEvent = false;
+			} 
+			
+			if(this._applyTouchEvent !== flag) {
+				if(flag){
+					ELON(this.Source,"touchstart",this._currentTouchStartEvent);
+					ELON(this.Source,"touchmove",this._currentTouchMoveEvent);
+					ELON(this.Source,"touchend",this._currentTouchEndEvent);
+				} else {
+					ELOFF(this.Source,"touchstart",this._currentTouchStartEvent);
+					ELOFF(this.Source,"touchmove",this._currentTouchMoveEvent);
+					ELOFF(this.Source,"touchend",this._currentTouchEndEvent);
+				}
+				this._applyTouchEvent = flag;
+			}
+		},
 		whenPinchStart:function(method){ this.GestureListener["pinchStart"] = method; },
 		whenPinch:function(method){ this.GestureListener["pinch"] = method; },
-		whenTouchMove:function(method){ this.GestureListener["touchMove"] = method; }
+		whenTouchStart:function(method){ this.GestureListener["touchStart"] = method; },
+		whenTouchBegin:function(method){ this.GestureListener["touchBegin"] = method; },
+		whenTouchMove:function(method){ this.GestureListener["touchMove"] = method; },
+		whenTouchEnd:function(method){ this.GestureListener["touchEnd"] = method; }
 	},function(gestureView){
 		this.Source = ZFIND(gestureView);
 		this.GestureListener = {};
@@ -6141,78 +6221,50 @@
 		this.StartTouchMoveX;
 		this.StartTouchMoveY;
 		var finger = this;
-		if(this.Source){
-			ELON(this.Source,"touchstart",function(e){
-				e.preventDefault();
-				if (finger.GestureListener["touchMove"] && (e.touches.length === 1)) {
-					finger.StartTouchMoveX = e.touches[0].pageX;
-					finger.StartTouchMoveY = e.touches[0].pageY;
-				}
-				if (finger.GestureListener["pinch"] && (e.touches.length === 2)) {
-					finger.StartPinchValue = finger.getPinchDistance(
-						 e.touches[0].pageX,
-						 e.touches[0].pageY,
-						 e.touches[1].pageX,
-						 e.touches[1].pageY
-					);
-					CALL(finger.GestureListener["pinchStart"],finger.Source,e);
-				}
-			});
-			ELON(this.Source,"touchmove",function(e){
-				e.preventDefault();
-				//1 finger
-				if (finger.GestureListener["touchMove"] && (e.touches.length === 1)) {
-					var moveX = e.touches[0].pageX - finger.StartTouchMoveX;
-					var moveY = e.touches[0].pageY - finger.StartTouchMoveY;
-					finger.StartTouchMoveX = e.touches[0].pageX;
-					finger.StartTouchMoveY = e.touches[0].pageY;
-					CALL(finger.GestureListener["touchMove"],finger.Source,moveX,moveY,e);
-				}
-				//2 finger
-				if(finger.GestureListener["pinch"] && finger.StartPinchValue && (e.touches.length === 2)){
-					var currentDistance = finger.getPinchDistance(
-						 e.touches[0].pageX,
-						 e.touches[0].pageY,
-						 e.touches[1].pageX,
-						 e.touches[1].pageY
-					);
-					CALL(finger.GestureListener["pinch"],finger.Source,-((finger.StartPinchValue / currentDistance) - 1))
-					//finger.StartPinchValue = currentDistance;
-				}
-			});
-			ELON(this.Source,"touchend",function(e){
-				e.preventDefault();
-				finger.StartTouchMoveX = undefined;
-				finger.StartTouchMoveY = undefined;
-				finger.StartPinchValue = undefined;
-			});
-		}
+		
+		if(this.Source) this.applyTouchEvent(true);
 	});
 	
 	makeModule("ScrollBox",{
 		needScrollingOffsetX:function(offset){
-			if(!this.allowScrollX) return;
+			if(!this.allowScrollX) return false;
 			var needTo = this.Source.scrollLeft + (-offset);
-			if (needTo < 0) needTo = 0;
+			if (needTo < 0) { needTo = 0; }
 			if (needTo > this.Source.scrollWidth) needTo = this.Source.scrollWidth;
 			if (this.Source.scrollLeft != needTo) this.Source.scrollLeft = needTo;
 		},
 		needScrollingOffsetY:function(offset){
-			if(!this.allowScrollY) return;
+			if(!this.allowScrollY) return false;
 			var needTo = this.Source.scrollTop + (-offset);
 			if (needTo < 0) {
 				this.needNegativeDrawItem();
 				//
 				needTo = this.Source.scrollTop + (-offset);
-				if(needTo < 0) needTo = 0;
+				if(needTo < 0) {
+					needTo = 0;
+				} 
+				//else {
+				//	if(this.ScrollEvent.ScrollConflictUp)this.ScrollEvent.ScrollConflictUp.call(this);
+				//}
 			}
 			if (needTo > this.Source.scrollHeight - this.Source.offsetHeight){
 				this.needPositiveDrawItem();
+				
 				if(needTo > this.Source.scrollHeight){
 					needTo = this.Source.scrollHeight;
-				}
+				} 
+				//else {
+				//	if(this.ScrollEvent.ScrollConflictDown) this.ScrollEvent.ScrollConflictDown.call(this);
+				//}
 			} 
-			if (this.Source.scrollTop != needTo) this.Source.scrollTop = needTo;
+			if (this.Source.scrollTop != needTo) {
+				//if(this.Source.scrollTop > needTo){
+				//	if(this.ScrollEvent.ScrollUp) this.ScrollEvent.ScrollUp.call(this);
+				//} else {
+				//	if(this.ScrollEvent.ScrollDown) this.ScrollEvent.ScrollDown.call(this);
+				//}
+				this.Source.scrollTop = needTo;
+			}
 			
 		},
 		needZoom:function(needTo){
@@ -6283,9 +6335,49 @@
 				}
 			}
 		},
+		restDown:function(){
+			return this.Source.scrollHeight - this.Source.offsetHeight - this.Source.scrollTop
+		},
 		//scroll event
-		whenScroll:function(event){ this.ScrollEvent = event; },
-		whenZoom:function(event){ this.ZoomEvent = event; }
+		whenScroll            :function(e){ this.ScrollEvent.Scroll            = e; },
+		//whenScrollUp          :function(e){ this.ScrollEvent.ScrollUp          = e; },
+		//whenScrollDown        :function(e){ this.ScrollEvent.ScrollDown        = e; },
+		//whenScrollConflictUp  :function(e){ this.ScrollEvent.ScrollConflictUp  = e; },
+		//whenScrollConflictDown:function(e){ this.ScrollEvent.ScrollConflictDown= e; },
+		whenZoom:function(event){ this.ZoomEvent = event; },
+		applyScrollEvent:function(flag){
+			if(typeof flag !== "boolean") return;
+			if(typeof this._applyScrollEvent === "undefined") {
+				var _ = this;
+				this._currentMouseWheelEvent = function(e){
+					e.preventDefault();
+					if(e.wheelDeltaY) {
+						_.needScrollingOffsetY(e.wheelDeltaY/3);
+						_.needScrollingOffsetX(e.wheelDeltaX/3);
+					} else if(e.wheelDelta) {
+						_.needScrollingOffsetY(e.wheelDelta/3)
+					}
+				};
+				this._currentScrollEvent = function(e){
+					return CALL(_.ScrollEvent.Scroll,_,e);
+				};
+				this._applyScrollEvent = false;
+			}
+		
+			if(this._applyScrollEvent !== flag) {
+				if(flag){
+					ELON(this.Source,"mousewheel",this._currentMouseWheelEvent);
+					ELON(this.Source,"scroll",this._currentScrollEvent);
+					this.Finger.applyTouchEvent(true);
+				} else {
+					ELOFF(this.Source,"mousewheel",this._currentMouseWheelEvent);
+					ELOFF(this.Source,"scroll",this._currentScrollEvent);
+					this.Finger.applyTouchEvent(false);
+				}
+				this._applyScrollEvent = flag;
+			}
+
+		}
 	},function(node){
 		this.Source = ZFIND(node);
 		
@@ -6299,10 +6391,15 @@
 			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
 			ELAPPEND(this.ClipView,this.Source.childNodes);
 			ELAPPEND(this.Source,this.ClipView);
-			ELHASATTR(this.Source,"class") ? ELATTR(this.Source,"class",_String(ELATTR("class")).addModel("frame-scroll")) : ELATTR(this.Source,"class","frame-scroll");
+			if(ELHASATTR(this.Source,"class")){
+				var originClass = ELATTR(this.Source,"class");
+				ELATTR(this.Source,"class",_String(originClass).getAddModel("frame-scroll"));
+			} else {
+				ELATTR(this.Source,"class","frame-scroll");
+			}
 			
 			//
-			this.ScrollEvent;
+			this.ScrollEvent = {};
 			this.ZoomEvent;
 			this.Finger = new Finger(this.Source);
 			this.allowZoom = true;
@@ -6314,9 +6411,12 @@
 			var owner = this;
 			//
 			this.Finger.whenTouchMove(function(offsetX,offsetY,e){
-				owner.needScrollingOffsetX(offsetX);
-				owner.needScrollingOffsetY(offsetY);
+				if( !owner.needScrollingOffsetX(offsetX) &&  !owner.needScrollingOffsetY(offsetY)) {
+					e.preventDefault();
+				}
 			});
+			// 바운싱
+			this.Finger.whenTouchS
 			
 			//
 			this.StartZoom = undefined;
@@ -6331,19 +6431,7 @@
 				if(owner.allowZoom) owner.needZoomOffset(zoomOffset);
 			});
 			
-			ELON(this.Source,"mousewheel",function(e){
-				e.preventDefault();
-				if(e.wheelDeltaY) {
-					owner.needScrollingOffsetY(e.wheelDeltaY/3);
-					owner.needScrollingOffsetX(e.wheelDeltaX/3);
-				} else if(e.wheelDelta) {
-					owner.needScrollingOffsetY(e.wheelDelta/3)
-				}
-			});
-			
-			ELON(this.Source,"scroll",function(e){
-				CALL(owner.ScrollEvent,owner,e);
-			});
+			this.applyScrollEvent(true);
 		} else {
 			console.warn("ScrollBox제대로 불러오지 못했습니다.",node);
 		}
