@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.8.8.2");
-	var build   = new String("795");
+	var version = new String("0.8.8.5");
+	var build   = new String("798");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -3838,37 +3838,39 @@
 			return node;
 		},
 		//이벤트 등록이 가능한 타겟을 찾아냅니다.
-		"ONTARGET":function(node){ 
-			var ontarget;
-			if(ISWINDOW(node)){ 
-				ontarget = W; 
-			} else { 
-				ontarget = ZFIND(node); 
-				if(!ISELNODE(ontarget)) throw new Error("ELONTARGET::Element이 여야합니다. 들어온 값 => " + node); 
-			} 
-			return ontarget; 
-		},
+		"ONTARGET":function(node){ return (ISWINDOW(node),ISDOCUMENT(node)) ? node : FIND(node); },
+		//중복이벤트 등록 가능
 		"ON":function(node, eventName, eventHandler, useCapture){
-			// 메타이벤트를 임시 삭제함
-			node = ELONTARGET(node);
-			if(!node || !(typeof eventHandler == "function")) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.",node, eventName, eventHandler);
-		
+			if((typeof eventName !== "string") || (typeof eventHandler !== "function")) return console.erro("ELON 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요",node, eventName, eventHandler);
+			var nodes  = ELONTARGET(node);
 			var events = eventName.split(" ");
-			//var eventMeta = _Meta(eventHandler);
-			//var handler = function(e){eventHandler.call(node,e)};
-			for(var i=0,l=events.length;i<l;i++){
-				//eventMeta.setProp(events[i],function(e){eventHandler.call(node,e);});
-				if (node.addEventListener){
-					node.addEventListener(events[i], eventHandler, useCapture==true ? true : false); 
-					 //node.addEventListener(events[i], eventMeta.getProp(events[i]), false); 
-				} else if (node.attachEvent){
-					node.attachEvent('on'+events[i], eventHandler);
-				    //node.attachEvent('on'+events[i], eventMeta.getProp(events[i]));
-				}
-			}
-			return node;
+			DATAEACH(nodes,function(eventNode){
+				DATAEACH(events,function(event){
+					if (eventNode.addEventListener){
+						eventNode.addEventListener(event, eventHandler, useCapture==true ? true : false); 
+					} else if (node.attachEvent){
+						eventNode.attachEvent('on'+event, eventHandler);
+					}
+				});
+			});
+			return nodes;
 		},
 		"OFF":function(node, eventName, eventHandler, useCapture){
+			if((typeof eventName !== "string") || (typeof eventHandler !== "function")) return console.erro("ELON 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요",node, eventName, eventHandler);
+			var nodes  = ELONTARGET(node);
+			var events = eventName.split(" ");
+			DATAEACH(nodes,function(eventNode){
+				DATAEACH(events,function(event){
+					if (eventNode.removeEventListener){
+						eventNode.removeEventListener(event, eventHandler, useCapture==true ? true : false); 
+					} else if (node.detachEvent){
+						eventNode.detachEvent('on'+event, eventHandler);
+					}
+				});
+			});
+			return nodes;
+			
+			
 			node = ELONTARGET(node);
 			if(!node || !(typeof eventHandler == "function")) console.error("ELON::node나 이벤트 헨들러가 존재해야 합니다.",node, eventName, eventHandler);
 		
@@ -5166,20 +5168,20 @@
 				APPLY(this.LoaderEvents.LoaderGlobalLoadEvent,this.LoaderContainer,arguments);
 				APPLY(this.LoaderEvents.LoaderLoadEvent[appearName],this.LoaderContainer,arguments);
 			} 
-			CALL(this.LoaderEvents.LoaderGlobalOpenEvent,this.LoaderContainer,arguments);
-			CALL(this.LoaderEvents.LoaderOpenEvent[appearName],this.LoaderContainer,arguments);
+			APPLY(this.LoaderEvents.LoaderGlobalOpenEvent,this.LoaderContainer,arguments);
+			APPLY(this.LoaderEvents.LoaderOpenEvent[appearName],this.LoaderContainer,arguments);
 		},
 		// load
 		// navname, [onen|load], starter method
 		statusWillChange:function(starter) { 
 			// 시작하기전 이전뷰가 사라진다고 통보
-			CALL(this.LoaderEvents.LoaderGlobalDisappearEvent,this.LoaderContainer);
-			CALL(this.LoaderEvents.LoaderDisappearEvent[this.LoaderCurrent],this.LoaderContainer);
+			APPLY(this.LoaderEvents.LoaderGlobalDisappearEvent,this.LoaderContainer);
+			APPLY(this.LoaderEvents.LoaderDisappearEvent[this.LoaderCurrent],this.LoaderContainer);
 			
 			// 로드 시작
 			CALL(starter,this);
 		},
-		//
+		// 현재 열려있는 페이지를 강제적으로 링크파라메터로 불러옴
 		link: function (linkText){
 			if(this.LoaderCurrent){
 				this.Source[this.LoaderCurrent] = linkText;
@@ -5188,13 +5190,12 @@
 				console.error("불러진 컨텐츠가 없습니다.");
 			}
 		},
-		//
+		// 선택한 enum으로 페이지를 무조건 불러옴
 		load: function (loadEnum){
 			if(loadEnum in this.Source){
 				//전달되는 파라메터 입니다.
 				var loadArguments = Array.prototype.slice.call(arguments);
 				loadArguments.shift();
-				
 				//
 				
 				this.statusWillChange(function(){
@@ -5225,36 +5226,6 @@
 								indicator = undefined;
 							}
 						}
-						/*
-						if( _Client.isLocalHTML() ){
-							console.warn("Loader::주의::클라이언트 상에서 로드합니다. 약간의 에러메시지가 늘어날수 있습니다.")
-							_HTMLOpen(loadPath,function(doms){
-								if(indicator) ELREMOVE(indicator);
-								_Array(doms).each(function(el){ ELAPPEND(own.LoaderContainer,el); });
-								own.executeScriptForCurrentEnum(loadArguments);
-								own.statusComplete(loadEnum,"load",loadArguments);
-							},function(error){
-								if(indicator) ELREMOVE(indicator);
-								var errerDraw = own.drawError.apply(own,drawArguments);
-								if (ISELNODE(errerDraw)) ELAPPEND(own.LoaderContainer,errerDraw);
-							});
-						} else {
-							_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") +_Util.base36Random(2),{
-								"dataType":"dom",
-								"success":function(doms){
-									if(indicator) ELREMOVE(indicator);
-									_Array(doms).each(function(el){ ELAPPEND(own.LoaderContainer,el); });
-									own.executeScriptForCurrentEnum(loadArguments);
-									own.statusComplete(loadEnum,"load",loadArguments);
-								},
-								"error":function(){
-									if(indicator) ELREMOVE(indicator);
-									var errerDraw = own.drawError.apply(own,drawArguments);
-									if (ISELNODE(errerDraw)) ELAPPEND(own.LoaderContainer,errerDraw);
-								}
-							});
-						}
-						*/
 						_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") +_Util.base36Random(2),{
 							"dataType":"dom",
 							"success":function(doms){
@@ -5280,27 +5251,45 @@
 						}
 					}
 				});
+				return true;
 			} else {
 				console.error("Loader::load::정의되지 않은 Enum을 호출할수 없습니다. => ",loadEnum,this);
+				return false;
 			}
-			return this;
+			return false;
 		},
+		//불러온적이 없는 경우 load 있는경우 open이벤트를 실행함
 	    open: function (loadEnum) {
 			if(this.LoaderCurrent !== loadEnum) if(loadEnum in this.LoaderViews) {
+				var openArguments = Array.prototype.slice.call(arguments);
+				openArguments.shift();
 				
-				var openArgument = _Array(arguments).subarr(1).toArray();
 				this.statusWillChange(function(){
 					var own = this;
 					this.clear();
 					this.LoaderCurrent = loadEnum;
 					this.LoaderViews[loadEnum].each( function(el){ ELAPPEND(own.LoaderContainer,el); });
-					this.statusComplete(loadEnum,"open",openArgument);
+					this.statusComplete(loadEnum,"open",openArguments);
 				});
+				
+				return true;
 			} else {
-				this.load(loadEnum);
+				return this.load.apply(this,Array.prototype.slice.call(arguments));
 			}
-			return this;
+			return false;
 	    },
+		//불러온적이 없다면 open의 이벤트들을 시작함
+		order:function(loadEnum){
+			if(this.LoaderCurrent == loadEnum) {
+				var orderArguments = Array.prototype.slice.call(arguments);
+				orderArguments.shift();
+				statusComplete(loadEnum,"open",orderArguments);
+				return true;
+			} else {
+				return this.open.apply(this,Array.prototype.slice.call(arguments));
+			}
+			return false;
+		},
 		//처음 로드될때
 		_setEvent:function(eventType,eventName,method){
 			var _ = this;
@@ -6145,6 +6134,8 @@
 			if(typeof this._applyTouchEvent === "undefined") {
 				var _ = this;
 				this._currentTouchStartEvent = function(e){
+					e.stopPropagation();
+					e.preventDefault();
 					if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
 						_.StartTouchMoveX = e.touches[0].pageX;
 						_.StartTouchMoveY = e.touches[0].pageY;
@@ -6163,6 +6154,8 @@
 					}
 				};
 				this._currentTouchMoveEvent = function(e){
+					e.stopPropagation();
+					e.preventDefault();
 					//1 _
 					if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
 						var moveX = e.touches[0].pageX - _.StartTouchMoveX;
@@ -6184,6 +6177,8 @@
 					}
 				};
 				this._currentTouchEndEvent = function(e){
+					e.stopPropagation();
+					e.preventDefault();
 					_.StartTouchMoveX = undefined;
 					_.StartTouchMoveY = undefined;
 					_.StartPinchValue = undefined;
@@ -6350,6 +6345,7 @@
 			if(typeof this._applyScrollEvent === "undefined") {
 				var _ = this;
 				this._currentMouseWheelEvent = function(e){
+					e.stopPropagation();
 					e.preventDefault();
 					if(e.wheelDeltaY) {
 						_.needScrollingOffsetY(e.wheelDeltaY/3);
@@ -6359,6 +6355,8 @@
 					}
 				};
 				this._currentScrollEvent = function(e){
+					e.stopPropagation();
+					e.preventDefault();
 					return CALL(_.ScrollEvent.Scroll,_,e);
 				};
 				this._applyScrollEvent = false;
