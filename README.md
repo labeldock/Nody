@@ -702,7 +702,7 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 	- TAG함수 강화
   - FINDZERO가 ZFIND로 이름이 바뀌었습니다.
   - ZNUMBER 추가
-  - 셀렉터를 querySelectAll 베이스로 바뀌었습니다.
+  - Nody의 느린 셀렉터 엔진의 비중을 낮추고 querySelectAll의 베이스의 셀렉터로 동작합니다. 따라서 셀렉터 구문은 표준만 지원하도록 정책이 바뀌었습니다.
   - 캐쉬를 사용하여 일반적인 노드 작업속도가 20 ~ 150배 정도 빨라졌습니다.
   - Contexts 모듈이 간소화되었습니다.
   - 각 노드의 위치를 바꿔주는 ELCHANGE가 생겼습니다.
@@ -713,7 +713,7 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
   - EL, _[tag]... 함수들이 제거되었고 Nody와 Make모듈로 MAKE함수로 대체되었습니다.
   - Area, AreaContent 모듈이 제거되었고 ZString 모듈로 대체되었습니다.
   - 성능을 높이기 위한 작업이 되었습니다.
-  - 모듈인 "Type"이 제거되고 단순 함수 "IS"로 대체되었습니다.
+  - 모듈인 "Type"이 제거되고 단순한 함수형태인 "IS"로 대체되었습니다.
   - DataGrid, DataRender, DataViewController 등의 이전 MVVM모듈이 제거되었습니다.
   - 완전히 새로 작성된 MVVM관련 모듈인 DataContext, ManagedData, ViewModel, DataContextViewController이 추가되었습니다. 이로서 메모리 관리가 최적화 되었고와 렌더링 프로세싱을 최소화 하였습니다.
   - ELDATA가 추가되었습니다. 노드의 DATASET에 접근할수 있습니다.
