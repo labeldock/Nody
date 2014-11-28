@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.8.8.5");
-	var build   = new String("798");
+	var version = new String("0.8.8.8");
+	var build   = new String("802");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -600,7 +600,7 @@
 		// 각각의 값을 배열로 다시 구해오되 undefined는 제거합니다
 		"DATAGATHER"  :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) { var def = f(ev[i],i); if(typeof def !== "undefined") rv.push(); } return rv; },2),
 		//
-		"INJECTOBJECT":function(v,f,d){ d=(typeof d=="object"?d:{});v=TOARRAY(v); for(var i=0,l=v.length;i<l;i++)f(d,v[i],i);return d;},
+		"INJECT":function(v,f,d){ d=(typeof d=="object"?d:{});v=TOARRAY(v); for(var i=0,l=v.length;i<l;i++)f(d,v[i],i);return d;},
 		// 배열안의 배열을 풀어냅니다.
 		"DATAFLATTEN":function(){ var result = []; function arrayFlatten(args){ DATAEACH(args,function(arg){ if(ISARRAY(arg)) return DATAEACH(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
 		// false를 호출하면 배열에서 제거합니다.
@@ -619,7 +619,9 @@
 		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 		"SPRINGINDEX":function(index,maxIndex){ index = TONUMBER(index); maxIndex = TONUMBER(maxIndex); return (index == 0 || (Math.floor(index/maxIndex)%2 == 0))?index%maxIndex:maxIndex-(index%maxIndex); },
 		//오브젝트의 key를 each열거함
-		"ENUMERATION":FUT.CONTINUTILITY(function(v,f){if((typeof v === "object") && (typeof f === "function")){for(k in v) {f(v[k],k)}}; return v; },2),
+		"OBJECTEACH":FUT.CONTINUTILITY(function(v,f){if((typeof v === "object") && (typeof f === "function")){for(k in v) {f(v[k],k)}}; return v; },2),
+		//오브젝트의 key value값을 Array 맵으로 구한다.
+		"OBJECTMAP" :FUT.CONTINUTILITY(function(v,f){ var result = []; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
 		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
 		"APPLY" : function(f,owner,args) { 
 			if(typeof f === "function"){ 
@@ -2594,7 +2596,7 @@
 		for(var i=0,l=W.ManagedUIDObjectData.length;i<l;i++){
 			var pushString = MAX(TOSTRING(W.ManagedUIDObjectData[i]),40) + "  =>  ";
 			var pushLength = 0;
-			ENUMERATION(W.ManagedMetaObjectData[i],function(data,key){
+			OBJECTEACH(W.ManagedMetaObjectData[i],function(data,key){
 				pushString += "\n    ";
 				pushString += key;
 				pushString += " : ";
@@ -4070,7 +4072,7 @@
 			var _ = this;
 			var _partials = this.TemplatePartials;
 			// 파셜 노드 수집 (두번째의 경우 수집한 노드를 다시 수집)
-			ENUMERATION(this.TemplatePartials,function(inject,name){
+			OBJECTEACH(this.TemplatePartials,function(inject,name){
 				_.partialAttr("partial-"+name,function(attrValue,node){
 					if (!inject[attrValue]) inject[attrValue] = [];
 					inject[attrValue].push(node);
@@ -4078,15 +4080,15 @@
 			});
 			
 			// 파셜 데이터 입력
-			ENUMERATION(_partials,function(partialData,partialCase){
-				ENUMERATION(partialData,function(nodelist,attrValue){
+			OBJECTEACH(_partials,function(partialData,partialCase){
+				OBJECTEACH(partialData,function(nodelist,attrValue){
 					if(attrValue in data) DATAEACH(nodelist,function(node){
 						switch(partialCase){
 							case "value":ELVALUE(node,data[attrValue]);break;
 							case "src"  :node.setAttribute("src",data[attrValue]);break;
 							case "href" :node.setAttribute("href",data[attrValue]);break;
 							case "placeholder": ELEMPTY(node);ELAPPEND(node,data[attrValue]);break;
-							case "dataset": ENUMERATION(data[attrValue],function(key,value){ node.dataset[key] = value; });break;
+							case "dataset": OBJECTEACH(data[attrValue],function(key,value){ node.dataset[key] = value; });break;
 						}
 					});
 				});
@@ -4310,13 +4312,13 @@
 			return this;
 		},
 		setSelects : function(selectsOrder,targetsOrder){
-			if(typeof selectsOrder !== "string") console.warn("Context::getSelects::selects order는 string인것이 좋습니다.");
+			if(typeof selectsOrder !== "string") console.warn("Context::getSelects::selects order는 string인것이 좋습니다.",selectsOrder);
 			this.initCall[1] = selectsOrder;
 			if(targetsOrder)this.setTargets(targetsOrder);
 			return this;
 		},
 		setTargets : function(targetsOrder){
-			if(typeof selectsOrder !== "string") console.warn("Context::getTargets::targets order는 string인것이 좋습니다.");
+			if(typeof targetsOrder !== "string") console.warn("Context::getTargets::targets order는 string인것이 좋습니다.",targetsOrder);
 			this.initCall[2] = targetsOrder;
 			return this;
 		},
@@ -5190,16 +5192,28 @@
 				console.error("불러진 컨텐츠가 없습니다.");
 			}
 		},
-		// 선택한 enum으로 페이지를 무조건 불러옴
-		load: function (loadEnum){
+		loadWithOption:function(option){
+			if(typeof option !== "object") console.warn("Loader::loadWithOption잘못된 호출!",arguments);
+			var loadEnum = option.name;
+			
+			//멀티컨테이너 옵션이 있을땐 아무것도 하지 않습니다.
+			if(option.multiContainer && (loadEnum in this.LoaderViews)) return true;
+			
 			if(loadEnum in this.Source){
 				//전달되는 파라메터 입니다.
 				var loadArguments = Array.prototype.slice.call(arguments);
 				loadArguments.shift();
-				//
+				
+				//멀티컨테이너를 넣습니다.
+				if(option.multiContainer) this.LoaderContainer = option.multiContainer;
 				
 				this.statusWillChange(function(){
-					this.clear();
+					
+					if(option.multiContainer) {
+						this.LoaderViews[loadEnum] = undefined;
+					} else {
+						this.clear();
+					}
 					this.LoaderCurrent = loadEnum;
 					var own            = this;
 					var loadPath       = this.Source[loadEnum];
@@ -5258,15 +5272,25 @@
 			}
 			return false;
 		},
-		//불러온적이 없는 경우 load 있는경우 open이벤트를 실행함
-	    open: function (loadEnum) {
+		openWithOption:function(option){
+			if(typeof option !== "object") console.warn("Loader::openWithOption잘못된 호출!",arguments);
+			var loadEnum = option.name;
+			//멀티컨테이너 옵션이 있을땐 아무것도 하지 않습니다.
+			if(option.multiContainer && (loadEnum in this.LoaderViews)) return true;
 			if(this.LoaderCurrent !== loadEnum) if(loadEnum in this.LoaderViews) {
 				var openArguments = Array.prototype.slice.call(arguments);
 				openArguments.shift();
 				
+				if(option.multiContainer) this.LoaderContainer = option.multiContainer;
+				
 				this.statusWillChange(function(){
 					var own = this;
-					this.clear();
+					//멀티컨테이너 옵션에서 clear는 실행하지 않습니다.
+					if(option.multiContainer) {
+						this.LoaderViews[loadEnum] = undefined;
+					} else {
+						this.clear();
+					}
 					this.LoaderCurrent = loadEnum;
 					this.LoaderViews[loadEnum].each( function(el){ ELAPPEND(own.LoaderContainer,el); });
 					this.statusComplete(loadEnum,"open",openArguments);
@@ -5274,9 +5298,19 @@
 				
 				return true;
 			} else {
-				return this.load.apply(this,Array.prototype.slice.call(arguments));
+				return this.loadWithOption.apply(this,Array.prototype.slice.call(arguments));
 			}
 			return false;
+		},
+		// 선택한 enum으로 페이지를 무조건 불러옴
+		load: function (loadEnum){
+			var args = Array.prototype.slice.call(arguments);
+			return this.loadWithOption.apply(this,[{name:args.shift()}].concat(args));
+		},
+		//불러온적이 없는 경우 load 있는경우 open이벤트를 실행함
+	    open: function (loadEnum) {
+			var args = Array.prototype.slice.call(arguments);
+			return this.openWithOption.apply(this,[{name:args.shift()}].concat(args));
 	    },
 		//불러온적이 없다면 open의 이벤트들을 시작함
 		order:function(loadEnum){
@@ -6135,7 +6169,7 @@
 				var _ = this;
 				this._currentTouchStartEvent = function(e){
 					e.stopPropagation();
-					e.preventDefault();
+
 					if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
 						_.StartTouchMoveX = e.touches[0].pageX;
 						_.StartTouchMoveY = e.touches[0].pageY;
@@ -6178,7 +6212,7 @@
 				};
 				this._currentTouchEndEvent = function(e){
 					e.stopPropagation();
-					e.preventDefault();
+
 					_.StartTouchMoveX = undefined;
 					_.StartTouchMoveY = undefined;
 					_.StartPinchValue = undefined;
