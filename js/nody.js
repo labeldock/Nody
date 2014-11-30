@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.8.8.9");
-	var build   = new String("805");
+	var version = new String("0.8.9");
+	var build   = new String("806");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -620,9 +620,9 @@
 		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 		"SPRINGINDEX":function(index,maxIndex){ index = TONUMBER(index); maxIndex = TONUMBER(maxIndex); return (index == 0 || (Math.floor(index/maxIndex)%2 == 0))?index%maxIndex:maxIndex-(index%maxIndex); },
 		//오브젝트의 key를 each열거함
-		"OBJECTEACH":FUT.CONTINUTILITY(function(v,f){if((typeof v === "object") && (typeof f === "function")){for(k in v) {f(v[k],k)}}; return v; },2),
+		"PROPEACH":FUT.CONTINUTILITY(function(v,f){if((typeof v === "object") && (typeof f === "function")){for(k in v) {f(v[k],k)}}; return v; },2),
 		//오브젝트의 key value값을 Array 맵으로 구한다.
-		"OBJECTMAP" :FUT.CONTINUTILITY(function(v,f){ var result = []; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
+		"PROPMAP" :FUT.CONTINUTILITY(function(v,f){ var result = []; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
 		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
 		"APPLY" : function(f,owner,args) { 
 			if(typeof f === "function"){ 
@@ -2597,7 +2597,7 @@
 		for(var i=0,l=W.ManagedUIDObjectData.length;i<l;i++){
 			var pushString = MAX(TOSTRING(W.ManagedUIDObjectData[i]),40) + "  =>  ";
 			var pushLength = 0;
-			OBJECTEACH(W.ManagedMetaObjectData[i],function(data,key){
+			PROPEACH(W.ManagedMetaObjectData[i],function(data,key){
 				pushString += "\n    ";
 				pushString += key;
 				pushString += " : ";
@@ -3816,7 +3816,7 @@
 			return pos;
 		},
 		//이벤트를 발생시킵니다.
-		"TRIGGER":function(node,eventName){
+		"TRIGGER":function(node,eventName,eventParam){
 			if(ISWINDOW(node)){
 				node = W;
 			} else {
@@ -3826,6 +3826,10 @@
 			if ("createEvent" in document) {
 			    var e = W.document.createEvent("HTMLEvents");
 			    e.initEvent(eventName, true, true);
+				PROPEACH(eventParam,function(v,k){
+					e[v] = k;
+				});
+				console.log("event trigger",e);
 			    node.dispatchEvent(e);
 			} else {
 				node.fireEvent("on"+eventName);
@@ -4073,7 +4077,7 @@
 			var _ = this;
 			var _partials = this.TemplatePartials;
 			// 파셜 노드 수집 (두번째의 경우 수집한 노드를 다시 수집)
-			OBJECTEACH(this.TemplatePartials,function(inject,name){
+			PROPEACH(this.TemplatePartials,function(inject,name){
 				_.partialAttr("partial-"+name,function(attrValue,node){
 					if (!inject[attrValue]) inject[attrValue] = [];
 					inject[attrValue].push(node);
@@ -4081,15 +4085,15 @@
 			});
 			
 			// 파셜 데이터 입력
-			OBJECTEACH(_partials,function(partialData,partialCase){
-				OBJECTEACH(partialData,function(nodelist,attrValue){
+			PROPEACH(_partials,function(partialData,partialCase){
+				PROPEACH(partialData,function(nodelist,attrValue){
 					if(attrValue in data) DATAEACH(nodelist,function(node){
 						switch(partialCase){
 							case "value":ELVALUE(node,data[attrValue]);break;
 							case "src"  :node.setAttribute("src",data[attrValue]);break;
 							case "href" :node.setAttribute("href",data[attrValue]);break;
 							case "placeholder": ELEMPTY(node);ELAPPEND(node,data[attrValue]);break;
-							case "dataset": OBJECTEACH(data[attrValue],function(key,value){ node.dataset[key] = value; });break;
+							case "dataset": PROPEACH(data[attrValue],function(key,value){ node.dataset[key] = value; });break;
 						}
 					});
 				});
@@ -6189,8 +6193,7 @@
 					}
 				};
 				this._currentTouchMoveEvent = function(e){
-					e.stopPropagation();
-					e.preventDefault();
+					
 					//1 _
 					if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
 						var moveX = e.touches[0].pageX - _.StartTouchMoveX;
@@ -6198,9 +6201,13 @@
 						_.StartTouchMoveX = e.touches[0].pageX;
 						_.StartTouchMoveY = e.touches[0].pageY;
 						
-						CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e);
-						
-						
+						//CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e);
+						if(CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e) !== false){
+							e.stopPropagation();
+							e.preventDefault();
+						} else {
+							_._currentTouchStartEvent(e);
+						}
 					}
 					//2 _
 					if(_.GestureListener["pinch"] && _.StartPinchValue && (e.touches.length === 2)){
@@ -6211,6 +6218,8 @@
 							 e.touches[1].pageY
 						);
 						CALL(_.GestureListener["pinch"],_.Source,-((_.StartPinchValue / currentDistance) - 1))
+						e.stopPropagation();
+						e.preventDefault();
 					}
 					
 				};
@@ -6329,7 +6338,6 @@
 			} else if(typeof negative === "number") {
 				this.axisYNegativeLength = negative;
 			}
-			
 			this.needPositiveDrawItem();
 		},
 		needPositiveDrawItem:function(){
@@ -6448,16 +6456,16 @@
 			var _ = this;
 			//
 			this.Finger.whenTouchMove(function(offsetX,offsetY,e){
-				//var result = false;
-				//if( (offsetY !== 0) && (_.needScrollingOffsetY(offsetY) == true) && (_.restYSpace() !== 0) ) {
-				//	result = true;
-				//}
-				//if( (offsetX !== 0) && (_.needScrollingOffsetX(offsetX) == true) ){
-				//	result = true;
-				//}
-				//return result;
-				(offsetY !== 0) && _.needScrollingOffsetY(offsetY);
-				(offsetX !== 0) && _.needScrollingOffsetX(offsetX);
+				var result = false;
+				if( (offsetY !== 0) && (_.needScrollingOffsetY(offsetY) == true) && (_.restYSpace() !== 0) ) {
+					result = true;
+				}
+				if( (offsetX !== 0) && (_.needScrollingOffsetX(offsetX) == true) ){
+					result = true;
+				}
+				return result;
+				//(offsetY !== 0) && _.needScrollingOffsetY(offsetY);
+				//(offsetX !== 0) && _.needScrollingOffsetX(offsetX);
 			});
 			// 바운싱
 			this.Finger.whenTouchS
