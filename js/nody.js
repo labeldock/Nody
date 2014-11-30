@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.8.8.8");
-	var build   = new String("802");
+	var version = new String("0.8.8.9");
+	var build   = new String("805");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -593,6 +593,7 @@
 		"TIMESMAP":function(l,f){ l=TONUMBER(l); var r = []; for(var i=0;i<l;i++) r.push(f(i)); return r; },
 		// 각각의 값의 function실행
 		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
+		"GREP"        :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f.call(ev[i],ev[i],i); return ev; },2),
 		// 각각의 값의 function실행
 		"DATAEACHBACK":FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
 		// 각각의 값을 배열로 다시 구해오기
@@ -6196,7 +6197,10 @@
 						var moveY = e.touches[0].pageY - _.StartTouchMoveY;
 						_.StartTouchMoveX = e.touches[0].pageX;
 						_.StartTouchMoveY = e.touches[0].pageY;
+						
 						CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e);
+						
+						
 					}
 					//2 _
 					if(_.GestureListener["pinch"] && _.StartPinchValue && (e.touches.length === 2)){
@@ -6207,8 +6211,8 @@
 							 e.touches[1].pageY
 						);
 						CALL(_.GestureListener["pinch"],_.Source,-((_.StartPinchValue / currentDistance) - 1))
-						//_.StartPinchValue = currentDistance;
 					}
+					
 				};
 				this._currentTouchEndEvent = function(e){
 					e.stopPropagation();
@@ -6256,25 +6260,27 @@
 	
 	makeModule("ScrollBox",{
 		needScrollingOffsetX:function(offset){
-			if(!this.allowScrollX) return false;
+			if(!this.allowScrollX || offset == 0) return false;
 			var needTo = this.Source.scrollLeft + (-offset);
 			if (needTo < 0) { needTo = 0; }
 			if (needTo > this.Source.scrollWidth) needTo = this.Source.scrollWidth;
-			if (this.Source.scrollLeft != needTo) this.Source.scrollLeft = needTo;
+			if (this.Source.scrollLeft != needTo) {
+				this.Source.scrollLeft = needTo;
+				return true;
+			}  else {
+				return false;
+			}
 		},
 		needScrollingOffsetY:function(offset){
-			if(!this.allowScrollY) return false;
+			if(!this.allowScrollY || offset == 0) return false;
+			
 			var needTo = this.Source.scrollTop + (-offset);
+
 			if (needTo < 0) {
 				this.needNegativeDrawItem();
-				//
+				
 				needTo = this.Source.scrollTop + (-offset);
-				if(needTo < 0) {
-					needTo = 0;
-				} 
-				//else {
-				//	if(this.ScrollEvent.ScrollConflictUp)this.ScrollEvent.ScrollConflictUp.call(this);
-				//}
+				if(needTo < 0) needTo = 0;
 			}
 			if (needTo > this.Source.scrollHeight - this.Source.offsetHeight){
 				this.needPositiveDrawItem();
@@ -6282,19 +6288,12 @@
 				if(needTo > this.Source.scrollHeight){
 					needTo = this.Source.scrollHeight;
 				} 
-				//else {
-				//	if(this.ScrollEvent.ScrollConflictDown) this.ScrollEvent.ScrollConflictDown.call(this);
-				//}
-			} 
-			if (this.Source.scrollTop != needTo) {
-				//if(this.Source.scrollTop > needTo){
-				//	if(this.ScrollEvent.ScrollUp) this.ScrollEvent.ScrollUp.call(this);
-				//} else {
-				//	if(this.ScrollEvent.ScrollDown) this.ScrollEvent.ScrollDown.call(this);
-				//}
-				this.Source.scrollTop = needTo;
 			}
-			
+			if (this.Source.scrollTop !== needTo) {
+				this.Source.scrollTop = needTo;
+				return true;
+			}
+			return false;
 		},
 		needZoom:function(needTo){
 			needTo = TONUMBER(needTo);
@@ -6364,28 +6363,38 @@
 				}
 			}
 		},
+		restUp:function(){
+			return this.Source.scrollTop;
+		},
 		restDown:function(){
-			return this.Source.scrollHeight - this.Source.offsetHeight - this.Source.scrollTop
+			return this.Source.scrollHeight - this.Source.offsetHeight - this.Source.scrollTop;
+		},
+		restYSpace:function(){
+			var u = this.Source.scrollTop , d = (this.Source.scrollHeight - this.Source.offsetHeight - this.Source.scrollTop);	
+			return (u < d)?u:d;
 		},
 		//scroll event
 		whenScroll            :function(e){ this.ScrollEvent.Scroll            = e; },
-		//whenScrollUp          :function(e){ this.ScrollEvent.ScrollUp          = e; },
-		//whenScrollDown        :function(e){ this.ScrollEvent.ScrollDown        = e; },
-		//whenScrollConflictUp  :function(e){ this.ScrollEvent.ScrollConflictUp  = e; },
-		//whenScrollConflictDown:function(e){ this.ScrollEvent.ScrollConflictDown= e; },
 		whenZoom:function(event){ this.ZoomEvent = event; },
 		applyScrollEvent:function(flag){
 			if(typeof flag !== "boolean") return;
 			if(typeof this._applyScrollEvent === "undefined") {
 				var _ = this;
 				this._currentMouseWheelEvent = function(e){
-					e.stopPropagation();
-					e.preventDefault();
 					if(e.wheelDeltaY) {
-						_.needScrollingOffsetY(e.wheelDeltaY/3);
-						_.needScrollingOffsetX(e.wheelDeltaX/3);
+						if( (e.wheelDeltaY !== 0) && (_.needScrollingOffsetY(e.wheelDeltaY/3) == true) && (_.restYSpace() !== 0) ) {
+							e.stopPropagation();
+							e.preventDefault();
+						}
+						if( (e.wheelDeltaX !== 0) && (_.needScrollingOffsetX(e.wheelDeltaX/3) == true) ) {
+							e.stopPropagation();
+							e.preventDefault();
+						}
 					} else if(e.wheelDelta) {
-						_.needScrollingOffsetY(e.wheelDelta/3)
+						if( (e.wheelDelta !== 0) && (_.needScrollingOffsetY(e.wheelDelta/3) !== false) && (_.restYSpace() !== 0) ) {
+							e.stopPropagation();
+							e.preventDefault();
+						}
 					}
 				};
 				this._currentScrollEvent = function(e){
@@ -6410,7 +6419,7 @@
 			}
 
 		}
-	},function(node){
+	},function(node,fixHeight){
 		this.Source = ZFIND(node);
 		
 		if(this.Source){
@@ -6421,14 +6430,9 @@
 			this.axisYNegativeItems = [];
 			
 			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
+			
 			ELAPPEND(this.ClipView,this.Source.childNodes);
 			ELAPPEND(this.Source,this.ClipView);
-			if(ELHASATTR(this.Source,"class")){
-				var originClass = ELATTR(this.Source,"class");
-				ELATTR(this.Source,"class",_String(originClass).getAddModel("frame-scroll"));
-			} else {
-				ELATTR(this.Source,"class","frame-scroll");
-			}
 			
 			//
 			this.ScrollEvent = {};
@@ -6439,13 +6443,21 @@
 			this.allowScrollY = true;
 			
 			ELSTYLE(this.Source,"overflow","hidden");
+			ELSTYLE(this.Source,"position","relative");
 			
-			var owner = this;
+			var _ = this;
 			//
 			this.Finger.whenTouchMove(function(offsetX,offsetY,e){
-				if( !owner.needScrollingOffsetX(offsetX) &&  !owner.needScrollingOffsetY(offsetY)) {
-					e.preventDefault();
-				}
+				//var result = false;
+				//if( (offsetY !== 0) && (_.needScrollingOffsetY(offsetY) == true) && (_.restYSpace() !== 0) ) {
+				//	result = true;
+				//}
+				//if( (offsetX !== 0) && (_.needScrollingOffsetX(offsetX) == true) ){
+				//	result = true;
+				//}
+				//return result;
+				(offsetY !== 0) && _.needScrollingOffsetY(offsetY);
+				(offsetX !== 0) && _.needScrollingOffsetX(offsetX);
 			});
 			// 바운싱
 			this.Finger.whenTouchS
@@ -6457,10 +6469,10 @@
 
 			
 			this.Finger.whenPinchStart(function(){
-				if(owner.allowZoom) owner.StartZoom = TONUMBER(ELSTYLE(owner.ClipView,"zoom"));
+				if(_.allowZoom) _.StartZoom = TONUMBER(ELSTYLE(_.ClipView,"zoom"));
 			});
 			this.Finger.whenPinch(function(zoomOffset,e){
-				if(owner.allowZoom) owner.needZoomOffset(zoomOffset);
+				if(_.allowZoom) _.needZoomOffset(zoomOffset);
 			});
 			
 			this.applyScrollEvent(true);
