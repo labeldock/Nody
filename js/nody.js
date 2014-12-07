@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.8.9");
-	var build   = new String("806");
+	var version = new String("0.9.0");
+	var build   = new String("818");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -584,7 +584,7 @@
 		"LAST"   :function(t){ return ISARRAY(t) ? t[t.length-1] : t; },
 		//숫자로 변환합니다. 디폴트 값이나 0으로 반환합니다.
 		"TONUMBER":function(v,d){
-			switch(typeof v){ case "number":return v;case "string":var r=v.replace(/\,/,"")*1;return isNaN(r)?0:r;break; }
+			switch(typeof v){ case "number":return v;case "string":var r=v.replace(/\D/g,"")*1;return isNaN(r)?0:r;break; }
 			switch(typeof d){ case "number":return d;case "string":var r=d*1;return isNaN(r)?0:r;break; }
 			return 0;
 		},
@@ -592,8 +592,7 @@
 		"TIMES":function(l,f){ l=TONUMBER(l); for(var i=0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
 		"TIMESMAP":function(l,f){ l=TONUMBER(l); var r = []; for(var i=0;i<l;i++) r.push(f(i)); return r; },
 		// 각각의 값의 function실행
-		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
-		"GREP"        :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f.call(ev[i],ev[i],i); return ev; },2),
+		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f.call(ev[i],ev[i],i); return ev; },2),
 		// 각각의 값의 function실행
 		"DATAEACHBACK":FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
 		// 각각의 값을 배열로 다시 구해오기
@@ -621,8 +620,10 @@
 		"SPRINGINDEX":function(index,maxIndex){ index = TONUMBER(index); maxIndex = TONUMBER(maxIndex); return (index == 0 || (Math.floor(index/maxIndex)%2 == 0))?index%maxIndex:maxIndex-(index%maxIndex); },
 		//오브젝트의 key를 each열거함
 		"PROPEACH":FUT.CONTINUTILITY(function(v,f){if((typeof v === "object") && (typeof f === "function")){for(k in v) {f(v[k],k)}}; return v; },2),
+		//
+		"PROPMAP":FUT.CONTINUTILITY(function(v,f){ var result = {}; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result[k] = f(v[k],k); return result; } return result;},2),
 		//오브젝트의 key value값을 Array 맵으로 구한다.
-		"PROPMAP" :FUT.CONTINUTILITY(function(v,f){ var result = []; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
+		"PROPDATA" :FUT.CONTINUTILITY(function(v,f){ var result = []; if(typeof f !== "function") f = function(v){ return v; }; if(typeof v === "object"){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
 		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
 		"APPLY" : function(f,owner,args) { 
 			if(typeof f === "function"){ 
@@ -1197,6 +1198,7 @@
 			this[leftIndex]  = right;
 			this[rightIndex] = left;
 		},
+		has:function(v){ for(var i=0,l=this.length;i<l;i++) if(this[i] === v) return true; return false; },
 		hasIndex:function(index){ if (index < 0) return false; if (this.length - 1 < index) return false; return true; },
 		concat    : function(){ return this.setSource(this.getConcat.apply(this,arguments)); },			
 		// 리턴한 요소를 누적하여 차례로 전달함
@@ -2747,11 +2749,10 @@
 		"TAG" : function(tagProperty,attrValue){
 			
 			//TAG중첩을 지원하기 위한 것
-			if((typeof attrValue === "string") && arguments.length > 2){
-				DATAEACH(arguments,function(v,i){
-					if(i < 2) return;
-					attrValue += v;
-				});
+			if(arguments.length > 1) {
+				var newValue = "";
+				for(var i=1,l=arguments.length;i<l;i++) if(typeof arguments[i] !== "undefined") newValue += arguments[i];
+				attrValue = newValue;
 			}
 			
 			//캐쉬를 이용해 잦은 표현에 대한 오버해드를 줄입니다.
@@ -3829,18 +3830,9 @@
 				PROPEACH(eventParam,function(v,k){
 					e[v] = k;
 				});
-				console.log("event trigger",e);
 			    node.dispatchEvent(e);
 			} else {
 				node.fireEvent("on"+eventName);
-				/*
-				성능이슈로 블럭처리
-				try{
-					node.fireEvent("on"+eventName);
-				} catch(e) {
-					console.warn("존재하지 않는 이벤트 호출 error => ",e.message);
-				}
-				*/
 			}
 			return node;
 		},
@@ -5117,7 +5109,179 @@
 		this.send();
 	});
 	
-	makeModule("Loader",{
+	makeModule("ContainerEvents",{
+		_setEvent:function(eventType,eventName,method){
+			var _ = this;
+			DATAEACH(eventName,function(eventName){
+				if(eventName == "!global"){
+					if(typeof method === "function") _.ContainerEvents[eventType] = method;
+				} else {
+					if((typeof eventName === "string") && (typeof method === "function")) 
+					return  _.ContainerEvents[eventType][eventName] = method;
+				}
+			});
+		},
+		whenAllLoad:function(method){
+			this._setEvent("AllLoadEvent","!global",method);
+		},
+		whenAllActive:function(method){
+			this._setEvent("AllActiveEvent","!global",method);
+		},
+		whenAllInactive:function(method){
+			this._setEvent("AllInactiveEvent","!global",method);
+		},
+		whenAllActiveToggle:function(openMethod,disappearMethod){
+			this.whenAllActive(openMethod);
+			this.whenAllInactive(disappearMethod);
+		},
+		whenLoad:function(eventName,method){
+			this._setEvent("ContainerLoadEvents",eventName,method);
+		},
+		//열때마다 일어나는 이벤트
+		whenActive:function(eventName,method){
+			this._setEvent("ContainerOpenEvents",eventName,method);
+		},
+		//보임이 없어질때마다 일어나는 이벤트
+		whenInactive:function(eventName,method){
+			this._setEvent("ContainerInactiveEvents",eventName,method);
+		},
+		whenActiveToggle:function(eventName,openMethod,disappearMethod){
+			this.whenActive(eventName,openMethod);
+			this.whenInactive(eventName,disappearMethod);
+		},
+		_triggingActiveEvents:function(container,activeName,containerEvent,userArgs){
+			// 로드가 완료되었을때
+			if( containerEvent.match("load")) {
+				APPLY(this.ContainerEvents.AllLoadEvent,container,userArgs);
+				APPLY(this.ContainerEvents.ContainerLoadEvents[activeName],container,userArgs);
+			}
+			if( containerEvent.match("active")) {
+				APPLY(this.ContainerEvents.AllActiveEvent,container,userArgs);
+				APPLY(this.ContainerEvents.ContainerOpenEvents[activeName],container,userArgs);
+			}
+		},
+		_triggingInactiveEvents:function(container,inactiveName){
+			APPLY(this.ContainerEvents.AllInactiveEvent,container);
+			APPLY(this.ContainerEvents.ContainerInactiveEvents[inactiveName],container);
+		}
+	},function(){
+		// 로드될때 이벤트입니다.
+		this.ContainerEvents = {
+			"AllLoadEvent":undefined,
+			"AllActiveEvent":undefined,
+			"AllInactiveEvent":undefined,
+			"ContainerLoadEvents":{},
+			"ContainerOpenEvents":{},
+			"ContainerInactiveEvents":{}
+		};
+	});
+	
+	makeGetter("ELSCRIPTSTART",function(container){
+		FIND("script",container,DATAEACH,function(scriptNode){
+			var script = scriptNode.innerHTML;
+			try {
+				eval.call(script);
+			} catch(e) {
+				console.error("다음의 스크립트 구문 오류로 스크립트 실행이 정지되었습니다. => ",MAX(script,200));
+				throw e;
+			}
+		});
+	});
+	
+	extendModule("ContainerEvents","Containers",{
+		loadHTML:function(containerKey,loadPath,success,faild){
+			var _container = this.Source[containerKey];
+			var _ = this;
+			
+			if(!_container) return console.warn("Containers:: 존재하지 않는 컨테이너 키를 호출",this.Source);
+			
+			//함수일때
+			if(typeof loadPath === "function"){
+				var result = loadPath(loadEnum);
+				if(ISELNODE(result) || (typeof result === "string") ) loadPath = result;
+			}
+			
+			//ELEMENT(s) or URL
+			if( typeof loadPath === "string" ){
+				_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") +_Util.base36Random(2),{
+					"dataType":"dom",
+					"success":function(doms){
+						DATAEACH(doms,function(el){ ELAPPEND(_container,el); });
+						ELSCRIPTSTART(_container);
+						_._triggingActiveEvents(_container,containerKey,"load");
+						CALL(success);
+					},
+					"error":function(){
+						console.warn("Containers::",loadPath,"데이터를 읽어들이는데 실패하였습니다");
+						CALL(faild);
+					}
+				});
+			} else {
+				var doms = FIND(loadPath);
+				if( doms.length < 1 ){
+					console.error("Loader::load 불러올 엘리먼트가 존재하지 않습니다. => ",loadPath);
+					CALL(faild);
+				} else {
+					DATAEACH(doms,function(el){ ELAPPEND(_container,el); });
+					ELSCRIPTSTART(_container);
+					_._triggingActiveEvents(_container,containerKey,"load",loadArguments);
+					CALL(success);
+				}
+			}
+		},
+		addContainer:function(container,key){
+			var findContainer = ZFIND(container);
+			if(!findContainer) return console.warn(key,"의 컨테이너를 찾을 수 없습니다.");
+			this.Source[key] = findContainer;;
+		},
+		active:function(name){
+			if( !(name in this.Source) ) return console.warn("정의되지 않은 컨테이너를 active하려고 함 => ",name);
+			//이미 엑티브된 컨테이너는 아무것도 발생하지 않음
+			if( this.ActiveSource.has(name) ) return;
+			//멀티 액티브가 아니면 다른 active값을 inactive시킴
+			if( this.multiActive == false ) {
+				var _ = this;
+				this.ActiveSource.each(function(wasActive){
+					_.inactive(wasActive);
+				});
+			}
+			//액티브 된 이벤트를 전달
+			var loadArguments = Array.prototype.slice.call(this);
+			loadArguments.shift();
+			this._triggingActiveEvents(this.Source[name],name,"active",loadArguments);
+			this.ActiveSource.push(name);
+		},
+		inactive:function(name){
+			if( this.ActiveSource.has(name)) {
+				this.ActiveSource.remove(name);
+				this._triggingInactiveEvents(this.Source[name],name);
+			}
+		},
+		getActiveContainerName:function(){
+			return this.LoaderCurrent;
+		},
+		getActiveContainerURL:function(){
+			return this.Source[this.LoaderCurrent];
+		}
+	},function(containers,loadBefore){
+		//이벤트를 셋팅함
+		this._super();
+		//
+		this.Source = {};
+		
+		//컨테이너 추가;
+		var _ = this;
+		PROPEACH(containers,function(container,key){ _.addContainer(container,key); });
+		
+		//
+		this.multiActive = false;
+		//
+		this.ActiveSource = new AArray();
+		
+		CALL(loadBefore,this,this);
+	});
+	
+	extendModule("ContainerEvents","Loader",{
 		clear:function(){
 			if(this.LoaderCurrent) {
 				this.LoaderViews[this.LoaderCurrent] = _Array(this.LoaderContainer.children).each(function(el){ ELREMOVE(el); }); 
@@ -5130,60 +5294,21 @@
 			this.LoaderViews   = {};
 			return this;
 		},
-		executeScriptForCurrentEnum:function(loadArguments){
-			var own      = this;
-			var loadEnum = this.LoaderCurrent;
-			//
-			var scripts = _Array(FIND("script",this.LoaderContainer));
-			scripts.each(function(scriptDom){
-				var javascript = scriptDom.innerHTML;
-				try {
-					eval(javascript);
-				} catch(e){
-					console.error("스크립트 구문 오류로 스크립트 실행이 정지되었습니다. => ",MAX(javascript,200));
-					throw e;
-				}
-			});
-			
-			if(typeof this.LoaderEvents.LoaderLoadEvent[loadEnum] === "string"){
-				if(/(\.js|\.js\s)$/.test(currentLoadEvent)){
-					var scriptPath = _Client.getAbsolutePath(currentLoadEvent,_Client.scriptUrl());
-					new Open(scriptPath,function(javascript){
-						try {
-							var r = eval("("+javascript+")");
-							if(typeof r === "function"){ r.apply(own.LoaderContainer,loadArguments); }
-						} catch(e1) {
-							try {
-								eval(javascript);
-							} catch(e2) {
-								console.error("Loader::executeScriptForCurrentEnum 외부스크립트 오류 스크립트 구문 오류로 스크립트 실행이 정지되었습니다. => ",MAX(javascript,200));
-								throw e1;
-							}
-						}		
-					},function(){
-						console.error("Loader::executeScriptForCurrentEnum 외부스크립트를 가져오는데 실패하였습니다.. => ",currentLoadEvent," => ",scriptPath);
-					});
-				
-				} else {
-					console.error("Loader::executeScriptForCurrentEnum .js로 끝나는 자바스크립트만 가능합니다.");
-				}
-			}
-		},
-		statusComplete:function(appearName,openOrLoad,arguments){
+		statusComplete:function(appearName,openOrLoad,userArgs){
 			// 로드가 완료되었을때
 			if( openOrLoad == "load"){
-				APPLY(this.LoaderEvents.LoaderGlobalLoadEvent,this.LoaderContainer,arguments);
-				APPLY(this.LoaderEvents.LoaderLoadEvent[appearName],this.LoaderContainer,arguments);
+				APPLY(this.ContainerEvents.AllLoadEvent,this.LoaderContainer,userArgs);
+				APPLY(this.ContainerEvents.ContainerLoadEvents[appearName],this.LoaderContainer,userArgs);
 			} 
-			APPLY(this.LoaderEvents.LoaderGlobalOpenEvent,this.LoaderContainer,arguments);
-			APPLY(this.LoaderEvents.LoaderOpenEvent[appearName],this.LoaderContainer,arguments);
+			APPLY(this.ContainerEvents.AllActiveEvent,this.LoaderContainer,userArgs);
+			APPLY(this.ContainerEvents.ContainerOpenEvents[appearName],this.LoaderContainer,userArgs);
 		},
 		// load
 		// navname, [onen|load], starter method
 		statusWillChange:function(starter) { 
 			// 시작하기전 이전뷰가 사라진다고 통보
-			APPLY(this.LoaderEvents.LoaderGlobalDisappearEvent,this.LoaderContainer);
-			APPLY(this.LoaderEvents.LoaderDisappearEvent[this.LoaderCurrent],this.LoaderContainer);
+			APPLY(this.ContainerEvents.AllInactiveEvent,this.LoaderContainer);
+			APPLY(this.ContainerEvents.ContainerInactiveEvents[this.LoaderCurrent],this.LoaderContainer);
 			
 			// 로드 시작
 			CALL(starter,this);
@@ -5197,79 +5322,51 @@
 				console.error("불러진 컨텐츠가 없습니다.");
 			}
 		},
-		loadWithOption:function(option){
-			if(typeof option !== "object") console.warn("Loader::loadWithOption잘못된 호출!",arguments);
-			var loadEnum = option.name;
-			
-			//멀티컨테이너 옵션이 있을땐 아무것도 하지 않습니다.
-			if(option.multiContainer && (loadEnum in this.LoaderViews)) return true;
+		//무조건 새로 불러옴
+		load:function(loadEnum){
 			
 			if(loadEnum in this.Source){
 				//전달되는 파라메터 입니다.
 				var loadArguments = Array.prototype.slice.call(arguments);
 				loadArguments.shift();
 				
-				//멀티컨테이너를 넣습니다.
-				if(option.multiContainer) this.LoaderContainer = option.multiContainer;
+				//이전 컨테이너가 Inactive된다고 통보
+				this._triggingInactiveEvents(this.LoaderContainer,this.LoaderCurrent);
 				
-				this.statusWillChange(function(){
-					
-					if(option.multiContainer) {
-						this.LoaderViews[loadEnum] = undefined;
-					} else {
-						this.clear();
-					}
-					this.LoaderCurrent = loadEnum;
-					var own            = this;
-					var loadPath       = this.Source[loadEnum];
-					
-					//함수일때
-					if(typeof loadPath === "function"){
-						var result = loadPath(loadEnum);
-						if(ISELNODE(result) || (typeof result === "string") ) loadPath = result;
-					}
-					
-					//ELEMENT(s) or URL
-					if( typeof loadPath === "string" ){
-						
-						//indicator
-						var contextBound = {width:ELSTYLE(this.LoaderContainer,"width"),height:ELSTYLE(this.LoaderContainer,"height")};
-						var indicator;
-						var drawArguments = [contextBound,loadEnum].concat(loadArguments);
-						
-						if(typeof this.drawIndicator === "function"){
-							indicator = this.drawIndicator.apply(own,drawArguments);
-							if(ISELNODE(indicator)) {
-								ELAPPEND(this.LoaderContainer);
-							} else {
-								indicator = undefined;
-							}
+				this.clear();
+				this.LoaderCurrent = loadEnum;
+				var own            = this;
+				var loadPath       = this.Source[loadEnum];
+				
+				//함수일때
+				if(typeof loadPath === "function"){
+					var result = loadPath(loadEnum);
+					if(ISELNODE(result) || (typeof result === "string") ) loadPath = result;
+				}
+				
+				//ELEMENT(s) or URL
+				if( typeof loadPath === "string" ){
+					_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") +_Util.base36Random(2),{
+						"dataType":"dom",
+						"success":function(doms){
+							_Array(doms).each(function(el){ ELAPPEND(own.LoaderContainer,el); });
+							ELSCRIPTSTART(own.LoaderContainer);
+							own._triggingActiveEvents(own.LoaderContainer,loadEnum,"load active",loadArguments);
+						},
+						"error":function(){
+							console.warn("Loader::",loadPath,"데이터를 읽어들이는데 실패하였습니다");
 						}
-						_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") +_Util.base36Random(2),{
-							"dataType":"dom",
-							"success":function(doms){
-								if(indicator) ELREMOVE(indicator);
-								_Array(doms).each(function(el){ ELAPPEND(own.LoaderContainer,el); });
-								own.executeScriptForCurrentEnum(loadArguments);
-								own.statusComplete(loadEnum,"load",loadArguments);
-							},
-							"error":function(){
-								if(indicator) ELREMOVE(indicator);
-								var errerDraw = own.drawError.apply(own,drawArguments);
-								if (ISELNODE(errerDraw)) ELAPPEND(own.LoaderContainer,errerDraw);
-							}
-						});
+					});
+				} else {
+					var elfind = FIND(loadPath);
+					if( elfind.length < 1 ){
+						console.error("Loader::load 불러올 엘리먼트가 존재하지 않습니다. => ",loadPath);
 					} else {
-						var elfind = FIND(loadPath);
-						if( elfind.length < 1 ){
-							console.error("Loader::load 불러올 엘리먼트가 존재하지 않습니다. => ",loadPath);
-						} else {
-							_Array(elfind).each(function(el){ ELAPPEND(own.LoaderContainer,el); });
-							this.executeScriptForCurrentEnum(loadArguments,completeBlock);
-							own.statusComplete(loadEnum,"load",loadArguments);
-						}
+						_Array(elfind).each(function(el){ ELAPPEND(own.LoaderContainer,el); });
+						ELSCRIPTSTART(own.LoaderContainer);
+						own._triggingActiveEvents(own.LoaderContainer,loadEnum,"load active",loadArguments);
 					}
-				});
+				}
 				return true;
 			} else {
 				console.error("Loader::load::정의되지 않은 Enum을 호출할수 없습니다. => ",loadEnum,this);
@@ -5277,123 +5374,45 @@
 			}
 			return false;
 		},
-		openWithOption:function(option){
-			if(typeof option !== "object") console.warn("Loader::openWithOption잘못된 호출!",arguments);
-			var loadEnum = option.name;
-			//멀티컨테이너 옵션이 있을땐 아무것도 하지 않습니다.
-			if(option.multiContainer && (loadEnum in this.LoaderViews)) return true;
+		//불러와있다면 아무것도 실행하지 않음
+		active:function(loadEnum){
 			if(this.LoaderCurrent !== loadEnum) if(loadEnum in this.LoaderViews) {
 				var openArguments = Array.prototype.slice.call(arguments);
 				openArguments.shift();
 				
-				if(option.multiContainer) this.LoaderContainer = option.multiContainer;
+				var own = this;
 				
-				this.statusWillChange(function(){
-					var own = this;
-					//멀티컨테이너 옵션에서 clear는 실행하지 않습니다.
-					if(option.multiContainer) {
-						this.LoaderViews[loadEnum] = undefined;
-					} else {
-						this.clear();
-					}
-					this.LoaderCurrent = loadEnum;
-					this.LoaderViews[loadEnum].each( function(el){ ELAPPEND(own.LoaderContainer,el); });
-					this.statusComplete(loadEnum,"open",openArguments);
-				});
+				this._triggingInactiveEvents(this.LoaderContainer,this.LoaderCurrent);
 				
+				//멀티컨테이너 옵션에서 clear는 실행하지 않습니다.
+				this.clear();
+				this.LoaderCurrent = loadEnum;
+				this.LoaderViews[loadEnum].each( function(el){ ELAPPEND(own.LoaderContainer,el); });
+				this._triggingActiveEvents(own.LoaderContainer,loadEnum,"active",openArguments);
 				return true;
 			} else {
-				return this.loadWithOption.apply(this,Array.prototype.slice.call(arguments));
-			}
-			return false;
-		},
-		// 선택한 enum으로 페이지를 무조건 불러옴
-		load: function (loadEnum){
-			var args = Array.prototype.slice.call(arguments);
-			return this.loadWithOption.apply(this,[{name:args.shift()}].concat(args));
-		},
-		//불러온적이 없는 경우 load 있는경우 open이벤트를 실행함
-	    open: function (loadEnum) {
-			var args = Array.prototype.slice.call(arguments);
-			return this.openWithOption.apply(this,[{name:args.shift()}].concat(args));
-	    },
-		//불러온적이 없다면 open의 이벤트들을 시작함
-		order:function(loadEnum){
-			if(this.LoaderCurrent == loadEnum) {
-				var orderArguments = Array.prototype.slice.call(arguments);
-				orderArguments.shift();
-				statusComplete(loadEnum,"open",orderArguments);
-				return true;
-			} else {
-				return this.open.apply(this,Array.prototype.slice.call(arguments));
+				return this.load.apply(this,Array.prototype.slice.call(arguments));
 			}
 			return false;
 		},
 		//처음 로드될때
-		_setEvent:function(eventType,eventName,method){
-			var _ = this;
-			DATAEACH(eventName,function(eventName){
-				if(eventName == "!global"){
-					if(typeof method === "function") _.LoaderEvents[eventType] = method;
-				} else {
-					if((typeof eventName === "string") && (typeof method === "function")) 
-					return  _.LoaderEvents[eventType][eventName] = method;
-				}
-			});
-		},
-		setGlobalLoadEvent:function(method){
-			this._setEvent("LoaderGlobalLoadEvent","!global",method);
-		},
-		setGlobalOpenEvent:function(method){
-			this._setEvent("LoaderGlobalOpenEvent","!global",method);
-		},
-		setGlobalDisappearEvent:function(method){
-			this._setEvent("LoaderGlobalDisappearEvent","!global",method);
-		},
-		setGlobalToggleEvent:function(openMethod,disappearMethod){
-			this._setEvent("LoaderGlobalOpenEvent","!global",openMethod);
-			this._setEvent("LoaderGlobalDisappearEvent","!global",disappearMethod);
-		},
-		setLoadEvent:function(eventName,method){
-			this._setEvent("LoaderLoadEvent",eventName,method);
-		},
-		//열때마다 일어나는 이벤트
-		setOpenEvent:function(eventName,method){
-			this._setEvent("LoaderOpenEvent",eventName,method);
-		},
-		//보임이 없어질때마다 일어나는 이벤트
-		setDisappearEvent:function(eventName,method){
-			this._setEvent("LoaderDisappearEvent",eventName,method);
-		},
-		setToggleEvent:function(eventName,openMethod,disappearMethod){
-			this.setOpenEvent(eventName,openMethod);
-			this.setDisappearEvent(eventName,disappearMethod);
-		},
-		"var!drawIndicator":function(bound){ return MAKE("div::Loading..."); }, /*function(bound){ return node }*/
-		"var!drawError":function(bound){ return MAKE("div::error load"); },
-		getCurrentName:function(){
+		getActiveContainerName:function(){
 			return this.LoaderCurrent;
 		},
-		getCurrentURL:function(){
+		getActiveContainerURL:function(){
 			return this.Source[this.LoaderCurrent];
 		}
-	},function(container,navs){
+	},function(container,navs,loadBefore){
+		//이벤트를 셋팅함
+		this._super();
+		
 		// context    => 컨텐츠를 채울 곳
 		// navs       => object: key value로 해당이 호출되면 context에 내용이 체워짐
-		// loadEvent  => navs key과 같은 데이터가 불러와질때 호출되는 이벤트
 		this.Source          = navs;
 		this.LoaderCurrent   = undefined;
 		this.LoaderContainer = ZFIND(container);
-		// 로드될때 이벤트입니다.
-		this.LoaderEvents = {
-			"LoaderGlobalLoadEvent":undefined,
-			"LoaderGlobalOpenEvent":undefined,
-			"LoaderGlobalDisappearEvent":undefined,
-			"LoaderLoadEvent":{},
-			"LoaderOpenEvent":{},
-			"LoaderDisappearEvent":{}
-		};
 		this.LoaderViews     = {};
+		CALL(loadBefore,this,this);
 	});
 	
 	makeSingleton("DataContextNotificationCenter",{
