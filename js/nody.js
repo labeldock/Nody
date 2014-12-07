@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.9.0");
-	var build   = new String("818");
+	var version = new String("0.9.1");
+	var build   = new String("819");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -2121,7 +2121,9 @@
 		random:function(length) { return parseInt(this.base64Random(length,52,10)); },
 		numberRandom:function(length) { return this.base64Random(length,52,10); },
 		base36Random:function(length) { return this.base64Random(length,26,36); },
-		base36UniqueRandom:function(length) { return this.base64UniqueRandom(length,26,36); }
+		base36UniqueRandom:function(length) { return this.base64UniqueRandom(length || 6,26,36); },
+		base26Random:function(length) { return this.base64Random(length,0,52); },
+		base26UniqueRandom:function(length) { return this.base64UniqueRandom(length || 6,0,52); }
 	});
 	
 	
@@ -3304,7 +3306,11 @@
 			}
 			
 			//랜더링 후처리
-			if(dataset)   for(var key in dataset) element.dataset[key] = dataset[key];
+			if(dataset) for(var key in dataset) {
+				//ie11 lt fix
+				if(!element.dataset) element.dataset = {};
+				element.dataset[key] = dataset[key];
+			} 
 			if(htmlvalue) if("value" in element) {
 				element.setAttribute("value",htmlvalue)
 			} else {
@@ -3500,9 +3506,18 @@
 		},
 		"HASATTR":function(sel,name,hideConsole){
 			var node = ZFIND(sel);
-			if( ISELNODE(node) ) { return ELATTR(sel,name) == null ? false : true; }
+			if(node) { return ELATTR(sel,name) == null ? false : true; }
 			if(hideConsole !== true) console.error("ELHASATTR:: 알수없는 node값 입니다. => " + TOS(node) );
 			return false;
+		},
+		"UNIQUE":function(sel){
+			var node = ZFIND(sel);
+			if(node) { if(!ELHASATTR(node,"id")) node.setAttribute("id",_Util.base26UniqueRandom(8)) }
+			return node;
+		},
+		"UNIQUEID":function(sel){
+			var result = ELUNIQUE(sel);
+			if(result) { return result.getAttribute("id") }
 		},
 		//get css style tag info
 		"TRACE"   :function(target,sign,withValue){
@@ -4093,15 +4108,20 @@
 			return this;
 		},
 		reset : function(partialData){
-			if (this.TemplateNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",node)
-			if (this.TemplateNode.length !== 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",findNode);
+			if (this.TemplateNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
+			if (this.TemplateNode.length !== 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
 			this.setSource(IMPORTNODE(ZERO(this.TemplateNode)));
 			if(typeof partialData == "object") this.partialData(partialData);
 		}
 	},function(node,partialData,cancel){
+		this.initNode      = node;
 		this.TemplateNode  = (typeof node === "string")?/^<.+>$/.test(node)?[MAKETEMP(node)]:FIND(node):FIND(node);
-		if(partialData === false || cancel === false) return;
-		this.reset(partialData);
+		if (!this.TemplateNode) {
+			console.error("template init falid!");
+		} else {
+			if(partialData === false || cancel === false) return;
+			this.reset(partialData);
+		}
 	},function(){
 		//get 함수입니다. Template모듈은 기본적으로 노드를 반환합니다.
 		return ZFIND(this);
@@ -5219,7 +5239,7 @@
 			} else {
 				var doms = FIND(loadPath);
 				if( doms.length < 1 ){
-					console.error("Loader::load 불러올 엘리먼트가 존재하지 않습니다. => ",loadPath);
+					console.error("Containers::load 불러올 엘리먼트가 존재하지 않습니다. => ",loadPath);
 					CALL(faild);
 				} else {
 					DATAEACH(doms,function(el){ ELAPPEND(_container,el); });
@@ -5232,7 +5252,7 @@
 		addContainer:function(container,key){
 			var findContainer = ZFIND(container);
 			if(!findContainer) return console.warn(key,"의 컨테이너를 찾을 수 없습니다.");
-			this.Source[key] = findContainer;;
+			this.Source[key] = findContainer;
 		},
 		active:function(name){
 			if( !(name in this.Source) ) return console.warn("정의되지 않은 컨테이너를 active하려고 함 => ",name);
