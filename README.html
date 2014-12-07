@@ -843,6 +843,16 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <h2>Version info</h2>
 
+<h4>0.9 변동및 작업 #</h4>
+
+<ul>
+<li>Loader 모듈의 더 추상적인 모듈인 Containers모듈 추가</li>
+<li>TONUMBER가 아예 숫자만 인식함</li>
+<li>DATA와 PROP의 정의가 명확하짐 (array,attributes)</li>
+<li>이벤트 등록과 관련된 api는 when.. 으로 시작하도록 변경중</li>
+</ul>
+
+
 <h4>0.8 변동사항 #</h4>
 
 <ul>
@@ -850,29 +860,24 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <ul>
 <li>_Tamplate 모듈이 추가되었습니다.</li>
-<li>MAKETEMP 함수 추가 Template 태그를 생성함</li>
+<li>MAKETEMP 함수로 Template태그 작성 가능</li>
 </ul>
 </li>
-<li>ViewModel의 나열이 역전되었습니다. 이제부터 부모부터 열거해야합니다.</li>
-<li>FINDZERO가 ZFIND로 이름이 바뀌었습니다.</li>
-<li>ZNUMBER 추가</li>
-<li>Nody의 느린 셀렉터 엔진의 비중을 낮추고 querySelectAll의 베이스의 셀렉터로 동작합니다. 따라서 셀렉터 구문은 표준만 지원하도록 정책이 바뀌었습니다.</li>
-<li>캐쉬를 사용하여 일반적인 노드 작업속도가 20 ~ 150배 정도 빨라졌습니다.</li>
+<li>몇몇 장황한 함수이름 변경</li>
+<li>ZSTRING, ZNUMBER 함수 추가</li>
+<li>Nody의 기본 셀렉터 엔진을 표준에 준하게 하고 querySelector에 의존하도록 함. (수십배 빨리짐)</li>
+<li>노드 작업시 캐쉬를 적극 사용하여 150배 정도 빨라짐</li>
 <li>Contexts 모듈이 간소화되었습니다.</li>
-<li>각 노드의 위치를 바꿔주는 ELCHANGE가 생겼습니다.</li>
-<li>Loader 모듈의 실용성을 높였습니다.</li>
 </ul>
 
 
-<h4>0.7까지 변동사항</h4>
+<h4>0.7 변동사항</h4>
 
 <ul>
-<li>EL, _[tag]&hellip; 함수들이 제거되었고 Nody와 Make모듈로 MAKE함수로 대체되었습니다.</li>
-<li>Area, AreaContent 모듈이 제거되었고 ZString 모듈로 대체되었습니다.</li>
-<li>성능을 높이기 위한 작업이 되었습니다.</li>
-<li>모듈인 &ldquo;Type"이 제거되고 단순한 함수형태인 "IS"로 대체되었습니다.</li>
-<li>DataGrid, DataRender, DataViewController 등의 이전 MVVM모듈이 제거되었습니다.</li>
-<li>완전히 새로 작성된 MVVM관련 모듈인 DataContext, ManagedData, ViewModel, DataContextViewController이 추가되었습니다. 이로서 메모리 관리가 최적화 되었고와 렌더링 프로세싱을 최소화 하였습니다.</li>
-<li>ELDATA가 추가되었습니다. 노드의 DATASET에 접근할수 있습니다.</li>
+<li>CSS 스타일 노드만들기 함수 MAKE로 통일</li>
+<li>사용하기 어려운 모듈 다시 디자인 ZString 모듈 추가</li>
+<li>사용하기 장황한 모듈 다시 디자인 IS, AS함수 추가</li>
+<li>문제가 많던 이전 MVVM모듈 제거 새로 작성된 DataContext, ManagedData, ViewModel, DataContextViewController이 추가 (메모리 관리 문제, 랜더링 문제 해결)</li>
+<li>노드의 Dataset접근애 친화적이게 변경</li>
 </ul>
 
