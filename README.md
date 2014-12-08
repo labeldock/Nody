@@ -1,5 +1,6 @@
 Nody.js
 =======
+Node + Friendly
 
 # Sample #
 <a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a>
