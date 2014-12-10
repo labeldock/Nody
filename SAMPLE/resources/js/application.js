@@ -8,12 +8,13 @@ var loader = new Loader("#main-container",{
 	"viewmodel":"subview/viewmodel.html",
 	"multiselect":"subview/multiselect.html",
 	"selectbind":"subview/selectbind.html",
-	"speedtest":"subview/speedtest.html"
+	"speedtest":"subview/speedtest.html",
+	"speedtest2":"subview/speedtest2.html"
 });
 
 menuContext.onSelects("click",function(){
 	var pagename = ELATTR(this,"loadpage");
-	if(pagename) loader.open(pagename);
+	if(pagename) loader.active(pagename);
 });
 
 var appearLoad = function(){
@@ -65,7 +66,7 @@ var appearOpen = function(){
 	)
 };
 
-loader.setLoadEvent("appear",function(){
+loader.whenLoad("appear",function(){
 	FIND(".code-block-1 code",ELVALUE,CODE(ZFIND(".read-block-1")));
 	CODEBLOCK(".code-block-1");
 	
@@ -74,7 +75,7 @@ loader.setLoadEvent("appear",function(){
 	
 	appearLoad();
 })
-loader.setToggleEvent("appear",function(){	
+loader.whenActiveToggle("appear",function(){	
 	appearOpen();
 },function(){
 	FIND(".appear-ready",DATAEACH,function(node,i){
@@ -83,7 +84,7 @@ loader.setToggleEvent("appear",function(){
 	
 	window.css3Transform(".gage-box-line-container","rotate(-100deg)");
 });
-loader.setLoadEvent("mvvm",function(){
+loader.whenLoad("mvvm",function(){
     var data = {"list":[
     	{title:"Section1",list:[{title:"Item1"},{title:"Item2"}]},
   		{title:"Section2",list:[{title:"Item4"},{title:"Item5"}]},
@@ -159,7 +160,7 @@ var viewModels = {
 	})
 }
 
-loader.setLoadEvent("viewmodel",function(){	
+loader.whenLoad("viewmodel",function(){	
 
 	var viewController = new DataContextViewController("#view-display",viewDataContext);
 	
@@ -183,7 +184,7 @@ loader.setLoadEvent("viewmodel",function(){
 	
 });
 
-loader.setLoadEvent("multiselect",function(){
+loader.whenLoad("multiselect",function(){
 	var multiViewModel = new ViewModel(function(){
 		return this.placeholder("div.row-fluid");
 	},function(){
@@ -230,7 +231,7 @@ loader.setLoadEvent("multiselect",function(){
 		
 	});
 });
-loader.setLoadEvent("selectbind",function(){
+loader.whenLoad("selectbind",function(){
 	// view model
 	var listViewModel = new ViewModel(
 	function(){
@@ -276,7 +277,7 @@ loader.setLoadEvent("selectbind",function(){
 		viewController.deselectAll();
 	});
 });
-loader.setLoadEvent("scroll",function(){
+loader.whenLoad("scroll",function(){
 	var scrollBox    = new ScrollBox("#scroll-box");
 	var calendarBox  = new ScrollBox("#calendar-box");
 	var countDisplay = $("#calendar-box-count");
@@ -353,7 +354,7 @@ function(){
 _Template("template#test").get();
 }
 ]
-loader.setLoadEvent("speedtest",function(){
+loader.whenLoad("speedtest",function(){
 	setTimeout(function(){
 		TIMES(testset.length,function(i){
 			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset[i]));
@@ -366,6 +367,45 @@ loader.setLoadEvent("speedtest",function(){
 			DATAEACH(testset,function(method,i){
 				MARK("test"+i);
 				TIMES(2000,function(){
+					method();
+				});
+				FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
+			});
+		});
+	},500);
+});
+
+var testset2 = [
+function(){
+	var method = function(){
+		var args = Array.prototype.slice.call(arguments);
+		args.shift();
+		args.shift();
+		return args;
+	}
+	method({},[],"three");
+},
+function(){
+	var method = function(){
+		return Array.prototype.slice.call(arguments,2);
+	}
+	method({},[],"three");
+}
+]
+
+loader.whenLoad("speedtest2",function(){
+	setTimeout(function(){
+		TIMES(testset2.length,function(i){
+			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset2[i]));
+			CODEBLOCK(".code-block-"+ i);
+		});
+		FIND(".code-block-template code",ELVALUE,CODE("template#test"));
+		CODEBLOCK(ZFIND(".code-block-template"));
+	
+		ELON("#teststart","click",function(){
+			DATAEACH(testset2,function(method,i){
+				MARK("test"+i);
+				TIMES(3000,function(){
 					method();
 				});
 				FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
