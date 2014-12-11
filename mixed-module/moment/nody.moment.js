@@ -45,7 +45,7 @@
 			var lastMoment     = firstMoment.clone().add(1,'months').date(0);
 			var startDay       = TURNINDEX(firstMoment.day()-this.CalendarStartDay,7);
 			var beforeDate     = firstMoment.clone().date(0).date() - startDay;
-			var calendarBodies = ARRAYINARRAY(6);
+			var calendarBodies = ARRAYARRAY(6);
 			
 			
 			// before month

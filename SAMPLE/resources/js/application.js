@@ -313,21 +313,21 @@ function(){
 IMPORTNODE( $("template#test")[0] );
 },
 function(){
-var root = $("<div id='one' class='two three' />")
-$("<ul class='list' />").append(
-	$("<li/>",{"class":"item"}),
-	$("<li/>",{"class":"item"}),
-	$("<li/>",{"class":"item"})
-).appendTo(root);
+$("<div id='one' class='two three' />").append(
+	$("<ul class='list' />").append(
+		$("<li class='item'/>").data("alias","item"),
+		$("<li class='item'/>").data("alias","item"),
+		$("<li class='item'/>").data("alias","item")
+	)
+)
 
-IMPORTNODE( root[0] );
 },
 function(){
 MAKE("div#one.two.three",
 	MAKE("ul.list",
-		MAKE("li.item"),
-		MAKE("li.item"),
-		MAKE("li.item")
+		MAKE("li.item",{"dataset":{"alias":"item"}}),
+		MAKE("li.item",{"dataset":{"alias":"item"}}),
+		MAKE("li.item",{"dataset":{"alias":"item"}})
 	)
 );
 },
@@ -377,20 +377,25 @@ loader.whenLoad("speedtest",function(){
 
 var testset2 = [
 function(){
-	var method = function(){
-		var args = Array.prototype.slice.call(arguments);
-		args.shift();
-		args.shift();
-		return args;
-	}
-	method({},[],"three");
+	var p = [];
+	DATAEACH([1,2,3,4],function(v){
+		p.push(v+1);
+	});
 },
 function(){
-	var method = function(){
-		return Array.prototype.slice.call(arguments,2);
-	}
-	method({},[],"three");
+	var p = DATAMAP([1,2,3,4],function(v){
+		return v+1;
+	});
+},
+function(){
+	$.map([1,2,3,4],function(v){ return v+1; })
+},
+function(){
+	var d = [1,2,3,4];
+	var p = [];
+	for(var i=0,l=d.length;i<l;i++) p.push(d[i]+1);
 }
+
 ]
 
 loader.whenLoad("speedtest2",function(){
@@ -405,7 +410,7 @@ loader.whenLoad("speedtest2",function(){
 		ELON("#teststart","click",function(){
 			DATAEACH(testset2,function(method,i){
 				MARK("test"+i);
-				TIMES(3000,function(){
+				TIMES(8000,function(){
 					method();
 				});
 				FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
