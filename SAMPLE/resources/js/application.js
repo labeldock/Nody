@@ -1,24 +1,18 @@
 
-var menuContext = new Contexts("#header menu","a");
-
-var loader = new Loader("#main-container",{
-	"appear":"subview/appear.html",
-	"mvvm":"subview/mvvm.html",
-	"scroll":"subview/scroll.html",
-	"viewmodel":"subview/viewmodel.html",
-	"multiselect":"subview/multiselect.html",
-	"selectbind":"subview/selectbind.html",
-	"speedtest":"subview/speedtest.html",
-	"speedtest2":"subview/speedtest2.html"
-});
-
-menuContext.onSelects("click",function(){
-	var pagename = ELATTR(this,"loadpage");
-	if(pagename) loader.active(pagename);
-});
-
-var appearLoad = function(){
+var GNBNavigationController = new NavigationController("main",function(initActiveController,navigation){
 	
+	//active event controller
+	return initActiveController("#gnb menu","a","click",function(){
+		//willActive evnet
+		return GNBNavigationController.active(this.innerText.toLowerCase());
+	},0).makeAccessProperty(function(accessData,node){
+		//navigation data
+		var name = node.innerText.toLowerCase(),href = node.getAttribute("href");
+		if(name && href) accessData[name] = href;
+	});
+});
+var gnb = GNBNavigationController;
+var appearLoad = function(){
 	/*linehide*/
 	var css3Transform = function(query,value){
 		",-webkit-,-moz-,-ms-,-o-".replace(/[^\,]*\,/g,function(s){ 
@@ -66,7 +60,7 @@ var appearOpen = function(){
 	)
 };
 
-loader.whenLoad("appear",function(){
+GNBNavigationController.whenLoad("appear",function(){
 	FIND(".code-block-1 code",ELVALUE,CODE(ZFIND(".read-block-1")));
 	CODEBLOCK(".code-block-1");
 	
@@ -75,7 +69,7 @@ loader.whenLoad("appear",function(){
 	
 	appearLoad();
 })
-loader.whenActiveToggle("appear",function(){	
+GNBNavigationController.whenActiveToggle("appear",function(){	
 	appearOpen();
 },function(){
 	FIND(".appear-ready",DATAEACH,function(node,i){
@@ -84,7 +78,7 @@ loader.whenActiveToggle("appear",function(){
 	
 	window.css3Transform(".gage-box-line-container","rotate(-100deg)");
 });
-loader.whenLoad("mvvm",function(){
+GNBNavigationController.whenLoad("mvvm",function(){
     var data = {"list":[
     	{title:"Section1",list:[{title:"Item1"},{title:"Item2"}]},
   		{title:"Section2",list:[{title:"Item4"},{title:"Item5"}]},
@@ -92,7 +86,6 @@ loader.whenLoad("mvvm",function(){
     ]};
 	
 	var mvvmXMP =  $(MAKE("XMP")).appendTo("#init-data-view");
-	
 	
 	//데이터를 불러거나 다시 출력하는 역활
     var dataContext = new DataContext(data,"list");
@@ -160,7 +153,7 @@ var viewModels = {
 	})
 }
 
-loader.whenLoad("viewmodel",function(){	
+GNBNavigationController.whenLoad("viewmodel",function(){	
 
 	var viewController = new DataContextViewController("#view-display",viewDataContext);
 	
@@ -184,7 +177,7 @@ loader.whenLoad("viewmodel",function(){
 	
 });
 
-loader.whenLoad("multiselect",function(){
+GNBNavigationController.whenLoad("multiselect",function(){
 	var multiViewModel = new ViewModel(function(){
 		return this.placeholder("div.row-fluid");
 	},function(){
@@ -231,7 +224,7 @@ loader.whenLoad("multiselect",function(){
 		
 	});
 });
-loader.whenLoad("selectbind",function(){
+GNBNavigationController.whenLoad("selectbind",function(){
 	// view model
 	var listViewModel = new ViewModel(
 	function(){
@@ -277,7 +270,7 @@ loader.whenLoad("selectbind",function(){
 		viewController.deselectAll();
 	});
 });
-loader.whenLoad("scroll",function(){
+GNBNavigationController.whenLoad("scroll",function(){
 	var scrollBox    = new ScrollBox("#scroll-box");
 	var calendarBox  = new ScrollBox("#calendar-box");
 	var countDisplay = $("#calendar-box-count");
@@ -354,7 +347,7 @@ function(){
 _Template("template#test").get();
 }
 ]
-loader.whenLoad("speedtest",function(){
+GNBNavigationController.whenLoad("speedtest",function(){
 	setTimeout(function(){
 		TIMES(testset.length,function(i){
 			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset[i]));
@@ -398,7 +391,7 @@ function(){
 
 ]
 
-loader.whenLoad("speedtest2",function(){
+GNBNavigationController.whenLoad("speedtest2",function(){
 	setTimeout(function(){
 		TIMES(testset2.length,function(i){
 			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset2[i]));
@@ -418,4 +411,4 @@ loader.whenLoad("speedtest2",function(){
 		});
 	},500);
 });
-menuContext.onSelects("click",6);
+

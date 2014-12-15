@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.9.4");
-	var build   = new String("827");
+	var version = new String("0.10");
+	var build   = new String("855");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -165,7 +165,10 @@
 				
 				default: throw new Error("NativeFactoryObject :: 옳지않은 타입이 이니셜라이징 되고 있습니다. => " + type);
 			}
-			var nativeConstructor = function(){ if(typeof this.set === "function"){ for(var protoKey in NModules[name].prototype){ if(protoKey.indexOf("var!") == 0) this[protoKey.substr(4)] = NModules[name].prototype[protoKey]; }; this.set.apply(this,Array.prototype.slice.apply(arguments)); } };
+			var nativeConstructor = function(){ if(typeof this.set === "function"){ 
+				for(var protoKey in NModules[name].prototype){ if(protoKey.indexOf("+") == 0) this[protoKey.substr(1)] = NModules[name].prototype[protoKey]; }; this.set.apply(this,Array.prototype.slice.apply(arguments)); } 
+			};
+			
 			NModules[name]               = nativeConstructor;
 			NModules[name].prototype     = nativeProto;
 			NModules[name].prototype.set = setter;
@@ -430,9 +433,9 @@
 		"ascii"     : "ISASCII",
 		"true"      : "ISTRUE",
 		"false"     : "ISFALSE",
-		"nothing"     : "ISNOTHING",
-		"meaning"     : "ISMEANING",
-		"enough"     : "ISENOUGH"
+		"nothing"   : "ISNOTHING",
+		"meaning"   : "ISMEANING",
+		"enough"    : "ISENOUGH"
 	};
 	
 	makeSingleton("TypeBase",{
@@ -575,7 +578,29 @@
 	TypeBase.eachGetter();
 	
 	//퍼포먼스를 위해 바깥쪽에 꺼내놓았음
-	var TOARRAY = function(t,s){ if(typeof t=="undefined" && arguments.length < 2) return []; if(typeof t === "string" && typeof s === "string"){ return t.split(s); } else if(ISARRAY(t) == true) { return t; } else { return [t]; } };
+	var CLONEARRAY = function(v) { 
+		if( ISARRAY(v) ) { 
+			if("toArray" in v){ 
+				return Array.prototype.slice.apply(mvArray,v.toArray()); 
+			} else {
+				var mvArray = [];
+				for(var i=0,l=v.length;i<l;i++) mvArray.push(v[i]); 
+				return mvArray;
+			} 
+		}
+		if(v||v==0) return [v];
+		return [];
+	}
+	//이미 배열인경우에는 그대로 리턴해준다.
+	var TOARRAY = function(t,s){
+		if(typeof t === "object") if(ISARRAY(t)) {
+			if( (t instanceof NodeList) ||  (t instanceof HTMLCollection) ) return CLONEARRAY(t);
+			return t;
+		} 
+		if(typeof t === "undefined" && arguments.length < 2) return [];
+		if(typeof t === "string" && typeof s === "string") return t.split(s);
+		return [t];
+	};
 	
 	// Nody Super base
 	W.makeSingleton("NodyBase",{
@@ -583,7 +608,7 @@
 		"APPLY" : function(f,owner,args) { 
 			if( typeof f === "function" ) {
 				args = CLONEARRAY(args);
-				return (args.length > 0) ? f.apply(owner,mvArgs) : f.call(owner);
+				return (args.length > 0) ? f.apply(owner,args) : f.call(owner);
 			}
 		},
 		//값을 플래튼하여 실행함
@@ -602,7 +627,7 @@
 		//배열이 아니면 배열로 만들어줌
 		"TOARRAY":TOARRAY,
 		//배열이든 아니든 무조건 배열로 만듬
-		"CLONEARRAY":function(v) { var mvArray = []; if( ISARRAY(v) ) { if("toArray" in v){ Array.prototype.splice.apply(mvArray,v.toArray()); } else { for(var i=0,l=v.length;i<l;i++) mvArray.push(v[i]); } } else { if(v||v==0) mvArray.push(v); return this; } return mvArray; },
+		"CLONEARRAY":CLONEARRAY,
 		//배열안에 배열을 길이만큼 추가
 		"ARRAYARRAY":function(l) { l=TONUMBER(l);var aa=[];for(var i=0;i<l;i++){ aa.push([]); }return aa; },
 		//배열의 하나추출
@@ -611,7 +636,7 @@
 		"LAST"   :function(t){ return ISARRAY(t) ? t[t.length-1] : t; },
 		//숫자로 변환합니다. 디폴트 값이나 0으로 반환합니다.
 		"TONUMBER":function(v,d){
-			switch(typeof v){ case "number":return v;case "string":var r=v.replace(/[^.\d]/g,"")*1;return isNaN(r)?0:r;break; }
+			switch(typeof v){ case "number":return v;case "string":var r=v.replace(/[^.\d\-]/g,"")*1;return isNaN(r)?0:r;break; }
 			switch(typeof d){ case "number":return d;case "string":var r=d*1;return isNaN(r)?0:r;break; }
 			return 0;
 		},
@@ -649,6 +674,12 @@
 		"PROPMAP":FUT.CONTINUTILITY(function(v,f){ var result = {}; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result[k] = f(v[k],k); return result; } return result;},2),
 		//오브젝트의 key value값을 Array 맵으로 구한다.
 		"PROPDATA" :FUT.CONTINUTILITY(function(v,f){ var result = []; if(typeof f !== "function") f = function(v){ return v; }; if(typeof v === "object"){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
+		//
+		"PROPLENGTH":function(data){ var l = 0; if(typeof data === "object" || typeof data === "function") for(var key in data) l++; return l; },
+		"EXTEND":FUT.CONTINUTILITY(function(data){
+			if(typeof data !== "object") return data;
+			for(var i=1,l=arguments.length;i<l;i++) if( typeof arguments[i] == "object" ) for(var key in arguments[i]) data[key] = arguments[i][key];
+		},2),
 		//무엇이든 문자열로 넘김
 		"TOSTRING":function(tosv,depth,jsonfy){
 			switch(typeof tosv){
@@ -1142,8 +1173,12 @@
 		zero:function() { return this[0]; },
 		//마지막 요소 반환.
 		last:function() { return this[this.length - 1]},
+		//
+		has:function(v){ for(var i=0,l=this.length;i<l;i++) if(this[i] === v) return true; return false; },
 		// 값을 추가한다.
 		push : function(v,i){ switch(typeof i){ case "string": case "number": this[i] = v; break; default: Array.prototype.push.call(this,v); break; } return this; },
+		// 존재하지 않는 값만 추가한다
+		add :function(v,i){ if( !this.has(v) ) this.push(v,i); },
 		//해당 값을 당 배열로 바꾼다
 		setSource : function(v){
 			if( ISARRAY(v) ) {
@@ -1221,7 +1256,6 @@
 			this[leftIndex]  = right;
 			this[rightIndex] = left;
 		},
-		has:function(v){ for(var i=0,l=this.length;i<l;i++) if(this[i] === v) return true; return false; },
 		hasIndex:function(index){ if (index < 0) return false; if (this.length - 1 < index) return false; return true; },
 		concat    : function(){ return this.setSource(this.getConcat.apply(this,arguments)); },			
 		// 리턴한 요소를 누적하여 차례로 전달함
@@ -1722,7 +1756,6 @@
 					if( f.test(this.Source) ) {
 						f = f.exec(this.Source);
 					} else {
-						//debugger;
 						console.warn("String::getPrintf::printf 할수 없습니다.",this.Source,f);
 						return this.Source;
 					}
@@ -2429,7 +2462,11 @@
 		getCursorPoint:function(e) {
 		    e = e || window.event; 
 			var cursor = { x: 0, y: 0 };
-		    if (e.pageX || e.pageY) {
+			
+			if(e.touches && e.touches[0]) {
+				cursor.x = e.touches[0].pageX;
+				cursor.y = e.touches[0].pageY;
+			} else if (e.pageX || e.pageY) {
 		        cursor.x = e.pageX;
 		        cursor.y = e.pageY;
 		    } else {
@@ -2756,7 +2793,7 @@
 		"TAG" : function(tagProperty,attrValue){
 			
 			//TAG중첩을 지원하기 위한 것
-			if((arguments.length > 1) && (typeof attrValue === "string")) {
+			if((arguments.length > 1) && (typeof attrValue === "string" || typeof attrValue === "number")) {
 				var newValue = "";
 				for(var i=1,l=arguments.length;i<l;i++) if(typeof arguments[i] !== "undefined") newValue += arguments[i];
 				attrValue = newValue;
@@ -3973,6 +4010,34 @@
 					}
 				});
 			}
+		},
+		"CommonAString":new AString(),
+		"ADDCLASS":function(node,addClass){	
+			var findNodes = FIND(node);
+			if(typeof addClass !== "string") return findNodes;
+			for(var i=0,l=findNodes.length;i<l;i++) findNodes[i].setAttribute("class",EL.CommonAString.set(findNodes[i].getAttribute("class")).getAddModel(addClass));
+			return findNodes;
+		},
+		"HASCLASS":function(node,hasClass){
+			var findNodes = FIND(node);
+			if(typeof hasClass !== "string") return false;
+			for(var i=0,l=findNodes.length;i<l;i++) if( !EL.CommonAString.set(findNodes[i].getAttribute("class")).hasModel(hasClass) ) {
+				return false;
+			}
+			return true;
+		},
+		"REMOVECLASS":function(node,removeClass){
+			var findNodes = FIND(node);
+			if(typeof removeClass !== "string") return findNodes;
+			for(var i=0,l=findNodes.length;i<l;i++) {
+				var didRemoveClassText = EL.CommonAString.set(findNodes[i].getAttribute("class")).getRemoveModel(removeClass).trim();
+				if( !didRemoveClassText.length ) {
+					findNodes[i].removeAttribute(removeClass);
+				} else {
+					findNodes[i].setAttribute("class",didRemoveClassText);
+				}
+			} 
+			return findNodes;
 		}
 	});
 	EL.eachGetterWithPrefix();
@@ -3990,10 +4055,11 @@
 				return CALL(EL.ATTR,undefined,this,name);
 			}
 		},
+		
 		hasAttr:function(){ return FLATTENCALL(EL.ATTR,EL,this,arguments); },
-		addClass:function(name){ return this.hasAttr(name)?this.attr("class",_String(this.attr("class")).addModel(name)):this.attr("class",name); },
-		hasClass:function(name){ return this.hasAttr(name)?_String(this.attr("class")).hasModel(name):false;},
-		removeClass:function(name){ if(this.hasAttr(name))this.attr("class",_String(this.attr("class")).removeModel(name)); return this; },
+		addClass:function(name){ return CALL(EL.ADDCLASS,EL,this,name) },
+		hasClass:function(name){ return CALL(EL.HASCLASS,EL,this,name) },
+		removeClass:function(name){ return CALL(EL.REMOVECLASS,EL,this,name) },
 		is     :function(){ return FLATTENCALL(EL.IS,EL,this,arguments); },
 		filter :function(){ this.replace(FLATTENCALL(EL.FILTER,EL,this,arguments)); return this; },
 		value  :function(name){ 
@@ -4345,6 +4411,79 @@
 			this.initCall[2] = targetsOrder;
 			return this;
 		},
+		getContexts:function(){ 
+			return FIND(this.initCall[0]); 
+		},
+		getSelects:function(){ 
+			var selectQuery = ISNOTHING(this.initCall[1]) ? "*" : this.initCall[1];
+			if(selectQuery == "self") return this.getContexts();
+			return FINDON(this.getContexts(),selectQuery);
+		},
+		getGroups:function(){ 
+			var selectQuery = ISNOTHING(this.initCall[2]) ? "self" : this.initCall[2];
+			if(selectQuery == "self") return DATAMAP(this.getSelects(),function(selNode){ return [selNode]; });
+			if(selectQuery.charAt(0) == ">"){
+				return DATAMAP(this.getSelects(),function(node){
+					return FINDON(node,selectQuery.substr(1));
+				});
+			} else {
+				return DATAMAP(this.getSelects(),function(node){
+					return FINDIN(node,selectQuery);
+				});
+			}
+		},
+		getTargets:function()  { return DATAFLATTEN(this.getGroups());  },
+		getContext:function(eq){ return this.getContexts()[eq]; },
+		getSelect :function(eq){ return this.getSelects()[eq]; },
+		getTarget :function(eq){ return this.getTargets()[eq]; },
+		getGroup  :function(eq){ return this.getGroups()[eq]; },
+		onSelects  :function(event,func,otherFunc){
+			var _ = this;
+			// 이벤트와 번호가 들어오면
+			if(typeof event=="string" && typeof func === "number"){
+				var selNode = this.getSelect(func);
+				if(ISELNODE(selNode)){
+					ELTRIGGER(selNode,event);
+				} else {
+					console.warn("Contexts::onSelects::트리깅할 대상이 없습니다.");
+				}
+				return this;
+			}
+			if(typeof event=="string" && typeof func === "function"){
+				ELON(this.getContexts(),event,function(e){
+					var curSel = new AArray( _.getSelects() );
+					if(curSel.has(e.target)){
+						//버블이 잘 왔을때
+						var curfuncindex  = curSel.indexOf(e.target);
+						var curfuncresult = func.call(e.target,e,curfuncindex,_);
+						
+						if(curfuncresult == false) return false;
+						
+						if(typeof otherFunc === "function") curSel.each(function(otherObj,index){ 
+							if(e.target !== otherObj) return otherFunc.call(otherObj,e,index,_); 
+						});
+						
+						return curfuncresult;
+					} else {
+						//버블링이 중간에 멈췄을때
+						var eventCapture; 
+						curSel.each(function(sel){
+							if(ZFIND(e.target,sel)){
+								eventCapture = sel;
+								return false;
+							}
+						});
+						if(eventCapture){
+							ELTRIGGER(eventCapture,e.type);
+							return false;
+						}
+					}
+				});
+			} else {
+				console.error("onSelect::초기화 할수 없습니다. 글자함수필요",event,func);
+			}
+			return this;
+		},
 		trace : function(way) {
 			way = typeof way === "string" ? way : "console.log";
 			switch(way) {
@@ -4377,78 +4516,52 @@
 				break;
 			}
 			return false;
-		},
-		getContexts:function(){ 
-			return FIND(this.initCall[0]); 
-		},
-		getSelects:function(){ 
-			var selectQuery = ISNOTHING(this.initCall[1]) ? "*" : this.initCall[1];
-			if(selectQuery == "self") return this.getContexts();
-			return FINDON(this.getContexts(),selectQuery);
-		},
-		getGroups:function(){ 
-			var selectQuery = ISNOTHING(this.initCall[2]) ? "self" : this.initCall[2];
-			if(selectQuery == "self") return DATAMAP(this.getSelects(),function(selNode){ return [selNode]; });
-			if(selectQuery.charAt(0) == ">"){
-				return DATAMAP(this.getSelects(),function(node){
-					return FINDON(node,selectQuery.substr(1));
-				});
-			} else {
-				return DATAMAP(this.getSelects(),function(node){
-					return FINDIN(node,selectQuery);
-				});
-			}
-		},
-		getTargets:function()  { return DATAFLATTEN(this.getGroups());  },
-		getContext:function(eq){ return this.getContexts()[eq]; },
-		getSelect :function(eq){ return this.getSelects()[eq]; },
-		getTarget :function(eq){ return this.getTargets()[eq]; },
-		getGroup  :function(eq){ return this.getGroups()[eq]; },
-		onSelects :function(event,func,otherFunc){
-			var _ = this;
-			// 이벤트와 번호가 들어오면
-			if(typeof event=="string" && typeof func === "number"){
-				var selNode = this.getSelect(func);
-				if(ISELNODE(selNode)){
-					ELTRIGGER(selNode,event);
-				} else {
-					console.warn("Contexts::onSelects::트리깅할 대상이 없습니다.");
-				}
-				return this;
-			}
-			if(typeof event=="string" && typeof func === "function"){
-				ELON(this.getContexts(),event,function(e){
-					var curSel = new AArray( _.getSelects() );
-					if(curSel.has(e.target)){
-						//버블이 잘 왔을때
-						var curfuncresult = func.call(e.target,e,curSel.indexOf(e.target),_);
-						if(curfuncresult == false){ return false; }
-						if(typeof otherFunc === "function") curSel.each(function(otherObj,index){ if(e.target !== otherObj) return otherFunc.call(otherObj,e,index,_); });
-						return curfuncresult;
-					} else {
-						//버블링이 중간에 멈췄을때
-						var eventCapture; 
-						curSel.each(function(sel){
-							if(ZFIND(e.target,sel)){
-								eventCapture = sel;
-								return false;
-							}
-						});
-						if(eventCapture){
-							ELTRIGGER(eventCapture,e.type);
-							return false;
-						}
-					}
-				});
-			} else {
-				console.error("onSelect::초기화 할수 없습니다. 글자함수필요",event,func);
-			}
-			return this;
 		}
 	},function(cSel,sSel,tSel){
 		if(ISNOTHING(FIND(cSel))) console.warn("Contexts::init::error 첫번째 파라메터의 값을 현재 찾을 수 없습니다. 들어온값", cSel);
 		this.initCall = [cSel,sSel,tSel];
 		this.setContexts(cSel,sSel,tSel);
+	});
+	
+	extendModule("Contexts","ActiveController",{
+		whenWillActive:function(method){ this.ContextsEvents.willActive = method; return this; },
+		whenDidActive:function(method){ this.ContextsEvents.didActive = method; return this;},
+		whenDidInactive:function(){ this.ContextsEvents.didInactive = method; return this; },
+		whenActiveToggle:function(am,im){ this.whenDidActive(am); return this.whenDidInactive(im); },
+		shouldActive:function(index,wait){
+			var _ = this;
+			wait = TONUMBER(wait);
+			wait = wait > 0 ? wait : 5;
+			var t = setTimeout(function(){
+				_.onSelects(_.ContextsEventName,TONUMBER(index));
+			},wait);
+			return this;
+		},
+		makeAccessProperty:function(method){
+			if(typeof method !== "function") return {};
+			return INJECT(this.getSelects(),function(inject,node,index){
+				method(inject,node,index);
+			});
+		}
+	},function(cSel,sSel,selectEvent,willActive,shouldActiveIndex,shouldActiveWait){
+		this._super(cSel,sSel);
+		this.ContextsEvents = {};
+		this.ContextsEventName = (typeof selectEvent === "string") ? selectEvent : "click";
+		this.preventDefault = true;
+		//
+		var _ = this;
+		this.onSelects(this.ContextsEventName,function(e){
+			if(_.preventDefault) e.preventDefault();
+			if( CALL(_.ContextsEvents.willActive,this) == false ) return;
+			ELADDCLASS(this,"active");
+			CALL(_.ContextsEvents.didActive,this);
+		},function(){
+			ELREMOVECLASS(this,"active");
+			CALL(_.ContextsEvents.didInactive,this);
+		});
+		//
+		if(willActive) this.whenWillActive(willActive);
+		if(typeof shouldActiveIndex !== "undefined") this.shouldActive(shouldActiveIndex,shouldActiveWait);
 	});
 	
 	// Model은 순수 데이터 모델에 접근하기 위해 사용합니다.
@@ -4787,30 +4900,32 @@
 		this.send();
 	});
 	
-	makeModule("ContainerEvents",{
+	makeModule("LoadContainerBase",{
+		"+_ActiveController":undefined,
+		getActiveController:function(){ return this._ActiveController; },
 		_setEvent:function(eventType,eventName,method){
 			var _ = this;
 			DATAEACH(eventName,function(eventName){
 				if(eventName == "!global"){
-					if(typeof method === "function") _.ContainerEvents[eventType] = method;
+					if(typeof method === "function") _.LoadContainerBaseEvents[eventType] = method;
 				} else {
 					if((typeof eventName === "string") && (typeof method === "function")) 
-					return  _.ContainerEvents[eventType][eventName] = method;
+					return  _.LoadContainerBaseEvents[eventType][eventName] = method;
 				}
 			});
 		},
-		whenAllLoad:function(method){
-			this._setEvent("AllLoadEvent","!global",method);
+		whenAnyLoad:function(method){
+			this._setEvent("AnyLoadEvent","!global",method);
 		},
-		whenAllActive:function(method){
-			this._setEvent("AllActiveEvent","!global",method);
+		whenAnyActive:function(method){
+			this._setEvent("AnyActiveEvent","!global",method);
 		},
-		whenAllInactive:function(method){
-			this._setEvent("AllInactiveEvent","!global",method);
+		whenAnyInactive:function(method){
+			this._setEvent("AnyInactiveEvent","!global",method);
 		},
-		whenAllActiveToggle:function(openMethod,disappearMethod){
-			this.whenAllActive(openMethod);
-			this.whenAllInactive(disappearMethod);
+		whenAnyActiveToggle:function(openMethod,disappearMethod){
+			this.whenAnyActive(openMethod);
+			this.whenAnyInactive(disappearMethod);
 		},
 		whenLoad:function(eventName,method){
 			this._setEvent("ContainerLoadEvents",eventName,method);
@@ -4827,31 +4942,112 @@
 			this.whenActive(eventName,openMethod);
 			this.whenInactive(eventName,disappearMethod);
 		},
+		getActiveContainerName:function(){
+			return this.ContainerActiveKeys.join(" ");
+		},
+		getActiveContainerURL:function(){
+			return this.Source[this.ContainerActiveKeys.last()];
+		},
 		_triggingActiveEvents:function(container,activeName,containerEvent,userArgs){
 			// 로드가 완료되었을때
 			if( containerEvent.match("load")) {
-				APPLY(this.ContainerEvents.AllLoadEvent,container,userArgs);
-				APPLY(this.ContainerEvents.ContainerLoadEvents[activeName],container,userArgs);
+				APPLY(this.LoadContainerBaseEvents.AnyLoadEvent,container,userArgs);
+				APPLY(this.LoadContainerBaseEvents.ContainerLoadEvents[activeName],container,userArgs);
 			}
 			if( containerEvent.match("active")) {
-				APPLY(this.ContainerEvents.AllActiveEvent,container,userArgs);
-				APPLY(this.ContainerEvents.ContainerOpenEvents[activeName],container,userArgs);
+				APPLY(this.LoadContainerBaseEvents.AnyActiveEvent,container,userArgs);
+				APPLY(this.LoadContainerBaseEvents.ContainerOpenEvents[activeName],container,userArgs);
 			}
 		},
 		_triggingInactiveEvents:function(container,inactiveName){
-			APPLY(this.ContainerEvents.AllInactiveEvent,container);
-			APPLY(this.ContainerEvents.ContainerInactiveEvents[inactiveName],container);
+			APPLY(this.LoadContainerBaseEvents.AnyInactiveEvent,container);
+			APPLY(this.LoadContainerBaseEvents.ContainerInactiveEvents[inactiveName],container);
+		},
+		loadHTML:function(loadKey,loadPath,success,error){
+			var _          = this;
+			
+			//함수일때
+			if(typeof loadPath === "function") loadPath = loadPath(APPLY(loadPath,this,loadArguments));
+			
+			//ELEMENT(s) or URL
+			switch(typeof loadPath){
+				case "string":
+					_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") + _Util.base36Random(2),{
+						"dataType":"dom",
+						"success":function(doms){
+							_.saveContainerContents(doms,loadKey);
+							CALL(success,_,loadKey,doms);
+						},
+						"error":function(){
+							console.error("LoadContainerBase::URL링크에서 데이트럴 찾지 못했습니다"+loadPath);
+							CALL(error,_,loadKey);
+						}
+					});
+					break;
+				case "object":
+					//엘리먼트 배열로 들어올경우
+					var elfind = FIND(loadPath);
+					if( elfind.length < 1 ){
+						console.error("LoadContainerBase::불러올 엘리먼트가 존재하지 않습니다."+loadPath);
+						CALL(error,_,loadKey);
+					} else {
+						_.saveContainerContents(doms,loadKey);
+						CALL(success,_,loadKey,doms);
+					}
+					break;
+				default :
+					console.log("LoadContainerBase::올바르지 않은 loadPath =>",loadPath,loadKey);
+					CALL(error,_,loadKey);
+					return false;
+					break;
+			}
+			return true;
+		},
+		saveContainerContents:function(doms,key){
+			if(typeof key === "string") { this.ContainerContents[key] = TOARRAY(doms); }
+		},
+		loadContainerContents:function(key){
+			return this.ContainerContents[key];
+		},
+		removeContainer:function(key){
+			delete Containers[key];
+			return this;
+		},
+		addContainer:function(container,key){
+			var findContainer = ZFIND(container);
+			if(!findContainer) return console.warn(key,"의 컨테이너를 찾을 수 없습니다.");
+			this.ContainerPlaceholder[key] = findContainer;
+			return this;
 		}
-	},function(){
+	},function(baseParam,setupMethod){
+		this.Source = {};
+		this.ContainerPlaceholder = {};
+		this.ContainerContents    = {};
+		this.ContainerActiveKeys  = new AArray();
+		
 		// 로드될때 이벤트입니다.
-		this.ContainerEvents = {
-			"AllLoadEvent":undefined,
-			"AllActiveEvent":undefined,
-			"AllInactiveEvent":undefined,
+		this.LoadContainerBaseEvents = {
+			"AnyLoadEvent":undefined,
+			"AnyActiveEvent":undefined,
+			"AnyInactiveEvent":undefined,
 			"ContainerLoadEvents":{},
 			"ContainerOpenEvents":{},
 			"ContainerInactiveEvents":{}
 		};
+		
+		CALL(setupMethod,this);
+		
+		switch(typeof baseParam){
+			case "object":
+				EXTEND(this.Source,baseParam);
+				break;
+			case "function":
+				var _                    = this;
+				var initActiveController = function(){ _._ActiveController = APPLY(_ActiveController,undefined,arguments); return _._ActiveController; }
+				var baseFunctionResult   = baseParam.call(this,initActiveController,this);
+				if(typeof baseFunctionResult === "object") EXTEND(this.Source,baseFunctionResult);
+				break;
+		}
 	});
 	
 	makeGetter("ELSCRIPTSTART",function(container){
@@ -4866,231 +5062,149 @@
 		});
 	});
 	
-	extendModule("ContainerEvents","Containers",{
-		loadHTML:function(containerKey,loadPath,success,faild){
-			var _container = this.Source[containerKey];
+	extendModule("LoadContainerBase","ContainersController",{
+		loadWithProperty:function(loadset,success){
+			//lo
+			if(typeof loadset !== "object") return console.error("loadAll이 중지되었습니다.");
 			var _ = this;
-			
-			if(!_container) return console.warn("Containers:: 존재하지 않는 컨테이너 키를 호출",this.Source);
-			
-			//함수일때
-			if(typeof loadPath === "function"){
-				var result = loadPath(loadEnum);
-				if(ISELNODE(result) || (typeof result === "string") ) loadPath = result;
-			}
-			
-			//ELEMENT(s) or URL
-			if( typeof loadPath === "string" ){
-				_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") +_Util.base36Random(2),{
-					"dataType":"dom",
-					"success":function(doms){
-						DATAEACH(doms,function(el){ ELAPPEND(_container,el); });
-						ELSCRIPTSTART(_container);
-						_._triggingActiveEvents(_container,containerKey,"load");
-						CALL(success);
-					},
-					"error":function(){
-						console.warn("Containers::",loadPath,"데이터를 읽어들이는데 실패하였습니다");
-						CALL(faild);
-					}
-				});
-			} else {
-				var doms = FIND(loadPath);
-				if( doms.length < 1 ){
-					console.error("Containers::load 불러올 엘리먼트가 존재하지 않습니다. => ",loadPath);
-					CALL(faild);
-				} else {
-					DATAEACH(doms,function(el){ ELAPPEND(_container,el); });
-					ELSCRIPTSTART(_container);
-					_._triggingActiveEvents(_container,containerKey,"load",loadArguments);
-					CALL(success);
+			var successFire = new Fire(PROPLENGTH(loadset),function(){ CALL(success,_); });
+			console.log("loadWithProperty")
+			PROPEACH(loadset,function(loadPath,loadKey){
+				var placeholder = _.ContainerPlaceholder[loadKey];
+				if(!placeholder) {
+					successFire.touch();
+					return console.error("미리 정의되어있지 않은 플레이스 홀드키가 존재함 =>",loadKey);
 				}
-			}
-		},
-		addContainer:function(container,key){
-			var findContainer = ZFIND(container);
-			if(!findContainer) return console.warn(key,"의 컨테이너를 찾을 수 없습니다.");
-			this.Source[key] = findContainer;
+				console.log("laodset!",loadKey,loadPath);
+				_.loadHTML(loadKey,loadPath,function(key,doms){
+					_.Source[loadKey] = _.Source[loadPath];
+					ELAPPEND(placeholder,doms);
+					ELSCRIPTSTART(placeholder);
+					_._triggingActiveEvents(placeholder,key,"load");
+					successFire.touch();
+				},function(){
+					successFire.touch();
+				});
+			});
 		},
 		active:function(name){
-			if( !(name in this.Source) ) return console.warn("정의되지 않은 컨테이너를 active하려고 함 => ",name);
+			var activeHTML = this.loadContainerContents(name);
+			if( !activeHTML ) return console.warn("정의되지 않은 컨테이너를 active하려고 함 => ",name);
+			
 			//이미 엑티브된 컨테이너는 아무것도 발생하지 않음
-			if( this.ActiveSource.has(name) ) return;
+			if( this.ContainerActiveKeys.has(name) ) return false;
+			
 			//멀티 액티브가 아니면 다른 active값을 inactive시킴
 			if( this.multiActive == false ) {
 				var _ = this;
-				this.ActiveSource.each(function(wasActive){
+				this.ContainerActiveKeys.each(function(wasActive){
 					_.inactive(wasActive);
 				});
 			}
 			//액티브 된 이벤트를 전달
 			var loadArguments = Array.prototype.slice.call(this);
 			loadArguments.shift();
-			this._triggingActiveEvents(this.Source[name],name,"active",loadArguments);
-			this.ActiveSource.push(name);
+			this._triggingActiveEvents(this.ContainerPlaceholder[name],name,"active",loadArguments);
+			this.ContainerActiveKeys.push(name);
 		},
 		inactive:function(name){
-			if( this.ActiveSource.has(name)) {
-				this.ActiveSource.remove(name);
-				this._triggingInactiveEvents(this.Source[name],name);
+			if( this.ContainerActiveKeys.has(name)) {
+				this.ContainerActiveKeys.remove(name);
+				this._triggingInactiveEvents(this.ContainerPlaceholder[name],name);
 			}
 		},
-		getActiveContainerName:function(){
-			return this.LoaderCurrent;
-		},
-		getActiveContainerURL:function(){
-			return this.Source[this.LoaderCurrent];
+		inactiveAll:function(){
+			var _ = this;
+			this.ContainerActiveKeys.each(function(name){
+				this._triggingInactiveEvents(this.ContainerPlaceholder[name],name);
+			});
+			this.ContainerActiveKeys.clear();
 		}
-	},function(containers,loadBefore){
-		//이벤트를 셋팅함
-		this._super();
-		//
-		this.Source = {};
-		
-		//컨테이너 추가;
+	},function(containers,baseParam){
+		//컨테이너 추가;	
 		var _ = this;
-		PROPEACH(containers,function(container,key){ _.addContainer(container,key); });
-		
-		//
-		this.multiActive = false;
-		//
-		this.ActiveSource = new AArray();
-		
-		CALL(loadBefore,this,this);
+		this._super(baseParam,function(){
+			PROPEACH(containers,function(container,key){ 
+				_.addContainer(container,key); 
+			});
+			this.multiActive = false;
+		});
 	});
 	
-	extendModule("ContainerEvents","Loader",{
-		clear:function(){
-			if(this.LoaderCurrent) {
-				this.LoaderViews[this.LoaderCurrent] = new AArray(this.LoaderContainer.children).each(function(el){ ELREMOVE(el); }); 
-			} 
-			return this;
+	extendModule("LoadContainerBase","NavigationController",{
+		_inactiveActivatedContents:function(removeInPlaceholder){
+			var _ = this;
+			this.ContainerActiveKeys.each(function(activatedKey){
+				_.saveContainerContents(_.ContainerPlaceholder[activatedKey].children,activatedKey);
+				_._triggingInactiveEvents(_.ContainerPlaceholder[activatedKey],activatedKey);
+				if(removeInPlaceholder) _.ContainerPlaceholder[activatedKey].innerHTML = "";
+			});
+			this.ContainerActiveKeys.clear();
 		},
-		clearSource:function(){
-			this.clear();
-			this.LoaderCurrent = undefined;
-			this.LoaderViews   = {};
-			return this;
+		//무조건 새로 불러옴
+		load:function(loadKey){
+			if(loadKey in this.Source){
+				var _             = this;
+				var loadArguments = Array.prototype.slice.call(arguments,undefined,1);
+				
+				//이전 컨테이너를 Inactive한다고 통보
+				this._inactiveActivatedContents(true);
+				
+				return this.loadHTML(loadKey,this.Source[loadKey],function(key,doms){
+					ELAPPEND(_.ContainerPlaceholder[key],doms);
+					ELSCRIPTSTART(_.ContainerPlaceholder[key]);
+					_.ContainerActiveKeys.push(key);
+					_._triggingActiveEvents(_.ContainerPlaceholder[key],key,"load active",loadArguments);
+				});	
+			} else {
+				console.warn("불러올 소스의 경로가 존재하지 않습니다. => ",loadKey)
+			}
 		},
-		statusComplete:function(appearName,openOrLoad,userArgs){
-			// 로드가 완료되었을때
-			if( openOrLoad == "load"){
-				APPLY(this.ContainerEvents.AllLoadEvent,this.LoaderContainer,userArgs);
-				APPLY(this.ContainerEvents.ContainerLoadEvents[appearName],this.LoaderContainer,userArgs);
-			} 
-			APPLY(this.ContainerEvents.AllActiveEvent,this.LoaderContainer,userArgs);
-			APPLY(this.ContainerEvents.ContainerOpenEvents[appearName],this.LoaderContainer,userArgs);
-		},
-		// load
-		// navname, [onen|load], starter method
-		statusWillChange:function(starter) { 
-			// 시작하기전 이전뷰가 사라진다고 통보
-			APPLY(this.ContainerEvents.AllInactiveEvent,this.LoaderContainer);
-			APPLY(this.ContainerEvents.ContainerInactiveEvents[this.LoaderCurrent],this.LoaderContainer);
+		active:function(loadKey){
+			//불러와있다면 아무것도 실행하지 않음
+			if( this.ContainerActiveKeys.has(loadKey) ) return false;
 			
-			// 로드 시작
-			CALL(starter,this);
+			//파라메터를 배열로 변환
+			var openArguments = Array.prototype.slice.call(arguments);
+			
+			//로드한 컨텐츠가 아예 존재하지 않으면 load를 진행한다.
+			var loadedHTMLContents = this.loadContainerContents(loadKey);
+			if(!loadedHTMLContents) return this.load.apply(this,openArguments);
+			
+			//이전 컨테이너를 Inactive한다고 통보
+			this._inactiveActivatedContents(true);
+			
+			ELAPPEND( this.ContainerPlaceholder[loadKey], loadedHTMLContents );
+			this.ContainerActiveKeys.push(loadKey);
+			this._triggingActiveEvents(this.ContainerPlaceholder[loadKey],loadKey,"active",openArguments);
+			return true;
 		},
 		// 현재 열려있는 페이지를 강제적으로 링크파라메터로 불러옴
 		link: function (linkText){
-			if(this.LoaderCurrent){
-				this.Source[this.LoaderCurrent] = linkText;
-				this.load.apply(this,new AArray(arguments).subarr(1).insert(this.LoaderCurrent).toArray());
-			} else {
-				console.error("불러진 컨텐츠가 없습니다.");
-			}
-		},
-		//무조건 새로 불러옴
-		load:function(loadEnum){
-			
-			if(loadEnum in this.Source){
-				//전달되는 파라메터 입니다.
-				var loadArguments = Array.prototype.slice.call(arguments);
-				loadArguments.shift();
-				
-				//이전 컨테이너가 Inactive된다고 통보
-				this._triggingInactiveEvents(this.LoaderContainer,this.LoaderCurrent);
-				
-				this.clear();
-				this.LoaderCurrent = loadEnum;
-				var own            = this;
-				var loadPath       = this.Source[loadEnum];
-				
-				//함수일때
-				if(typeof loadPath === "function"){
-					var result = loadPath(loadEnum);
-					if(ISELNODE(result) || (typeof result === "string") ) loadPath = result;
-				}
-				
-				//ELEMENT(s) or URL
-				if( typeof loadPath === "string" ){
-					_Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") +_Util.base36Random(2),{
-						"dataType":"dom",
-						"success":function(doms){
-							new AArray(doms).each(function(el){ ELAPPEND(own.LoaderContainer,el); });
-							ELSCRIPTSTART(own.LoaderContainer);
-							own._triggingActiveEvents(own.LoaderContainer,loadEnum,"load active",loadArguments);
-						},
-						"error":function(){
-							console.warn("Loader::",loadPath,"데이터를 읽어들이는데 실패하였습니다");
-						}
-					});
-				} else {
-					var elfind = FIND(loadPath);
-					if( elfind.length < 1 ){
-						console.error("Loader::load 불러올 엘리먼트가 존재하지 않습니다. => ",loadPath);
-					} else {
-						new AArray(elfind).each(function(el){ ELAPPEND(own.LoaderContainer,el); });
-						ELSCRIPTSTART(own.LoaderContainer);
-						own._triggingActiveEvents(own.LoaderContainer,loadEnum,"load active",loadArguments);
-					}
-				}
-				return true;
-			} else {
-				console.error("Loader::load::정의되지 않은 Enum을 호출할수 없습니다. => ",loadEnum,this);
-				return false;
-			}
-			return false;
-		},
-		//불러와있다면 아무것도 실행하지 않음
-		active:function(loadEnum){
-			if(this.LoaderCurrent !== loadEnum) if(loadEnum in this.LoaderViews) {
-				var openArguments = Array.prototype.slice.call(arguments);
-				openArguments.shift();
-				
-				var own = this;
-				
-				this._triggingInactiveEvents(this.LoaderContainer,this.LoaderCurrent);
-				
-				//멀티컨테이너 옵션에서 clear는 실행하지 않습니다.
-				this.clear();
-				this.LoaderCurrent = loadEnum;
-				this.LoaderViews[loadEnum].each( function(el){ ELAPPEND(own.LoaderContainer,el); });
-				this._triggingActiveEvents(own.LoaderContainer,loadEnum,"active",openArguments);
-				return true;
-			} else {
-				return this.load.apply(this,Array.prototype.slice.call(arguments));
-			}
-			return false;
-		},
-		//처음 로드될때
-		getActiveContainerName:function(){
-			return this.LoaderCurrent;
-		},
-		getActiveContainerURL:function(){
-			return this.Source[this.LoaderCurrent];
+			loadHTML(linkText,undefined,function(key,doms){
+				var placeholder = this.ContainerPlaceholder[this.ContainerActiveKeys.last()];
+				placeholder.innerHTML = "";
+				ELAPPEND(placeholder,doms);
+			});
 		}
-	},function(container,navs,loadBefore){
-		//이벤트를 셋팅함
-		this._super();
-		
+	},function(container,baseParam){
 		// context    => 컨텐츠를 채울 곳
 		// navs       => object: key value로 해당이 호출되면 context에 내용이 체워짐
-		this.Source          = navs;
-		this.LoaderCurrent   = undefined;
-		this.LoaderContainer = ZFIND(container);
-		this.LoaderViews     = {};
-		CALL(loadBefore,this,this);
+		//소스셋팅
+		var _container = ZFIND(container),_ = this;
+		if (_container){
+			this._super(baseParam,function(){
+				//defaultContainer를 보존합니다.
+				var dcf = "defaultContainer";
+				this.addContainer(_container,dcf);
+				this.saveContainerContents(_container.children,dcf);
+				this.ContainerActiveKeys.push(dcf);
+			});
+			//다른컨테이너도 플레이스 홀더 설정을 합니다.
+			PROPEACH(this.Source,function(value,key){ _.addContainer(_container,key); });
+		} else {
+			console.error("NavigationController::해당 컨테이너를 찾을수 없습니다. Navigation Controller의 작동을 완전히 중지합니다.=> ",container);
+		}
 	});
 	
 	makeSingleton("DataContextNotificationCenter",{
@@ -5344,8 +5458,8 @@
 		whenSelectItem:function(m)  { if(typeof m === "function") this.shouldSelectItem = m; },
 		whenDeselectItem:function(m){ if(typeof m === "function") this.shouldDeselectItem = m; },
 		whenSelectToggle:function(se,de){ this.whenSelectItem(se); this.whenDeselectItem(de); },
-		"var!shouldSelectItem"  :function(node,depth){ ELSTYLE(node,"background","#dae8f2"); },
-		"var!shouldDeselectItem":function(node,depth){ ELSTYLE(node,"background","none") }
+		"+shouldSelectItem"  :function(node,depth){ ELSTYLE(node,"background","#dae8f2"); },
+		"+shouldDeselectItem":function(node,depth){ ELSTYLE(node,"background","none") }
 	},function(renderDepth){
 		var args = Array.prototype.slice.call(arguments);
 		
@@ -5560,7 +5674,7 @@
 	});
 	
 	makeModule("DataContextViewController",{
-		"var!events":{
+		"+events":{
 			"up":function(managedData,arg){
 				if(typeof arg === "function") {
 					if( arg(managedData,element) != false ) managedData.managedDataDecrease();
@@ -5840,8 +5954,8 @@
 		//이벤트
 		whenItemDidChange:function(m){ if((typeof m === "function") || m == undefined) this.selectItemDidChange = m; },
 		whenDataDidChange:function(m){ if((typeof m === "function") || m == undefined) this.dataDidChange = m; },
-		"var!selectItemDidChange":undefined,
-		"var!dataDidChange":undefined
+		"+selectItemDidChange":undefined,
+		"+dataDidChange":undefined
 	},function(view,managedData,viewModel){
 		this.view          = ZFIND(view);
 		if(managedData)this.setManagedData(managedData);

@@ -1,15 +1,12 @@
 @charset "UTF-8";
 @import 'nody-kit';
 /*
-	modernizer support
+	Nody modernize support kit
 	auther        : hojugn ahn (https://github.com/labeldock/Nody_SASS)
 	target-compatibility : IE8+;
 	version       : 2.0
 */
-
-/*****************************
- mordernizer */
-/* must none boxsizing-target is table tags! */
+/* mordernizer */
 *{
 	&,&:before,&:after {
 		-webkit-box-sizing: border-box; 
@@ -17,21 +14,38 @@
 		box-sizing: border-box;
 	}
 }
-html,body { margin:0px;padding:0px; }
+html,body { 
+	-webkit-font-smoothing: antialiased;
+	font-smoothing: antialiased;
+	font-smooth: always;
+	margin:0px;
+	padding:0px;
+}
+
 h1,h2,h3,h4,h5,h6 { margin-top:0px; }
 img { border:none; }
-a   { text-decoration:none; }
+a   { text-decoration:none; &:hover { text-decoration:none; }}
 *:focus { outline:none !important; }
 
 /*****************************
  HTML5fix */
 article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary, command, fieldset{ display:block; }
 audio,canvas,progress,video {@include inline-block;}
-template,.hidden,.template {
-	@include show-toggle-veriant(".show",block);
-	&.inline { @include show-toggle-veriant(".show",inline); }
-	&.inline-block { @include show-toggle-veriant(".show",inline-block); }
+template,.hidden,.template,[hidden] {
+	display:none;
 }
+
+tt, code, kbd, em, samp, s, cite, b, strong, dfn, i {
+	display:inline;
+	font-family:inherit;
+	font-style: normal;
+	text-decoration:none;
+	font-weight:normal;
+	padding:0;
+	margin:0;
+}
+
+input,button,select,textarea {  font-family: inherit;  font-size: inherit;  line-height: inherit;}
 
 /* baseline */
 .baseline { @include baseline-veriant(auto,"div,th,td"); }
@@ -48,16 +62,31 @@ menu,ul.menu { @include menu-veriant; }
 */
 .frame,.layer  { position:relative; }
 .frame         { overflow:hidden; }
-.frame-scroll  { overflow:auto;-webkit-overflow-scrolling: touch; }
+.frame-scroll  { overflow:auto;-webkit-overflow-scrolling: touch; overflow-scrolling:touch; }
 .layer-under   { display:block;position:relative; }
-.layer-over    { position:absolute;top:0px;       }
+.layer-over    { position:absolute;top:0px;left:0;width:100%;height:100%; }
 /*****************************
  - table
  - toolbar
  - bar
  - caption
 */
-fieldset,.layout { @include layout-container-veriant(expend); }
+fieldset,.layout { 
+	@include layout-veriant();
+}
+.cell-layout { 
+	@include cell-layout-veriant("layout");
+}
+.fieldset {
+	display:table;
+	> div.row {
+		display:table-row;
+		> div.cell {
+			width:auto;
+			display:table-cell;
+		}
+	}
+}
 
 /********
 block */
@@ -136,6 +165,8 @@ $xl:20px;
 .muted { color:#777 !important;}
 .caption { color:#777; padding-top:3px; padding-bottom:3px !important;}
 
+.heightfix{@include heightfix;}
+
 /*****************************
  group layout */
 .inline-group,.input-group,.text-group,.box{ display:block;}
@@ -191,6 +222,9 @@ $xl:20px;
 
 /********
  table */
+table.grid {
+	@include table-veriant();
+}
 .table-fixed{table-layout:fixed;}
 .table-frame{
 	width:100%;
@@ -267,5 +301,5 @@ span.ellipsis { @include inline-block;margin:0px;padding:0px;width:100%; }
 					 ('section','section,.section'),
 					 ('article','article,.article'),
 					 ('aside','aside,.aside'),
-{ @include panel-veriant($model,$sel); }
+{ #{$sel} {@include panel-veriant($model);} }
 

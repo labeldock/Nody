@@ -1,5 +1,7 @@
 <h1>Nody.js</h1>
 
+<p>Node + Friendly</p>
+
 <h1>Sample</h1>
 
 <p><a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a></p>
@@ -810,7 +812,7 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <p>```javascript
         makeModule(&ldquo;Dog&rdquo;,{
-            &ldquo;var!name&rdquo;:&ldquo;Dog name&rdquo;
+            &ldquo;+name&rdquo;:&ldquo;Dog name&rdquo;
         },function(){});</p>
 
 <pre><code>    var dog = new Dog();
@@ -850,6 +852,8 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 <li>TONUMBER가 아예 숫자만 인식함</li>
 <li>DATA와 PROP의 정의가 명확하짐 (array,attributes)</li>
 <li>이벤트 등록과 관련된 api는 when.. 으로 시작하도록 변경중</li>
+<li>인스턴스 예약어 &lsquo;var!&rsquo; 가 &lsquo;+'로 바뀌었습니다.</li>
+<li>추상적인 Contexts와 Loader를 더 구체적인 ActiveController, NavigationController로 구체화 시켜 실용성 증가시킴.</li>
 </ul>
 
 

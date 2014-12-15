@@ -665,7 +665,7 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 
 ```javascript
         makeModule("Dog",{
-            "var!name":"Dog name"
+            "+name":"Dog name"
         },function(){});
 		
 		var dog = new Dog();
@@ -698,6 +698,9 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 - TONUMBER가 아예 숫자만 인식함
 - DATA와 PROP의 정의가 명확하짐 (array,attributes)
 - 이벤트 등록과 관련된 api는 when.. 으로 시작하도록 변경중
+- 인스턴스 예약어 'var!' 가 '+'로 바뀌었습니다.
+- 추상적인 Contexts와 Loader를 더 구체적인 ActiveController, NavigationController로 구체화 시켜 실용성 증가시킴.
+
 
 #### 0.8 변동사항 # 
   - template 태그 관련 지원 강화
