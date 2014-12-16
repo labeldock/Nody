@@ -693,6 +693,10 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 <a name="version-info"/>
 ## Version info #
 
+#### 0.10 변동및 작업 # 
+- Nody모듈과 기능이 중복된 Element 모듈 제거
+- 0.8때 제거된 ViewController가 복구되었음. 버전을 거듭하면서 api가 캐쥬얼하게 바뀔 예정.
+
 #### 0.9 변동및 작업 # 
 - Loader 모듈의 더 추상적인 모듈인 Containers모듈 추가
 - TONUMBER가 아예 숫자만 인식함
@@ -701,20 +705,3 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 - 인스턴스 예약어 'var!' 가 '+'로 바뀌었습니다.
 - 추상적인 Contexts와 Loader를 더 구체적인 ActiveController, NavigationController로 구체화 시켜 실용성 증가시킴.
 
-
-#### 0.8 변동사항 # 
-  - template 태그 관련 지원 강화
-    - _Tamplate 모듈이 추가되었습니다.	
-	- MAKETEMP 함수로 Template태그 작성 가능
-  - 몇몇 장황한 함수이름 변경
-  - ZSTRING, ZNUMBER 함수 추가
-  - Nody의 기본 셀렉터 엔진을 표준에 준하게 하고 querySelectAll에 의존하도록 함. (수십배 빨리짐)
-  - 노드 작업시 캐쉬를 적극 사용하여 최대 150배 정도 빨라짐
-  - Contexts 모듈이 간소화되었습니다.
-  
-#### 0.7 변동사항 #
-  - CSS 스타일 노드만들기 함수 MAKE로 통일 
-  - 사용하기 어려운 모듈 다시 디자인 ZString 모듈 추가
-  - 사용하기 장황한 모듈 다시 디자인 IS, AS함수 추가
-  - 문제가 많던 이전 MVVM모듈 제거 새로 작성된 DataContext, ManagedData, ViewModel, DataContextViewController이 추가 (메모리 관리 문제, 랜더링 문제 해결)
-  - 노드의 Dataset접근애 친화적이게 변경

@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.10");
-	var build   = new String("855");
+	var version = new String("0.10.1");
+	var build   = new String("857");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -640,6 +640,9 @@
 			switch(typeof d){ case "number":return d;case "string":var r=d*1;return isNaN(r)?0:r;break; }
 			return 0;
 		},
+		"PADLEFT":function(nr,n,str){
+			 return new Array(n-new String(nr).length+1).join(str||'0')+nr;
+		},
 		//1:길이와 같이 2: 함수호출
 		"TIMES":function(l,f){ l=TONUMBER(l); for(var i=0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
 		"TIMESMAP":FUT.CONTINUTILITY(function(l,f){ l=TONUMBER(l); var r = []; for(var i=0;i<l;i++) r.push(f(i)); return r; },2),
@@ -666,6 +669,7 @@
 		},2),
 		"DATAINDEX":function(data,compare){ var v = TOARRAY(data); for(var i in v) if(compare == v[i]) return TONUMBER(i); },
 		//i 값이 제귀합니다.
+		"REVERSEINDEX":function(index,maxIndex){ return (maxIndex-1) - index },
 		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 		"SPRINGINDEX":function(index,maxIndex){ index = TONUMBER(index); maxIndex = TONUMBER(maxIndex); return (index == 0 || (Math.floor(index/maxIndex)%2 == 0))?index%maxIndex:maxIndex-(index%maxIndex); },
 		//오브젝트의 key를 each열거함
@@ -742,8 +746,21 @@
 			}
 			return target;
 		},
+		//
 		// 복사
-		"CLONE"  : function(t) { 
+		"CLONE"  : function(t,d) { 
+			if(d) {
+				if(ISARRAY(t)) {
+					if(!ISARRAY(d)) { d = [] };
+					for (var i=0,l=t.length;i<l;i++) d.push( ((typeof t[i] === "object" && t[i] !== null ) ? CLONE(t[i]) : t[i]) )
+					return d;
+				} else {
+					if(d == true) { d = {} };
+			        for (var p in t) (typeof t[p] === "object" && t[p] !== null && d[p]) ? CLONE(t[p],d[p]) : d[p] = t[p];
+					return d;
+				}
+				
+			}
 			switch(typeof t){
 				case "undefined": return t; break;
 				case "number": return t+0; break;
@@ -4032,8 +4049,9 @@
 			for(var i=0,l=findNodes.length;i<l;i++) {
 				var didRemoveClassText = EL.CommonAString.set(findNodes[i].getAttribute("class")).getRemoveModel(removeClass).trim();
 				if( !didRemoveClassText.length ) {
-					findNodes[i].removeAttribute(removeClass);
+					findNodes[i].removeAttribute("class");
 				} else {
+					
 					findNodes[i].setAttribute("class",didRemoveClassText);
 				}
 			} 
@@ -4312,11 +4330,42 @@
 		this.CommandFilter = typeof filter === "object" ? filter : {} ;
 	});
 	
-	//하나의 엘리먼트만 컨트롤
-	makeModule("Element",{
-		addClass    : function(m){ ELATTR(this.Source,"class",_String(ELATTR(this.Source,"class")).getAddModel(m)); return this; },
-		removeClass : function(m){ ELATTR(this.Source,"class",_String(ELATTR(this.Source,"class")).getRemoveModel(m)); return this; },
-		hasClass    : function(m){ return _String(ELATTR(this.Source,"class")).hasModel(m); },
+	//value 값이 있는 엘리먼트 컨트롤
+	makeModule("Inside",{
+		__setInputConfig:function(){ ELATTR(this.Source,"autocomplete","off"); },
+		__maskIgnoreKeyCode:[9,16,17,18,27,36,37,38,39,40,91,92],
+		__maskApply:function(name){
+			this.__setInputConfig();
+			var ignoreMaskKeyCodes = new AArray(this.__maskIgnoreKeyCode);
+			var params             = new AArray(arguments).subarr(1).toArray();
+			var eventTarget        = this.Source;
+			ELON(eventTarget,"keydown",function(e){
+				if( !ignoreMaskKeyCodes.has(e.keyCode) ){
+					setTimeout(function(){
+						var n = new ANumber(ELVALUE(eventTarget));
+						ELVALUE(eventTarget,n[name].apply(n,params));
+					},0);
+				}
+			});
+		},
+		getDateValue:function(format){
+			var dateValue = ELVALUE(this.Source);
+			return IS(dateValue,/(\d+)\D+(\d+)\D+(\d+)/,_String(dateValue).printf(/(\d+)\D+(\d+)\D+(\d+)/,[1],"년 ",[2],"월 ",[3],"일"),dateValue);
+		},
+		maskNumber:function(mask,reverse){
+			if(this.Source) return this.__maskApply("getNumberTextFormat",mask,reverse); 
+			return console.warn("Inside:: inside source invalid");
+		},
+		maskPhoneNumber:function(p,s){ 
+			if(this.Source) return this.__maskApply("getPhoneNumber"); 
+			return console.warn("Inside:: inside source invalid");
+		},
+		maskDecimal:function(p,s){ 
+			if(this.Source) return this.__maskApply("getDecimal",p,s); 
+			return console.warn("Inside:: inside source invalid");
+		},	
+		is:function(test,tb,fb){ return IS(this.getValue(),test,tb,fb); },
+		as:function(test,tb,fb){ return AS(this.getValue(),test,tb,fb); },
 		print:function(beforePrint,afterPrint){
 			var targetWindow   = window.open('','','left=0,top=0,width=1,height=1,toolbar=0,scrollbars=0,status =0');
 			var targetDocument = targetWindow.document;
@@ -4353,45 +4402,353 @@
 		if(!this.Source) console.warn("Inside의 초기값을 설정하지 못했습니다. command =>",el);
 	});
 	
-	//value 값이 있는 엘리먼트 컨트롤
-	extendModule("Element","Inside",{
-		__setInputConfig:function(){ ELATTR(this.Source,"autocomplete","off"); },
-		__maskIgnoreKeyCode:[9,16,17,18,27,36,37,38,39,40,91,92],
-		__maskApply:function(name){
-			this.__setInputConfig();
-			var ignoreMaskKeyCodes = new AArray(this.__maskIgnoreKeyCode);
-			var params             = new AArray(arguments).subarr(1).toArray();
-			var eventTarget        = this.Source;
-			ELON(eventTarget,"keydown",function(e){
-				if( !ignoreMaskKeyCodes.has(e.keyCode) ){
-					setTimeout(function(){
-						var n = new ANumber(ELVALUE(eventTarget));
-						ELVALUE(eventTarget,n[name].apply(n,params));
-					},0);
-				}
+	//피드가능한 노드오브젝트 인터페이스
+	makeModule("FeedNode",{
+		//최상위 노드에게 메서드 호출
+		feedFromTop:function(f,d){ d=(typeof d === "number")?d++:0; if(this.NodeParent) return this.NodeParent.feedToTop(f,d); return f.call(this,d); },
+		//아래부터 현재까지 메서드 호출
+		feedup:function(ff,depth,infinityTop){
+			depth = (typeof depth === "undefined" ? 0 : depth ); 
+			if(depth == infinityTop) return undefined;
+			var feedData = [];
+			this.NodeChildrens.each(function(feednode){
+				var feed = feednode.feedup.call(feednode,ff,depth + 1,infinityTop);
+				if(typeof feed !== undefined) feedData.push(feed);	
 			});
+			return ff.call(this,feedData,depth);
 		},
-		getDateValue:function(format){
-			var dateValue = ELVALUE(this.Source);
-			return IS(dateValue,/(\d+)\D+(\d+)\D+(\d+)/,_String(dateValue).printf(/(\d+)\D+(\d+)\D+(\d+)/,[1],"년 ",[2],"월 ",[3],"일"),dateValue);
+		//현재부터 아래로 호출
+		feeddown:function(ff,cutIndex,depth,feedData){
+			depth = (typeof depth === "undefined" ? 0 : depth ); 
+			var feedData = [];
+			if(depth == cutIndex) return undefined;
+			this.NodeChildrens.each(function(feednode){
+				var feed = feednode.feeddown.call(feednode,ff,cutIndex,depth + 1);
+				if(typeof feed !== undefined) feedData.push(feed);
+			});
+			return ff.call(this,feedData,depth);
 		},
-		maskNumber:function(mask,reverse){
-			if(this.Source) return this.__maskApply("getNumberTextFormat",mask,reverse); 
-			return console.warn("Inside:: inside source invalid");
+		injectNode:function(){ return AArray.prototype.inject.apply(new AArray(this.NodeChildrens),Array.prototype.slice.call(arguments)); },
+		isEqualNode:function(obj){ return (obj instanceof this.constructor); },
+		getChildNodes:function(){ return this.NodeChildrens.clone(); },
+		removeChildNode:function(obj){ return this.NodeChildrens.remove(obj); },
+		addChildNode:function(obj,n){
+			if(this.isEqualNode(obj)){ this.NodeChildrens.push(obj,n); obj.setParentNode(this,false); return true; } 
+			console.error("NodeInterface error #1",obj); return false;
 		},
-		maskPhoneNumber:function(p,s){ 
-			if(this.Source) return this.__maskApply("getPhoneNumber"); 
-			return console.warn("Inside:: inside source invalid");
+		setParentNode:function(obj,n){
+			if(n == false) {
+				this.NodeParent = obj;
+				return true;
+			} else {
+				if(this.isEqualNode(obj)){
+					if(this.NodeParent) this.NodeParent.removeChildNode(this);
+					this.NodeParent = obj;
+					this.NodeParent.addChildNode(this);
+				}
+			}
 		},
-		maskDecimal:function(p,s){ 
-			if(this.Source) return this.__maskApply("getDecimal",p,s); 
-			return console.warn("Inside:: inside source invalid");
-		},	
-		is:function(test,tb,fb){ return IS(this.getValue(),test,tb,fb); },
-		as:function(test,tb,fb){ return AS(this.getValue(),test,tb,fb); }
-	},function(el){
-		this._super(el);
+		getParentNode:function(){ return this.NodeParent; },
+		getTopNode:function(){ var topNode; this.feedFromTop(function(){ topNode = this; }); return topNode; }
+	},function(){
+		this.NodeChildrens = _Object();
+		this.NodeParent    = undefined;
 	});
+
+	extendModule("FeedNode","ViewController",{
+			//override tree interface
+			setTreeParent:function(p){ if(this._super(p)){ this.parentViewController = p; return true; } return false; },
+			//debuging
+			trace:function(){
+				console.log(":: ViewController :: trace :: start");
+				console.log(":",this.Parent,"::parent::");
+				this.Childrens.each(function(o,k){
+					console.log(":",k,"  => ",o);
+				});
+				console.log(":: ViewController :: trace :: end");
+			},
+			// view controller
+			// controller gs
+			addChildViewController:function(context,property,viewStatus){
+				var nvc     = new ViewController(context,property,viewStatus,this);
+				var nvcName = PASCAL(ELTRACE(nvc.view,"id"));
+				this.addChildNode(nvc,nvcName);
+				return nvc;
+			},
+			getChildViewController:function(s){ 
+				return this.NodeChildrens.Source[s];
+			},
+			hasChildViewController:function(s){ return s in this.NodeChildrens.Source; },		
+			// view controller
+			// status
+			//이 값은 status가 순간적으로 바뀔때에만 구할수 있습니다.
+			getPreviousStatus:function(){ return this.PreviousViewStatus; },
+			//상환관련
+			getStatus:function(status){
+				if( typeof status === "string" || typeof status === "number" ){
+					return this.CurrentViewStatus == status;
+				} else {
+					return this.CurrentViewStatus;
+				}
+			},
+			setStatus:function(setStatus){
+				this.CurrentViewStatus = status;
+			},
+			isStatus:function(statusName){ 
+				var inspects = TOARRAY(statusName," ");
+				for(var i=0,l=inspects.length;i<l;i++) if(this.CurrentViewStatus == statusName) return true;
+				return false;
+			},
+			notStatus:function(statusName){ return !this.isStatus(statusName); },
+			frameStatusSetter:function(setStatus,forced,touched){
+				if(typeof setStatus === "string" || typeof setStatus === "number"){
+					if( IS(setStatus,"text>0") ) {
+						if(typeof setStatus === "string") setStatus = setStatus.trim();
+						if(forced || this.CurrentViewStatus !== setStatus){
+							if(setStatus in this.ViewStatus){
+								if(typeof this.ViewStatus[setStatus] === "function"){
+									this.PreviousViewStatus = this.CurrentViewStatus;
+									this.CurrentViewStatus  = setStatus;
+									var result               = this.ViewStatus[setStatus].apply(this,_Array(arguments).subarr(3).toArray());
+									this.PreviousViewStatus = undefined;
+									return result;
+								} else {
+									if(!touched) console.warn("FrameController::frameStatusSetter:: 처음 정의의 다음의 status가 반드시 함수로 정의되어야 합니다. =>",setStatus);
+								}
+							} else {
+								if(!touched) console.warn("FrameController::frameStatusSetter:: 정의되지 않은 status를 호출하였습니다.",setStatus,this.ViewStatus);
+							}
+						}
+					} else {
+						if(!touched) console.warn("FrameController::frameStatusSetter:: status값이 올바르지 않습니다. (문자형 필요)",setStatus);
+					}
+				} else {
+					console.warn("FrameController::frameStatusSetter:: 불러올 status값은 숫자나 문자여야 합니다. 올바르지 않습니다.",setStatus);
+				}
+				if(typeof setStatus === "string" || typeof setStatus === "number"){
+					if(typeof setStatus === "string") setStatus = setStatus.trim();
+					if( AS(setStatus,"text>0") ) if(setStatus in this.ViewStatus) if(typeof this.ViewStatus[setStatus] === "function") {
+						var result = this.ViewStatus[setStatus].apply(this,_Array(arguments).subarr(1).toArray());
+						this.CurrentViewStatus = setStatus;
+						return result;
+					}
+				}
+			},
+			// 불러운 내용도 다시 불러온다 // 내용을 부른다 // 내용을 부를때 에러가 나도 표시하지 않는다
+			loadChildStatus:function(){
+				var args = Array.prototype.slice.call(arguments);
+				this.NodeChildrens.each(function(frame){ frame.setupStatus.apply(frame,args); });
+				return this;
+			},
+			touchChildStatus:function(){
+				var args = Array.prototype.slice.call(arguments);
+				this.NodeChildrens.each(function(frame){ frame.touchStatus.apply(frame,args); });
+				return this;
+			},
+			//칠드런까지 함께 설정한다.
+			setupStatus:function() { 
+				var args = Array.prototype.slice.call(arguments);
+				var statusValue = args.shift();
+				args.unshift(statusValue,true,true);
+				this.frameStatusSetter.apply(this,args);
+				this.loadChildStatus.apply(this,Array.prototype.slice.call(arguments));
+				return 
+			},
+			loadStatus :function() { 
+				var args = Array.prototype.slice.call(arguments);
+				var statusValue = args.shift();
+				args.unshift(statusValue,true,false);
+				return this.frameStatusSetter.apply(this,args); 
+			},
+			status     :function() { 
+				var args = Array.prototype.slice.call(arguments);
+				var statusValue = args.shift();
+				args.unshift(statusValue,false,false);
+				return this.frameStatusSetter.apply(this,args); 
+			},
+			touchStatus:function() { 
+				var args = Array.prototype.slice.call(arguments);
+				var statusValue = args.shift();
+				args.unshift(statusValue,false,true);
+				return this.frameStatusSetter.apply(this,args); 
+			},
+			syncStatusWith:function(moduleName){
+				var module = this.parentViewController.get(moduleName);
+				if(module) {
+					var args = Array.prototype.slice.call(arguments);
+					args.shift();
+					args.unshift(this.getStatus());
+					return module.setupStatus.apply(module,args);
+				} else {
+					console.error("ViewController::syncStatusWith 동기화할 대상을 찾을수 없습니다. => ",moduleName);
+				}
+			},
+			//w is wrapper (function)
+			find      : function(s,w) { return FIND(s,       this.ControllerElement, w); },
+			findClass : function(s,w) { return this.find("."+s.split(" ").join("."), w); },
+			findName  : function(s,w) { return this.find("[name="+s+"]",             w); },
+			findId    : function(s,w) { return this.find("#"+s,                      w); },
+			parentFind: function(s,w) { var p = this.getTreeParent();    if(!p){ console.warn("부모가 존재하지 않습니다"); return this.find(s,w); } else { return p.find(s,w) } },
+			topFind   : function(s,w) { var p = this.getTreeTopParent(); if(!p){ console.warn("부모가 존재하지 않습니다"); return this.find(s,w); } else { return p.find(s,w) } },
+			//control view
+			form      : function(a,b){ return new Form(this.ControllerElement,a,b); },
+			controls  : function(a)  { return new Controls(a,this.ControllerElement); },
+			// view controller
+			// default Data
+			//default Data가 있는지 확인
+			hasDefaultData:function(name){
+				name = (typeof name === "string" || typeof name === "number") ? name  : "defualtData" ;
+				return (typeof this.DefaultDataModels[name] === "undefined") ? false : true ;
+			},
+			setDefaultDataWithName:function(data,name){
+				if(typeof name === "string" || typeof name === "number"){
+					this.DefaultDataModels[name] = data;
+				} else {
+					console.warn("FrameController::setDefaultDataWithName 두번째 파라메터값은 반드시 String이나 Number이여야 합니다. param => ",data,name);
+				}
+			},
+			getDefaultDataList:function(){ return CLONE(this.DefaultDataModels); },
+			getDefaultData:function(index){
+				if( typeof index === "undefined") {
+					//아무거나 나옴
+					if("defualtData" in this.DefaultDataModels) return CLONE(this.DefaultDataModels[key]);
+					for(var key in this.DefaultDataModels) return CLONE(this.DefaultDataModels[key]);
+				} else {
+					return CLONE(this.DefaultDataModels[index]);
+				}
+			},
+			//
+			setControllerData:function(data){
+				this.FrameControllerHasData = data;
+				return this.FrameControllerHasData;
+			},
+			getControllerData:function(key){
+				if( typeof key === "undefined" ){
+					return this.FrameControllerHasData;
+				} else {
+					if(typeof this.FrameControllerHasData === "object"){
+						return this.FrameControllerHasData[key];
+					}
+				}
+			},
+			removeControllerData :function(){
+				delete this["FrameControllerHasData"];
+				return this;
+			},
+			//
+			hasControllerData :function(){ return (typeof this.FrameControllerHasData !== "undefined") },
+			//
+			setParentControllerData:function(data){
+				var pn = this.getParentNode();
+				if(pn) return pn.setControllerData(data);
+				console.warn("ViewController :: setParentControllerData :: 부모객체가 없는데 호출하였습니다.",this,data);
+			},
+			getParentControllerData:function(key){
+				var pn = this.getParentNode();
+				if(pn) return pn.getControllerData();
+				console.warn("ViewController :: getParentControllerData :: 부모객체가 없는데 호출하였습니다.",this,key);
+			},
+			removeParentControllerData:function(){
+				var pn = this.getParentNode();
+				if(pn) { pn.removeControllerData(); } else { console.warn("ViewController :: removeParentControllerData :: 부모객체가 없는데 호출하였습니다.",this); }
+				return this;
+			},
+			hasParentControllerData:function(){
+				var pn = this.getParentNode();
+				if(pn) { return pn.hasControllerData(); } 
+				console.warn("ViewController :: hasParentControllerData :: 부모객체가 없는데 호출하였습니다.",this);
+			},
+			//model controller
+			modelOfControllerData:function(){ if( this.hasControllerData () == true) return _Model(this.FrameControllerHasData); },
+			modelOfControllerView:function(){ if( typeof this.ControllerElement !== "undefined") return _Model(this.ControllerElement); },
+			//
+			updateControllerDataFilter:function(f) { this.FrameControllerUpdateDataFilter = f; return this; },
+			exportsControllerDataFilter:function(f){ this.FrameControllerExportsDataFilter = f; return this; },
+			//뷰에 있는 데이터를 데이터 모델로 가져옵니다.
+			updateControllerData:function(overwrite){
+				var d = this.modelOfControllerView().data()
+				if (typeof this.FrameControllerUpdateDataFilter === "function") d = this.FrameControllerUpdateDataFilter(d);
+			
+				if( this.hasControllerData () == false || overwrite == true){
+					this.setControllerData(d);
+				} else {
+					if(typeof this.FrameControllerHasData === "object"){
+						_Object(this.FrameControllerHasData).concat(d);
+					} else {
+						console.error("FrameController::다음 데이터에 updateControllerData를 실행 할 수 없습니다.",this.FrameControllerHasData);
+					}
+				}
+				if(typeof overwrite === "function"){
+					return overwrite(this.getControllerData());
+				} else {
+					return this.getControllerData();
+				}
+			},
+			//데이터 모델을 뷰로 뿌려줍니다.
+			exportsControllerData:function(){
+				if( this.hasControllerData () == true ){
+					var d = this.getControllerData();
+					if (typeof this.FrameControllerExportsDataFilter === "function") d = this.FrameControllerExportsDataFilter(d);
+					_Model(d).exports(this.ControllerElement);
+				} else {
+					console.warn("프레임 데이터가 존재하지 않아 뷰로 적용되지 못하였습니다.");
+				}
+			},
+			getMemberController:function(s){
+				var pn = this.getParentNode();
+				if(pn && (typeof s === "string" || typeof s === "number")){
+					if("get" in pn){
+						return pn.get(s);
+					} else {
+						console.warn("ViewController :: getMemberController :: parentViewController이 올바르지 않습니다. get이 존재하지 않음");
+					}
+				} else {
+					console.warn("ViewController :: getMemberController :: FrameController의 parentViewController이 존재하지 않거나 파라메터가 올바르지 않습니다. (parentViewController,param)",this.parentViewController,s);
+				}
+			}
+		},function(context,property,viewStatus,parentViewController){
+			this._super();
+			// view context
+			var c = ZFIND(context);
+			if( ISELNODE(c) == false ) console.error("FrameController::context => 현재 Context안에 해당 영역을 찾지 못했습니다. \ncontext는 고정적인 element에 지정하는것이 좋습니다. params =>",context,property,viewStatus);
+			this.ControllerElement = c;
+			this.view              = c;
+	
+			//status data
+			this.ViewStatus   = CLONE(TOOBJECT(viewStatus));
+			this.CurrentViewStatus = undefined;
+		
+			//attribute & default data
+			property = CLONE(TOOBJECT(property,"init"));
+			this.DefaultDataModels = {};
+			for(var key in property) {
+				var keySign = /([\#]+|)(.*)/.exec(key);
+				if(keySign[1] == ""){
+					if(key in this){
+						console.warn("FrameController:: error key => "+ key +" 추가 하려는 '메서드'는 이미 존재하는 메서드입니다. 추가할수 없습니다.");
+					} else {
+						this[key] = property[key];
+					}
+				} else {
+					if(keySign[2] in this.DefaultDataModels){
+						console.warn("FrameController:: error key => "+ key +" 추가 하려는 '기본 데이터'는 이미 존재하는 메서드입니다. 추가할수 없습니다.");
+					} else {
+						this.DefaultDataModels[keySign[2]] = CLONE(property[key]);
+					}
+				}
+			}
+			//parent
+			this.setTreeParent(parentViewController);
+		
+			//init
+			if( ("init" in this) && (typeof this.init === "function") ){
+				this.init.call(this,this,c,this.parentViewController);
+				delete this["init"];
+			}
+		},function(s){
+			return this.getChildViewController(s);
+		}
+	);
 	
 	// 컨텍스트 컨트롤러
 	makeModule("Contexts",{
@@ -4526,7 +4883,7 @@
 	extendModule("Contexts","ActiveController",{
 		whenWillActive:function(method){ this.ContextsEvents.willActive = method; return this; },
 		whenDidActive:function(method){ this.ContextsEvents.didActive = method; return this;},
-		whenDidInactive:function(){ this.ContextsEvents.didInactive = method; return this; },
+		whenDidInactive:function(method){ this.ContextsEvents.didInactive = method; return this; },
 		whenActiveToggle:function(am,im){ this.whenDidActive(am); return this.whenDidInactive(im); },
 		shouldActive:function(index,wait){
 			var _ = this;
@@ -4547,16 +4904,17 @@
 		this._super(cSel,sSel);
 		this.ContextsEvents = {};
 		this.ContextsEventName = (typeof selectEvent === "string") ? selectEvent : "click";
-		this.preventDefault = true;
+		this.preventDefault  = true;
+		this.allowAutoActive = true;
 		//
 		var _ = this;
-		this.onSelects(this.ContextsEventName,function(e){
+		this.onSelects(this.ContextsEventName,function(e,i){
 			if(_.preventDefault) e.preventDefault();
-			if( CALL(_.ContextsEvents.willActive,this) == false ) return;
-			ELADDCLASS(this,"active");
-			CALL(_.ContextsEvents.didActive,this);
+			if( CALL(_.ContextsEvents.willActive,this,e,i) == false ) return;
+			if(_.allowAutoActive) ELADDCLASS(this,"active");
+			CALL(_.ContextsEvents.didActive,this,i);
 		},function(){
-			ELREMOVECLASS(this,"active");
+			if(_.allowAutoActive) ELREMOVECLASS(this,"active");
 			CALL(_.ContextsEvents.didInactive,this);
 		});
 		//
@@ -5068,14 +5426,12 @@
 			if(typeof loadset !== "object") return console.error("loadAll이 중지되었습니다.");
 			var _ = this;
 			var successFire = new Fire(PROPLENGTH(loadset),function(){ CALL(success,_); });
-			console.log("loadWithProperty")
 			PROPEACH(loadset,function(loadPath,loadKey){
 				var placeholder = _.ContainerPlaceholder[loadKey];
 				if(!placeholder) {
 					successFire.touch();
 					return console.error("미리 정의되어있지 않은 플레이스 홀드키가 존재함 =>",loadKey);
 				}
-				console.log("laodset!",loadKey,loadPath);
 				_.loadHTML(loadKey,loadPath,function(key,doms){
 					_.Source[loadKey] = _.Source[loadPath];
 					ELAPPEND(placeholder,doms);
