@@ -1,11 +1,28 @@
-/* include tag
-
-<script src="moment/moment-with-locales.js"></script>
-<script src="moment/nody.moment.js"></script>
-
-*/
-
 (function(){
+	
+	makeGetter("CODE",function(){
+		return _Array(arguments).map(function(func){
+			if(ISELNODE(func)){
+				return _String(func.innerHTML).trimLine().getTabsAlign();
+			} else if(typeof func == "function"){
+				var hideSwitch = false;
+				return _String(UNWRAP((func+"").replace(/(^[^{]+)/g,""))).trimLine().tabsAlign().eachLine(function(line){
+					if(line.indexOf("/*break*/") > -1) return "";
+					if(line.indexOf("/*linehide*/") > -1) {
+						hideSwitch = hideSwitch ? false : true;
+						return undefined;
+					} 
+					return hideSwitch ? undefined : line;
+				});
+			}
+		}).compact().join("\n\n");
+	});
+	
+	makeGetter("CODEBLOCK",function(node){
+		DATAEACH(node,function(){
+			hljs.highlightBlock(ZFIND("code",node));
+		});
+	});
 	
 	makeModule("MixedMoment",{
 		getCommand:function(name){
@@ -47,29 +64,24 @@
 			var beforeDate     = firstMoment.clone().date(0).date() - startDay;
 			var calendarBodies = ARRAYARRAY(6);
 			
-			
+			;
 			// before month
-			var tdtempbefore = _Template(TAG("td.before[partial-value=html]"),false);
-			for(var i=0,l=startDay;i<l;i++) calendarBodies[0].push( tdtempbefore.generate({html:beforeDate+i+1}) );
-		
+			
+			for(var i=0,l=startDay;i<l;i++) calendarBodies[0].push(CREATE("td.before",beforeDate+i+1));
+			
 			//
 			var count = lastMoment.date()+startDay;
 			
 			// current month
-			var tdtemp = _Template(TAG("td[partial-value=html][partial-dataset=dataset]"),false);
 			for(var i=startDay,l=count;i<l;i++){
 				var date    = i-startDay+1;
-				var makedTd = tdtemp.generate({html:date,dataset:{"year":year,"month":month,"date":date}});
+				var makedTd = CREATE("td",{html:date,dataset:{"year":year,"month":month,"date":date}});
 				calendarBodies[ Math.floor(i/7) ].push(makedTd);
-				ELON(makedTd,"click",function(){
-					owner.calendarToggle(parseInt(ELDATA(this,"year")),parseInt(ELDATA(this,"month")),parseInt(ELDATA(this,"date")));
-				});
 			} 
 		
 			// after month
-			var tdtempafter = _Template(TAG("td.after[partial-value=html]"),false);
 			for(var i=count,l=42,ai=1;i<l;i++){
-				calendarBodies[ Math.floor(i/7) ].push(tdtempafter.generate({html:ai}));
+				calendarBodies[ Math.floor(i/7) ].push( CREATE("td.after",ai) );
 				ai++;
 			}
 			
@@ -90,7 +102,9 @@
 		}
 	});
 	
-	// load moment
 	var root  = FUT.LOADINGSCRIPTROOT();
 	FUT.INCLUDE(root + "moment-with-locales.js");
+	FUT.INCLUDE(root + "jquery.noty.packaged.min.js");
+	FUT.INCLUDE(root + "highlight.pack.js");
+	FUT.INCLUDE(root + "highlight/github.css");
 })();

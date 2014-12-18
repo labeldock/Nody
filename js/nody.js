@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.10.1");
-	var build   = new String("857");
+	var version = new String("0.10.2");
+	var build   = new String("863");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -70,6 +70,90 @@
 	
 	//IE8 function bind FIX
 	if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { /* closest thing possible to the ECMAScript 5 internal IsCallable function */ throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments,1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }	
+	
+	W.NODYENV = (function(){
+		var info = {};
+		
+		var support;
+		
+		// Operating system
+		info.os = /(win|mac|linux|iphone)/.exec(navigator.platform.toLowerCase());
+		info.os = (info.os !== null) ? info.os[0].replace("sunos", "solaris") : "unknown";
+		
+		// Browser Name
+		//http://stackoverflow.com/questions/5916900/detect-version-of-browser 191
+		var sayswho = (function(){
+		    var ua= navigator.userAgent, tem, 
+		    M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+		    if(/trident/i.test(M[1])){
+		        tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
+		        return 'IE '+(tem[1] || '');
+		    }
+		    if(M[1]=== 'Chrome'){
+		        tem= ua.match(/\bOPR\/(\d+)/)
+		        if(tem!= null) return 'Opera '+tem[1];
+		    }
+		    M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+		    if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
+		    return M.join(' ');
+		})();
+		
+		info.browser        = sayswho;
+		//info.browserName    = sayswho.exec(/^(\w+)/)[1];
+		//info.browserVersion = sayswho.exec(/[\d\.]+/)[1];
+		//generation
+		//0 : <ie7 : truble, 1 : <ie8 : teasor , 2 : <ie9 : good, 3 : <ie10 : perfect
+		info.browserGeneration
+		
+		//online
+		info.online = navigator.onLine;
+	
+		//support ComputedStyle
+		info.supportComputedStyle  = window.getComputedStyle ? true : false;
+		
+		//support Query
+		info.supportQuerySelectAll = document.querySelectorAll ? true : false;
+		
+		var lab3Prefix = function(s){
+			if( s.match(/^Webkit/) ) return "-webkit-";
+			if( s.match(/^Moz/) )    return "-moz-";
+			if( s.match(/^O/) )      return "-o-";
+			if( s.match(/^ms/) )     return "-ms-";
+			return "";
+		};
+		
+		
+		var supportPrefix = {};
+		
+		info.getCSSName = function(cssName){
+			cssName.trim();
+			for(var prefix in supportPrefix) {
+				if( cssName.indexOf(prefix) === 0 ) {
+					var sp = supportPrefix[prefix];
+					if( sp.length ) return sp+cssName;
+				}
+			}
+			return cssName;
+		};
+		
+		var tester = document.createElement('div')
+		//transform
+		support = false;
+		"transform WebkitTransform MozTransform OTransform msTransform".replace(/\S+/g,function(s){ if(s in tester.style){
+			support = true;	
+			supportPrefix["transform"] = lab3Prefix(s);
+		}});
+		info.supportTransform = support;
+		
+		//transition
+		support = false;
+		"transition WebkitTransition MozTransition OTransition msTransition".replace(/\S+/g,function(s){ if(s in tester.style){
+			support = true;
+			supportPrefix["transition"] = lab3Prefix(s);
+		}});
+		info.supportTransition = support;
+		return info;
+	})();
 	
 	//NativeCore console trace
 	W.NativeModule   = function(name){
@@ -680,9 +764,42 @@
 		"PROPDATA" :FUT.CONTINUTILITY(function(v,f){ var result = []; if(typeof f !== "function") f = function(v){ return v; }; if(typeof v === "object"){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
 		//
 		"PROPLENGTH":function(data){ var l = 0; if(typeof data === "object" || typeof data === "function") for(var key in data) l++; return l; },
+		//새로운 객체를 만들어 복사
+		"CLONE"  : function(t,d) { 
+			if(d) {
+				if(ISARRAY(t)) {
+					if(!ISARRAY(d)) { d = [] };
+					for (var i=0,l=t.length;i<l;i++) d.push( ((typeof t[i] === "object" && t[i] !== null ) ? CLONE(t[i]) : t[i]) )
+					return d;
+				} else {
+					if(d == true) { d = {} };
+			        for (var p in t) (typeof t[p] === "object" && t[p] !== null && d[p]) ? CLONE(t[p],d[p]) : d[p] = t[p];
+					return d;
+				}
+				
+			}
+			switch(typeof t){
+				case "undefined": return t; break;
+				case "number": return t+0; break;
+				case "string": return t+"";break;
+				case "object":
+				if(t instanceof Date){var r=new Date();r.setTime(t.getTime());return r;}
+				if(t instanceof Array){var r=[]; for(var i=0,length=t.length;i<length;i++)r[i]=t[i];return r;}
+				if( ISELNODE(t) == true ) return t;
+				if(t instanceof Object){var r={};for(var k in t)if(t.hasOwnProperty(k))r[k]=t[k];return r;}
+				default : console.error("CLONE::copy failed : target => ",t); return t; break;
+			}
+		},
+		//첫번째 소스에 두번째 부터 시작하는 소스를 반영
 		"EXTEND":FUT.CONTINUTILITY(function(data){
 			if(typeof data !== "object") return data;
 			for(var i=1,l=arguments.length;i<l;i++) if( typeof arguments[i] == "object" ) for(var key in arguments[i]) data[key] = arguments[i][key];
+			return data;
+		},2),
+		//완전히 새로운 포인터 오브젝트에 다른 소스를 반영
+		"MARGE":FUT.CONTINUTILITY(function(data){
+			if(typeof data !== "object") return data;
+			return EXTEND.apply(undefined,[CLONE(data,true)].concat(Array.prototype.slice.call(arguments)));
 		},2),
 		//무엇이든 문자열로 넘김
 		"TOSTRING":function(tosv,depth,jsonfy){
@@ -745,33 +862,6 @@
 				if (target.length > length) target.length = length;
 			}
 			return target;
-		},
-		//
-		// 복사
-		"CLONE"  : function(t,d) { 
-			if(d) {
-				if(ISARRAY(t)) {
-					if(!ISARRAY(d)) { d = [] };
-					for (var i=0,l=t.length;i<l;i++) d.push( ((typeof t[i] === "object" && t[i] !== null ) ? CLONE(t[i]) : t[i]) )
-					return d;
-				} else {
-					if(d == true) { d = {} };
-			        for (var p in t) (typeof t[p] === "object" && t[p] !== null && d[p]) ? CLONE(t[p],d[p]) : d[p] = t[p];
-					return d;
-				}
-				
-			}
-			switch(typeof t){
-				case "undefined": return t; break;
-				case "number": return t+0; break;
-				case "string": return t+"";break;
-				case "object":
-				if(t instanceof Date){var r=new Date();r.setTime(t.getTime());return r;}
-				if(t instanceof Array){var r=[]; for(var i=0,length=t.length;i<length;i++)r[i]=t[i];return r;}
-				if( ISELNODE(t) == true ) return t;
-				if(t instanceof Object){var r={};for(var k in t)if(t.hasOwnProperty(k))r[k]=t[k];return r;}
-				default : console.error("CLONE::copy failed : target => ",t); return t; break;
-			}
 		},
 		//inspect type
 		"ISTYPE":function(t,v) {
@@ -2265,64 +2355,10 @@
 	//******************
 	//ClientKit
 	makeSingleton("_Client",{
-		
 		agent :function(t){ 
 			return (typeof t === "string") ? ((navigator.userAgent||navigator.vendor||window.opera).toLowerCase().indexOf(t.toLowerCase()) > -1) : (navigator.userAgent||navigator.vendor||window.opera);
 		},
-		info:function(){
-			var info = {};
-			var support,tester  = document.createElement('div');
-				
-			// Operating system
-			info.os = /(win|mac|linux|iphone)/.exec(navigator.platform.toLowerCase());
-			
-			if (info.os !== null){
-				info.os = info.os[0].replace("sunos", "solaris");
-			} else {
-				info.os = "unknown";
-			} 
-			
-			// Browser Name
-			//http://stackoverflow.com/questions/5916900/detect-version-of-browser 191
-			var sayswho = (function(){
-			    var ua= navigator.userAgent, tem, 
-			    M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
-			    if(/trident/i.test(M[1])){
-			        tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
-			        return 'IE '+(tem[1] || '');
-			    }
-			    if(M[1]=== 'Chrome'){
-			        tem= ua.match(/\bOPR\/(\d+)/)
-			        if(tem!= null) return 'Opera '+tem[1];
-			    }
-			    M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
-			    if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
-			    return M.join(' ');
-			})();
-			
-			info.browser        = sayswho;
-			//info.browserName    = sayswho.exec(/^(\w+)/)[1];
-			//info.browserVersion = sayswho.exec(/[\d\.]+/)[1];
-			//generation
-			//0 : <ie7 : truble, 1 : <ie8 : teasor , 2 : <ie9 : good, 3 : <ie10 : perfect
-			info.browserGeneration
-			
-			
-			//online
-			info.online = navigator.onLine;
-			
-			//transform
-			support = false;
-			"transform WebkitTransform MozTransform OTransform msTransform".replace(/\S+/g,function(s){ if(s in tester.style) support = true; });
-			info.supportTransform = support;
-			
-			//transition
-			support = false;
-			"transition WebkitTransition MozTransition OTransition msTransition".replace(/\S+/g,function(s){ if(s in tester.style) support = true; });
-			info.supportTransition = support;
-			
-			return info;
-		},
+		info:NODYENV,
 		width :function(){ return (window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName('body')[0].clientWidth); },
 		height:function(){ return (window.innerHeight|| document.documentElement.clientHeight|| document.getElementsByTagName('body')[0].clientHeight); },
 		bound :function(){ return {"width":this.width(),"height":this.height()}; },
@@ -2676,7 +2712,7 @@
 	}
 })(window);
 //Nody Node Foundation 
-(function(W){
+(function(W,ENV){
 	
 	var ELUT_REGEX = new RegExp("("+ [
 		//tag
@@ -3796,19 +3832,21 @@
 		//스타일을 얻어냅니다.
 		"STYLE": function(target,styleName,value){
 			var target = ZFIND(target);
-			var nodeStyles = document.defaultView.getComputedStyle ? document.defaultView.getComputedStyle(target) : target.style;
 			if(ISELNODE(target)){
-				var marge;
-				if(typeof styleName === "undefined") return nodeStyles;
-				if(typeof styleName === "object")    marge = styleName;
+				if(typeof styleName === "undefined") return ENV.supportComputedStyle ? window.getComputedStyle(target,null) : target.currentStyle;
 				if(typeof styleName === "string"){
+					//mordern-style-name
+					styleName = ENV.getCSSName(styleName);
 					//get
-					if(typeof value === "undefined") return nodeStyles[CAMEL(styleName)];
+					if(typeof value === "undefined") return ENV.supportComputedStyle ? window.getComputedStyle(target,null).getPropertyValue(styleName) : target.currentStyle[CAMEL(styleName)];
+					
 					//set
-					marge = {};
-					marge[CAMEL(styleName)] = value;
+					value     = ENV.getCSSName(value);
+					var wasStyle = ELATTR(target,"style");
+					wasStyle = wasStyle ? wasStyle.replace(new RegExp(styleName+"[^\;]+;"),"") : "";
+					
+					ELATTR(target,"style",styleName+":"+value+";"+wasStyle);
 				}
-				for(var key in marge) target.style[key] = value;
 			}
 			return target;
 		},
@@ -4213,10 +4251,10 @@
 		//get 함수입니다. Template모듈은 기본적으로 노드를 반환합니다.
 		return ZFIND(this);
 	});
-})(window);
+})(window,NODYENV);
 
 //Nody Component Foundation
-(function(W){
+(function(W,ENV){
 	//여러 엘리먼트를 셀렉트하여 한번에 컨트롤
 	makeModule("Controls",{
 		getSelects:function(){ return this.Source; },
@@ -5513,7 +5551,7 @@
 					_._triggingActiveEvents(_.ContainerPlaceholder[key],key,"load active",loadArguments);
 				});	
 			} else {
-				console.warn("불러올 소스의 경로가 존재하지 않습니다. => ",loadKey)
+				console.warn("불러올 소스의 경로가 존재하지 않습니다. => ",loadKey,this.ContainerPlaceholder,this.Source);
 			}
 		},
 		active:function(loadKey){
@@ -6477,7 +6515,22 @@
 				wasHeight = this.Source.scrollHeight,
 				changeWidth,changeHeight;
 			
-			ELSTYLE(this.ClipView,"zoom",needTo);
+			ELSTYLE(this.ClipView,"transform","scale("+needTo+")");
+			
+			var _ = this;
+			if(needTo > 1) {
+				setTimeout(function(){
+					var offsetWidth  = (_.ClipView.offsetWidth * (1-needTo) / -2);
+					var offsetHeight = (_.ClipView.offsetHeight * (1-needTo) / -2);
+					ELSTYLE(_.ClipView,"margin", offsetHeight + "px "+ offsetWidth +"px");
+					_.needScrollingOffsetX(offsetWidth/-2);
+					_.needScrollingOffsetY(offsetHeight/-2);
+				},300);
+			} else {
+				setTimeout(function(){
+					ELSTYLE(_.ClipView,"margin","0px");
+				},300)
+			}
 			
 			changeWidth  = this.Source.scrollWidth;
 			changeHeight = this.Source.scrollHeight;
@@ -6492,8 +6545,17 @@
 			}
 			
 		},
+		getZoomValue:function(){
+			var matrix = ELSTYLE(this.ClipView,"transform");
+			var scale = /matrix\(([\d.]+)/.exec(matrix)[1];
+			return TONUMBER(scale);
+		},
 		needZoomWithOffset:function(offset){ 
-			if(offset) this.needZoom(this.StartZoom + offset); 
+			if(this.StartZoom) {
+				this.needZoom(this.StartZoom + offset); 
+			} else {
+				this.needZoom(this.getZoomValue()+offset);
+			}
 		},
 		//
 		// var _drawAxisYItem
@@ -6611,7 +6673,12 @@
 			this.axisYPositiveItems = [];
 			this.axisYNegativeItems = [];
 			
-			this.ClipView = MAKE("div.nody-scroll-box-clip-view",{style:"-webkit-transition:all 0.3s;transition:all 0.3s;"});
+			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
+			ELSTYLE(this.ClipView,"transition-property","transform");
+			ELSTYLE(this.ClipView,"transition-duration","0.3s");
+			ELSTYLE(this.ClipView,"transition-timing-function","ease-in");
+			
+			ELSTYLE(this.ClipView,"transform","matrix(1.0,0,0,1.0,0,0)");
 			
 			ELAPPEND(this.ClipView,this.Source.childNodes);
 			ELAPPEND(this.Source,this.ClipView);
@@ -6620,7 +6687,7 @@
 			this.ScrollEvent = {};
 			this.ZoomEvent;
 			this.Finger = new Finger(this.Source);
-			this.allowZoom = true;
+			this.allowZoom = false;
 			this.allowScrollX = true;
 			this.allowScrollY = true;
 			
@@ -6649,7 +6716,7 @@
 
 			
 			this.Finger.whenPinchStart(function(){
-				if(_.allowZoom) _.StartZoom = TONUMBER(ELSTYLE(_.ClipView,"zoom"));
+				if(_.allowZoom) _.StartZoom = _.getZoomValue();
 			});
 			this.Finger.whenPinch(function(zoomOffset,e){
 				if(_.allowZoom) _.needZoomWithOffset(zoomOffset);
@@ -6660,4 +6727,4 @@
 			console.warn("ScrollBox제대로 불러오지 못했습니다.",node);
 		}
 	});
-})(window);
+})(window,NODYENV);

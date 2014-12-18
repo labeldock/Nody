@@ -5,7 +5,7 @@ var GNBNavigationController = new NavigationController("main",function(initActiv
 	return initActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
 		return GNBNavigationController.active(this.innerText.toLowerCase());
-	},0).makeAccessProperty(function(accessData,node){
+	},1).makeAccessProperty(function(accessData,node){
 		//navigation data
 		var name = node.innerText.toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
@@ -276,6 +276,12 @@ GNBNavigationController.whenLoad("scroll",function(){
 	var countDisplay = $("#calendar-box-count");
 	var nowMoment    = new MixedMoment("ko");
 		
+	$(document).on("click",".zoomp",function(){	
+		scrollBox.needZoomWithOffset(0.2);
+	});
+	$(document).on("click",".zoomm",function(){
+		scrollBox.needZoomWithOffset(-0.2);
+	});
 	calendarBox.drawAxisYItem(function(index){
 		setTimeout(function(){
 			countDisplay.text( ("generated to down : [" + calendarBox.axisYPositiveItems.length + "] generated to up : ["+ calendarBox.axisYNegativeItems.length+"]") );

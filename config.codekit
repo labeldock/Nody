@@ -573,23 +573,45 @@
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
+	"\/mixed-module\/mixed\/jquery.noty.packaged.min.js": {
+		"fileType": 64,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/jquery.noty.packaged.min.js",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/min\/jquery.noty.packaged.min-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
+	"\/mixed-module\/mixed\/moment-with-locales.js": {
+		"fileType": 64,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/moment-with-locales.js",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/min\/moment-with-locales-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
+	"\/mixed-module\/mixed\/nody.mixed.js": {
+		"fileType": 64,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/nody.mixed.js",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/nody.mixed.min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 1,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 0
+		},
 	"\/mixed-module\/moment\/moment-timezone-with-data.js": {
 		"fileType": 64,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"inputAbbreviatedPath": "\/mixed-module\/moment\/moment-timezone-with-data.js",
 		"outputAbbreviatedPath": "\/mixed-module\/moment\/min\/moment-timezone-with-data-min.js",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 0,
-		"outputStyle": 1,
-		"syntaxCheckerStyle": 1
-		},
-	"\/mixed-module\/moment\/moment-with-locales.js": {
-		"fileType": 64,
-		"ignore": 0,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/moment\/moment-with-locales.js",
-		"outputAbbreviatedPath": "\/mixed-module\/moment\/min\/moment-with-locales-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
