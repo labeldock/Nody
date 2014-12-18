@@ -9,7 +9,7 @@
 	
 	// 버전
 	var version = new String("0.10.2");
-	var build   = new String("863");
+	var build   = new String("864");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -6113,7 +6113,6 @@
 			}
 		},
 		nManagedDataRemove:function(bindID){
-			
 			if(this.structureNodes[bindID]){
 				var owner = this;
 				//바인드값 삭제
@@ -6315,7 +6314,6 @@
 						CALL(owner.viewModel.shouldDeselectItem,owner.structureNodes[managedData.BindID],owner.structureNodes[managedData.BindID],1);
 					});
 				}
-				
 				this.selectIndexes.clear();
 				if(eventBlocking != true) CALL(this.selectItemDidChange,this,this.selectIndexes);
 			}
@@ -6506,6 +6504,27 @@
 			}
 			return false;
 		},
+		getZoomValue:function(){
+			var matrix = ELSTYLE(this.ClipView,"transform");
+			var scale = /matrix\(([\d.]+)/.exec(matrix)[1];
+			return TONUMBER(scale);
+		},
+		getBoundsInfo:function(){
+			return  {
+				frame:{
+					width:this.Source.offsetWidth,
+					height:this.Source.offsetHeight,
+					swidth:this.Source.scrollWidth,
+					sheight:this.Source.scrollHeight
+				},
+				clipview:{
+					x:this.Source.scrollLeft,
+					y:this.Source.scrollTop,
+					width:this.ClipView.offsetWidth,
+					height:this.ClipView.offsetHeight
+				}
+			}
+		},
 		needZoom:function(needTo){
 			needTo = TONUMBER(needTo);
 			if(needTo < this.zoomMin) needTo = this.zoomMin;
@@ -6518,19 +6537,17 @@
 			ELSTYLE(this.ClipView,"transform","scale("+needTo+")");
 			
 			var _ = this;
-			if(needTo > 1) {
-				setTimeout(function(){
-					var offsetWidth  = (_.ClipView.offsetWidth * (1-needTo) / -2);
-					var offsetHeight = (_.ClipView.offsetHeight * (1-needTo) / -2);
-					ELSTYLE(_.ClipView,"margin", offsetHeight + "px "+ offsetWidth +"px");
-					_.needScrollingOffsetX(offsetWidth/-2);
-					_.needScrollingOffsetY(offsetHeight/-2);
-				},300);
-			} else {
-				setTimeout(function(){
-					ELSTYLE(_.ClipView,"margin","0px");
-				},300)
-			}
+			
+			setTimeout(function(){
+				var offsetWidth  = Math.floor(_.ClipView.offsetWidth * (1-needTo) / -2);
+				var offsetHeight = Math.floor(_.ClipView.offsetHeight * (1-needTo) / -2);
+				var setMargin    = offsetHeight + "px "+ offsetWidth +"px";
+				//LG("setMargin",setMargin);
+				ELSTYLE(_.ClipView,"padding", setMargin);
+				//LG("needScrollingOffsetX Y",-offsetWidth,-offsetHeight);
+				//_.needScrollingOffsetX(-offsetWidth/2);
+				//_.needScrollingOffsetY(-offsetHeight/2);
+			},300);
 			
 			changeWidth  = this.Source.scrollWidth;
 			changeHeight = this.Source.scrollHeight;
@@ -6543,12 +6560,6 @@
 				this.Source.scrollLeft += fixOffset;
 				this.Source.scrollTop  += fixOffset;
 			}
-			
-		},
-		getZoomValue:function(){
-			var matrix = ELSTYLE(this.ClipView,"transform");
-			var scale = /matrix\(([\d.]+)/.exec(matrix)[1];
-			return TONUMBER(scale);
 		},
 		needZoomWithOffset:function(offset){ 
 			if(this.StartZoom) {
@@ -6623,6 +6634,7 @@
 		whenZoom:function(event){ this.ZoomEvent = event; },
 		applyScrollEvent:function(flag){
 			if(typeof flag !== "boolean") return;
+			
 			if(typeof this._applyScrollEvent === "undefined") {
 				var _ = this;
 				this._currentMouseWheelEvent = function(e){
@@ -6645,6 +6657,7 @@
 				this._currentScrollEvent = function(e){
 					e.stopPropagation();
 					e.preventDefault();
+					
 					return CALL(_.ScrollEvent.Scroll,_,e);
 				};
 				this._applyScrollEvent = false;
@@ -6667,6 +6680,7 @@
 		this.Source = ZFIND(node);
 		
 		if(this.Source){
+			
 			//
 			this.axisYPositiveLength = 0;
 			this.axisYNegativeLength = 0;
@@ -6677,8 +6691,8 @@
 			ELSTYLE(this.ClipView,"transition-property","transform");
 			ELSTYLE(this.ClipView,"transition-duration","0.3s");
 			ELSTYLE(this.ClipView,"transition-timing-function","ease-in");
-			
 			ELSTYLE(this.ClipView,"transform","matrix(1.0,0,0,1.0,0,0)");
+			ELSTYLE(this.ClipView,"box-sizing","content-box");
 			
 			ELAPPEND(this.ClipView,this.Source.childNodes);
 			ELAPPEND(this.Source,this.ClipView);
@@ -6726,5 +6740,21 @@
 		} else {
 			console.warn("ScrollBox제대로 불러오지 못했습니다.",node);
 		}
+	});
+	
+	makeModule("ScrollObserver",{
+		whenScroll:function(m){ this._whenScroll = m; }
+	},function(scrollbox,setting){
+		this.Source = scrollbox;
+		var _  = this;
+		var __ = this.Source;
+		this.Source.whenScroll(function(){
+			var restUp   = __.restUp();
+			if(restUp < 1) return CALL(_.whenScroll,_,0);
+			var restDown = __.restDown();
+			if(restDown < 1) return CALL(_.whenScroll,_,100);
+			return CALL(_.whenScroll,_,RATIO100(restUp,restDown)[0]);
+		});
+		this._whenScroll;
 	});
 })(window,NODYENV);

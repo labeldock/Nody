@@ -102,6 +102,13 @@
 		}
 	});
 	
+	makeGetter("LG",function(s){
+		var text = DATAMAP(arguments,function(vs){
+			return TOS(vs,true);
+		}).join("\n");
+		noty({theme:"relax",layout:"bottom",text:text,timeout:3000})
+	});
+	
 	var root  = FUT.LOADINGSCRIPTROOT();
 	FUT.INCLUDE(root + "moment-with-locales.js");
 	FUT.INCLUDE(root + "jquery.noty.packaged.min.js");

@@ -275,11 +275,22 @@ GNBNavigationController.whenLoad("scroll",function(){
 	var calendarBox  = new ScrollBox("#calendar-box");
 	var countDisplay = $("#calendar-box-count");
 	var nowMoment    = new MixedMoment("ko");
-		
-	$(document).on("click",".zoomp",function(){	
+	
+	var scrollObserver = new ScrollObserver(scrollBox);
+	scrollObserver.whenScroll(function(position){
+		console.log("hello");
+		console.log("postion",position);
+	});
+	
+	$(document).on("click",".lginfo",function(){
+		LG("bounds info",scrollBox.getBoundsInfo());
+	});	
+	$(document).on("click",".zoomp",function(){
+		LG("click zoom plus");
 		scrollBox.needZoomWithOffset(0.2);
 	});
 	$(document).on("click",".zoomm",function(){
+		LG("click zoom minus");
 		scrollBox.needZoomWithOffset(-0.2);
 	});
 	calendarBox.drawAxisYItem(function(index){
