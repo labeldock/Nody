@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.10.3");
-	var build   = new String("868");
+	var version = new String("0.10.4");
+	var build   = new String("871");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -5621,13 +5621,16 @@
 				}
 			});
 		},
+		managedDataNeedRerender:function(managedData){
+			this.notification("nManagedDataNeedRerender",[managedData]);
+		},
 		managedDataChangePosition:function(leftID,rightID){
 			this.notification("nManagedDataChangePosition",[leftID,rightID]);
 		},
-		managedDataRemove:function(bindID){
+		removeManagedData:function(bindID){
 			this.notification("nManagedDataRemove",[bindID]);
 		},
-		managedDataAppend:function(bindID,newManagedData){
+		addChildData:function(bindID,newManagedData){
 			this.notification("nManagedDataAppend",[bindID,newManagedData]);
 		},
 		managedDataBindEvent:function(bindID,key,value,sender){
@@ -6031,7 +6034,12 @@
 				return findID;
 			}
 		},
-		//인덱스를 옮길때 필요함
+		//뷰컨트롤러와 함께 바인딩되는 메서드들입니다.
+		//렌더시 다음 아래의 메서드들은 절대 호출하면 안됩니다.
+		//지정한 인덱스로
+		rerender:function(){
+			DataContextNotificationCenter.managedDataNeedRerender(this);
+		},
 		managedDataIndexExchange:function(changeTarget){
 			if(changeTarget){
 				var bindId1= this.BindID;
@@ -6044,33 +6052,35 @@
 			}
 			return false;
 		},
+		//상위 인덱스로
 		managedDataIncrease:function(){
 			var nextManagedData = this.Parent.Childrens[this.Parent.Childrens.indexOf(this)+1];
 			if (nextManagedData) return this.managedDataIndexExchange(nextManagedData);
 			return false;
 		},
+		//하위 인덱스로
 		managedDataDecrease:function(){
 			var prevManagedData = this.Parent.Childrens[this.Parent.Childrens.indexOf(this)-1];
 			if (prevManagedData) return this.managedDataIndexExchange(prevManagedData);
 			return false;
 		},
 		//현재 데이터를 제거함
-		managedDataRemove:function(){
+		removeManagedData:function(){
 			this.removeFromParent();
-			DataContextNotificationCenter.managedDataRemove(this.BindID);
+			DataContextNotificationCenter.removeManagedData(this.BindID);
 		},
 		//하위 데이터를 추가함
-		managedDataAppend:function(data){
+		addChildData:function(data){
 			if(typeof data === "function") data = data();
 			if(typeof data === "object") {
 				this.context.feedDownManagedDataMake(data,this);
-				DataContextNotificationCenter.managedDataAppend(this.BindID,this.Childrens.getLast());
+				DataContextNotificationCenter.addChildData(this.BindID,this.Childrens.getLast());
 			} else {
-				console.warn("managedDataAppend :: append data가 들어오지 않았습니다", data);
+				console.warn("addChildData :: append data가 들어오지 않았습니다", data);
 			}
 		},
-		maagedDataMemeberAppend:function(data){
-			if(this.Parent) this.Parent.managedDataAppend(data);
+		addMemberData:function(data){
+			if(this.Parent) this.Parent.addChildData(data);
 		}
 	},function(context,initData,dataType){
 		this.BindID     = _Util.base64UniqueRandom(8);
@@ -6101,10 +6111,10 @@
 				}
 			},
 			"delete":function(arg,vc){
-				this.managedDataRemove();
+				this.removeManagedData();
 			},
 			"append":function(arg,vc){
-				this.managedDataAppend(arg);
+				this.addChildData(arg);
 			}
 		},
 		addEvent:function(name,method){
@@ -6149,16 +6159,33 @@
 			}
 			//
 			if(this.placeholderNodes[bindID]) delete this.placeholderNodes[bindID];
-			
+		},
+		nManagedDataNeedRerender:function(rerenderManagedData){
+			//부모의 placehoder를 찾음
+			var parentManData   = rerenderManagedData.Parent;
+			if(parentManData) {
+				//부모의 placeholder가 존재해야 작동함
+				var parentPlaceHolder = this.placeholderNodes[parentManData.BindID];
+				var beforeElement     = this.structureNodes[rerenderManagedData.BindID];
+				var beforePlaceHolder = this.placeholderNodes[rerenderManagedData.BindID];
+				if(parentPlaceHolder && beforePlaceHolder) {
+					//바꿔치기 하기
+					this.needDisplay(rerenderManagedData,parentPlaceHolder,true);
+					ELBEFORE(beforeElement,this.structureNodes[rerenderManagedData.BindID]);
+					ELAPPEND(this.placeholderNodes[rerenderManagedData.BindID],beforePlaceHolder.children);
+					ELREMOVE(beforeElement);
+					CALL(this.dataDidChange,this);
+				} else {
+					console.error("부모의 placeholder가 존재해야 rerender가 작동할수 있습니다.");
+				}
+			} else {
+				this.needDisplay(rerenderManagedData);
+				CALL(this.dataDidChange,this);
+			}
 		},
 		nManagedDataAppend:function(bindID,newManagedData){
 			if(this.placeholderNodes[bindID]) {
-				var _ = this;
-				//일단 하위데이터까지 처리를 이곳에서
-				newManagedData.feedDownManagedData(function(placenodeID){
-					_.needDisplay(this,_.placeholderNodes[placenodeID]);
-					return this.BindID;
-				},bindID);
+				this.needDisplay(newManagedData,this.placeholderNodes[bindID]);
 				CALL(this.dataDidChange,this);
 			}
 		},
@@ -6216,6 +6243,7 @@
 			var viewController = this;
 			ELON(element,"click", function(){
 				if (typeof viewController.events[actionName] === "function") {
+					console.log("event!",actionName,managedData)
 					viewController.events[actionName].call(
 						managedData,
 						arg,
@@ -6236,7 +6264,7 @@
 			console.warn("setManagedData::managedData 오브젝트가 필요합니다. 들어온 값->", managedData);
 			return false;
 		},
-		needDisplay:function(managedData,rootElement){
+		needDisplay:function(managedData,rootElement,sigleRenderMode){
 			//기본적으로 존재하지 않는값을 경고해줌
 			if(!this.managedData) console.warn("DataContextViewController:: Must need set ManagedData before needdisplay");
 			if(!this.viewModel) console.warn("DataContextViewController:: Must need set ViewModel before needdisplay");
@@ -6255,50 +6283,65 @@
 			var lastFeed       = null;
 			var topLevel       = this.managedData.getLevel();
 			var startDepth     = managedData.getLevel();
-			managedData.feedUpManageData(function(managedData,depth){
-				// 마지막 피드가 존재하지 않으면 depth값을 초기화함
-				if (lastFeed == null) lastFeed = depth;
-				
+			
+			if (sigleRenderMode == true) {
 				// 메니지드 데이터에 현재 스코프를 등록함
 				managedData.scope = viewController;
-				
-				var renderResult;
-				
-				if (depth == startDepth) {
-					// 최상위 렌더링
-					renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[topLevel+1],viewController);
-					//루트에 추가
-					rootElement.appendChild(renderResult);
-					//컨테이너에 추가
-					if( viewController.placeholderNodes[managedData.BindID] ) ELAPPEND(viewController.placeholderNodes[managedData.BindID],feedCollection[topLevel+1]);
-					
-					feedCollection[topLevel+1] = [];
-				} else if (depth < lastFeed) {
-					// 렌더 피드가 올라감
-					var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[lastFeed],viewController);
-					//컨테이너에 추가
-					if( viewController.placeholderNodes[managedData.BindID] ){ 
-						ELAPPEND(viewController.placeholderNodes[managedData.BindID],feedCollection[lastFeed])
-					};
-					//피드 초기화
-					feedCollection[lastFeed] = [];
-					feedCollection[depth].push(renderResult);
-				} else {
-					// 최하위 피드모음
-					// 렌더 피드가 내려감
-					var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,[],viewController);
-					feedCollection[depth].push(renderResult);
-				}
-				// 마지막 피드 depth를 기록함
-				lastFeed = depth;
-				
+				//slngleRenderMode의 관리는 매우 중요함 else문의 블럭과 동일하게 동작하도록 주의할것
+				var renderResult = viewController.viewModel.needRenderView(startDepth-topLevel,managedData,[],viewController);
+				// 루트에 추가함
+				rootElement.appendChild(renderResult);
 				// 그린내역을 기록함
 				if(ISELNODE(renderResult) || ISTEXTNODE(renderResult)) viewController.structureNodes[managedData.BindID] = renderResult;
-				
 				// 현재 스코프를 지움
 				managedData.scope = undefined;
+			} else {
+				managedData.feedUpManageData(function(managedData,depth){
+					// 마지막 피드가 존재하지 않으면 depth값을 초기화함
+					if (lastFeed == null) lastFeed = depth;
 				
-			},startDepth);
+					// 메니지드 데이터에 현재 스코프를 등록함
+					managedData.scope = viewController;
+				
+					var renderResult;
+				
+					if (depth == startDepth) {
+						// 최상위 렌더링
+						renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[depth+1],viewController);
+						//루트에 추가
+						rootElement.appendChild(renderResult);
+						//컨테이너에 추가
+						if( viewController.placeholderNodes[managedData.BindID] ) ELAPPEND(viewController.placeholderNodes[managedData.BindID],feedCollection[depth+1]);
+						feedCollection[depth+1] = [];
+					} else if (depth < lastFeed) {
+						// 렌더 피드가 올라감
+						var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[lastFeed],viewController);
+						//컨테이너에 추가
+						if( viewController.placeholderNodes[managedData.BindID] ){ 
+							ELAPPEND(viewController.placeholderNodes[managedData.BindID],feedCollection[lastFeed])
+						};
+						//피드 초기화
+						feedCollection[lastFeed] = [];
+						feedCollection[depth].push(renderResult);
+					} else {
+						// 최하위 피드모음
+						// 렌더 피드가 내려감
+						var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,[],viewController);
+						feedCollection[depth].push(renderResult);
+					}
+					// 마지막 피드 depth를 기록함
+					lastFeed = depth;
+				
+					// 그린내역을 기록함
+					if(ISELNODE(renderResult) || ISTEXTNODE(renderResult)) viewController.structureNodes[managedData.BindID] = renderResult;
+				
+					// 현재 스코프를 지움
+					managedData.scope = undefined;
+					
+				},startDepth);
+			}
+			
+			
 		},
 		needDisplayWithViewModel:function(newViewModel){
 			this.viewModel = newViewModel;
