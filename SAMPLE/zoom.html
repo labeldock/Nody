@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=2">
+  <title>Command Zone</title>
+  <link rel="stylesheet" href="resources/css/bootstrap.min.css">
+  <link rel="stylesheet" href="resources/css/nody.css">
+  <link rel="stylesheet" href="resources/css/application.css">
+  <link rel="stylesheet" href="resources/css/bootstrap-slider.css">
+  <style>
+	  .zoom-area {
+  		  border:1px solid red;
+		  width:50%;
+		  margin:0px auto;
+		  height:465px;
+	  }
+	  .commands {
+		  margin-top:20px;
+		  text-align:center;
+	  }
+	  .world {
+		  border:2px dotted green;
+  		  background:url('resources/images/zoom/world.gif') no-repeat;
+		  width:800px;
+		  height:465px;
+	  }
+  </style>
+</head>
+<body>
+	<h1>ZOOM TEST</h1>
+	<div class="zoom-area">
+		<div class="world">
+		</div>
+	</div>
+	<div class="commands">
+		<button class="btn btn-default" id="zoomin">+</button>
+		<button class="btn btn-default" id="zoomout">-</button>
+	</div>
+	
+	<script src="../js/nody.js"></script>
+	<script src="resources/js/jquery-1.11.1.min.js"></script>
+	<script src="../mixed-module/mixed/nody.mixed.js"></script>
+	<script src="resources/js/bootstrap.min.js"></script>
+	<script src="resources/js/bootstrap-slider.js"></script>
+	
+	<script>
+		var zoom = new ScrollBox(".zoom-area");
+		zoom.setAllowVirtureFinger(true);
+		
+		$(document).on("click","#zoomin",function(){
+			zoom.needZoomWithOffset(0.3);
+		});
+		$(document).on("click","#zoomout",function(){
+			zoom.needZoomWithOffset(-0.3);
+		});
+	</script>	
+</body>
+</html>

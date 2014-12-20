@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.10.2");
-	var build   = new String("864");
+	var version = new String("0.10.3");
+	var build   = new String("867");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -3938,7 +3938,7 @@
 			    var e = W.document.createEvent("HTMLEvents");
 			    e.initEvent(eventName, true, true);
 				PROPEACH(eventParam,function(v,k){
-					e[v] = k;
+					e[k] = v;
 				});
 			    node.dispatchEvent(e);
 			} else {
@@ -4923,6 +4923,8 @@
 		whenDidActive:function(method){ this.ContextsEvents.didActive = method; return this;},
 		whenDidInactive:function(method){ this.ContextsEvents.didInactive = method; return this; },
 		whenActiveToggle:function(am,im){ this.whenDidActive(am); return this.whenDidInactive(im); },
+		whenActiveStart:function(method){ this.ContextsEvents.activeStart = method; return this; },
+		whenActiveEnd:function(method){this.ContextsEvents.activeEnd = method; return this;},
 		shouldActive:function(index,wait){
 			var _ = this;
 			wait = TONUMBER(wait);
@@ -4942,14 +4944,26 @@
 		this._super(cSel,sSel);
 		this.ContextsEvents = {};
 		this.ContextsEventName = (typeof selectEvent === "string") ? selectEvent : "click";
-		this.preventDefault  = true;
-		this.allowAutoActive = true;
+		this.preventDefault   = true;
+		this.allowAutoActive  = true;
+		this.allowMultiActive = false;
+		this.allowInactive = false;
 		//
 		var _ = this;
 		this.onSelects(this.ContextsEventName,function(e,i){
+			var currentSelects = _.getSelects();
 			if(_.preventDefault) e.preventDefault();
+			if(_.allowInactive && ELHASCLASS(this,"active") ) {
+				ELREMOVECLASS(this,"active");
+				if( FIND(".active",currentSelects).length == 0 ) CALL(_.ContextsEvents.activeEnd,this,i);
+				return false;
+			}
 			if( CALL(_.ContextsEvents.willActive,this,e,i) == false ) return;
-			if(_.allowAutoActive) ELADDCLASS(this,"active");
+			if(_.allowAutoActive) {
+				var firstActive = FIND(".active",currentSelects).length ? false : true;
+				ELADDCLASS(this,"active");
+				if(firstActive) CALL(_.ContextsEvents.activeStart,this,i);
+			} 
 			CALL(_.ContextsEvents.didActive,this,i);
 		},function(){
 			if(_.allowAutoActive) ELREMOVECLASS(this,"active");
@@ -5360,10 +5374,10 @@
 			APPLY(this.LoadContainerBaseEvents.ContainerInactiveEvents[inactiveName],container);
 		},
 		loadHTML:function(loadKey,loadPath,success,error){
-			var _          = this;
+			var _ = this;
 			
 			//함수일때
-			if(typeof loadPath === "function") loadPath = loadPath(APPLY(loadPath,this,loadArguments));
+			if(typeof loadPath === "function") loadPath = loadPath(APPLY(loadPath,this));
 			
 			//ELEMENT(s) or URL
 			switch(typeof loadPath){
@@ -5382,8 +5396,8 @@
 					break;
 				case "object":
 					//엘리먼트 배열로 들어올경우
-					var elfind = FIND(loadPath);
-					if( elfind.length < 1 ){
+					var doms = FIND(loadPath);
+					if( doms.length < 1 ){
 						console.error("LoadContainerBase::불러올 엘리먼트가 존재하지 않습니다."+loadPath);
 						CALL(error,_,loadKey);
 					} else {
@@ -6371,6 +6385,34 @@
 				Math.pow((fy1-fy2),2)
 			)
 		},
+		setAllowVirtureFinger:function(flag){
+			if(!this.AllowVirtureFinger && flag) {
+				this.AllowVirtureFinger = true;
+				var wasStart = false;
+				var source = this.Source;
+				ELON(source,"mousedown",function(e){
+					wasStart = true;
+					e.preventDefault();
+					ELTRIGGER(source,"touchstart",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
+				})
+				ELON(source,"mousemove",function(e){
+					if(wasStart) {
+						e.preventDefault();
+						ELTRIGGER(source,"touchmove",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
+					}
+				});
+				ELON(source,"mouseup",function(e){
+					wasStart = false;
+					e.preventDefault();
+					ELTRIGGER(source,"touchend",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
+				});
+				ELON(source,"mouseout",function(e){
+					wasStart = false;
+					e.preventDefault();
+					ELTRIGGER(source,"touchend",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
+				});
+			}
+		},
 		applyTouchEvent:function(flag){
 			if(typeof flag !== "boolean") return;
 			if(typeof this._applyTouchEvent === "undefined") {
@@ -6531,35 +6573,37 @@
 			if(needTo > this.zoomMax) needTo = this.zoomMax;
 			
 			var wasWidth  = this.Source.scrollWidth,
-				wasHeight = this.Source.scrollHeight,
-				changeWidth,changeHeight;
+				wasHeight = this.Source.scrollHeight
+				wasZoom   = this.getZoomValue();
 			
 			ELSTYLE(this.ClipView,"transform","scale("+needTo+")");
-			
 			var _ = this;
 			
 			setTimeout(function(){
-				var offsetWidth  = Math.floor(_.ClipView.offsetWidth * (1-needTo) / -2);
-				var offsetHeight = Math.floor(_.ClipView.offsetHeight * (1-needTo) / -2);
-				var setMargin    = offsetHeight + "px "+ offsetWidth +"px";
-				//LG("setMargin",setMargin);
-				ELSTYLE(_.ClipView,"padding", setMargin);
-				//LG("needScrollingOffsetX Y",-offsetWidth,-offsetHeight);
-				//_.needScrollingOffsetX(-offsetWidth/2);
-				//_.needScrollingOffsetY(-offsetHeight/2);
+				//가장 근사치임
+				var offsetWidth  = Math.floor(((_.ClipView.offsetWidth  * needTo) - _.ClipView.offsetWidth) / 2);
+				var offsetHeight = Math.floor(((_.ClipView.offsetHeight * needTo) - _.ClipView.offsetHeight) / 2);
+				
+				ELSTYLE(_.ClipView,"padding-top",offsetHeight + "px ");
+				ELSTYLE(_.ClipView,"padding-left",offsetWidth + "px ");
+				
+				var changeWidth  = (wasWidth - _.Source.scrollWidth) /2;
+				var changeHeight = (wasHeight - _.Source.scrollHeight) /2;
+				
+				_.needScrollingOffsetX(changeWidth);
+				_.needScrollingOffsetY(changeHeight);
 			},300);
 			
-			changeWidth  = this.Source.scrollWidth;
-			changeHeight = this.Source.scrollHeight;
 			
-			var fixLeft = (wasWidth  !== changeWidth) ? (this.Source.scrollLeft += (changeWidth - wasWidth ) / 2) : 0;
-			var fixTop  = (wasHeight !== changeHeight)? (this.Source.scrollTop  += (changeHeight - wasHeight) / 2): 0;
-			var fixOffset = (fixLeft > fixTop) ? fixLeft : fixTop;
 			
-			if(fixOffset !== 0) {
-				this.Source.scrollLeft += fixOffset;
-				this.Source.scrollTop  += fixOffset;
-			}
+			//var fixLeft = (wasWidth  !== changeWidth) ? (this.Source.scrollLeft += (changeWidth - wasWidth ) / 2) : 0;
+			//var fixTop  = (wasHeight !== changeHeight)? (this.Source.scrollTop  += (changeHeight - wasHeight) / 2): 0;
+			//var fixOffset = (fixLeft > fixTop) ? fixLeft : fixTop;
+			
+			//if(fixOffset !== 0) {
+			//	this.Source.scrollLeft += fixOffset;
+			//	this.Source.scrollTop  += fixOffset;
+			//}
 		},
 		needZoomWithOffset:function(offset){ 
 			if(this.StartZoom) {
@@ -6629,8 +6673,9 @@
 			var u = this.Source.scrollTop , d = (this.Source.scrollHeight - this.Source.offsetHeight - this.Source.scrollTop);	
 			return (u < d)?u:d;
 		},
+		setAllowVirtureFinger:function(flag){ this.Finger.setAllowVirtureFinger(true); },
 		//scroll event
-		whenScroll            :function(e){ this.ScrollEvent.Scroll            = e; },
+		whenScroll            :function(e){ this.ScrollEvent.Scroll = e; },
 		whenZoom:function(event){ this.ZoomEvent = event; },
 		applyScrollEvent:function(flag){
 			if(typeof flag !== "boolean") return;
@@ -6690,7 +6735,7 @@
 			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
 			ELSTYLE(this.ClipView,"transition-property","transform");
 			ELSTYLE(this.ClipView,"transition-duration","0.3s");
-			ELSTYLE(this.ClipView,"transition-timing-function","ease-in");
+			ELSTYLE(this.ClipView,"transition-timing-function","ease-out");
 			ELSTYLE(this.ClipView,"transform","matrix(1.0,0,0,1.0,0,0)");
 			ELSTYLE(this.ClipView,"box-sizing","content-box");
 			
@@ -6725,7 +6770,7 @@
 			
 			//
 			this.StartZoom = undefined;
-			this.zoomMin   = 0.5;
+			this.zoomMin   = 1;
 			this.zoomMax   = 2;
 
 			

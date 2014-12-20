@@ -101,12 +101,11 @@
 			this.Source = moment.apply(undefined,CLONEARRAY(arguments));
 		}
 	});
-	
-	makeGetter("LG",function(s){
+	makeGetter("NOTY",function(s){
 		var text = DATAMAP(arguments,function(vs){
 			return TOS(vs,true);
 		}).join("\n");
-		noty({theme:"relax",layout:"bottom",text:text,timeout:3000})
+		noty({theme:"relax",layout:"topLeft",text:text,timeout:4000})
 	});
 	
 	var root  = FUT.LOADINGSCRIPTROOT();
