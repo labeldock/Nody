@@ -5900,6 +5900,12 @@
 				}
 			});
 		},
+		//현재부터 자식으로 
+		feedDownManagedData:function(method,param){
+			var newParam = method.call(this,param);
+			this.Childrens.each(function(child){ child.feedDownManagedData(method,newParam); });
+			return this;
+		},
 		feedUpManageData:function(method,depth){
 			// 돌리는 depth
 			var depth = depth ? depth : 0;
@@ -5909,6 +5915,7 @@
 			depth++;
 			DATAEACH(mangedDatas,function(child){ child.feedUpManageData(method,depth); });
 			method(this,depth-1);
+			return this;
 		},
 		chainUpMangedData:function(method){
 			if(typeof method === "function"){
@@ -6061,6 +6068,9 @@
 			} else {
 				console.warn("managedDataAppend :: append data가 들어오지 않았습니다", data);
 			}
+		},
+		maagedDataMemeberAppend:function(data){
+			if(this.Parent) this.Parent.managedDataAppend(data);
 		}
 	},function(context,initData,dataType){
 		this.BindID     = _Util.base64UniqueRandom(8);
@@ -6076,25 +6086,25 @@
 	
 	makeModule("DataContextViewController",{
 		"+events":{
-			"up":function(managedData,arg){
+			"up":function(arg,vc){
 				if(typeof arg === "function") {
-					if( arg(managedData,element) != false ) managedData.managedDataDecrease();
+					if( arg(this,element) != false ) this.managedDataDecrease();
 				} else {
-					managedData.managedDataDecrease();
+					this.managedDataDecrease();
 				}
 			},
-			"down":function(managedData,arg){
+			"down":function(arg,vc){
 				if(typeof arg === "function") {
-					if( arg(managedData,element) != false ) managedData.managedDataIncrease();
+					if( arg(this,element) != false ) this.managedDataIncrease();
 				} else {
-					managedData.managedDataIncrease();
+					this.managedDataIncrease();
 				}
 			},
-			"delete":function(managedData,arg){
-				managedData.managedDataRemove();
+			"delete":function(arg,vc){
+				this.managedDataRemove();
 			},
-			"append":function(managedData,arg){
-				managedData.managedDataAppend(arg);
+			"append":function(arg,vc){
+				this.managedDataAppend(arg);
 			}
 		},
 		addEvent:function(name,method){
@@ -6143,8 +6153,12 @@
 		},
 		nManagedDataAppend:function(bindID,newManagedData){
 			if(this.placeholderNodes[bindID]) {
-				this.needDisplay(newManagedData,this.placeholderNodes[bindID]);
-				//
+				var _ = this;
+				//일단 하위데이터까지 처리를 이곳에서
+				newManagedData.feedDownManagedData(function(placenodeID){
+					_.needDisplay(this,_.placeholderNodes[placenodeID]);
+					return this.BindID;
+				},bindID);
 				CALL(this.dataDidChange,this);
 			}
 		},
@@ -6203,9 +6217,9 @@
 			ELON(element,"click", function(){
 				if (typeof viewController.events[actionName] === "function") {
 					viewController.events[actionName].call(
-						viewController.events,
 						managedData,
-						arg
+						arg,
+						viewController
 					);
 				} else {
 					console.warn(actionName,"에 해당하는 이벤트가 없습니다.")
