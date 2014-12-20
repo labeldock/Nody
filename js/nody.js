@@ -9,7 +9,7 @@
 	
 	// 버전
 	var version = new String("0.10.3");
-	var build   = new String("867");
+	var build   = new String("868");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -22,19 +22,12 @@
 	if (typeof W.console !== "object"){W.console = {};} 'log info warn error count assert dir clear profile profileEnd"'.replace(/\S+/g,function(n){ 
 		if(!(n in W.console)){W.console[n] = function(){
 			if(typeof air === "object") if("trace" in air){
-				var args = Array.prototype.slice.call(arguments);
-				var traces = [];
+				var args = Array.prototype.slice.call(arguments),traces = [];
 				for(var i=0,l=args.length;i<l;i++){
 					switch(typeof args[i]){
-						case "string":case "number":
-							traces.push(args[i]);
-							break;
-						case "boolean":
-							traces.push(args[i]?"true":"false");
-							break;
-						default:
-							traces.push(TOSTRING(args[i]));
-							break;
+						case "string" : case "number": traces.push(args[i]); break;
+						case "boolean": traces.push(args[i]?"true":"false"); break;
+						default: traces.push(TOSTRING(args[i])); break;
 					}
 				}
 				air.trace( traces.join(", ") ); 
@@ -6407,9 +6400,11 @@
 					ELTRIGGER(source,"touchend",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
 				});
 				ELON(source,"mouseout",function(e){
-					wasStart = false;
-					e.preventDefault();
-					ELTRIGGER(source,"touchend",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
+					if(e.target == e.currentTarget) {
+						wasStart = false;
+						e.preventDefault();
+						ELTRIGGER(source,"touchend",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
+					}
 				});
 			}
 		},
