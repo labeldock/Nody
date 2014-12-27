@@ -8,11 +8,11 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.10.4");
-	var build   = new String("871");
+	var version = new String("0.10.5");
+	var build   = new String("872");
 	
 	// 이미 불러온 버전이 있는지 확인
-	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded ATYPE core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
+	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	
 	// 코어버전
 	var nodyCoreVersion = new String("1.7");
@@ -146,6 +146,10 @@
 		}});
 		info.supportTransition = support;
 		return info;
+		
+		//getUserMedia
+		info.getUserMedia        = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+		info.supportGetUserMedia = !!info.getUserMedia;
 	})();
 	
 	//NativeCore console trace
@@ -436,13 +440,14 @@
 		"PAGEURLINFO":function(url){
 			if(typeof url === "object") return ( url["ConstructorMark"] === ("ClientURLInfo" + W.nody)) ? url : null;
 			try {
-				var info = /([\w]+)(\:[\/]+)([^/]*\@|)([\w\d\.\-\_\+]+)(\:[\d]+|)(\/|)([\w\d\.\/\-\_]+|)(\?[\d\w\=\&\%]+|)(\#[\d\w]*|)/.exec(url?url:this.url());
+				var info = /([\w]+)(\:[\/]+)([^/]*\@|)([\w\d\.\-\_\+]+)(\:[\d]+|)(\/|)([\w\d\.\/\-\_]+|)(\?[\d\w\=\&\%]+|)(\#[\d\w]*|)/.exec(url?url:window.document.URL.toString());
 			} catch(e) {
+				console.error("PAGEURLINFO faild get url info",e);
 				return null;
 			}
 			return {
 				"ConstructorMark" : "ClientURLInfo" + W.nody,
-				"url"      : this.url(),
+				"url"      : window.document.URL.toString(),
 				"protocol" : info[1],
 				"divider"  : info[2],
 				"userinfo" : info[3],
@@ -454,7 +459,11 @@
 				"filename" : /(\/|)([\w\d\.\-\_]+|)$/.exec(info[6]+info[7])[2]
 			};
 		},
-		"PAGEROOT":function(url){ var h = FUT.PAGEURLINFO(url); return h.protocol + h.divider + h.hostname + (h.port !== ""?":"+h.port:h.port) + (slash===false?"":"/"); },
+		"PAGEROOT":function(url){ var 
+			h = FUT.PAGEURLINFO(url);
+			var root = h.protocol + h.divider + h.hostname + (h.port !== ""?":"+h.port:h.port);
+			return /\/$/.test(root) ? root : root + "/";
+		},
 		//current loading page info
 		"LOADINGSCRIPTURL":function(){ 
 			var scripts = document.getElementsByTagName('script');
@@ -701,6 +710,16 @@
 				}
 			} 
 		},
+		"CALLBACK":function(f,owner){
+			if(typeof f === "function"){ 
+				if (arguments.length > 2) {
+					return f.apply(owner,Array.prototype.slice.call(arguments,2));
+				} else {
+					return f.call(owner);
+				}
+			}
+			return f;
+		},
 		//배열이 아니면 배열로 만들어줌
 		"TOARRAY":TOARRAY,
 		//배열이든 아니든 무조건 배열로 만듬
@@ -842,7 +861,7 @@
 			}
 		},
 		//무엇이든 문자열로 넘기지만 4댑스 이하로는 읽지 않음
-		"TOS"  : function(tosv,jsonfy){ return TOSTRING(tosv,4,jsonfy); },
+		"TOS"  : function(tosv,jsonfy){ return TOSTRING(tosv,9,jsonfy); },
 		//어떠한 객체의 길이를 조절함
 		"MAX"  : function(target,length,suffix){
 			if(typeof target === "string"){
@@ -2435,6 +2454,15 @@
 			} else {
 				return this.setCookie(k,_Util.encodeString(v));
 			}
+		},
+		isEventSupport:function(eventName,tagName){
+			var testTag = (typeof tagName === "object") ? tagName : document.createElement( (typeof tagName === "string") ? tagName : "div" );
+			var isSupport = ( eventName in testTag );
+			if(!isSupport && ( "setAttribute" in testTag)) {
+				testTag.setAttribute(eventName,'return;');
+				return (typeof testTag[eventName] === "function");
+			}
+			return isSupport;
 		},
 		getLocalData:function(k){
 			if(this.agent("adobeair")){
@@ -5865,17 +5893,14 @@
 		"+shouldSelectItem"  :function(node,depth){ ELSTYLE(node,"background","#dae8f2"); },
 		"+shouldDeselectItem":function(node,depth){ ELSTYLE(node,"background","none") }
 	},function(renderDepth){
-		var args = Array.prototype.slice.call(arguments);
-		
 		//tempate 타겟을 설정
-		this.Source = new AArray(args).getMap(function(a){ 
+		this.Source = new AArray(Array.prototype.slice.call(arguments)).getMap(function(a){ 
 			if(typeof a === "string"){
 				var findTemplate = ZFIND(a);
 				return _Template(findTemplate,undefined,false);
 			}
 			return a; 
 		});
-			
 	});
 	
 	makeModule("ManagedData",{
@@ -6096,28 +6121,28 @@
 	
 	makeModule("DataContextViewController",{
 		"+events":{
-			"up":function(arg,vc){
+			"up":function(arg,el,vc){
 				if(typeof arg === "function") {
 					if( arg(this,element) != false ) this.managedDataDecrease();
 				} else {
 					this.managedDataDecrease();
 				}
 			},
-			"down":function(arg,vc){
+			"down":function(arg,el,vc){
 				if(typeof arg === "function") {
 					if( arg(this,element) != false ) this.managedDataIncrease();
 				} else {
 					this.managedDataIncrease();
 				}
 			},
-			"delete":function(arg,vc){
+			"delete":function(arg,el,vc){
 				this.removeManagedData();
 			},
-			"append":function(arg,vc){
+			"append":function(arg,el,vc){
 				this.addChildData(arg);
 			}
 		},
-		addEvent:function(name,method){
+		addActionEvent:function(name,method){
 			if(typeof name === "string", typeof method === "function"){
 				this.events[name] = method;
 			}
@@ -6243,10 +6268,10 @@
 			var viewController = this;
 			ELON(element,"click", function(){
 				if (typeof viewController.events[actionName] === "function") {
-					console.log("event!",actionName,managedData)
 					viewController.events[actionName].call(
 						managedData,
 						arg,
+						element,
 						viewController
 					);
 				} else {
@@ -6598,73 +6623,6 @@
 			}
 			return false;
 		},
-		getZoomValue:function(){
-			var matrix = ELSTYLE(this.ClipView,"transform");
-			var scale = /matrix\(([\d.]+)/.exec(matrix)[1];
-			return TONUMBER(scale);
-		},
-		getBoundsInfo:function(){
-			return  {
-				frame:{
-					width:this.Source.offsetWidth,
-					height:this.Source.offsetHeight,
-					swidth:this.Source.scrollWidth,
-					sheight:this.Source.scrollHeight
-				},
-				clipview:{
-					x:this.Source.scrollLeft,
-					y:this.Source.scrollTop,
-					width:this.ClipView.offsetWidth,
-					height:this.ClipView.offsetHeight
-				}
-			}
-		},
-		needZoom:function(needTo){
-			needTo = TONUMBER(needTo);
-			if(needTo < this.zoomMin) needTo = this.zoomMin;
-			if(needTo > this.zoomMax) needTo = this.zoomMax;
-			
-			var wasWidth  = this.Source.scrollWidth,
-				wasHeight = this.Source.scrollHeight
-				wasZoom   = this.getZoomValue();
-			
-			ELSTYLE(this.ClipView,"transform","scale("+needTo+")");
-			var _ = this;
-			
-			setTimeout(function(){
-				//가장 근사치임
-				var offsetWidth  = Math.floor(((_.ClipView.offsetWidth  * needTo) - _.ClipView.offsetWidth) / 2);
-				var offsetHeight = Math.floor(((_.ClipView.offsetHeight * needTo) - _.ClipView.offsetHeight) / 2);
-				
-				ELSTYLE(_.ClipView,"padding-top",offsetHeight + "px ");
-				ELSTYLE(_.ClipView,"padding-left",offsetWidth + "px ");
-				
-				var changeWidth  = (wasWidth - _.Source.scrollWidth) /2;
-				var changeHeight = (wasHeight - _.Source.scrollHeight) /2;
-				
-				_.needScrollingOffsetX(changeWidth);
-				_.needScrollingOffsetY(changeHeight);
-			},300);
-			
-			
-			
-			//var fixLeft = (wasWidth  !== changeWidth) ? (this.Source.scrollLeft += (changeWidth - wasWidth ) / 2) : 0;
-			//var fixTop  = (wasHeight !== changeHeight)? (this.Source.scrollTop  += (changeHeight - wasHeight) / 2): 0;
-			//var fixOffset = (fixLeft > fixTop) ? fixLeft : fixTop;
-			
-			//if(fixOffset !== 0) {
-			//	this.Source.scrollLeft += fixOffset;
-			//	this.Source.scrollTop  += fixOffset;
-			//}
-		},
-		needZoomWithOffset:function(offset){ 
-			if(this.StartZoom) {
-				this.needZoom(this.StartZoom + offset); 
-			} else {
-				this.needZoom(this.getZoomValue()+offset);
-			}
-		},
-		//
 		// var _drawAxisYItem
 		drawAxisYItem:function(rend){
 			this._drawAxisYItem = rend;
@@ -6728,35 +6686,39 @@
 		setAllowVirtureFinger:function(flag){ this.Finger.setAllowVirtureFinger(true); },
 		//scroll event
 		whenScroll            :function(e){ this.ScrollEvent.Scroll = e; },
-		whenZoom:function(event){ this.ZoomEvent = event; },
 		applyScrollEvent:function(flag){
 			if(typeof flag !== "boolean") return;
 			
 			if(typeof this._applyScrollEvent === "undefined") {
 				var _ = this;
-				this._currentMouseWheelEvent = function(e){
-					if(e.wheelDeltaY) {
-						if( (e.wheelDeltaY !== 0) && (_.needScrollingOffsetY(e.wheelDeltaY/3) == true) && (_.restYSpace() !== 0) ) {
-							e.stopPropagation();
-							e.preventDefault();
+				if(!this._currentMouseWheelEvent) {
+					this._currentMouseWheelEvent = function(e){
+						if(e.wheelDeltaY) {
+							if( (e.wheelDeltaY !== 0) && (_.needScrollingOffsetY(e.wheelDeltaY/3) == true) && (_.restYSpace() !== 0) ) {
+								e.stopPropagation();
+								e.preventDefault();
+							}
+							if( (e.wheelDeltaX !== 0) && (_.needScrollingOffsetX(e.wheelDeltaX/3) == true) ) {
+								e.stopPropagation();
+								e.preventDefault();
+							}
+						} else if(e.wheelDelta) {
+							if( (e.wheelDelta !== 0) && (_.needScrollingOffsetY(e.wheelDelta/3) !== false) && (_.restYSpace() !== 0) ) {
+								e.stopPropagation();
+								e.preventDefault();
+							}
 						}
-						if( (e.wheelDeltaX !== 0) && (_.needScrollingOffsetX(e.wheelDeltaX/3) == true) ) {
-							e.stopPropagation();
-							e.preventDefault();
-						}
-					} else if(e.wheelDelta) {
-						if( (e.wheelDelta !== 0) && (_.needScrollingOffsetY(e.wheelDelta/3) !== false) && (_.restYSpace() !== 0) ) {
-							e.stopPropagation();
-							e.preventDefault();
-						}
-					}
-				};
-				this._currentScrollEvent = function(e){
-					e.stopPropagation();
-					e.preventDefault();
-					
-					return CALL(_.ScrollEvent.Scroll,_,e);
-				};
+					};
+				}
+				
+				if(!this._currentScrollEvent) {
+					this._currentScrollEvent = function(e){
+						e.stopPropagation();
+						e.preventDefault();
+						return CALL(_.ScrollEvent.Scroll,_,e);
+					};
+				}
+				
 				this._applyScrollEvent = false;
 			}
 		
@@ -6772,33 +6734,49 @@
 				}
 				this._applyScrollEvent = flag;
 			}
+		},
+		getBoundsInfo:function(){
+			return  {
+				frame:{
+					width:this.Source.offsetWidth,
+					height:this.Source.offsetHeight,
+				},
+				clipview:{
+					x:this.Source.scrollLeft,
+					y:this.Source.scrollTop,
+					width:this.ClipView.offsetWidth,
+					height:this.ClipView.offsetHeight
+				},
+				contents:{
+					width:this.Source.scrollWidth,
+					height:this.Source.scrollHeight
+				}
+			}
 		}
 	},function(node,fixHeight){
 		this.Source = ZFIND(node);
-		
 		if(this.Source){
 			
-			//
 			this.axisYPositiveLength = 0;
 			this.axisYNegativeLength = 0;
 			this.axisYPositiveItems = [];
 			this.axisYNegativeItems = [];
 			
 			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
-			ELSTYLE(this.ClipView,"transition-property","transform");
+			ELSTYLE(this.ClipView,"transition-property","all");
 			ELSTYLE(this.ClipView,"transition-duration","0.3s");
 			ELSTYLE(this.ClipView,"transition-timing-function","ease-out");
 			ELSTYLE(this.ClipView,"transform","matrix(1.0,0,0,1.0,0,0)");
-			ELSTYLE(this.ClipView,"box-sizing","content-box");
+			ELSTYLE(this.ClipView,"position","relative");
 			
 			ELAPPEND(this.ClipView,this.Source.childNodes);
 			ELAPPEND(this.Source,this.ClipView);
 			
 			//
 			this.ScrollEvent = {};
-			this.ZoomEvent;
+			
 			this.Finger = new Finger(this.Source);
-			this.allowZoom = false;
+			
 			this.allowScrollX = true;
 			this.allowScrollY = true;
 			
@@ -6809,28 +6787,9 @@
 			//
 			this.Finger.whenTouchMove(function(offsetX,offsetY,e){
 				var result = false;
-				if( (offsetY !== 0) && (_.needScrollingOffsetY(offsetY) == true) && (_.restYSpace() !== 0) ) {
-					result = true;
-				}
-				if( (offsetX !== 0) && (_.needScrollingOffsetX(offsetX) == true) ){
-					result = true;
-				}
+				if( (offsetY !== 0) && (_.needScrollingOffsetY(offsetY) == true) && (_.restYSpace() !== 0) ) result = true;
+				if( (offsetX !== 0) && (_.needScrollingOffsetX(offsetX) == true) ) result = true;
 				return result;
-				//(offsetY !== 0) && _.needScrollingOffsetY(offsetY);
-				//(offsetX !== 0) && _.needScrollingOffsetX(offsetX);
-			});
-			
-			//
-			this.StartZoom = undefined;
-			this.zoomMin   = 1;
-			this.zoomMax   = 2;
-
-			
-			this.Finger.whenPinchStart(function(){
-				if(_.allowZoom) _.StartZoom = _.getZoomValue();
-			});
-			this.Finger.whenPinch(function(zoomOffset,e){
-				if(_.allowZoom) _.needZoomWithOffset(zoomOffset);
 			});
 			
 			this.applyScrollEvent(true);
@@ -6839,19 +6798,141 @@
 		}
 	});
 	
-	makeModule("ScrollObserver",{
-		whenScroll:function(m){ this._whenScroll = m; }
-	},function(scrollbox,setting){
-		this.Source = scrollbox;
-		var _  = this;
-		var __ = this.Source;
-		this.Source.whenScroll(function(){
-			var restUp   = __.restUp();
-			if(restUp < 1) return CALL(_.whenScroll,_,0);
-			var restDown = __.restDown();
-			if(restDown < 1) return CALL(_.whenScroll,_,100);
-			return CALL(_.whenScroll,_,RATIO100(restUp,restDown)[0]);
+	extendModule("ScrollBox","ZoomBox",{
+		needZoom:function(needTo){
+			needTo = TONUMBER(needTo);
+			if(needTo < this.zoomMin) needTo = this.zoomMin;
+			if(needTo > this.zoomMax) needTo = this.zoomMax;
+			
+			if(needTo === this.ZoomValue) return false;
+			
+			//ELSTYLE(this.ClipView,"transform","scale("+needTo+")");
+			var offsetWidth  = Math.floor(((this.ClipView.offsetWidth  * needTo) - this.ClipView.offsetWidth) / 2);
+			var offsetHeight = Math.floor(((this.ClipView.offsetHeight * needTo) - this.ClipView.offsetHeight) / 2);
+			
+			ELSTYLE(this.ClipView,"transform","matrix("+needTo+",0,0,"+needTo+","+offsetWidth+","+offsetHeight+")");
+			var _ = this;
+			
+			
+			if( !this.wasClipTimeout ) clearTimeout(this.wasClipTimeout);
+			this.wasClipTimeout = setTimeout(function(){ CALL(_.ScrollEvent.Scroll,_); },305);
+			
+			CALL(_.ScrollEvent.Scroll,_);
+			this.ZoomValue = needTo;
+			return true;
+		},
+		needZoomWithOffset:function(offset){ 
+			return this.needZoom(this.ZoomValue + offset);
+		},
+		whenZoom:function(event){ this.ZoomEvent = event; },
+		resizeFix:function(){
+			this.nzClipWidth  = this.Source.scrollWidth;
+			this.nzClipHeigth = this.Source.scrollHeight;
+		},
+		getBoundsInfo:function(){
+			var bi = this._super();
+			bi.clipview.zoom     = this.ZoomValue;
+			bi.contents.nzWidth  = this.nzClipWidth;
+			bi.contents.nsHeight = this.nzClipHeigth;
+			return bi;
+		},
+		getPosition:function(){
+			
+		},
+		setPosition:function(x,y,z){
+			
+		}
+	},function(mainNode){
+		//scrollbox이벤트의 휠 이벤트를 변경
+		var _ = this;
+		this._currentMouseWheelEvent = function(e){
+			e.preventDefault();
+			if(e.wheelDelta) _.needZoomWithOffset(e.wheelDelta/2000)
+		}
+		
+		this._super(mainNode);
+		
+		
+		this.ZoomValue = 1.0
+		this.zoomMin   = 1.0;
+		this.zoomMax   = 3.0;
+		this.allowZoom = true;
+		this.ZoomEvent;
+		this.resizeFix();
+		
+		this.Finger.whenPinch(function(zoomOffset,e){
+			if(_.allowZoom) _.needZoomWithOffset(zoomOffset);
 		});
-		this._whenScroll;
+		
+		this.setAllowVirtureFinger(true);
 	});
+	
+	makeModule("BoxTracker",{
+		whenTracking:function(m){ this._trackingEvnet = m; }
+	},function(mainNode,box){
+		this.Source            = ZFIND(mainNode);
+		box = CALLBACK(box,this);
+		
+		this.SourcePlaceholder = MAKE(".nody-box-tracker-placeholder");
+		this.SourceFocusLens   = MAKE(".nody-box-tracker-focus-lens");
+		this.SourceWrapper     = MAKE(".nody-box-tracker-wrapper[style=position:relative;overflow:hidden;]",this.SourcePlaceholder,this.SourceFocusLens);
+		
+		
+		this.SourceWidth       = this.Source.offsetWidth;
+		this.SourceHeight      = this.Source.offsetHeight;
+		
+		ELAPPEND(this.Source,this.SourceWrapper);
+		
+		
+		
+		if("__NativeClass__" in box) {
+			if( box.__NativeClass__("ZoomBox")  ) {
+				
+				var a1 = box.ClipView.outerHTML;
+				var a2 = HTMLTOEL(a1);
+				ELPUT(this.SourcePlaceholder,a2);
+				
+				var boxBounds   = box.getBoundsInfo();
+				var wm          = this.SourceWidth  / boxBounds.contents.width;
+				var hm          = this.SourceHeight / boxBounds.contents.height;
+				var defaultZoom = (wm < hm) ? wm : hm;
+		
+				ELATTR(this.SourcePlaceholder,"style","zoom:"+defaultZoom+";");
+		
+				var _ = this;
+				var __ = function(){
+					var boxBounds   = box.getBoundsInfo();
+					CALL(_._trackingEvnet,_,boxBounds);
+					ELATTR(
+						_.SourceFocusLens,
+						"style",
+						ZSTRING("position:absolute;left:\\{$0}px;top:\\{$1}px;width:\\{$2}px;height:\\{$3}px;border:2px solid red;",
+							boxBounds.clipview.x * defaultZoom / boxBounds.clipview.zoom,
+							boxBounds.clipview.y * defaultZoom / boxBounds.clipview.zoom,
+							boxBounds.clipview.width  * defaultZoom / boxBounds.clipview.zoom,
+							boxBounds.clipview.height * defaultZoom / boxBounds.clipview.zoom
+						)
+					);
+				};
+				box.whenScroll(__);__();
+		
+				//
+				this.Finger = new Finger(this.SourceFocusLens);
+				this.Finger.setAllowVirtureFinger(true);
+				this.Finger.whenTouchMove(function(offsetX,offsetY){
+					var zoom = box.getBoundsInfo().clipview.zoom * ((1-defaultZoom) + 1);
+					box.needScrollingOffsetX(-offsetX * zoom );
+					box.needScrollingOffsetY(-offsetY * zoom );
+				});
+				return;
+			}
+			if( box.__NativeClass__("ScrollBox")  ) {
+				
+				return;
+			}
+		}
+		console.error("두번째 파라메터는 Box인스턴스이여야 합니다.")
+		
+	});
+	
 })(window,NODYENV);
