@@ -276,15 +276,6 @@ GNBNavigationController.whenLoad("scroll",function(){
 	var countDisplay = $("#calendar-box-count");
 	var nowMoment    = new MixedMoment("ko");
 	
-	var scrollObserver = new ScrollObserver(scrollBox);
-	scrollObserver.whenScroll(function(position){
-		console.log("hello");
-		console.log("postion",position);
-	});
-	
-	$(document).on("click",".lginfo",function(){
-		LG("bounds info",scrollBox.getBoundsInfo());
-	});	
 	$(document).on("click",".zoomp",function(){
 		LG("click zoom plus");
 		scrollBox.needZoomWithOffset(0.2);

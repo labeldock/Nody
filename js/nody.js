@@ -8,8 +8,8 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// 버전
-	var version = new String("0.10.5");
-	var build   = new String("872");
+	var version = new String("0.10.6");
+	var build   = new String("873");
 	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
@@ -763,6 +763,25 @@
 			}
 			return [];
 		},2),
+		//중복되는 값 제거
+		"DATAUNIQUE" :function() {
+			var value  = [];
+			var result = [];
+			for(var ai=0,li=arguments.length;ai<li;ai++){
+				var mvArray = CLONEARRAY(arguments[ai]);
+				for(var i=0,l=mvArray.length;i<l;i++){
+					var unique = true;
+					for(var i2=0,l2=result.length;i2<l2;i2++){
+						if(mvArray[i] == result[i2]){
+							unique = false;
+							break;
+						}
+					}
+					if(unique==true)result.push(mvArray[i]);
+				}
+			}
+			return result;
+		},
 		"DATAINDEX":function(data,compare){ var v = TOARRAY(data); for(var i in v) if(compare == v[i]) return TONUMBER(i); },
 		//i 값이 제귀합니다.
 		"REVERSEINDEX":function(index,maxIndex){ return (maxIndex-1) - index },
@@ -902,7 +921,6 @@
 //Nody Foundation
 (function(W){
 	if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
-	
 	W.makeSingleton("SpecialFoundation",{
 		"RATIO100":function(){
 			var total = 0;
@@ -913,36 +931,6 @@
 			},DATAMAP,function(num){
 				return Math.round(num / total * 100);
 			});
-		},
-		// 데이터의 갯수를 샘
-		"DATACOUNT" : function(v){
-			if( v == undefined || v == null ) return 0;
-			if( typeof v === "object"){
-				if( ISARRAY(v) ) return v.length;
-				var count = 0;
-				for(var key in v) count++;
-				return count;
-			}
-			return 1;
-		},
-		//중복되는 값 제거
-		"DATAUNIQUE" :function() {
-			var value  = [];
-			var result = [];
-			for(var ai=0,li=arguments.length;ai<li;ai++){
-				var mvArray = CLONEARRAY(arguments[ai]);
-				for(var i=0,l=mvArray.length;i<l;i++){
-					var unique = true;
-					for(var i2=0,l2=result.length;i2<l2;i2++){
-						if(mvArray[i] == result[i2]){
-							unique = false;
-							break;
-						}
-					}
-					if(unique==true)result.push(mvArray[i]);
-				}
-			}
-			return result;
 		},
 		//래핑된 텍스트를 제거
 		"ISWRAP":function(c,w){ if(typeof c === "string"){ c = c.trim(); w = typeof w !== "undefined" ? TOARRAY(w) : ['""',"''","{}","[]"]; for(var i=0,l=w.length;i<l;i++){ var wf = w[i].substr(0,w[i].length-1); var we = w[i].substr(w[i].length-1); if(c.indexOf(wf)==0 && c.substr(c.length-1) == we) return true; } } return false; },
@@ -1571,7 +1559,7 @@
 		min :function(){
 			
 		},
-		count:function(){return DATACOUNT(this.Source) },
+		count:function(){ return PROPLENGTH(this.Source); },
 		clone:function(){return CLONE(this.Source); },
 		save:function() {return this.__GlobalConstructor__(CLONE(this.Source)); },
 		//key value get setter
@@ -6932,7 +6920,6 @@
 			}
 		}
 		console.error("두번째 파라메터는 Box인스턴스이여야 합니다.")
-		
 	});
 	
 })(window,NODYENV);
