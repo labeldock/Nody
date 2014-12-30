@@ -7,60 +7,25 @@
 
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
-	// 버전
-	var version = new String("0.10.6");
-	var build   = new String("873");
-	
+	// Nody 버전
+	var version = "0.11",build = "875";	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
-	
 	// 코어버전
-	var nodyCoreVersion = new String("1.7");
-	var nodyCoreBuild   = new String("72");
-	
-	// 콘솔설정 : ie에러 고침 : adobe air
-	if (typeof W.console !== "object"){W.console = {};} 'log info warn error count assert dir clear profile profileEnd"'.replace(/\S+/g,function(n){ 
-		if(!(n in W.console)){W.console[n] = function(){
-			if(typeof air === "object") if("trace" in air){
-				var args = Array.prototype.slice.call(arguments),traces = [];
-				for(var i=0,l=args.length;i<l;i++){
-					switch(typeof args[i]){
-						case "string" : case "number": traces.push(args[i]); break;
-						case "boolean": traces.push(args[i]?"true":"false"); break;
-						default: traces.push(TOSTRING(args[i])); break;
-					}
-				}
-				air.trace( traces.join(", ") ); 
-			}
-		};} 
-	});
-	
+	var nodyCoreVersion = "1.8", nodyCoreBuild = "73";	
+	// Console fix // target IE, air
+	if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(TOSTRING(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
 	// MARK("name") 두번호출하면 시간을 측정할수 있음
-	var MARKO = {};
-	W.MARK = function(name){ if(typeof name === "string" || typeof name === "number") { name = name+""; if(typeof MARKO[name] === "number") { var time = (+new Date() - MARKO[name]);console.info("MARK::"+name+" => "+time) ; delete MARKO[name]; return time  } else { console.info("MARK START::"+name); MARKO[name] = +new Date(); } } };
-	
+	var MARKO = {}; W.MARK = function(name){ if(typeof name === "string" || typeof name === "number") { name = name+""; if(typeof MARKO[name] === "number") { var time = (+new Date() - MARKO[name]);console.info("MARK::"+name+" => "+time) ; delete MARKO[name]; return time  } else { console.info("MARK START::"+name); MARKO[name] = +new Date(); } } };
 	//IE8 TRIM FIX
 	if(!String.prototype.trim) String.prototype.trim = function() { return this.replace(/(^\s*)|(\s*$)/gi, ""); };
-	
 	//IE7 JSON FIX
-	var __aJSONCount__ = "JSON" in W ? 1 : 0; 
-	W.aJSON = {
-		 "parse"     : function (jtext) { 
-			if(__aJSONCount__ < 1){ __aJSONCount__++; }
-			 var result;
-			 try { result = eval('(' + jtext + ')'); } catch(e) { result = TOOBJECT(jtext); }
-			 return result;
-		 },
-		 "stringify" : function (obj)   {
-			if(__aJSONCount__ < 1){ __aJSONCount__++; }
-			return W.TOSTRING(obj,Number.POSITIVE_INFINITY,true);
- 		}
-	};
-	if(typeof W.JSON === "undefined"){W.JSON = aJSON;}
-	
+	if(typeof W.JSON === "undefined"){ W.JSON = {
+			'parse' : function(s) { var r; try { r = eval('(' + s + ')'); } catch(e) { r = TOOBJECT(s); } return r; },
+			'stringify' : function(o) { return W.TOSTRING(obj,Number.POSITIVE_INFINITY,true); }
+	};}
 	//IE8 Success FIX
 	if (typeof W.success === "function"){W.success = "success";}
-	
 	//IE8 function bind FIX
 	if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { /* closest thing possible to the ECMAScript 5 internal IsCallable function */ throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments,1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }	
 	
@@ -91,12 +56,7 @@
 		    return M.join(' ');
 		})();
 		
-		info.browser        = sayswho;
-		//info.browserName    = sayswho.exec(/^(\w+)/)[1];
-		//info.browserVersion = sayswho.exec(/[\d\.]+/)[1];
-		//generation
-		//0 : <ie7 : truble, 1 : <ie8 : teasor , 2 : <ie9 : good, 3 : <ie10 : perfect
-		info.browserGeneration
+		info.browser = sayswho;
 		
 		//online
 		info.online = navigator.onLine;
@@ -114,7 +74,6 @@
 			if( s.match(/^ms/) )     return "-ms-";
 			return "";
 		};
-		
 		
 		var supportPrefix = {};
 		
@@ -175,40 +134,24 @@
 		var i,key,logText = [];
 		//Getter
 		var getterText = "# Native Getter";
-		for (i=0,l=NGetters.length;i<l;i++){
-			getterText += "\n";
-			getterText += i;
-			getterText += " : ";
-			getterText += NGetters[i];
-		}
+		for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i];
 		
 		logText.push(getterText);
 		//Sigletons
 		var singletonText = "# Native Singleton";
 		i=0;
 		for (key in NSingletons ) {
-			singletonText += "\n";
-			singletonText += i;
-			singletonText += " : ";
-			singletonText += key;
+			singletonText += "\n" + i + " : " + key;
 			
 			var protoName,i2=0;
 			switch(key){
 				case "SpecialFoundation": case "ELUT": case "NODY": case "FINDEL": case "ElementFoundation": case "ElementGenerator":
 					var count = 0;
 					for(protoName in NSingletons[key].constructor.prototype) count++;
-					singletonText += "\n    [";
-					singletonText += count;
-					singletonText += "]...";
+					singletonText += "\n    [" + count + "]...";
 					break;
 				default:
-					for(protoName in NSingletons[key].constructor.prototype) {
-						singletonText += "\n";
-						singletonText += i2;
-						singletonText += " : ";
-						singletonText += protoName;
-						i2++;
-					}
+					for(protoName in NSingletons[key].constructor.prototype)  singletonText += "\n" + (i2++) + " : " + protoName;
 					break;
 			}
 			i++;
@@ -218,10 +161,7 @@
 		var moduleText = "# Native Module";
 		i=0;
 		for (key in NModules ) {
-			moduleText += "\n " ;
-			moduleText += i;
-			moduleText += " : ";
-			moduleText += W.NativeModule(key);
+			moduleText += "\n " + i + " : " + W.NativeModule(key);
 			i++;
 		}
 		logText.push(moduleText);
@@ -508,21 +448,7 @@
 	});
 	FUT.CACHECLEAR();
 	
-	var TypeBaseMap = {
-		"string"    : "ISSTRING",
-		"number"    : "ISNUMBER",
-		"numberText": "ISNUMBERTEXT",
-		"text"      : "ISTEXT",
-		"array"     : "ISARRAY",
-		"object"    : "ISOBJECT",
-		"email"     : "ISEMAIL",
-		"ascii"     : "ISASCII",
-		"true"      : "ISTRUE",
-		"false"     : "ISFALSE",
-		"nothing"   : "ISNOTHING",
-		"meaning"   : "ISMEANING",
-		"enough"    : "ISENOUGH"
-	};
+	var TypeBaseMap = { "string" : "ISSTRING", "number" : "ISNUMBER", "numberText": "ISNUMBERTEXT", "text" : "ISTEXT", "array" : "ISARRAY", "object" : "ISOBJECT", "email" : "ISEMAIL", "ascii" : "ISASCII", "true" : "ISTRUE", "false" : "ISFALSE", "nothing" : "ISNOTHING", "meaning" : "ISMEANING", "enough" : "ISENOUGH" };
 	
 	makeSingleton("TypeBase",{
 		// // 데이터 타입 검사
@@ -691,35 +617,11 @@
 	// Nody Super base
 	W.makeSingleton("NodyBase",{
 		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
-		"APPLY" : function(f,owner,args) { 
-			if( typeof f === "function" ) {
-				args = CLONEARRAY(args);
-				return (args.length > 0) ? f.apply(owner,args) : f.call(owner);
-			}
-		},
+		"APPLY" : function(f,owner,args) { if( typeof f === "function" ) { args = CLONEARRAY(args); return (args.length > 0) ? f.apply(owner,args) : f.call(owner); } },
 		//값을 플래튼하여 실행함
-		"FLATTENCALL" : function(f,owner) {
-			 APPLY(f,owner,DATAFLATTEN(Array.prototype.slice.call(arguments,2)));
-		},
-		"CALL" : function(f,owner) { 
-			if(typeof f === "function"){ 
-				if (arguments.length > 2) {
-					return f.apply(owner,Array.prototype.slice.call(arguments,2));
-				} else {
-					return f.call(owner);
-				}
-			} 
-		},
-		"CALLBACK":function(f,owner){
-			if(typeof f === "function"){ 
-				if (arguments.length > 2) {
-					return f.apply(owner,Array.prototype.slice.call(arguments,2));
-				} else {
-					return f.call(owner);
-				}
-			}
-			return f;
-		},
+		"FLATTENCALL" : function(f,owner) { APPLY(f,owner,DATAFLATTEN(Array.prototype.slice.call(arguments,2))); },
+		"CALL"    :function(f,owner){ if(typeof f === "function") return (arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner); },
+		"CALLBACK":function(f,owner){ if(typeof f === "function") return (arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner); return f; },
 		//배열이 아니면 배열로 만들어줌
 		"TOARRAY":TOARRAY,
 		//배열이든 아니든 무조건 배열로 만듬
@@ -915,7 +817,6 @@
 		}
 	});
 	NodyBase.eachGetter();
-	
 })(window,[],{},{},{});
 
 //Nody Foundation
