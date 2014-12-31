@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11",build = "875";	
+	var version = "0.11",build = "876";	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -620,8 +620,8 @@
 		"APPLY" : function(f,owner,args) { if( typeof f === "function" ) { args = CLONEARRAY(args); return (args.length > 0) ? f.apply(owner,args) : f.call(owner); } },
 		//값을 플래튼하여 실행함
 		"FLATTENCALL" : function(f,owner) { APPLY(f,owner,DATAFLATTEN(Array.prototype.slice.call(arguments,2))); },
-		"CALL"    :function(f,owner){ if(typeof f === "function") return (arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner); },
-		"CALLBACK":function(f,owner){ if(typeof f === "function") return (arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner); return f; },
+		"CALL"    :function(f,owner){ return (typeof f === "function") ? ((arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner)) : undefined; },
+		"CALLBACK":function(f,owner){ return (typeof f === "function") ? ((arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner)) : f; },
 		//배열이 아니면 배열로 만들어줌
 		"TOARRAY":TOARRAY,
 		//배열이든 아니든 무조건 배열로 만듬
@@ -638,9 +638,8 @@
 			switch(typeof d){ case "number":return d;case "string":var r=d*1;return isNaN(r)?0:r;break; }
 			return 0;
 		},
-		"PADLEFT":function(nr,n,str){
-			 return new Array(n-new String(nr).length+1).join(str||'0')+nr;
-		},
+		//좌측으로 0을 붙임
+		"PADLEFT":function(nr,n,str){ return new Array(n-new String(nr).length+1).join(str||'0')+nr; },
 		//1:길이와 같이 2: 함수호출
 		"TIMES":function(l,f){ l=TONUMBER(l); for(var i=0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
 		"TIMESMAP":FUT.CONTINUTILITY(function(l,f){ l=TONUMBER(l); var r = []; for(var i=0;i<l;i++) r.push(f(i)); return r; },2),
