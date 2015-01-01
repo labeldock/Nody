@@ -219,10 +219,10 @@ Result
 Tag
 ```html
 		<template id="menu-item">
-			<a partial-href="hrefKey">
-				<img partial-src="srcKey">
-				<span partial-value="spanValueKey"></span>
-				<input type="text" partial-value="inputValueKey">
+			<a node-href="hrefKey">
+				<img node-src="srcKey">
+				<span node-value="spanValueKey"></span>
+				<input type="text" node-value="inputValueKey">
 			</a>
 		</template>
 ```
@@ -269,7 +269,7 @@ Result
 	<div id="container">
 	</div>
 	<template id="part">
-		<ul partial-placeholder="list"></ul>
+		<ul node-placeholder="list"></ul>
 	</template>
 ```
 ```javascript
@@ -279,7 +279,7 @@ Result
 Result
 ```html
 	<div id="container">
-		<ul partial-placeholder="list">
+		<ul node-placeholder="list">
 			<li class="item">item1</li>
 			<li class="item">item2</li>
 		</ul>
@@ -349,13 +349,13 @@ Result
 					<th>value</th>
 				</tr>
 			</thead>
-			<tbody data-placeholder></tbody>
+			<tbody node-placeholder></tbody>
 		</table>
 	</template>
 	<template id="tbody-item">
 		<tr>
-			<td data-value="index"></td>
-			<td data-value="value"></td>
+			<td node-value="index"></td>
+			<td node-value="value"></td>
 		</tr>
 	</template>
 	
@@ -695,4 +695,4 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 
 #### 0.11 정보
 - 사용법 단순화를 위한 API디자인과, IE9 호환성 작업 및 성능최적화 작업이 주로 이루어질 예정입니다.
-- Firefox bug fix
+<!-- Firefox bug fix

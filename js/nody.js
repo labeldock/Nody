@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11.1",build = "880";	
+	var version = "0.11.2",build = "881";	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -4219,7 +4219,7 @@
 			var _partials = this.TemplatePartials;
 			// 파셜 노드 수집 (두번째의 경우 수집한 노드를 다시 수집)
 			PROPEACH(this.TemplatePartials,function(inject,name){
-				_.partialAttr("partial-"+name,function(attrValue,node){
+				_.partialAttr("node-"+name,function(attrValue,node){
 					if (!inject[attrValue]) inject[attrValue] = [];
 					inject[attrValue].push(node);
 				});
@@ -5994,18 +5994,18 @@
 			
 			if(templateNode.isEmpty()) console.error("configWithTemplate :: 렌더링할 template를 찾을수 없습니다");
 			
-			templateNode.partialAttr("data",function(dataKey,node){
+			templateNode.partialAttr("node-data",function(dataKey,node){
 				ELVALUE(node,dataKey,_.data(dataKey));
 			});
-			templateNode.partialAttr("data-bind",function(dataKey,node){
+			templateNode.partialAttr("node-bind",function(dataKey,node){
 				_.bind(dataKey,node)
 			});
-			templateNode.partialAttr("data-action",function(dataKey,node){
+			templateNode.partialAttr("node-action",function(dataKey,node){
 				var dataParam = node.getAttribute("data-param");
 				_.action(dataKey,node,TOOBJECT(dataParam,"value"));
-				if("data-param" in node.attributes) node.removeAttribute("data-param");;	
+				if("node-param" in node.attributes) node.removeAttribute("node-param");;	
 			});
-			templateNode.partialAttr("data-placeholder",function(dataKey,node){
+			templateNode.partialAttr("node-placeholder",function(dataKey,node){
 				_.placeholder(node);
 			});
 			
