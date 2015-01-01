@@ -282,8 +282,7 @@
 <p><code>
 Script
 </code>javascript
-        var ul = ZFIND(&ldquo;ul#container&rdquo;);
-        for(var i=0,l=3;i&lt;l;i++) _Template(&ldquo;template#li-temp&rdquo;).appendTo(ul);
+        for(var i=0,l=3;i&lt;l;i++) _Template(&ldquo;template#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
 <code>
 Result
 </code>html
@@ -334,24 +333,35 @@ Result
 <h4>Create template node</h4>
 
 <p>자바스크립트로 Template태그를 만들수 있다.
-```javascript
+<code>javascript
         var template = MAKETEMP(
-            TAG(&ldquo;ul.list&rdquo;,
-                TAG(&ldquo;li.item&rdquo;),
-                TAG(&ldquo;li.item&rdquo;),
-                TAG(&ldquo;li.item&rdquo;)
-        ));</p>
+            TAG("ul.list",
+                TAG("li.item"),
+                TAG("li.item"),
+                TAG("li.item")
+        ));
+</code>
+<code>html
+    &lt;template&gt;
+        &lt;ul class="list"&gt;
+            &lt;li class="item"&gt;&lt;/li&gt;
+            &lt;li class="item"&gt;&lt;/li&gt;
+            &lt;li class="item"&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/template&gt;
+</code></p>
 
-<pre><code>    // import node
-    document.importNode(template.content);
-    //or
-    _Template(template).get();
-    //or
-    IMPORTNODE(template);
-</code></pre>
+<p>다음과 같이 클론 가능하다.
+<code>javascript
+        // import node
+        document.importNode(template.content);
+        //or
+        _Template(template).get();
+        //or
+        IMPORTNODE(template);
+</code></p>
 
-<p>```
-<a name="showcase-template-04"/></p>
+<p><a name="showcase-template-04"/></p>
 
 <h4>템플릿 안에 노드를 파셜하기</h4>
 
@@ -363,13 +373,14 @@ Result
     &lt;/template&gt;
 </code>
 <code>javascript
-    var partialNode = [MAKE("li.item::item1"),MAKE("li.item::item2")];
-    _Template("#part",{"list":partialNode}).appendTo("#container");
+    _Template("#part",{
+        "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
+    }).appendTo("#container");
 </code>
 Result
 <code>html
     &lt;div id="container"&gt;
-        &lt;ul node-placeholder="list"&gt;
+        &lt;ul&gt;
             &lt;li class="item"&gt;item1&lt;/li&gt;
             &lt;li class="item"&gt;item2&lt;/li&gt;
         &lt;/ul&gt;

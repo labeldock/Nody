@@ -202,8 +202,7 @@ Tag
 ```
 Script
 ```javascript
-		var ul = ZFIND("ul#container");
-		for(var i=0,l=3;i<l;i++) _Template("template#li-temp").appendTo(ul);
+		for(var i=0,l=3;i<l;i++) _Template("template#li-temp").appendTo("ul#container");
 ```
 Result
 ```html
@@ -255,14 +254,27 @@ Result
 				TAG("li.item"),
 				TAG("li.item")
 		));
-		
+```
+```html
+	<template>
+		<ul class="list">
+			<li class="item"></li>
+			<li class="item"></li>
+			<li class="item"></li>
+		</ul>
+	</template>
+```
+
+다음과 같이 클론 가능하다.
+```javascript 
 		// import node
 		document.importNode(template.content);
 		//or
 		_Template(template).get();
 		//or
 		IMPORTNODE(template);
-```
+```		
+
 <a name="showcase-template-04"/>
 #### 템플릿 안에 노드를 파셜하기 #
 ```html
@@ -273,13 +285,14 @@ Result
 	</template>
 ```
 ```javascript
-	var partialNode = [MAKE("li.item::item1"),MAKE("li.item::item2")];
-	_Template("#part",{"list":partialNode}).appendTo("#container");
+	_Template("#part",{
+		"list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
+	}).appendTo("#container");
 ```
 Result
 ```html
 	<div id="container">
-		<ul node-placeholder="list">
+		<ul>
 			<li class="item">item1</li>
 			<li class="item">item2</li>
 		</ul>
