@@ -4200,8 +4200,9 @@
 	
 	
 	extendModule("Nody","Template",{
-		clone    : function(partialData){ return _Template(this.TemplateNode,partialData); },
-		generate : function(partialData){ return _Template(this.TemplateNode,partialData).get(); },
+		clone      : function(partialData){ return _Template(this.TemplateNode,partialData); },
+		generate   : function(partialData){ return _Template(this.TemplateNode,partialData).get(); },
+		generateTo : function(target,partialData){ return _Template(this.TemplateNode,partialData).appendTo(target); },
 		// 키를 지우면서
 		partialAttr:function(attrKey,method){
 			this.find("["+attrKey+"]").each(function(node){

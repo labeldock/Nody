@@ -219,34 +219,52 @@ Result
 #### Partial template node #
 Tag
 ```html
+		<section id="figure-group"></section>
 		<template id="figure-item">
 			<figure>
 				<img node-src="image">
 				<figcaption>
 					<a node-href="link" node-value="title"></a>
-					<input type="text" node-value="inputText">
+					<input type="text" node-value="index">
 				</figcaption>
 			</figure>
 		</template>
 ```
 Script
 ```javascript
-		_Template("#figure-item",{
-			"image"    :"somewhere.png",
-			"link"     :"#someplace",
-			"title"    :"awesome",
-			"inputText":"100"
-		}); // => Result
+		var temp = _Template("#figure-item",false);
+		
+		temp.generateTo("#figure-group",{
+			"image":"somewhere.png",
+			"link" :"#someplace",
+			"title":"awesome",
+			"index":"100"
+		});
+		temp.generateTo("#figure-group",{
+			"image":"somewhere2.png",
+			"link" :"#someplace2",
+			"title":"great",
+			"index":"101"
+		});
 ```
 Result
 ```html
-	<figure>
-		<img src="somewhere.png">
-		<figcaption>
-			<a href="#someplace">awesome</a>
-			<input type="text" value="100">
-		</figcaption>
-	</figure>
+	<section id="figure-group">
+		<figure>
+			<img src="somewhere.png">
+			<figcaption>
+				<a href="#someplace">awesome</a>
+				<input type="text" value="100">
+			</figcaption>
+		</figure>
+		<figure>
+			<img src="somewhere2.png">
+			<figcaption>
+				<a href="#someplace2">great</a>
+				<input type="text" value="101">
+			</figcaption>
+		</figure>
+	</section>
 ```
 <a name="showcase-template-03"/>
 #### Create template node #

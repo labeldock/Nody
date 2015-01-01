@@ -301,35 +301,55 @@ Result
 
 <p>Tag
 <code>html
+        &lt;section id="figure-group"&gt;&lt;/section&gt;
         &lt;template id="figure-item"&gt;
             &lt;figure&gt;
                 &lt;img node-src="image"&gt;
                 &lt;figcaption&gt;
                     &lt;a node-href="link" node-value="title"&gt;&lt;/a&gt;
-                    &lt;input type="text" node-value="inputText"&gt;
+                    &lt;input type="text" node-value="index"&gt;
                 &lt;/figcaption&gt;
             &lt;/figure&gt;
         &lt;/template&gt;
 </code>
 Script
-<code>javascript
-        _Template("#figure-item",{
-            "image"    :"somewhere.png",
-            "link"     :"#someplace",
-            "title"    :"awesome",
-            "inputText":"100"
-        }); // =&gt; Result
-</code>
+```javascript
+        var temp = _Template(&ldquo;#figure-item&rdquo;,false);</p>
+
+<pre><code>    temp.generateTo("#figure-group",{
+        "image":"somewhere.png",
+        "link" :"#someplace",
+        "title":"awesome",
+        "index":"100"
+    });
+    temp.generateTo("#figure-group",{
+        "image":"somewhere2.png",
+        "link" :"#someplace2",
+        "title":"great",
+        "index":"101"
+    });
+</code></pre>
+
+<p><code>
 Result
-<code>html
-    &lt;figure&gt;
-        &lt;img src="somewhere.png"&gt;
-        &lt;figcaption&gt;
-            &lt;a href="#someplace"&gt;awesome&lt;/a&gt;
-            &lt;input type="text" value="100"&gt;
-        &lt;/figcaption&gt;
-    &lt;/figure&gt;
-</code>
+</code>html
+    <section id="figure-group">
+        <figure>
+            <img src="somewhere.png">
+            <figcaption>
+                <a href="#someplace">awesome</a>
+                <input type="text" value="100">
+            </figcaption>
+        </figure>
+        <figure>
+            <img src="somewhere2.png">
+            <figcaption>
+                <a href="#someplace2">great</a>
+                <input type="text" value="101">
+            </figcaption>
+        </figure>
+    </section>
+```
 <a name="showcase-template-03"/></p>
 
 <h4>Create template node</h4>
