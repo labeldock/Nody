@@ -301,35 +301,35 @@ Result
 
 <p>Tag
 <code>html
-        &lt;template id="menu-item"&gt;
-            &lt;a node-href="hrefKey"&gt;
-                &lt;img node-src="srcKey"&gt;
-                &lt;span node-value="spanValueKey"&gt;&lt;/span&gt;
-                &lt;input type="text" node-value="inputValueKey"&gt;
-            &lt;/a&gt;
+        &lt;template id="figure-item"&gt;
+            &lt;figure&gt;
+                &lt;img node-src="image"&gt;
+                &lt;figcaption&gt;
+                    &lt;a node-href="link" node-value="title"&gt;&lt;/a&gt;
+                    &lt;input type="text" node-value="inputText"&gt;
+                &lt;/figcaption&gt;
+            &lt;/figure&gt;
         &lt;/template&gt;
 </code>
 Script
-```javascript
-        var data = {
-            &ldquo;hrefKey&rdquo;       : &ldquo;#first&rdquo;,
-            &ldquo;srcKey&rdquo;        : &ldquo;somewhere.png&rdquo;,
-            &ldquo;spanValueKey&rdquo;  : &ldquo;InnerHTML value&rdquo;,
-            &ldquo;inputValueKey&rdquo; : &ldquo;Input value&rdquo;
-        };</p>
-
-<pre><code>    _Template("template#menu-item",data); =&gt; Result
-</code></pre>
-
-<p><code>
+<code>javascript
+        _Template("#figure-item",{
+            "image"    :"somewhere.png",
+            "link"     :"#someplace",
+            "title"    :"awesome",
+            "inputText":"100"
+        }); // =&gt; Result
+</code>
 Result
-</code>html
-    <a href="#first">
-        <img src="somewhere.png">
-        <span>InnerHTML value</span>
-        <input type="text" value="Input value">
-    </a>
-```
+<code>html
+    &lt;figure&gt;
+        &lt;img src="somewhere.png"&gt;
+        &lt;figcaption&gt;
+            &lt;a href="#someplace"&gt;awesome&lt;/a&gt;
+            &lt;input type="text" value="100"&gt;
+        &lt;/figcaption&gt;
+    &lt;/figure&gt;
+</code>
 <a name="showcase-template-03"/></p>
 
 <h4>Create template node</h4>
@@ -341,7 +341,8 @@ Result
                 TAG("li.item"),
                 TAG("li.item"),
                 TAG("li.item")
-        ));
+            )
+        );
 </code>
 <code>html
     &lt;template&gt;

@@ -219,32 +219,34 @@ Result
 #### Partial template node #
 Tag
 ```html
-		<template id="menu-item">
-			<a node-href="hrefKey">
-				<img node-src="srcKey">
-				<span node-value="spanValueKey"></span>
-				<input type="text" node-value="inputValueKey">
-			</a>
+		<template id="figure-item">
+			<figure>
+				<img node-src="image">
+				<figcaption>
+					<a node-href="link" node-value="title"></a>
+					<input type="text" node-value="inputText">
+				</figcaption>
+			</figure>
 		</template>
 ```
 Script
 ```javascript
-		var data = {
-			"hrefKey"       : "#first",
-			"srcKey"        : "somewhere.png",
-			"spanValueKey"  : "InnerHTML value",
-			"inputValueKey" : "Input value"
-		};
-		
-		_Template("template#menu-item",data); => Result
+		_Template("#figure-item",{
+			"image"    :"somewhere.png",
+			"link"     :"#someplace",
+			"title"    :"awesome",
+			"inputText":"100"
+		}); // => Result
 ```
 Result
 ```html
-	<a href="#first">
+	<figure>
 		<img src="somewhere.png">
-		<span>InnerHTML value</span>
-		<input type="text" value="Input value">
-	</a>
+		<figcaption>
+			<a href="#someplace">awesome</a>
+			<input type="text" value="100">
+		</figcaption>
+	</figure>
 ```
 <a name="showcase-template-03"/>
 #### Create template node #
@@ -255,7 +257,8 @@ Result
 				TAG("li.item"),
 				TAG("li.item"),
 				TAG("li.item")
-		));
+			)
+		);
 ```
 ```html
 	<template>
