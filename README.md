@@ -202,7 +202,9 @@ Tag
 ```
 Script
 ```javascript
-		for(var i=0,l=3;i<l;i++) _Template("template#li-temp").appendTo("ul#container");
+		for(var i=0,l=3;i<l;i++) {
+			_Template("template#li-temp").appendTo("ul#container");
+		} 
 ```
 Result
 ```html
