@@ -1,4 +1,4 @@
-/* include Nody SASS Kit : version 2.0 Build (alpha 109) */
+/* include Nody SASS Kit : version 2.0 Build (alpha 114) */
 #header { position: absolute; left: 0; top: 0; }
 
 #main { padding-left: 120px; padding-right: 20px; }
@@ -51,8 +51,11 @@ table.calendar td.before, table.calendar td.after { color: #ccc; }
 
 code { text-align: left; }
 
-.thumbnail h3, .thumbnail p { white-space: nowrap; word-wrap: normal !important; text-overflow: ellipsis; -o-text-overflow: ellipsis; -ms-text-overflow: ellipsis; overflow: hidden; }
+.thumbnail h3, .thumbnail p { white-space: nowrap; word-wrap: normal; text-overflow: ellipsis; -o-text-overflow: ellipsis; -ms-text-overflow: ellipsis; overflow: hidden; }
 .thumbnail.active { background: #73a4e5; }
 .thumbnail.active h3, .thumbnail.active p { color: white; }
 
 .page-header small { font-size: 40%; }
+
+#canvas-background { display: table; table-layout: auto; border-spacing: 0px; border-collapse: collapse; }
+#canvas-background table td { width: 100px; height: 100px; background-color: #eee; text-align: center; }

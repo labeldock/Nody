@@ -1,11 +1,10 @@
 
-var GNBNavigationController = new NavigationController("main",function(initActiveController,navigation){
-	
+var GNBNavigationController = new NavigationController("main",function(initActiveController,navigation){	
 	//active event controller
 	return initActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
 		return GNBNavigationController.active(this.innerText.toLowerCase());
-	},1).makeAccessProperty(function(accessData,node){
+	},6).makeAccessProperty(function(accessData,node){
 		//navigation data
 		var name = node.innerText.toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
@@ -418,5 +417,23 @@ GNBNavigationController.whenLoad("speedtest2",function(){
 			});
 		});
 	},500);
+});
+
+GNBNavigationController.whenLoad("canvas2d",function(){
+	var canvasArea = $("#canvas-area",this);
+	var canvasBackground = $("#canvas-background td",this);
+	_Context2D(100).drawCrossConnect(true,false,false,false).needDisplay().appendTo(canvasArea);
+	_Context2D(100).drawCrossConnect(true,true,false,false,2).needDisplay().appendTo(canvasArea);
+	_Context2D(100).drawCrossConnect(true,true,true,false,4).needDisplay().appendTo(canvasArea);
+	_Context2D(100).drawCrossConnect(true,true,true,true,6).needDisplay().appendTo(canvasArea);
+	
+	
+	_Context2D(canvasBackground.eq(0)).drawCrossConnect(true,true,true,true).needDisplay().backgroundToResponder();
+	_Context2D(canvasBackground.eq(1)).drawCrossConnect(false,true,false,true,4,"#5c5").needDisplay().backgroundToResponder();
+	_Context2D(canvasBackground.eq(2)).drawCrossConnect(false,false,true,true).needDisplay().backgroundToResponder();
+	_Context2D(canvasBackground.eq(3)).drawCrossConnect(true,true,false,false,4,"#cc5").needDisplay().backgroundToResponder();
+	_Context2D(canvasBackground.eq(4)).drawCrossConnect(false,true,true,true).needDisplay().backgroundToResponder();
+	_Context2D(canvasBackground.eq(5)).drawCrossConnect(true,false,false,true).needDisplay().backgroundToResponder();
+	
 });
 

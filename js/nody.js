@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11",build = "876";	
+	var version = "0.11.1",build = "877";	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -4099,6 +4099,101 @@
 		this.setSource(GUT.CREATE(node,attr,parent));
 	});
 	
+	extendModule("Nody","Context2D",{
+		setCanvasSize:function(width,height){
+			this._drawTarget.setAttribute("width",width);
+			this._drawTarget.setAttribute("height",height);
+			this._drawTargetWidth  = width;
+			this._drawTargetHeight = height;
+		},
+		addDrawRect:function(m){
+			this._drawRect.push(m);
+		},
+		needDisplay:function(){
+			var _ = this;
+			var dirtyRectParam = {
+				width:this._drawTargetWidth,
+				height:this._drawTargetHeight,
+				horizontalCenter:this._drawTargetWidth/2,
+				verticalCenter:this._drawTargetHeight/2,
+				top:0,
+				left:0,
+				right:this._drawTargetWidth,
+				bottom:this._drawTargetHeight
+			}
+			DATAEACH(this._drawRect,function(m){
+				if(typeof m === "function") m(dirtyRectParam,_._drawTarget.getContext('2d'));
+			});
+			return this;
+		},
+		drawCrossConnect:function(top,right,bottom,left,lineWidth,lineColor,alpha){
+			lineWidth = lineWidth || 1;
+			lineColor = lineColor || "#777";
+			alpha     = alpha || 1.0;
+			
+			this.addDrawRect(function(b,c){
+				var quickStroke = function(m){
+					c.beginPath();
+					c.globalAlpha = alpha;
+					c.strokeStyle = lineColor;
+					c.lineWidth   = lineWidth;
+					m(b,c);
+					c.closePath();
+					c.stroke();
+				};
+				if(top) {
+					quickStroke(function(b,c){
+						c.moveTo(b.horizontalCenter,b.verticalCenter);
+						c.lineTo(b.horizontalCenter,b.top);
+					});
+				}
+				if(right) {
+					quickStroke(function(b,c){
+						c.moveTo(b.horizontalCenter,b.verticalCenter);
+						c.lineTo(b.right,b.verticalCenter);
+					});
+				}
+				if(bottom) {
+					quickStroke(function(b,c){
+						c.moveTo(b.horizontalCenter,b.verticalCenter);
+						c.lineTo(b.horizontalCenter,b.bottom);
+					});
+				}
+				if(left) {
+					quickStroke(function(b,c){
+						c.moveTo(b.horizontalCenter,b.verticalCenter);
+						c.lineTo(b.left,b.verticalCenter);
+					});
+				}
+			});
+			return this;
+		},
+		toURL:function(){
+			return this._drawTarget.toDataURL();
+		},
+		backgroundTo:function(target,fill){
+			var target = ZFIND(target);
+			if(target) {
+				ELSTYLE(target,"background-image",ZSTRING("url(\"\\{$0}\")",this.toURL()));
+			}
+		},
+		backgroundToResponder:function(fill){
+			this.backgroundTo(this._responder,fill);
+		}
+	},function(width,height){
+		this._drawRect   = [];
+		this._drawTarget = MAKE("canvas");
+		this.setSource(this._drawTarget);
+		if(typeof width === "string" || typeof width === "object") this._responder = ZFIND(width);
+		if(this._responder){
+			this.setCanvasSize(this._responder.offsetWidth,this._responder.offsetHeight);
+		} else {
+			this.setCanvasSize(width,height || width);	
+		}
+	});
+	
+	
+	
 	extendModule("Nody","Template",{
 		clone    : function(partialData){ return _Template(this.TemplateNode,partialData); },
 		generate : function(partialData){ return _Template(this.TemplateNode,partialData).get(); },
@@ -6705,7 +6800,7 @@
 			if( !this.wasClipTimeout ) clearTimeout(this.wasClipTimeout);
 			this.wasClipTimeout = setTimeout(function(){ CALL(_.ScrollEvent.Scroll,_); },305);
 			
-			CALL(_.ScrollEvent.Scroll,_);
+			CALL(this.ZoomEvent,_);
 			this.ZoomValue = needTo;
 			return true;
 		},
@@ -6739,7 +6834,6 @@
 		}
 		
 		this._super(mainNode);
-		
 		
 		this.ZoomValue = 1.0
 		this.zoomMin   = 1.0;

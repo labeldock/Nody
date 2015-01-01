@@ -4,7 +4,7 @@
 	Nody modernize support kit
 	auther        : hojugn ahn (https://github.com/labeldock/Nody_SASS)
 	target-compatibility : IE8+;
-	version       : 2.0
+	version       : 2.2
 */
 /* mordernizer */
 *{
@@ -24,7 +24,7 @@ html,body {
 
 h1,h2,h3,h4,h5,h6 { margin-top:0px; }
 img { border:none; }
-a   { text-decoration:none; &:hover { text-decoration:none; }}
+a,button{ cursor:pointer;text-decoration:inherit;color:inherit; &:hover { text-decoration:inherit;color:inherit; }}
 *:focus { outline:none !important; }
 
 /*****************************
@@ -35,16 +35,18 @@ template,.hidden,.template,[hidden] {
 	display:none;
 }
 
-tt, code, kbd, em, samp, s, cite, b, strong, dfn, i {
+tt, code, kbd, samp, var, em, s, b, strong, cite, dfn, i, time, mark {
 	display:inline;
 	font-family:inherit;
 	font-style: normal;
-	text-decoration:none;
+	text-decoration:inherit;
 	font-weight:normal;
 	padding:0;
 	margin:0;
 }
-
+tt, code, kbd, samp {
+	font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
+}
 input,button,select,textarea {  font-family: inherit;  font-size: inherit;  line-height: inherit;}
 
 /* baseline */
@@ -65,6 +67,9 @@ menu,ul.menu { @include menu-veriant; }
 .frame-scroll  { overflow:auto;-webkit-overflow-scrolling: touch; overflow-scrolling:touch; }
 .layer-under   { display:block;position:relative; }
 .layer-over    { position:absolute;top:0px;left:0;width:100%;height:100%; }
+
+
+
 /*****************************
  - table
  - toolbar
@@ -99,6 +104,10 @@ block */
 .inline-block {@include inline-block;}
 .scroll-block {overflow-y:scroll;overflow-x:hidden;}
 .hidden-block {overflow:hidden;}
+.full-width {
+	display:block;
+	width:100%;
+}
 /********
  scroll */
 .scroll-{
@@ -106,52 +115,26 @@ block */
 	&x   { overflow-x:auto;-webkit-overflow-scrolling: touch; }
 	&y   { overflow-y:auto;-webkit-overflow-scrolling: touch; }
 }
-/********
- set */
-$xs:2.5px;
+/*******************
+ - fast layout set
+*/
+$xxs:1px;
+$xs:3px;
 $sm:5px;
 $de:10px;
 $lg:15px;
 $xl:20px;
-
-@each $name, $property in ('.in-set','padding'), ('.out-set','margin') {
+$xxl:30px;
+@each $name, $property in ('.inset','padding'), ('.outset','margin') {
 	#{$name} {
-		#{$property}:$de;
-		&-xs{#{$property}:$xs;}
-		&-sm{#{$property}:$sm;}
-		&-lg{#{$property}:$lg;}
-		&-xs{#{$property}:$xl;}
-	
-		&-up{
-			#{$property}-top:$de;
-			&-xs{#{$property}-top:$xs;}
-			&-sm{#{$property}-top:$sm;}
-			&-lg{#{$property}-top:$lg;}
-			&-xs{#{$property}-top:$xl;}
-		}
-	
-		&-down{
-			#{$property}-bottom:$de;
-			&-xs{#{$property}-bottom:$xs;}
-			&-sm{#{$property}-bottom:$sm;}
-			&-lg{#{$property}-bottom:$lg;}
-			&-xs{#{$property}-bottom:$xl;}
-		}
-	
-		&-left,&-indent {
-			#{$property}-left:$de;
-			&-xs{#{$property}-left:$xs;}
-			&-sm{#{$property}-left:$sm;}
-			&-lg{#{$property}-left:$lg;}
-			&-xs{#{$property}-left:$xl;}
-		}
-	
-		&-right,&-indent {
-			&,&.layout-right{#{$property}-right:$de;}
-			&-xs,&-xs.layout-right{#{$property}-right:$xs;}
-			&-sm,&-sm.layout-right{#{$property}-right:$sm;}
-			&-lg,&-lg.layout-right{#{$property}-right:$lg;}
-			&-xs,&-xs.layout-right{#{$property}-right:$xl;}
+		@each $size-id,$size-val in ('-xxs',$xxs),('-xs',$xs),('-sm',$sm),('-md',$de),('',$de),('-lg',$lg),('-xl',$xl),('-xxl',$xxl) {
+			&#{$size-id} {
+				#{$property} : $size-val;
+				&-vertical {
+					#{$property}-left  : $size-val;
+					#{$property}-right : $size-val;
+				}
+			}
 		}
 	}
 }
@@ -191,9 +174,9 @@ $xl:20px;
 }
 
 /*text weight*/
-.text-weak  {font-weight:200    !important;}
+.text-weak  {font-weight:thin   !important;}
 .text-normal{font-weight:normal !important;}
-.text-strong{font-weight:800    !important;}
+.text-strong{font-weight:bold   !important;}
 
 /*default color property*/
 .text-{
@@ -204,26 +187,29 @@ $xl:20px;
 	&info    { color :#5bc0de;}	
 	&danger  { color :#d9534f;}
 }
-@mixin badge-in-set {
-	&.in-set {border-radius:3px;}
-	&.in-set-xs {border-radius:1px;}
-	&.in-set-sm {border-radius:2px;}
-	&.in-set-lg {border-radius:5px;}
-	&.in-set-xl {border-radius:10px;}
+@mixin badge-inset {
+	&.inset {border-radius:3px;}
+	&.inset-xs {border-radius:1px;}
+	&.inset-sm {border-radius:2px;}
+	&.inset-lg {border-radius:5px;}
+	&.inset-xl {border-radius:10px;}
 }
 .badge-{
-	&default { @include badge-in-set; color: #000; background:white; }
-	&primary { @include badge-in-set; color: #fff; background-color:#3071a9;}
-	&success { @include badge-in-set; color: #fff; background-color:#449d44;}
-	&warning { @include badge-in-set; color: #fff; background-color:#f0ad4e;}
-	&info    { @include badge-in-set; color: #fff; background-color:#5bc0de;}
-	&danger  { @include badge-in-set; color: #fff; background-color:#d9534f;}
+	&default { @include badge-inset; color: #000; background:white; }
+	&primary { @include badge-inset; color: #fff; background-color:#3071a9;}
+	&success { @include badge-inset; color: #fff; background-color:#449d44;}
+	&warning { @include badge-inset; color: #fff; background-color:#f0ad4e;}
+	&info    { @include badge-inset; color: #fff; background-color:#5bc0de;}
+	&danger  { @include badge-inset; color: #fff; background-color:#d9534f;}
 }
 
 /********
  table */
 table.grid {
 	@include table-veriant();
+}
+table.wired {
+	@include wired-table-veriant();
 }
 .table-fixed{table-layout:fixed;}
 .table-frame{
@@ -291,7 +277,7 @@ select block*/
 	@include ellipsis;
 }
 span.ellipsis { @include inline-block;margin:0px;padding:0px;width:100%; }
-.multi-line   { @include multiline; }
+.multiline   { @include multiline; }
 .pointer { &,&-each>*{ cursor:pointer; } }
 .pointer-underline{ &:hover,&-each>*:hover { text-decoration:underline; } }
 

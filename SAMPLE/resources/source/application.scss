@@ -182,3 +182,14 @@ code {
 		font-size:40%;
 	}
 }
+#canvas-background {
+	@include wired-table-veriant;
+	table {
+		td {
+			width:100px;
+			height:100px;
+			background-color:#eee;
+			text-align:center;
+		}
+	}
+}
