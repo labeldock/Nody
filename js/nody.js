@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11.1",build = "877";	
+	var version = "0.11.1",build = "878";	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -6825,7 +6825,7 @@
 		setPosition:function(x,y,z){
 			
 		}
-	},function(mainNode){
+	},function(mainNode,initZoom){
 		//scrollbox이벤트의 휠 이벤트를 변경
 		var _ = this;
 		this._currentMouseWheelEvent = function(e){
@@ -6847,6 +6847,8 @@
 		});
 		
 		this.setAllowVirtureFinger(true);
+		
+		if(typeof initZoom == "number") this.needZoom(initZoom);
 	});
 	
 	makeModule("BoxTracker",{

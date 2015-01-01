@@ -558,13 +558,13 @@ ZString은 렌덤 택스트 생성을 위해 만들어졌다. 첫번째 파라�
 \\() 구문은 곧바로 값을 환산하여 뽑아준다.
 ```javascript
 	//range param
-	_ZString("Total \\(10~20)%").get(); //=> "Total 17%"
-	_ZString("Total \\(10~20)%").get(); //=> "Total 12%"
-	_ZString("Total \\(10~20)%").get(); //=> "Total 15%"
+	ZSTRING("Total \\(10~20)%"); //=> "Total 17%"
+	ZSTRING("Total \\(10~20)%"); //=> "Total 12%"
+	ZSTRING("Total \\(10~20)%"); //=> "Total 15%"
 	//choice param
-	_ZString("\\(Boy,Girl) say \\(hello,bye,hi)").get(); //=> "Boy say hello"
-	_ZString("\\(Boy,Girl) say \\(hello,bye,hi)").get(); //=> "Girl say hi"
-	_ZString("\\(Boy,Girl) say \\(hello,bye,hi)").get(); //=> "Boy say bye"
+	ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say hello"
+	ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Girl say hi"
+	ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say bye"
 ```
 
 <a name="showcase-zstring-02"/>
@@ -572,11 +572,11 @@ ZString은 렌덤 택스트 생성을 위해 만들어졌다. 첫번째 파라�
 \\{} 구문은 내부에서 연산후 값을 뽑는다
 ```javascript
 	//range string
-	_ZString("Result : \\{$0+$1}","2","3").get(); //=> "Result : 5"
-	_ZString("Result : \\{$0-$1}","2","3").get(); //=> "Result : -1"
-	_ZString("Result : \\{$0*$1}","2","3").get(); //=> "Result : 6"
-	_ZString("Result : \\{$0/$1}","2","3").get(); //=> "Result : 0.6666666666666666"
-	_ZString("Result : \\{$0+' '+$1}","not","enough").get(); //=> "Result : not enough"
+	ZSTRING("Result : \\{$0+$1}","2","3"); //=> "Result : 5"
+	ZSTRING("Result : \\{$0-$1}","2","3"); //=> "Result : -1"
+	ZSTRING("Result : \\{$0*$1}","2","3"); //=> "Result : 6"
+	ZSTRING("Result : \\{$0/$1}","2","3"); //=> "Result : 0.6666666666666666"
+	ZSTRING("Result : \\{$0+' '+$1}","not","enough"); //=> "Result : not enough"
 ```
 
 <a name="showcase-zstring-03"/>
@@ -584,14 +584,14 @@ ZString은 렌덤 택스트 생성을 위해 만들어졌다. 첫번째 파라�
 파라메터 또한 랜덤값을 주어줄수 있다.
 ```javascript
 	//range string
-	_ZString("\\(10~20) - \\{$0}","\\?20~30").get(); //=> "16 - 21"
-	_ZString("\\(10~20) - \\{$0}","\\?20~30").get(); //=> "17 - 23"
-	_ZString("\\(10~20) - \\{$0}","\\?20~30").get(); //=> "12 - 28"
+	ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=> "16 - 21"
+	ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=> "17 - 23"
+	ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=> "12 - 28"
 ```
 
 <a name="showcase-zstring-03"/>
 #### To many array #
-$i 는 index값이다 toArray(길이)로 지정하여 많은 값이 생성 가능하다.
+ZSTRING을 실제로 _ZString모듈을 호출하여 값을 반환한다. 직접적으로 _ZString모듈을 호출하여 많은 값의 생성 가능하다.
 ```javascript
 	//range string
 	_ZString("Result[\\{$i+1}] : \\{10*$i+$0}","\\?1~9").toArray(5);
@@ -693,15 +693,5 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 <a name="version-info"/>
 ## Version info #
 
-#### 0.10 변동및 작업 # 
-- Nody모듈과 기능이 중복된 Element 모듈 제거
-- 0.8때 제거된 ViewController가 복구되었음. 버전을 거듭하면서 api가 캐쥬얼하게 바뀔 예정.
-
-#### 0.9 변동및 작업 # 
-- Loader 모듈의 더 추상적인 모듈인 Containers모듈 추가
-- TONUMBER가 아예 숫자만 인식함
-- DATA와 PROP의 정의가 명확하짐 (array,attributes)
-- 이벤트 등록과 관련된 api는 when.. 으로 시작하도록 변경중
-- 인스턴스 예약어 'var!' 가 '+'로 바뀌었습니다.
-- 추상적인 Contexts와 Loader를 더 구체적인 ActiveController, NavigationController로 구체화 시켜 실용성 증가시킴.
-
+#### 0.11 정보
+- 사용법 단순화를 위한 API디자인과, IE9 호환성 작업 및 성능최적화 작업이 주로 이루어질 예정입니다.

@@ -685,13 +685,13 @@ Result
 <p>\() 구문은 곧바로 값을 환산하여 뽑아준다.
 <code>javascript
     //range param
-    _ZString("Total \\(10~20)%").get(); //=&gt; "Total 17%"
-    _ZString("Total \\(10~20)%").get(); //=&gt; "Total 12%"
-    _ZString("Total \\(10~20)%").get(); //=&gt; "Total 15%"
+    ZSTRING("Total \\(10~20)%"); //=&gt; "Total 17%"
+    ZSTRING("Total \\(10~20)%"); //=&gt; "Total 12%"
+    ZSTRING("Total \\(10~20)%"); //=&gt; "Total 15%"
     //choice param
-    _ZString("\\(Boy,Girl) say \\(hello,bye,hi)").get(); //=&gt; "Boy say hello"
-    _ZString("\\(Boy,Girl) say \\(hello,bye,hi)").get(); //=&gt; "Girl say hi"
-    _ZString("\\(Boy,Girl) say \\(hello,bye,hi)").get(); //=&gt; "Boy say bye"
+    ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=&gt; "Boy say hello"
+    ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=&gt; "Girl say hi"
+    ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=&gt; "Boy say bye"
 </code></p>
 
 <p><a name="showcase-zstring-02"/></p>
@@ -701,11 +701,11 @@ Result
 <p>\{} 구문은 내부에서 연산후 값을 뽑는다
 <code>javascript
     //range string
-    _ZString("Result : \\{$0+$1}","2","3").get(); //=&gt; "Result : 5"
-    _ZString("Result : \\{$0-$1}","2","3").get(); //=&gt; "Result : -1"
-    _ZString("Result : \\{$0*$1}","2","3").get(); //=&gt; "Result : 6"
-    _ZString("Result : \\{$0/$1}","2","3").get(); //=&gt; "Result : 0.6666666666666666"
-    _ZString("Result : \\{$0+' '+$1}","not","enough").get(); //=&gt; "Result : not enough"
+    ZSTRING("Result : \\{$0+$1}","2","3"); //=&gt; "Result : 5"
+    ZSTRING("Result : \\{$0-$1}","2","3"); //=&gt; "Result : -1"
+    ZSTRING("Result : \\{$0*$1}","2","3"); //=&gt; "Result : 6"
+    ZSTRING("Result : \\{$0/$1}","2","3"); //=&gt; "Result : 0.6666666666666666"
+    ZSTRING("Result : \\{$0+' '+$1}","not","enough"); //=&gt; "Result : not enough"
 </code></p>
 
 <p><a name="showcase-zstring-03"/></p>
@@ -715,16 +715,16 @@ Result
 <p>파라메터 또한 랜덤값을 주어줄수 있다.
 <code>javascript
     //range string
-    _ZString("\\(10~20) - \\{$0}","\\?20~30").get(); //=&gt; "16 - 21"
-    _ZString("\\(10~20) - \\{$0}","\\?20~30").get(); //=&gt; "17 - 23"
-    _ZString("\\(10~20) - \\{$0}","\\?20~30").get(); //=&gt; "12 - 28"
+    ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=&gt; "16 - 21"
+    ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=&gt; "17 - 23"
+    ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=&gt; "12 - 28"
 </code></p>
 
 <p><a name="showcase-zstring-03"/></p>
 
 <h4>To many array</h4>
 
-<p>$i 는 index값이다 toArray(길이)로 지정하여 많은 값이 생성 가능하다.
+<p>ZSTRING을 실제로 <em>ZString모듈을 호출하여 값을 반환한다. 직접적으로 </em>ZString모듈을 호출하여 많은 값의 생성 가능하다.
 <code>javascript
     //range string
     _ZString("Result[\\{$i+1}] : \\{10*$i+$0}","\\?1~9").toArray(5);
@@ -845,22 +845,9 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <h2>Version info</h2>
 
-<h4>0.10 변동및 작업 #</h4>
+<h4>0.11 정보</h4>
 
 <ul>
-<li>Nody모듈과 기능이 중복된 Element 모듈 제거</li>
-<li>0.8때 제거된 ViewController가 복구되었음. 버전을 거듭하면서 api가 캐쥬얼하게 바뀔 예정.</li>
-</ul>
-
-
-<h4>0.9 변동및 작업 #</h4>
-
-<ul>
-<li>Loader 모듈의 더 추상적인 모듈인 Containers모듈 추가</li>
-<li>TONUMBER가 아예 숫자만 인식함</li>
-<li>DATA와 PROP의 정의가 명확하짐 (array,attributes)</li>
-<li>이벤트 등록과 관련된 api는 when.. 으로 시작하도록 변경중</li>
-<li>인스턴스 예약어 &lsquo;var!&rsquo; 가 &lsquo;+'로 바뀌었습니다.</li>
-<li>추상적인 Contexts와 Loader를 더 구체적인 ActiveController, NavigationController로 구체화 시켜 실용성 증가시킴.</li>
+<li>사용법 단순화를 위한 API디자인과, IE9 호환성 작업 및 성능최적화 작업이 주로 이루어질 예정입니다.</li>
 </ul>
 
