@@ -157,7 +157,7 @@
 <p>css 스타일로 구현 가능</p>
 
 <p><code>javascript
-        MAKE("div#hello.world[my=code]:disabled::foo");
+        MAKE("div#hello.world[my=code]:disabled","foo");
 </code>
 <code>html
         &lt;div id="hello" class="world" my="code" disabled&gt;foo&lt;/div&gt;
@@ -169,10 +169,10 @@
 
 <p>오브젝트를 값을 사용하여 만들수 있음
 <code>javascript
-        MAKE("div",{dataset:{hello:"world",data:"set"},"id":"hello","class":"world"});
+        MAKE("div",{dataset:{hello:"world"},"id":"hello","class":"world",html:"foo"});
 </code>
 <code>html
-        &lt;div id="hello" class="world" data-hello="world" data-data="set"&gt;&lt;/div&gt;
+        &lt;div id="hello" class="world" data-hello="world"&gt;foo&lt;/div&gt;
 </code></p>
 
 <p><a name="showcase-tag-generator-03"/></p>
@@ -182,9 +182,9 @@
 <p>파라메터를 중첩하여 생성가능</p>
 
 <p><code>javascript
-        MAKE("ul",
-          MAKE("li.item::list1"),
-          MAKE("li.item::list2")
+        MAKE('ul',
+          MAKE('li.item','list1'),
+          MAKE('li.item','list2')
         );
 </code>
 <code>html
@@ -202,9 +202,9 @@
 
 <p><code>javascript
         MAKE("table#my-table",
-            MAKE("a[href=#]::link1"),
-            MAKE("a[href=#]::link2"),
-            MAKE("a[href=#]::link3")
+            MAKE("a[href=#]","link1"),
+            MAKE("a[href=#]","link2"),
+            MAKE("a[href=#]","link3")
         );
 </code>
 <code>html
@@ -849,5 +849,6 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <ul>
 <li>사용법 단순화를 위한 API디자인과, IE9 호환성 작업 및 성능최적화 작업이 주로 이루어질 예정입니다.</li>
+<li>Firefox bug fix</li>
 </ul>
 

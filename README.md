@@ -95,7 +95,7 @@ MAKE("...")이나 _Make("...") 태그생성이 가능하다.
 css 스타일로 구현 가능
 
 ```javascript
-        MAKE("div#hello.world[my=code]:disabled::foo"); 
+        MAKE("div#hello.world[my=code]:disabled","foo"); 
 ```
 ```html
         <div id="hello" class="world" my="code" disabled>foo</div>
@@ -105,10 +105,10 @@ css 스타일로 구현 가능
 #### Case 2 #
 오브젝트를 값을 사용하여 만들수 있음
 ```javascript
-        MAKE("div",{dataset:{hello:"world",data:"set"},"id":"hello","class":"world"}); 
+        MAKE("div",{dataset:{hello:"world"},"id":"hello","class":"world",html:"foo"}); 
 ```
 ```html
-        <div id="hello" class="world" data-hello="world" data-data="set"></div>
+        <div id="hello" class="world" data-hello="world">foo</div>
 ```
 
 <a name="showcase-tag-generator-03"/>
@@ -116,9 +116,9 @@ css 스타일로 구현 가능
 파라메터를 중첩하여 생성가능
 
 ```javascript
-        MAKE("ul",
-          MAKE("li.item::list1"),
-          MAKE("li.item::list2")
+        MAKE('ul',
+          MAKE('li.item','list1'),
+          MAKE('li.item','list2')
         );
 ```
 ```html
@@ -134,9 +134,9 @@ css 스타일로 구현 가능
 
 ```javascript
         MAKE("table#my-table",
-            MAKE("a[href=#]::link1"),
-            MAKE("a[href=#]::link2"),
-            MAKE("a[href=#]::link3")
+            MAKE("a[href=#]","link1"),
+            MAKE("a[href=#]","link2"),
+            MAKE("a[href=#]","link3")
         );
 ```
 ```html
@@ -695,3 +695,4 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 
 #### 0.11 정보
 - 사용법 단순화를 위한 API디자인과, IE9 호환성 작업 및 성능최적화 작업이 주로 이루어질 예정입니다.
+- Firefox bug fix

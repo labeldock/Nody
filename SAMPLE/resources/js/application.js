@@ -3,10 +3,10 @@ var GNBNavigationController = new NavigationController("main",function(initActiv
 	//active event controller
 	return initActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
-		return GNBNavigationController.active(this.innerText.toLowerCase());
+		return GNBNavigationController.active((this.textContent || this.innerText).toLowerCase());
 	},6).makeAccessProperty(function(accessData,node){
 		//navigation data
-		var name = node.innerText.toLowerCase(),href = node.getAttribute("href");
+		var name = (node.textContent || node.innerText).toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
 	});
 });

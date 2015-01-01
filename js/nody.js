@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11.1",build = "878";	
+	var version = "0.11.1",build = "880";	
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -2875,7 +2875,11 @@
 			            var attrs = node.attributes;
 			            if(!ISNOTHING(attrs)){
 			            	var length = attrs.length;
-			            	for(var i = 0; i < length; i++) if(attrs[i].nodeName === v1) result = attrs[i].nodeValue;
+			            	for(var i = 0; i < length; i++)
+								if(attrs[i].nodeName === v1) {
+									result = attrs[i].value;
+									if(typeof result === "undefined") result = attrs[i].nodeValue;
+								} 
 			            }
 			        }
 			        return result;
@@ -3313,7 +3317,7 @@
 				if(!element.dataset) element.dataset = {};
 				element.dataset[key] = dataset[key];
 			}
-			if(htmlvalue) if("value" in element) {
+			if(htmlvalue) if(("value" in element) && element.tagName !== "LI") {
 				element.setAttribute("value",htmlvalue)
 			} else {
 				element.innerHTML = htmlvalue;
@@ -3500,8 +3504,9 @@
 					return false;
 					break;
 				default :
-					if(typeof value === "undefined") return node.innerText;
-					node.innerText = value;
+					
+					if(typeof value === "undefined") return (node.textContent || node.innerText);
+					node[('textContent' in node)?'textContent':'innerText'] = value;
 				break;
 			}
 			return node;
