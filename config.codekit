@@ -11,17 +11,6 @@
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/js\/min\/nody-min.js": {
-		"fileType": 64,
-		"ignore": 1,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/js\/min\/nody-min.js",
-		"outputAbbreviatedPath": "\/js\/min\/min\/nody-min-min.js",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 0,
-		"outputStyle": 1,
-		"syntaxCheckerStyle": 1
-		},
 	"\/js\/nody.core.js": {
 		"fileType": 64,
 		"ignore": 0,
@@ -44,534 +33,490 @@
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/js\/nody.js": {
+	"\/mixed-module\/mixed\/highlight.pack.js": {
 		"fileType": 64,
 		"ignore": 0,
-		"ignoreWasSetByUser": 1,
-		"inputAbbreviatedPath": "\/js\/nody.js",
-		"outputAbbreviatedPath": "\/js\/nody.min.js",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 1,
-		"outputStyle": 1,
-		"syntaxCheckerStyle": 0
-		},
-	"\/js\/nody.min.js": {
-		"fileType": 64,
-		"ignore": 1,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/js\/nody.min.js",
-		"outputAbbreviatedPath": "\/js\/min\/nody.min-ck.js",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight.pack.js",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/min\/highlight.pack-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/mixed-module\/highlight\/css\/arta.css": {
+	"\/mixed-module\/mixed\/highlight\/arta.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/arta.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/arta.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/ascetic.css": {
+	"\/mixed-module\/mixed\/highlight\/ascetic.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/ascetic.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/ascetic.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/atelier-dune.dark.css": {
+	"\/mixed-module\/mixed\/highlight\/atelier-dune.dark.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/atelier-dune.dark.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/atelier-dune.dark.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/atelier-dune.light.css": {
+	"\/mixed-module\/mixed\/highlight\/atelier-dune.light.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/atelier-dune.light.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/atelier-dune.light.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/atelier-forest.dark.css": {
+	"\/mixed-module\/mixed\/highlight\/atelier-forest.dark.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/atelier-forest.dark.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/atelier-forest.dark.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/atelier-forest.light.css": {
+	"\/mixed-module\/mixed\/highlight\/atelier-forest.light.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/atelier-forest.light.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/atelier-forest.light.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/atelier-heath.dark.css": {
+	"\/mixed-module\/mixed\/highlight\/atelier-heath.dark.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/atelier-heath.dark.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/atelier-heath.dark.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/atelier-heath.light.css": {
+	"\/mixed-module\/mixed\/highlight\/atelier-heath.light.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/atelier-heath.light.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/atelier-heath.light.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/atelier-lakeside.dark.css": {
+	"\/mixed-module\/mixed\/highlight\/atelier-lakeside.dark.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/atelier-lakeside.dark.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/atelier-lakeside.dark.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/atelier-lakeside.light.css": {
+	"\/mixed-module\/mixed\/highlight\/atelier-lakeside.light.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/atelier-lakeside.light.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/atelier-lakeside.light.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/atelier-seaside.dark.css": {
+	"\/mixed-module\/mixed\/highlight\/atelier-seaside.dark.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/atelier-seaside.dark.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/atelier-seaside.dark.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/atelier-seaside.light.css": {
+	"\/mixed-module\/mixed\/highlight\/atelier-seaside.light.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/atelier-seaside.light.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/atelier-seaside.light.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/brown_paper.css": {
+	"\/mixed-module\/mixed\/highlight\/brown_paper.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/brown_paper.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/brown_paper.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/brown_papersq.png": {
+	"\/mixed-module\/mixed\/highlight\/brown_papersq.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 18198,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/brown_papersq.png",
-		"outputAbbreviatedPath": "\/mixed-module\/highlight\/css\/brown_papersq.png",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/brown_papersq.png",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/brown_papersq.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/mixed-module\/highlight\/css\/codepen-embed.css": {
+	"\/mixed-module\/mixed\/highlight\/codepen-embed.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/codepen-embed.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/codepen-embed.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/color-brewer.css": {
+	"\/mixed-module\/mixed\/highlight\/color-brewer.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/color-brewer.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/color-brewer.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/dark.css": {
+	"\/mixed-module\/mixed\/highlight\/dark.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/dark.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/dark.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/default.css": {
+	"\/mixed-module\/mixed\/highlight\/default.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/default.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/default.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/docco.css": {
+	"\/mixed-module\/mixed\/highlight\/docco.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/docco.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/docco.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/far.css": {
+	"\/mixed-module\/mixed\/highlight\/far.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/far.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/far.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/foundation.css": {
+	"\/mixed-module\/mixed\/highlight\/foundation.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/foundation.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/foundation.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/github.css": {
+	"\/mixed-module\/mixed\/highlight\/github.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/github.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/github.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/googlecode.css": {
+	"\/mixed-module\/mixed\/highlight\/googlecode.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/googlecode.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/googlecode.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/hybrid.css": {
+	"\/mixed-module\/mixed\/highlight\/hybrid.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/hybrid.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/hybrid.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/idea.css": {
+	"\/mixed-module\/mixed\/highlight\/idea.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/idea.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/idea.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/ir_black.css": {
+	"\/mixed-module\/mixed\/highlight\/ir_black.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/ir_black.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/ir_black.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/kimbie.dark.css": {
+	"\/mixed-module\/mixed\/highlight\/kimbie.dark.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/kimbie.dark.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/kimbie.dark.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/kimbie.light.css": {
+	"\/mixed-module\/mixed\/highlight\/kimbie.light.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/kimbie.light.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/kimbie.light.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/magula.css": {
+	"\/mixed-module\/mixed\/highlight\/magula.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/magula.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/magula.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/mono-blue.css": {
+	"\/mixed-module\/mixed\/highlight\/mono-blue.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/mono-blue.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/mono-blue.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/monokai.css": {
+	"\/mixed-module\/mixed\/highlight\/monokai.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/monokai.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/monokai.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/monokai_sublime.css": {
+	"\/mixed-module\/mixed\/highlight\/monokai_sublime.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/monokai_sublime.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/monokai_sublime.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/obsidian.css": {
+	"\/mixed-module\/mixed\/highlight\/obsidian.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/obsidian.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/obsidian.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/paraiso.dark.css": {
+	"\/mixed-module\/mixed\/highlight\/paraiso.dark.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/paraiso.dark.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/paraiso.dark.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/paraiso.light.css": {
+	"\/mixed-module\/mixed\/highlight\/paraiso.light.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/paraiso.light.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/paraiso.light.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/pojoaque.css": {
+	"\/mixed-module\/mixed\/highlight\/pojoaque.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/pojoaque.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/pojoaque.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/pojoaque.jpg": {
+	"\/mixed-module\/mixed\/highlight\/pojoaque.jpg": {
 		"fileType": 16384,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 1186,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/pojoaque.jpg",
-		"outputAbbreviatedPath": "\/mixed-module\/highlight\/css\/pojoaque.jpg",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/pojoaque.jpg",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/pojoaque.jpg",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/mixed-module\/highlight\/css\/railscasts.css": {
+	"\/mixed-module\/mixed\/highlight\/railscasts.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/railscasts.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/railscasts.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/rainbow.css": {
+	"\/mixed-module\/mixed\/highlight\/rainbow.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/rainbow.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/rainbow.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/school_book.css": {
+	"\/mixed-module\/mixed\/highlight\/school_book.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/school_book.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/school_book.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/school_book.png": {
+	"\/mixed-module\/mixed\/highlight\/school_book.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 486,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/school_book.png",
-		"outputAbbreviatedPath": "\/mixed-module\/highlight\/css\/school_book.png",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/school_book.png",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/school_book.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/mixed-module\/highlight\/css\/solarized_dark.css": {
+	"\/mixed-module\/mixed\/highlight\/solarized_dark.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/solarized_dark.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/solarized_dark.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/solarized_light.css": {
+	"\/mixed-module\/mixed\/highlight\/solarized_light.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/solarized_light.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/solarized_light.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/sunburst.css": {
+	"\/mixed-module\/mixed\/highlight\/sunburst.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/sunburst.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/sunburst.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/tomorrow-night-blue.css": {
+	"\/mixed-module\/mixed\/highlight\/tomorrow-night-blue.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/tomorrow-night-blue.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/tomorrow-night-blue.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/tomorrow-night-bright.css": {
+	"\/mixed-module\/mixed\/highlight\/tomorrow-night-bright.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/tomorrow-night-bright.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/tomorrow-night-bright.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/tomorrow-night-eighties.css": {
+	"\/mixed-module\/mixed\/highlight\/tomorrow-night-eighties.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/tomorrow-night-eighties.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/tomorrow-night-eighties.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/tomorrow-night.css": {
+	"\/mixed-module\/mixed\/highlight\/tomorrow-night.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/tomorrow-night.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/tomorrow-night.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/tomorrow.css": {
+	"\/mixed-module\/mixed\/highlight\/tomorrow.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/tomorrow.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/tomorrow.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/vs.css": {
+	"\/mixed-module\/mixed\/highlight\/vs.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/vs.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/vs.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/xcode.css": {
+	"\/mixed-module\/mixed\/highlight\/xcode.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/xcode.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/xcode.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/mixed-module\/highlight\/css\/zenburn.css": {
+	"\/mixed-module\/mixed\/highlight\/zenburn.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/css\/zenburn.css",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/highlight\/zenburn.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
-		},
-	"\/mixed-module\/highlight\/highlight.pack.js": {
-		"fileType": 64,
-		"ignore": 0,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/highlight.pack.js",
-		"outputAbbreviatedPath": "\/mixed-module\/highlight\/min\/highlight.pack-min.js",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 0,
-		"outputStyle": 1,
-		"syntaxCheckerStyle": 1
-		},
-	"\/mixed-module\/highlight\/nody.highlight.js": {
-		"fileType": 64,
-		"ignore": 0,
-		"ignoreWasSetByUser": 1,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/nody.highlight.js",
-		"outputAbbreviatedPath": "\/mixed-module\/highlight\/nody.highlight.min.js",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 1,
-		"outputStyle": 1,
-		"syntaxCheckerStyle": 0
-		},
-	"\/mixed-module\/highlight\/nody.highlight.min.js": {
-		"fileType": 64,
-		"ignore": 1,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/highlight\/nody.highlight.min.js",
-		"outputAbbreviatedPath": "\/mixed-module\/highlight\/min\/nody.highlight.min-min.js",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 0,
-		"outputStyle": 1,
-		"syntaxCheckerStyle": 1
 		},
 	"\/mixed-module\/mixed\/jquery.noty.packaged.min.js": {
 		"fileType": 64,
@@ -606,34 +551,32 @@
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 0
 		},
-	"\/mixed-module\/moment\/moment-timezone-with-data.js": {
+	"\/mixed-module\/mixed\/nody.mixed.min.js": {
 		"fileType": 64,
-		"ignore": 0,
+		"ignore": 1,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/moment\/moment-timezone-with-data.js",
-		"outputAbbreviatedPath": "\/mixed-module\/moment\/min\/moment-timezone-with-data-min.js",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/nody.mixed.min.js",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/min\/nody.mixed.min-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/mixed-module\/moment\/nody.moment.js": {
+	"\/mixed-module\/mixed\/ol.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/ol.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/mixed-module\/mixed\/ol.js": {
 		"fileType": 64,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/moment\/nody.moment.js",
-		"outputAbbreviatedPath": "\/mixed-module\/moment\/nody.moment.min.js",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 1,
-		"outputStyle": 1,
-		"syntaxCheckerStyle": 0
-		},
-	"\/mixed-module\/moment\/nody.moment.min.js": {
-		"fileType": 64,
-		"ignore": 1,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/moment\/nody.moment.min.js",
-		"outputAbbreviatedPath": "\/mixed-module\/moment\/min\/nody.moment.min-min.js",
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/ol.js",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/min\/ol-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
@@ -705,24 +648,12 @@
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/README.html": {
+	"\/SAMPLE\/map.html": {
 		"fileType": 8192,
-		"ignore": 1,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/README.html",
-		"outputAbbreviatedPath": "No Output Path",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 0
-		},
-	"\/README.md": {
-		"enableFootnoteSupport": 0,
-		"enableSmartyPants": 1,
-		"expandTabs": 1,
-		"fileType": 4096,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/README.md",
-		"outputAbbreviatedPath": "\/README.html",
+		"inputAbbreviatedPath": "\/SAMPLE\/map.html",
+		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
@@ -923,17 +854,6 @@
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/SAMPLE\/resources\/js\/min\/paging-min.js": {
-		"fileType": 64,
-		"ignore": 1,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/paging-min.js",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/min\/paging-min-min.js",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 0,
-		"outputStyle": 1,
-		"syntaxCheckerStyle": 1
-		},
 	"\/SAMPLE\/resources\/js\/paging.js": {
 		"fileType": 64,
 		"ignore": 0,
@@ -1002,6 +922,15 @@
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
+	"\/SAMPLE\/subview\/canvas2d.html": {
+		"fileType": 8192,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/SAMPLE\/subview\/canvas2d.html",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
 	"\/SAMPLE\/subview\/multiselect.html": {
 		"fileType": 8192,
 		"ignore": 0,
@@ -1061,6 +990,15 @@
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"inputAbbreviatedPath": "\/SAMPLE\/subview\/viewmodel.html",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/SAMPLE\/zoom.html": {
+		"fileType": 8192,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/SAMPLE\/zoom.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0

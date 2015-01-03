@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11.2",build = "881";	
+	var version = "0.11.5",build = "890";
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -650,6 +650,7 @@
 		// 각각의 값을 배열로 다시 구해오기
 		"DATAMAP"     :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f(ev[i],i)); return rv; },2),
 		//
+		"DATAHAS":function(v,o){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++){ if(ev[i] === o) return true } return false; },
 		"INJECT":function(v,f,d){ d=(typeof d=="object"?d:{});v=TOARRAY(v); for(var i=0,l=v.length;i<l;i++)f(d,v[i],i);return d;},
 		// 배열안의 배열을 풀어냅니다.
 		"DATAFLATTEN":function(){ var result = []; function arrayFlatten(args){ DATAEACH(args,function(arg){ if(ISARRAY(arg)) return DATAEACH(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
@@ -3183,22 +3184,17 @@
 		"ZFIND" : FUT.CONTINUTILITY(function(find,root){
 			return FINDFUNCTION(find,root)[0];
 		}),
+		// 하위루트의 모든 노드를 검색함
 		"FINDIN" : FUT.CONTINUTILITY(function(root,find){
-			return FINDFUNCTION( (ISNOTHING(find) ? "*" : find) ,root);
+			return FINDFUNCTION( (ISNOTHING(find) ? "*" : find) ,DATAMAP(FIND(root),function(node){ return node.children; },DATAFLATTEN));
 		},2),
+		// 자식루트의 노트를 검색함
 		"FINDON": FUT.CONTINUTILITY(function(root,find){
-			var finds = DATAMAP(FINDFUNCTION(root),function(node){
-				return node.children;
-			},DATAFLATTEN)
+			var finds = DATAMAP(FINDFUNCTION(root),function(node){ return node.children; },DATAFLATTEN);
 			switch(typeof find){
-				case "number":
-					return finds[find];
-				case "string":
-					return DATAFILTER(finds,function(node){
-						return NUT.IS(node,find);
-					});
-				default :
-					return finds;
+				case "number": return [finds[find]]; break;
+				case "string": return DATAFILTER(finds,function(node){ return NUT.IS(node,find); }); break;
+				default      : return finds; break;
 			}
 		},2),
 		"FINDPARENTS":FUT.CONTINUTILITY(function(el){ return NUT.PARENTS(FINDFUNCTION(el)[0]); }),
@@ -4200,9 +4196,8 @@
 	
 	
 	extendModule("Nody","Template",{
-		clone      : function(partialData){ return _Template(this.TemplateNode,partialData); },
-		generate   : function(partialData){ return _Template(this.TemplateNode,partialData).get(); },
-		generateTo : function(target,partialData){ return _Template(this.TemplateNode,partialData).appendTo(target); },
+		clone    : function(nodeData){ return _Template(this.TemplateNode,nodeData); },
+		generate : function(nodeData){ return _Template(this.TemplateNode,nodeData).get(); },
 		// 키를 지우면서
 		partialAttr:function(attrKey,method){
 			this.find("["+attrKey+"]").each(function(node){
@@ -4213,9 +4208,9 @@
 			return this;
 		},
 		//
-		partialData:function(data){
+		nodeData:function(data){
 			if(!this.TemplatePartials)this.TemplatePartials = {value:{},src:{},dataset:{},href:{},placeholder:{}};
-			if(typeof data !== "object") { return console.error("partialData의 파라메터는 object이여야 합니다"); }
+			if(typeof data !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다"); }
 			var _ = this;
 			var _partials = this.TemplatePartials;
 			// 파셜 노드 수집 (두번째의 경우 수집한 노드를 다시 수집)
@@ -4227,8 +4222,8 @@
 			});
 			
 			// 파셜 데이터 입력
-			PROPEACH(_partials,function(partialData,partialCase){
-				PROPEACH(partialData,function(nodelist,attrValue){
+			PROPEACH(_partials,function(nodeData,partialCase){
+				PROPEACH(nodeData,function(nodelist,attrValue){
 					if(attrValue in data) DATAEACH(nodelist,function(node){
 						switch(partialCase){
 							case "value":ELVALUE(node,data[attrValue]);break;
@@ -4242,20 +4237,20 @@
 			});
 			return this;
 		},
-		reset : function(partialData){
+		reset : function(nodeData){
 			if (this.TemplateNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
 			if (this.TemplateNode.length !== 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
 			this.setSource(IMPORTNODE(ZERO(this.TemplateNode)));
-			if(typeof partialData == "object") this.partialData(partialData);
+			if(typeof nodeData == "object") this.nodeData(nodeData);
 		}
-	},function(node,partialData,cancel){
+	},function(node,nodeData,cancel){
 		this.initNode      = node;
 		this.TemplateNode  = (typeof node === "string")?/^<.+>$/.test(node)?[MAKETEMP(node)]:FIND(node):FIND(node);
 		if (!this.TemplateNode) {
 			console.error("template init falid!");
 		} else {
-			if(partialData === false || cancel === false) return;
-			this.reset(partialData);
+			if(nodeData === false || cancel === false) return;
+			this.reset(nodeData);
 		}
 	},function(){
 		//get 함수입니다. Template모듈은 기본적으로 노드를 반환합니다.
@@ -4822,7 +4817,11 @@
 		getSelects:function(){ 
 			var selectQuery = ISNOTHING(this.initCall[1]) ? "*" : this.initCall[1];
 			if(selectQuery == "self") return this.getContexts();
-			return FINDON(this.getContexts(),selectQuery);
+			if(selectQuery.charAt(0) == ">"){
+				return FINDON(this.getContexts(),selectQuery);
+			} else {
+				return FINDIN(this.getContexts(),selectQuery);
+			}
 		},
 		getGroups:function(){ 
 			var selectQuery = ISNOTHING(this.initCall[2]) ? "self" : this.initCall[2];
@@ -4909,6 +4908,7 @@
 				case "log":
 				case "console.log":
 					console.info("#start# K [trace] <console.log>");
+					console.info("initCall =>", this.initCall);
 					console.info("contexts => ",this.getContexts());
 					console.info("selects => " ,this.getSelects());
 					console.info("targets => " ,this.getTargets());
@@ -4937,12 +4937,35 @@
 		whenActiveEnd:function(method){this.ContextsEvents.activeEnd = method; return this;},
 		shouldActive:function(index,wait){
 			var _ = this;
-			wait = TONUMBER(wait);
-			wait = wait > 0 ? wait : 5;
-			var t = setTimeout(function(){
+			if(wait === 0) {
 				_.onSelects(_.ContextsEventName,TONUMBER(index));
-			},wait);
+			} else {
+				wait = TONUMBER(wait);
+				wait = wait > 0 ? wait : 5;
+				var t = setTimeout(function(){
+					_.onSelects(_.ContextsEventName,TONUMBER(index));
+					clearTimeout(t);
+				},wait);
+			}
 			return this;
+		},
+		getActiveSelects:function(){
+			return DATAFILTER(this.getSelects(),function(){ return ELHASCLASS(node,'active'); });
+		},
+		getInactiveSelects:function(){
+			return DATAFILTER(this.getSelects(),function(){ return !ELHASCLASS(node,'active'); });
+		},
+		activeAll:function(ignoreEvent){
+			var _=this;selects=this.getSelects();
+			DATAEACH(selects,function(node,index){
+				if( !ELHASCLASS(node,'active') ) _.shouldActive(index,0);
+			});
+		},
+		inactiveAll:function(ignoreEvent){
+			var _=this;selects=this.getSelects();
+			DATAEACH(selects,function(node,index){
+				if( ELHASCLASS(node,'active') ) _.shouldActive(index,0);
+			});
 		},
 		makeAccessProperty:function(method){
 			if(typeof method !== "function") return {};
@@ -4950,38 +4973,62 @@
 				method(inject,node,index);
 			});
 		}
-	},function(cSel,sSel,selectEvent,willActive,shouldActiveIndex,shouldActiveWait){
+	},function(cSel,sSel,selectEvent,willActive,shouldActiveIndex,allowMultiActive,allowInactive){
 		this._super(cSel,sSel);
 		this.ContextsEvents = {};
 		this.ContextsEventName = (typeof selectEvent === "string") ? selectEvent : "click";
 		this.preventDefault   = true;
 		this.allowAutoActive  = true;
-		this.allowMultiActive = false;
-		this.allowInactive = false;
+		this.allowMultiActive = (typeof allowMultiActive === "boolean") ? allowMultiActive : false;
+		this.allowInactive    = (typeof allowInactive === "boolean")    ? allowInactive    : this.allowMultiActive;
 		//
 		var _ = this;
 		this.onSelects(this.ContextsEventName,function(e,i){
 			var currentSelects = _.getSelects();
 			if(_.preventDefault) e.preventDefault();
-			if(_.allowInactive && ELHASCLASS(this,"active") ) {
-				ELREMOVECLASS(this,"active");
-				if( FIND(".active",currentSelects).length == 0 ) CALL(_.ContextsEvents.activeEnd,this,i);
-				return false;
-			}
+			
+			//액티브가 실행될시
 			if( CALL(_.ContextsEvents.willActive,this,e,i) == false ) return;
+			//자동으로 액티브 실행
 			if(_.allowAutoActive) {
-				var firstActive = FIND(".active",currentSelects).length ? false : true;
-				ELADDCLASS(this,"active");
-				if(firstActive) CALL(_.ContextsEvents.activeStart,this,i);
+				//이미 액티브 된 상태의 아이템의 경우 
+				if(ELHASCLASS(this,"active")) {
+					if(_.allowInactive) {
+						//인액티브가 가능한 경우
+						ELREMOVECLASS(this,"active");
+						if( FIND(".active",currentSelects).length == 0 ) CALL(_.ContextsEvents.activeEnd,this,i);
+						return false;
+					} else {
+						//인액티브가 불가능한 경우
+						return false;
+					}
+				}
+				//새로운 액티브를 만들기 위한 순서
+				//액티브 Item들을 찾아냄
+				var activeItems = FIND(".active",currentSelects);
+				
+				if(_.allowMultiActive) {
+					//다중 Active를 허용하는 경우
+					ELADDCLASS(this,"active");
+					if(activeItems.length === 0) CALL(_.ContextsEvents.activeStart,this,i);
+					CALL(_.ContextsEvents.didActive,this,i);
+					//deactive를 실행하지 않음
+					return false;
+				} else {
+					//다중 Active를 허용하지 않는 경우
+					ELADDCLASS(this,"active");
+					if(activeItems.length === 0) CALL(_.ContextsEvents.activeStart,this,i);
+					CALL(_.ContextsEvents.didActive,this,i);
+					return true;
+				}
 			} 
-			CALL(_.ContextsEvents.didActive,this,i);
 		},function(){
 			if(_.allowAutoActive) ELREMOVECLASS(this,"active");
 			CALL(_.ContextsEvents.didInactive,this);
 		});
 		//
 		if(willActive) this.whenWillActive(willActive);
-		if(typeof shouldActiveIndex !== "undefined") this.shouldActive(shouldActiveIndex,shouldActiveWait);
+		if(typeof shouldActiveIndex === "number") this.shouldActive(shouldActiveIndex);
 	});
 	
 	// Model은 순수 데이터 모델에 접근하기 위해 사용합니다.
@@ -6804,9 +6851,9 @@
 			
 			
 			if( !this.wasClipTimeout ) clearTimeout(this.wasClipTimeout);
-			this.wasClipTimeout = setTimeout(function(){ CALL(_.ScrollEvent.Scroll,_); },305);
+			this.wasClipTimeout = setTimeout(function(){ CALL(_.ZoomEvent,_); },305);
 			
-			CALL(this.ZoomEvent,_);
+			CALL(this.ZoomEvent,this);
 			this.ZoomValue = needTo;
 			return true;
 		},
