@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11.5",build = "890";
+	var version = "0.11.5",build = "892";
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -4932,6 +4932,7 @@
 		whenWillActive:function(method){ this.ContextsEvents.willActive = method; return this; },
 		whenDidActive:function(method){ this.ContextsEvents.didActive = method; return this;},
 		whenDidInactive:function(method){ this.ContextsEvents.didInactive = method; return this; },
+		whenDidChange:function(method){ this.ContextsEvents.didChange = method; return this;},
 		whenActiveToggle:function(am,im){ this.whenDidActive(am); return this.whenDidInactive(im); },
 		whenActiveStart:function(method){ this.ContextsEvents.activeStart = method; return this; },
 		whenActiveEnd:function(method){this.ContextsEvents.activeEnd = method; return this;},
@@ -4950,10 +4951,10 @@
 			return this;
 		},
 		getActiveSelects:function(){
-			return DATAFILTER(this.getSelects(),function(){ return ELHASCLASS(node,'active'); });
+			return DATAFILTER(this.getSelects(),function(node){ return ELHASCLASS(node,'active'); });
 		},
 		getInactiveSelects:function(){
-			return DATAFILTER(this.getSelects(),function(){ return !ELHASCLASS(node,'active'); });
+			return DATAFILTER(this.getSelects(),function(node){ return !ELHASCLASS(node,'active'); });
 		},
 		activeAll:function(ignoreEvent){
 			var _=this;selects=this.getSelects();
@@ -4996,6 +4997,7 @@
 					if(_.allowInactive) {
 						//인액티브가 가능한 경우
 						ELREMOVECLASS(this,"active");
+						CALL(_.ContextsEvents.didChange,this,i);
 						if( FIND(".active",currentSelects).length == 0 ) CALL(_.ContextsEvents.activeEnd,this,i);
 						return false;
 					} else {
@@ -5012,6 +5014,7 @@
 					ELADDCLASS(this,"active");
 					if(activeItems.length === 0) CALL(_.ContextsEvents.activeStart,this,i);
 					CALL(_.ContextsEvents.didActive,this,i);
+					CALL(_.ContextsEvents.didChange,this,i);
 					//deactive를 실행하지 않음
 					return false;
 				} else {
@@ -5019,6 +5022,7 @@
 					ELADDCLASS(this,"active");
 					if(activeItems.length === 0) CALL(_.ContextsEvents.activeStart,this,i);
 					CALL(_.ContextsEvents.didActive,this,i);
+					CALL(_.ContextsEvents.didChange,this,i);
 					return true;
 				}
 			} 
@@ -6913,7 +6917,6 @@
 		this.SourcePlaceholder = MAKE(".nody-box-tracker-placeholder");
 		this.SourceFocusLens   = MAKE(".nody-box-tracker-focus-lens");
 		this.SourceWrapper     = MAKE(".nody-box-tracker-wrapper[style=position:relative;overflow:hidden;]",this.SourcePlaceholder,this.SourceFocusLens);
-		
 		
 		this.SourceWidth       = this.Source.offsetWidth;
 		this.SourceHeight      = this.Source.offsetHeight;
