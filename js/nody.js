@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11.5",build = "892";
+	var version = "0.11.6",build = "901";
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -104,11 +104,12 @@
 			supportPrefix["transition"] = lab3Prefix(s);
 		}});
 		info.supportTransition = support;
-		return info;
 		
 		//getUserMedia
-		info.getUserMedia        = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+		info.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 		info.supportGetUserMedia = !!info.getUserMedia;
+		
+		return info;
 	})();
 	
 	//NativeCore console trace
@@ -648,7 +649,7 @@
 		// 각각의 값의 function실행
 		"DATAEACHBACK":FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
 		// 각각의 값을 배열로 다시 구해오기
-		"DATAMAP"     :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f(ev[i],i)); return rv; },2),
+		"DATAMAP"     :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
 		//
 		"DATAHAS":function(v,o){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++){ if(ev[i] === o) return true } return false; },
 		"INJECT":function(v,f,d){ d=(typeof d=="object"?d:{});v=TOARRAY(v); for(var i=0,l=v.length;i<l;i++)f(d,v[i],i);return d;},
@@ -3351,6 +3352,38 @@
 				temphtml += '</template>';
 			return HTMLTOEL(temphtml)[0];
 		},
+		"MAKECANVAS":function(width,height,render){
+			var canvas = document.createElement("canvas");
+			canvas.setAttribute("width",width?width:"auto");
+			canvas.setAttribute("height",height?height:"auto");
+			
+			function srcToCanvasRender(src){
+				var img = document.createElement('img');
+				img.onload = function() {  canvas.getContext("2d").drawImage(this, 0, 0,width,height); }
+				img.src = src;
+			}
+			
+			if( ISELNODE(render) ) {
+				if(render.tagName === "IMG") {
+					render = render.src;
+				} else if(render.files) {
+					if(render.files[0]) {
+						
+						var file = render.files[0];
+						if (!file.type.match(/image.*/)) return;
+						var reader = new FileReader();
+						reader.onload = function(e){
+							srcToCanvasRender(e.target.result);
+						};
+						reader.readAsDataURL(file); 
+						src = undefined;
+					}
+				} 
+			}
+			if( typeof render === "string") srcToCanvasRender(render);
+			else CALL(render,canvas,canvas.getContext("2d"));
+			return canvas;
+		},
 		"TOOBJECT":function(param,es,kv){
 			if(typeof param=="object") return param;
 			if(kv == true && ( typeof param === "string" || typeof es === "string")){ var r = {}; r[es] = param; return r; }
@@ -4932,6 +4965,7 @@
 		whenWillActive:function(method){ this.ContextsEvents.willActive = method; return this; },
 		whenDidActive:function(method){ this.ContextsEvents.didActive = method; return this;},
 		whenDidInactive:function(method){ this.ContextsEvents.didInactive = method; return this; },
+		whenWillChange:function(method){ this.ContextsEvents.willChange = method; return this;},
 		whenDidChange:function(method){ this.ContextsEvents.didChange = method; return this;},
 		whenActiveToggle:function(am,im){ this.whenDidActive(am); return this.whenDidInactive(im); },
 		whenActiveStart:function(method){ this.ContextsEvents.activeStart = method; return this; },
@@ -4996,6 +5030,7 @@
 				if(ELHASCLASS(this,"active")) {
 					if(_.allowInactive) {
 						//인액티브가 가능한 경우
+						CALL(_.ContextsEvents.willChange,this,i);
 						ELREMOVECLASS(this,"active");
 						CALL(_.ContextsEvents.didChange,this,i);
 						if( FIND(".active",currentSelects).length == 0 ) CALL(_.ContextsEvents.activeEnd,this,i);
@@ -5013,6 +5048,7 @@
 					//다중 Active를 허용하는 경우
 					ELADDCLASS(this,"active");
 					if(activeItems.length === 0) CALL(_.ContextsEvents.activeStart,this,i);
+					CALL(_.ContextsEvents.willChange,this,i);
 					CALL(_.ContextsEvents.didActive,this,i);
 					CALL(_.ContextsEvents.didChange,this,i);
 					//deactive를 실행하지 않음
@@ -5021,6 +5057,7 @@
 					//다중 Active를 허용하지 않는 경우
 					ELADDCLASS(this,"active");
 					if(activeItems.length === 0) CALL(_.ContextsEvents.activeStart,this,i);
+					CALL(_.ContextsEvents.willChange,this,i);
 					CALL(_.ContextsEvents.didActive,this,i);
 					CALL(_.ContextsEvents.didChange,this,i);
 					return true;
@@ -6803,9 +6840,9 @@
 			this.axisYNegativeItems = [];
 			
 			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
-			ELSTYLE(this.ClipView,"transition-property","all");
-			ELSTYLE(this.ClipView,"transition-duration","0.3s");
-			ELSTYLE(this.ClipView,"transition-timing-function","ease-out");
+			//ELSTYLE(this.ClipView,"transition-property","all");
+			//ELSTYLE(this.ClipView,"transition-duration","0.3s");
+			//ELSTYLE(this.ClipView,"transition-timing-function","ease-out");
 			ELSTYLE(this.ClipView,"transform","matrix(1.0,0,0,1.0,0,0)");
 			ELSTYLE(this.ClipView,"position","relative");
 			
@@ -6850,9 +6887,14 @@
 			var offsetWidth  = Math.floor(((this.ClipView.offsetWidth  * needTo) - this.ClipView.offsetWidth) / 2);
 			var offsetHeight = Math.floor(((this.ClipView.offsetHeight * needTo) - this.ClipView.offsetHeight) / 2);
 			
+			var zoomOffset = this.ZoomValue - needTo;
+			if( zoomOffset !== 0) {
+				this.needScrollingOffsetX( (this.ClipView.offsetWidth  * zoomOffset) / 2 );
+				this.needScrollingOffsetY( (this.ClipView.offsetHeight * zoomOffset) / 2 );
+			}
+			
 			ELSTYLE(this.ClipView,"transform","matrix("+needTo+",0,0,"+needTo+","+offsetWidth+","+offsetHeight+")");
 			var _ = this;
-			
 			
 			if( !this.wasClipTimeout ) clearTimeout(this.wasClipTimeout);
 			this.wasClipTimeout = setTimeout(function(){ CALL(_.ZoomEvent,_); },305);
@@ -6887,7 +6929,7 @@
 		var _ = this;
 		this._currentMouseWheelEvent = function(e){
 			e.preventDefault();
-			if(e.wheelDelta) _.needZoomWithOffset(e.wheelDelta/2000)
+			if(e.wheelDelta) _.needZoomWithOffset(e.wheelDelta/1500)
 		}
 		
 		this._super(mainNode);
