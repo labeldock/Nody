@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11.6",build = "901";
+	var version = "0.11.6",build = "905";
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -3779,16 +3779,18 @@
 				if(typeof styleName === "undefined") return ENV.supportComputedStyle ? window.getComputedStyle(target,null) : target.currentStyle;
 				if(typeof styleName === "string"){
 					//mordern-style-name
-					styleName = ENV.getCSSName(styleName);
+					var prefixedName = ENV.getCSSName(styleName);
 					//get
-					if(typeof value === "undefined") return ENV.supportComputedStyle ? window.getComputedStyle(target,null).getPropertyValue(styleName) : target.currentStyle[CAMEL(styleName)];
+					if(typeof value === "undefined") return ENV.supportComputedStyle ? window.getComputedStyle(target,null).getPropertyValue(prefixedName) : target.currentStyle[CAMEL(prefixedName)];
 					
 					//set
-					value     = ENV.getCSSName(value);
-					var wasStyle = ELATTR(target,"style");
-					wasStyle = wasStyle ? wasStyle.replace(new RegExp(styleName+"[^\;]+;"),"") : "";
+					var prefixedValue = ENV.getCSSName(value);
+					var wasStyle = ELATTR(target,"style") || "";
 					
-					ELATTR(target,"style",styleName+":"+value+";"+wasStyle);
+					//set //with iefix
+					wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+"[^\;]+\;","g"),"");
+					
+					ELATTR(target,"style",prefixedName+":"+prefixedValue+";"+wasStyle);
 				}
 			}
 			return target;
@@ -6592,6 +6594,25 @@
 					}
 				};
 				this._currentTouchMoveEvent = function(e){
+					//2 _
+					if(_.GestureListener["pinch"] && _.StartPinchValue && (e.touches.length === 2)){
+						var currentDistance = _.getPinchDistance(
+							 e.touches[0].pageX,
+							 e.touches[0].pageY,
+							 e.touches[1].pageX,
+							 e.touches[1].pageY
+						);
+						CALL(_.GestureListener["pinch"],_.Source,-((_.StartPinchValue / currentDistance) - 1))
+						e.stopPropagation();
+						e.preventDefault();
+						
+					}
+					//핀치시에는 이벤트를 초기화함
+					if(_.StartPinchValue) {
+						_.StartTouchMoveX = undefined;
+						_.StartTouchMoveY = undefined;
+						return;
+					}
 					
 					//1 _
 					if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
@@ -6608,18 +6629,7 @@
 							_._currentTouchStartEvent(e);
 						}
 					}
-					//2 _
-					if(_.GestureListener["pinch"] && _.StartPinchValue && (e.touches.length === 2)){
-						var currentDistance = _.getPinchDistance(
-							 e.touches[0].pageX,
-							 e.touches[0].pageY,
-							 e.touches[1].pageX,
-							 e.touches[1].pageY
-						);
-						CALL(_.GestureListener["pinch"],_.Source,-((_.StartPinchValue / currentDistance) - 1))
-						e.stopPropagation();
-						e.preventDefault();
-					}
+					
 					
 				};
 				this._currentTouchEndEvent = function(e){
@@ -6840,10 +6850,9 @@
 			this.axisYNegativeItems = [];
 			
 			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
-			//ELSTYLE(this.ClipView,"transition-property","all");
-			//ELSTYLE(this.ClipView,"transition-duration","0.3s");
-			//ELSTYLE(this.ClipView,"transition-timing-function","ease-out");
-			ELSTYLE(this.ClipView,"transform","matrix(1.0,0,0,1.0,0,0)");
+			console.log("this.ClipView",this.ClipView)
+			ELSTYLE(this.ClipView,"transform","matrix(1,0,0,1,0,0)");
+			console.log("this.ClipView",this.ClipView)
 			ELSTYLE(this.ClipView,"position","relative");
 			
 			ELAPPEND(this.ClipView,this.Source.childNodes);
@@ -6883,17 +6892,17 @@
 			
 			if(needTo === this.ZoomValue) return false;
 			
-			//ELSTYLE(this.ClipView,"transform","scale("+needTo+")");
 			var offsetWidth  = Math.floor(((this.ClipView.offsetWidth  * needTo) - this.ClipView.offsetWidth) / 2);
 			var offsetHeight = Math.floor(((this.ClipView.offsetHeight * needTo) - this.ClipView.offsetHeight) / 2);
 			
 			var zoomOffset = this.ZoomValue - needTo;
 			if( zoomOffset !== 0) {
-				this.needScrollingOffsetX( (this.ClipView.offsetWidth  * zoomOffset) / 2 );
-				this.needScrollingOffsetY( (this.ClipView.offsetHeight * zoomOffset) / 2 );
+				this.needScrollingOffsetX( (this.Source.offsetWidth  * zoomOffset) / 2 );
+				this.needScrollingOffsetY( (this.Source.offsetHeight * zoomOffset) / 2 );
 			}
 			
 			ELSTYLE(this.ClipView,"transform","matrix("+needTo+",0,0,"+needTo+","+offsetWidth+","+offsetHeight+")");
+			
 			var _ = this;
 			
 			if( !this.wasClipTimeout ) clearTimeout(this.wasClipTimeout);
@@ -6901,6 +6910,7 @@
 			
 			CALL(this.ZoomEvent,this);
 			this.ZoomValue = needTo;
+			
 			return true;
 		},
 		needZoomWithOffset:function(offset){ 
@@ -6917,12 +6927,6 @@
 			bi.contents.nzWidth  = this.nzClipWidth;
 			bi.contents.nsHeight = this.nzClipHeigth;
 			return bi;
-		},
-		getPosition:function(){
-			
-		},
-		setPosition:function(x,y,z){
-			
 		}
 	},function(mainNode,initZoom){
 		//scrollbox이벤트의 휠 이벤트를 변경
@@ -6941,9 +6945,7 @@
 		this.ZoomEvent;
 		this.resizeFix();
 		
-		this.Finger.whenPinch(function(zoomOffset,e){
-			if(_.allowZoom) _.needZoomWithOffset(zoomOffset);
-		});
+		this.Finger.whenPinch(function(zoomOffset,e){ if(_.allowZoom) _.needZoomWithOffset(zoomOffset/30); });
 		
 		this.setAllowVirtureFinger(true);
 		
@@ -6964,8 +6966,6 @@
 		this.SourceHeight      = this.Source.offsetHeight;
 		
 		ELAPPEND(this.Source,this.SourceWrapper);
-		
-		
 		
 		if("__NativeClass__" in box) {
 			if( box.__NativeClass__("ZoomBox")  ) {

@@ -47,6 +47,7 @@ tt, code, kbd, samp, var, em, s, b, strong, cite, dfn, i, time, mark {
 tt, code, kbd, samp {
 	font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
 }
+
 input,button,select,textarea {  font-family: inherit;  font-size: inherit;  line-height: inherit;}
 
 /* baseline */
@@ -80,7 +81,7 @@ fieldset,.layout {
 	@include layout-veriant();
 }
 .cell-layout { 
-	@include cell-layout-veriant("layout");
+	@include cell-layout-veriant("cell");
 }
 .fieldset {
 	display:table;
@@ -208,8 +209,8 @@ $xxl:30px;
 table.grid {
 	@include table-veriant();
 }
-table.wired {
-	@include wired-table-veriant();
+table.cellbase  {
+	@include cellbase-table-veriant();
 }
 .table-fixed{table-layout:fixed;}
 .table-frame{

@@ -1,61 +1,66 @@
-/* include Nody SASS Kit : version 2.0 Build (alpha 114) */
-#header { position: absolute; left: 0; top: 0; }
+/*
+Error: Undefined mixin 'wired-table-veriant'.
+        on line 186 of /Users/labeldock/Documents/GIT/Nody/SAMPLE/resources/source/application.scss, in `wired-table-veriant'
+        from line 186 of /Users/labeldock/Documents/GIT/Nody/SAMPLE/resources/source/application.scss
 
-#main { padding-left: 120px; padding-right: 20px; }
-#main xmp { font-size: 10px; }
+181: 	small {
+182: 		font-size:40%;
+183: 	}
+184: }
+185: #canvas-background {
+186: 	@include wired-table-veriant;
+187: 	table {
+188: 		td {
+189: 			width:100px;
+190: 			height:100px;
+191: 			background-color:#eee;
 
-.appear-ready { position: relative; transition: all 0.4s; opacity: 0; -webkit-transform: translateY(20px); -moz-transform: translateY(20px); -ms-transform: translateY(20px); -o-transform: translateY(20px); transform: translateY(20px); }
-
-.appear-submit { opacity: 1; -webkit-transform: translateY(0px); -moz-transform: translateY(0px); -ms-transform: translateY(0px); -o-transform: translateY(0px); transform: translateY(0px); }
-
-#green-box, #yellow-box, #red-box { height: 100px; line-height: 100px; text-align: center; border: 1px solid #eee; cursor: pointer; -webkit-transition: color 0.3s; -moz-transition: color 0.3s; -ms-transition: color 0.3s; -o-transition: color 0.3s; transition: color 0.3s; -webkit-transition-timing-function: ease-in-out; -moz-transition-timing-function: ease-in-out; -ms-transition-timing-function: ease-in-out; -o-transition-timing-function: ease-in-out; transition-timing-function: ease-in-out; }
-
-#green-box:hover { background-color: green; }
-
-#yellow-box:hover { background-color: yellow; }
-
-#red-box:hover { background-color: red; }
-
-#green-box:hover, #red-box:hover { color: white; }
-
-.gage-box { margin: 0 auto; width: 328px; height: 160px; overflow: hidden; position: relative; }
-.gage-box .gage-box-line-container { position: absolute; top: 0; left: 0; width: 328px; height: 328px; text-align: center; }
-.gage-box .gage-box-line-container .gage-line { margin-top: 17px; }
-.gage-box.gage-box-css .gage-box-line-container { display: block; -webkit-transition: all 1.5s; -moz-transition: all 1.5s; -ms-transition: all 1.5s; -o-transition: all 1.5s; transition: all 1.5s; -webkit-transition-timing-function: cubic-bezier(1, -0.53, 0.405, 1.425); -moz-transition-timing-function: cubic-bezier(1, -0.53, 0.405, 1.425); -ms-transition-timing-function: cubic-bezier(1, -0.53, 0.405, 1.425); -o-transition-timing-function: cubic-bezier(1, -0.53, 0.405, 1.425); transition-timing-function: cubic-bezier(1, -0.53, 0.405, 1.425); -webkit-transform: rotate(-100deg); -moz-transform: rotate(-100deg); -ms-transform: rotate(-100deg); -o-transform: rotate(-100deg); transform: rotate(-100deg); }
-
-#scroll-box, #calendar-box { white-space: nowrap; font-size: 30px; border: 1px dotted #ddd; height: 400px; width: 400px; }
-
-div.calendar { padding: 10px 0px; }
-
-table.calendar { width: 100%; table-layout: fixed; font-size: 16px; text-align: center; margin: 5px 0; }
-table.calendar thead td { background: #eee; }
-table.calendar td { border: 1px solid #eee; }
-table.calendar td.before, table.calendar td.after { color: #ccc; }
-
-.border-box { border: 1px solid #eee; }
-
-.inline-box { display: inline-block; vertical-align: top; border: 1px solid; width: 120px; height: 120px; margin-left: 10px; }
-.inline-box input { background: rgba(255, 255, 255, 0.7); }
-.inline-box.green { background: #d9f2e4; }
-.inline-box.blue { background: #d9e9f2; }
-.inline-box.small-box { width: 50px; height: 50px; }
-
-.overflow-box { border: 1px solid blue; overflow: hidden; min-height: 500px; }
-
-#view-display { margin-top: 10px; border: 1px solid #ddd; min-height: 200px; }
-
-.side-bar-container { position: relative; padding-right: 20px; transition: padding 0.4s; }
-.side-bar-container .right-side-bar { position: absolute; right: -200px; top: 0; width: 200px; padding-left: 0px; border-left: 1px solid #ddd; opacity: 0; transition: all 0.4s; }
-.side-bar-container.side-bar-active { padding-right: 220px; }
-.side-bar-container.side-bar-active .right-side-bar { right: 0; padding-left: 20px; opacity: 1; }
-
-code { text-align: left; }
-
-.thumbnail h3, .thumbnail p { white-space: nowrap; word-wrap: normal; text-overflow: ellipsis; -o-text-overflow: ellipsis; -ms-text-overflow: ellipsis; overflow: hidden; }
-.thumbnail.active { background: #73a4e5; }
-.thumbnail.active h3, .thumbnail.active p { color: white; }
-
-.page-header small { font-size: 40%; }
-
-#canvas-background { display: table; table-layout: auto; border-spacing: 0px; border-collapse: collapse; }
-#canvas-background table td { width: 100px; height: 100px; background-color: #eee; text-align: center; }
+Backtrace:
+/Users/labeldock/Documents/GIT/Nody/SAMPLE/resources/source/application.scss:186:in `wired-table-veriant'
+/Users/labeldock/Documents/GIT/Nody/SAMPLE/resources/source/application.scss:186
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:338:in `block in visit_mixin'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/stack.rb:98:in `block in with_mixin'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/stack.rb:115:in `with_frame'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/stack.rb:98:in `with_mixin'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:336:in `visit_mixin'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/base.rb:36:in `visit'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:158:in `block in visit'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/stack.rb:79:in `block in with_base'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/stack.rb:115:in `with_frame'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/stack.rb:79:in `with_base'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:158:in `visit'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:420:in `block (2 levels) in visit_rule'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:420:in `map'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:420:in `block in visit_rule'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:179:in `with_environment'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:418:in `visit_rule'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/base.rb:36:in `visit'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:158:in `block in visit'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/stack.rb:79:in `block in with_base'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/stack.rb:115:in `with_frame'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/stack.rb:79:in `with_base'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:158:in `visit'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/base.rb:52:in `block in visit_children'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/base.rb:52:in `map'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/base.rb:52:in `visit_children'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:167:in `block in visit_children'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:179:in `with_environment'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:166:in `visit_children'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/base.rb:36:in `block in visit'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:186:in `visit_root'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/base.rb:36:in `visit'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:157:in `visit'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/visitors/perform.rb:8:in `visit'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/root_node.rb:36:in `css_tree'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/tree/root_node.rb:20:in `render'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/engine.rb:268:in `render'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/exec/sass_scss.rb:404:in `run'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/exec/sass_scss.rb:62:in `process_result'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/exec/base.rb:52:in `parse'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/lib/sass/exec/base.rb:19:in `parse!'
+/Applications/CodeKit.app/Contents/Resources/engines/scss/bin/scss:13:in `<main>'
+*/
+body:before {
+  white-space: pre;
+  font-family: monospace;
+  content: "Error: Undefined mixin 'wired-table-veriant'.\A         on line 186 of /Users/labeldock/Documents/GIT/Nody/SAMPLE/resources/source/application.scss, in `wired-table-veriant'\A         from line 186 of /Users/labeldock/Documents/GIT/Nody/SAMPLE/resources/source/application.scss\A \A 181: 	small {\A 182: 		font-size:40%;\A 183: 	}\A 184: }\A 185: #canvas-background {\A 186: 	@include wired-table-veriant;\A 187: 	table {\A 188: 		td {\A 189: 			width:100px;\A 190: 			height:100px;\A 191: 			background-color:#eee;"; }

@@ -80,8 +80,8 @@ fieldset fieldset, fieldset .layout-right, .layout fieldset, .layout .layout-rig
 fieldset fieldset > *, fieldset .layout-right > *, .layout fieldset > *, .layout .layout-right > * { vertical-align: middle; }
 
 .cell-layout { position: relative; width: 100%; }
-.cell-layout .layout-left { position: absolute; top: 0px; left: 0px; height: false; }
-.cell-layout .layout-right { position: absolute; top: 0px; right: 0px; height: false; }
+.cell-layout .cell-left { position: absolute; top: 0px; left: 0px; height: false; }
+.cell-layout .cell-right { position: absolute; top: 0px; right: 0px; height: false; }
 
 .fieldset { display: table; }
 .fieldset > div.row { display: table-row; }
@@ -240,7 +240,7 @@ block */
 /******** table */
 table.grid { display: table; width: 100%; table-layout: fixed; border-spacing: 0px; border-collapse: collapse; }
 
-table.wired { display: table; table-layout: auto; border-spacing: 0px; border-collapse: collapse; }
+table.cellbase { display: table; table-layout: auto; border-spacing: 0px; border-collapse: collapse; }
 
 .table-fixed { table-layout: fixed; }
 

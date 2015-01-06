@@ -1,0 +1,60 @@
+@charset "UTF-8";
+@import 'nody-kit';
+@import "bootstrap.min.css";
+@import "nody.css";
+@import "jquery-ui.min.css";
+
+/* zoom and response */
+.ui-draggable-dragging {
+	@include opacity(0.5);
+}
+.zoom-sample {
+  width:100%;
+  height:300px;
+  border:1px solid gray;
+  overflow:hidden;
+  .response-area {
+	  position:relative;
+	  @include asset("../images/zoom/floor.png",800,560);
+	  
+	  .create-object{
+		  position:absolute;
+		  width:30px;
+		  height:30px;
+		  line-height:30px;
+		  text-align:center;
+		  color:#27d0f9;
+		  border:2px solid #27d0f9;
+		  background:#232132;
+		  font-size:10px;
+	  }
+  }
+  
+  
+  &.zoom-sample-2 {
+	  table {
+		  @include cellbase-table-veriant();
+		  td{
+			  width:20px;
+			  height:20px;
+			  border:1px solid #eee;
+			  &.over{
+				  background:red;
+			  }
+		  }
+	  }
+  }
+}
+
+body {
+	padding-bottom:100px;
+	> aside {
+		position:fixed;
+		right:60px;
+		top:120px;
+		height:40%;
+		padding:20px;
+		border:1px solid #eee;
+		background:#fafafa;
+	}
+}

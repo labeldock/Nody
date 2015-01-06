@@ -235,6 +235,22 @@ $global-negative-color:#d37474;
 @mixin translateY($y){
 	@include css3f(transform, translateY(#{$y}));
 }
+@mixin trick-center($position:absolute) {
+	position: $position;
+	left: 50%;
+	top : 50%;
+	@include translate(-50%,-50%);
+}
+@mixin trick-center-horizontal($position:absolute) {
+	position: $position;
+	left: 50%;
+	@include translateX(-50%);
+}
+@mixin trick-center-vertical($position:absolute) {
+	position: $position;
+	top: 50%;
+	@include translateY(-50%);
+}
 @mixin translate3d($x:0,$y:0,$z:0){
 	@include css3f(transform, translate3d(#{$x},#{$y},#{$z}));
 }
@@ -587,7 +603,7 @@ $global-negative-color:#d37474;
 	}
 }
 //table cell에 의해 테이블 크기가 결정됩니다.
-@mixin wired-table-veriant($spacing:0px,$border:false,$table-width:false,$table-layout:auto) {
+@mixin cellbase-table-veriant($spacing:0px,$border:false,$table-width:false,$table-layout:auto) {
 	display:table;
 	@if $table-width { width:$table-width; }
 	table-layout:$table-layout;
@@ -602,9 +618,10 @@ $global-negative-color:#d37474;
 		border:$border;
 	}
 }
+
 //table 크기안에서 셀크기가 결정됩니다.
 @mixin table-veriant($spacing:0px,$border:false) {
-	@include wired-table-veriant($spacing,$border,100%,fixed);
+	@include cellbase-table-veriant($spacing,$border,100%,fixed);
 }
 //td, th안에서
 @mixin table-cell-veriant ($vertical:middle,$align:left,$height:false,$padding:false,$hBorder:false,$vBorder:false,$hBorderTop:false,$hBorderBottom:false){
@@ -747,11 +764,11 @@ $global-negative-color:#d37474;
 	}
 }
 
-@mixin asset($uri,$width:auto,$height:auto){
-	font-size:0;
+@mixin asset($uri,$width:auto,$height:auto,$font-size:0){
+	font-size:$font-size;
 	background: url("#{$uri}") no-repeat;
-	width:$width;
-	height:$height;
+	width : ($width * 1px) ;
+	height: ($height * 1px);
 }
 
 @mixin panelPart($model,$headname,$partHeight){
