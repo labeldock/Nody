@@ -183,7 +183,7 @@ code {
 	}
 }
 #canvas-background {
-	@include wired-table-veriant;
+	@include cellbase-table-veriant;
 	table {
 		td {
 			width:100px;

@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11.6",build = "905";
+	var version = "0.11.6",build = "906";
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -6850,9 +6850,7 @@
 			this.axisYNegativeItems = [];
 			
 			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
-			console.log("this.ClipView",this.ClipView)
 			ELSTYLE(this.ClipView,"transform","matrix(1,0,0,1,0,0)");
-			console.log("this.ClipView",this.ClipView)
 			ELSTYLE(this.ClipView,"position","relative");
 			
 			ELAPPEND(this.ClipView,this.Source.childNodes);

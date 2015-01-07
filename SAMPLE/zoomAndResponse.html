@@ -29,7 +29,7 @@
 					</div>
 				</div>
 				<div class="zoom-sample zoom-sample-1">
-					<div class="response-area">
+					<div id="response-area-1" class="response-area">
 					</div>
 				</div>
 			</div>
@@ -37,7 +37,6 @@
 		<hr>
 		<div class="row">
 			<div class="col-xs-8">
-				
 				<div class="layout">
 					<div class="layout-left">
 						<h2>Grid base dropdown</h2>
@@ -48,7 +47,7 @@
 					</div>
 				</div>
 				<div class="zoom-sample zoom-sample-2">
-					<div class="response-area">
+					<div id="response-area-2" class="response-area">
 						<table>
 						</table>
 					</div>
@@ -68,9 +67,7 @@
 	<script src="resources/js/jquery-1.11.1.min.js"></script>
 	<script src="resources/js/jquery-ui.min.js"></script>
 	<script src="resources/js/jquery-ui.touch-punch.min.js"></script>
-	<script src="../mixed-module/mixed/nody.mixed.js"></script>
 	<script src="resources/js/bootstrap.min.js"></script>
-	<script src="resources/js/bootstrap-slider.js"></script>
 	<script>
 		//helper
 		makeGetter("NOTY",function(s){
@@ -100,18 +97,19 @@
 			z1.needZoomWithOffset(-0.3);
 		});
 		
-		$(".zoom-sample-1 .response-area").droppable({
+		$(".zoom-sample-1 #response-area-1").droppable({
 			tolerance:"pointer",
 			drop:function(e,ui){
 				var pos  = ui.draggable.offset();
 				var	dPos = $(this).offset();
 				var	top  = (pos.top - dPos.top);
 				var	left = (pos.left - dPos.left);
+			
 				NOTY("drop position",top,left);
+			
 				ELAPPEND(e.target,
 					MAKE("div.create-object",{html:(newItemIndex++),style:ZSTRING("left:\\{$0}px;top:\\{$1}px;",left,top)})
 				)
-				return false;
 			}
 		});
 		
@@ -135,14 +133,14 @@
 			z2.needZoomWithOffset(-0.3);
 		});
 		
-		var tds = $(".zoom-sample-2 .response-area td").droppable({
+		var tds = $(".zoom-sample-2 #response-area-2 td").droppable({
 			tolerance:"pointer",
 			drop:function(e,ui){
 				tds.removeClass("over");
 				$(this).addClass("over");
 			},
 			over:function(){
-				$(this).addClass("over");
+				if(z2.ZoomValue == 1) $(this).addClass("over");
 			},
 			out:function(){
 				$(this).removeClass("over");

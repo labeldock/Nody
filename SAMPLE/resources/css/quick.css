@@ -16,7 +16,7 @@
     font-size: 0;
     background: url("../images/zoom/floor.png") no-repeat;
     width: 800px;
-    height: 560px; }
+    height: 330px; }
     .zoom-sample .response-area .create-object {
       position: absolute;
       width: 30px;
@@ -27,6 +27,8 @@
       border: 2px solid #27d0f9;
       background: #232132;
       font-size: 10px; }
+  .zoom-sample.zoom-sample-2 .response-area {
+    z-index: 1; }
   .zoom-sample.zoom-sample-2 table {
     display: table;
     table-layout: auto;

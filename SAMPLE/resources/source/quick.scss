@@ -15,8 +15,7 @@
   overflow:hidden;
   .response-area {
 	  position:relative;
-	  @include asset("../images/zoom/floor.png",800,560);
-	  
+	  @include asset("../images/zoom/floor.png",800,330);
 	  .create-object{
 		  position:absolute;
 		  width:30px;
@@ -32,6 +31,9 @@
   
   
   &.zoom-sample-2 {
+	  .response-area {
+		  z-index:1;
+	  }
 	  table {
 		  @include cellbase-table-veriant();
 		  td{
