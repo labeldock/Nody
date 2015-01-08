@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.11.6",build = "906";
+	var version = "0.12.1",build = "914";
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -4231,8 +4231,14 @@
 	
 	
 	extendModule("Nody","Template",{
-		clone    : function(nodeData){ return _Template(this.TemplateNode,nodeData); },
-		generate : function(nodeData){ return _Template(this.TemplateNode,nodeData).get(); },
+		clone    : function(nodeData){ return new Template(this.TemplateNode,nodeData); },
+		generate : function(nodeData){ return (new Template(this.TemplateNode,nodeData)).get(); },
+		generateMap : function(){ 
+			var _ = this;
+			return DATAMAP(Array.prototype.slice.call(arguments),function(nodeData){ 
+				return (new Template(_.TemplateNode,nodeData)).get(); }
+			);
+		},
 		// 키를 지우면서
 		partialAttr:function(attrKey,method){
 			this.find("["+attrKey+"]").each(function(node){
@@ -4244,7 +4250,9 @@
 		},
 		//
 		nodeData:function(data){
-			if(!this.TemplatePartials)this.TemplatePartials = {value:{},src:{},dataset:{},href:{},placeholder:{}};
+			if(!this.TemplatePartials) {
+				this.TemplatePartials = {value:{},src:{},"class":{},coordinate:{},dataset:{},href:{},append:{}};
+			}
 			if(typeof data !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다"); }
 			var _ = this;
 			var _partials = this.TemplatePartials;
@@ -4264,7 +4272,28 @@
 							case "value":ELVALUE(node,data[attrValue]);break;
 							case "src"  :node.setAttribute("src",data[attrValue]);break;
 							case "href" :node.setAttribute("href",data[attrValue]);break;
-							case "placeholder": ELEMPTY(node);ELAPPEND(node,data[attrValue]);break;
+							case "class":ELADDCLASS(node,data[attrValue]);break;
+							case "coordinate":
+								if(typeof data[attrValue] == "string") {
+									var coordinateData = [];
+									data[attrValue].replace(/(-|)\d+/g,function(s){ coordinateData.push(s); });
+									DATAEACH(coordinateData,function(v,i){
+										var styleName;
+										switch(i){
+											case 0:styleName='left';break;
+											case 1:styleName='top';break;
+											case 2:styleName='width';break;
+											case 3:styleName='height';break;
+											default:return false;break;
+										}
+										var styleValue = (TONUMBER(v) + "px");
+										ELSTYLE(node,styleName,styleValue);
+									});
+								} else {
+									if(!ISNOTHING(data[attrValue])) console.warn("코디네이트 데이터 에러",data[attrValue]);
+								}
+								break;
+							case "append" : ELAPPEND(node,data[attrValue]);break;
 							case "dataset": PROPEACH(data[attrValue],function(key,value){ node.dataset[key] = value; });break;
 						}
 					});
@@ -5945,7 +5974,7 @@
 	},function(source,childrenKey){
 		this.ID                = _Util.base36UniqueRandom(5);
 		this.Source            = TOOBJECT(source,"value");
-		this.SourceChildrenKey = childrenKey || "array";
+		this.SourceChildrenKey = childrenKey || "data";
 		// 데이터 안의 모든 Managed data를 생성하여 메타안에 집어넣음
 		this.RootManagedData = this.feedDownManagedDataMake(this.Source,"root");
 	});
@@ -5953,7 +5982,7 @@
 	makeModule("ViewModel",{
 		needRenderView:function(depth,managedData,feedViews,viewController){
 			if (ISTYPE(this.Source[depth],"Template") == true) {
-				return managedData.configWithTemplate(this.Source[depth]);
+				return managedData.template(this.Source[depth]);
 			} else if (typeof this.Source[depth] === "function") {
 				var renderResult = this.Source[depth].call(managedData,managedData,feedViews);
 				if(ISELNODE(renderResult)){
@@ -5976,7 +6005,7 @@
 		this.Source = new AArray(Array.prototype.slice.call(arguments)).getMap(function(a){ 
 			if(typeof a === "string"){
 				var findTemplate = ZFIND(a);
-				return _Template(findTemplate,undefined,false);
+				return new Template(findTemplate,undefined,false);
 			}
 			return a; 
 		});
@@ -6030,8 +6059,8 @@
 				if( this.Parent ) this.Parent.chainUpMangedData(method);
 			}
 		},
-		hasData:function(key){ return (key in this.Source); },
-		data:function(key,value,sender){
+		hasValue:function(key){ return (key in this.Source); },
+		value:function(key,value,sender){
 			// Read
 			if( arguments.length == 0) return CLONE(this.Source);
 			if( arguments.length == 1) return this.Source[key];
@@ -6040,21 +6069,25 @@
 			DataContextNotificationCenter.managedDataBindEvent(this.BindID,key,value,sender);
 			return this;
 		},
-		removeData:function(key,sender){
+		data:function(a,b,c){
+			console.warn("deprecated MangedObject::data => value");
+			return this.value(a,b,c);
+		},
+		removeValue:function(key,sender){
 			if(key in this.Source){
 				delete this.Source[key];
 				DataContextNotificationCenter.managedDataBindEvent(this.BindID,key,"",sender);
 			}
 		},
 		text:function(key){
-			return MAKETEXT( this.data.apply(this,arguments) )
+			return MAKETEXT( this.value.apply(this,arguments) )
 		},
 		bind:function(dataKey,bindElement,optional){
 			if(this.scope) {
 				//엘리먼트 기본설정값
 				var element = ISELNODE(bindElement) ? bindElement : typeof bindElement === "undefined" ? CREATE("input!"+bindElement) : CREATE(bindElement);
 				//optional은 기존에 실제 존재하였는지 확인하여 입력
-				this.scope.addBindNode(element,this,dataKey,!this.hasData(dataKey));
+				this.scope.addBindNode(element,this,dataKey,!this.hasValue(dataKey));
 				return element;
 			} else {
 				console.warn("view컨트롤러 스코프 내에서만 bind를 사용할수 있습니다.");
@@ -6079,15 +6112,10 @@
 				return placeholderElement;
 			}
 		},
-		configWithTemplate:function(_template){
+		template:function(_template){
 			var _ = this;
-			var templateNode = _template.clone().selectFirst();
-			
-			if(templateNode.isEmpty()) console.error("configWithTemplate :: 렌더링할 template를 찾을수 없습니다");
-			
-			templateNode.partialAttr("node-data",function(dataKey,node){
-				ELVALUE(node,dataKey,_.data(dataKey));
-			});
+			var templateNode = _template.clone(this.value()).selectFirst();
+			if(templateNode.isEmpty()) console.error("template :: 렌더링할 template를 찾을수 없습니다");
 			templateNode.partialAttr("node-bind",function(dataKey,node){
 				_.bind(dataKey,node)
 			});
@@ -6099,7 +6127,6 @@
 			templateNode.partialAttr("node-placeholder",function(dataKey,node){
 				_.placeholder(node);
 			});
-			
 			return templateNode.zero();
 		},
 		revertData:function(){
@@ -6198,7 +6225,7 @@
 		this.scope      = undefined;
 	});
 	
-	makeModule("DataContextViewController",{
+	makeModule("Presenter",{
 		"+events":{
 			"up":function(arg,el,vc){
 				if(typeof arg === "function") {
@@ -6311,7 +6338,7 @@
 		addBindNode:function(element,managedData,dataKey,optinal){
 			if( ISELNODE(element) ){
 				//값을 입력
-				ELVALUE( element, managedData.data(dataKey) );
+				ELVALUE( element, managedData.value(dataKey) );
 				
 				//바인드 값을 입력함
 				this.bindValueNodes.push( [managedData.BindID,dataKey,element] );
@@ -6323,8 +6350,8 @@
 						ELON (element,"keyup",function(e) {
 							setTimeout(function(){
 								var value = ELVALUE(element);
-								if( (optinal == true) && value == "" ) return managedData.removeData(dataKey,element);
-								managedData.data(dataKey,value,element);
+								if( (optinal == true) && value == "" ) return managedData.removeValue(dataKey,element);
+								managedData.value(dataKey,value,element);
 							},0);
 						});
 						break;
@@ -6332,8 +6359,8 @@
 						ELON (element,"change",function(e){
 							setTimeout(function(){
 								var value = ELVALUE(element);
-								if( (optinal == true) && value == "" ) return managedData.removeData(dataKey,element);
-								managedData.data(dataKey,value,element);
+								if( (optinal == true) && value == "" ) return managedData.removeValue(dataKey,element);
+								managedData.value(dataKey,value,element);
 							},0);
 						});
 						break;
@@ -6516,7 +6543,7 @@
 		whenDataDidChange:function(m){ if((typeof m === "function") || m == undefined) this.dataDidChange = m; },
 		"+selectItemDidChange":undefined,
 		"+dataDidChange":undefined
-	},function(view,managedData,viewModel){
+	},function(view,managedData,viewModel,needDisplay){
 		this.view          = ZFIND(view);
 		if(managedData)this.setManagedData(managedData);
 		this.viewModel     = viewModel || new ViewModel();
@@ -6530,6 +6557,10 @@
 		this.placeholderNodes = {};
 		this.selectIndexes  = new AArray();
 		DataContextNotificationCenter.addObserver(this);
+		
+		//needDisplay
+		if(typeof needDisplay === "function") needDisplay = CALL(needDisplay,this);
+		if(needDisplay === true) this.needDisplay();
 	});
 	
 	makeModule("Finger",{

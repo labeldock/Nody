@@ -92,10 +92,8 @@ GNBNavigationController.whenLoad("mvvm",function(){
 	//뷰를 그리는 방법을 정의
 	var itemIndex = 10;
 	var viewModel = new ViewModel("template#mvvm-ul","template#mvvm-list","template#mvvm-td");
-	window.vm = viewModel;
 	//뷰를 그리고 이벤트를 등록함
-    var listViewController = new DataContextViewController("#listContainer",dataContext.getRootManagedData(),viewModel);
-	window.lvc = listViewController;
+    var listViewController = new Presenter("#listContainer",dataContext.getRootManagedData(),viewModel);
 	listViewController.dataDidChange = function(){
 		var xmpText = dataContext.getJSONString().replace(/\:\[/,":[\n\t").replace(/\}\]\}\,(\s|)/g,"}]},\n\t").replace("]}]}","]}\n]}");
 		mvvmXMP.text(xmpText);
@@ -120,14 +118,14 @@ var viewModels = {
 		return this.placeholder("ul");
 	},function(){
 		return MAKE("li.inline-box.small-box.text-center",
-			MAKE("img",{src:this.data("image")})
+			MAKE("img",{src:this.value("image")})
 		);
 	}),
 	"large":new ViewModel(function(){
 		return this.placeholder("ul");
 	},function(){
 		return MAKE("li.inline-box.text-center",
-			MAKE("img",{src:this.data("image")}),
+			MAKE("img",{src:this.value("image")}),
 			this.bind("native","p")
 		);
 	}),
@@ -154,7 +152,7 @@ var viewModels = {
 
 GNBNavigationController.whenLoad("viewmodel",function(){	
 
-	var viewController = new DataContextViewController("#view-display",viewDataContext);
+	var viewController = new Presenter("#view-display",viewDataContext);
 	
 	var viewType = new Contexts("#view-type","button");
 	
@@ -182,7 +180,7 @@ GNBNavigationController.whenLoad("multiselect",function(){
 	},function(){
 		return MAKE("div.col-sm-6",
 			MAKE("div.thumbnail",
-				MAKE("img",{src:this.data("image")}),
+				MAKE("img",{src:this.value("image")}),
 				MAKE("div.caption",
 					this.bind("name","h3"),
 					this.bind("native","p")
@@ -196,7 +194,7 @@ GNBNavigationController.whenLoad("multiselect",function(){
 	},function(node){
 			$(".thumbnail",node).removeClass("active");
 	})
-	var viewController = new DataContextViewController("#multiselect-display",viewDataContext,multiViewModel);
+	var viewController = new Presenter("#multiselect-display",viewDataContext,multiViewModel);
 	// true is allowMultiSelect
 	viewController.needSelectable(true);
 	viewController.needDisplay();
@@ -213,7 +211,7 @@ GNBNavigationController.whenLoad("multiselect",function(){
 			
 			DATAEACH(managedItems,function(managedItem){
 				model.each(function(value,key){
-					managedItem.data(key,value);
+					managedItem.value(key,value);
 				});
 				_Form("#replaceData").empty();
 				viewController.deselectAll();
@@ -230,7 +228,7 @@ GNBNavigationController.whenLoad("selectbind",function(){
 		return this.placeholder("div.menu.list-group");
 	},function(){
 		return MAKE("a.list-group-item",
-			MAKE("h4.list-group-item-heading",MAKE("img",{src:this.data("image")}),MAKE("span",{html:"&nbsp;"}),this.bind("name","span")),
+			MAKE("h4.list-group-item-heading",MAKE("img",{src:this.value("image")}),MAKE("span",{html:"&nbsp;"}),this.bind("name","span")),
 			this.bind("native","p.list-group-item-text")
 		);
 	});
@@ -251,11 +249,11 @@ GNBNavigationController.whenLoad("selectbind",function(){
 			this.bind("image","p")
 		);
 	});
-	var itemController = new DataContextViewController("#bind-item-display",undefined,itemViewModel);
+	var itemController = new Presenter("#bind-item-display",undefined,itemViewModel);
 	
 	
 	// list view
-	var viewController = new DataContextViewController("#bind-display",viewDataContext,listViewModel);
+	var viewController = new Presenter("#bind-display",viewDataContext,listViewModel);
 	viewController.needSelectable();
 	viewController.needDisplay();
 	

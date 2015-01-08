@@ -1,6 +1,11 @@
 Nody.js
 =======
-Node + Friendly
+Node + Friendly => Nody
+
+
+## 주의 : 현재 소스는 0.12이지만 도큐먼트는 0.11 입니다.
+## 도큐먼트가 변경될때까지 Template모듈과 MVVM모듈들의 API가 다르거나 존재하지 않을수 있습니다.
+
 
 # Sample #
 <a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a>
