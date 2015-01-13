@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.12.1",build = "914";
+	var version = "0.12.2",build = "915";
 	// 이미 불러온 버전이 있는지 확인
 	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
 	// 코어버전
@@ -143,7 +143,7 @@
 		i=0;
 		for (key in NSingletons ) {
 			singletonText += "\n" + i + " : " + key;
-			
+		
 			var protoName,i2=0;
 			switch(key){
 				case "SpecialFoundation": case "ELUT": case "NODY": case "FINDEL": case "ElementFoundation": case "ElementGenerator":
@@ -4039,6 +4039,29 @@
 				}
 			} 
 			return findNodes;
+		},
+		"COORD":function(nodes,coordinate,insertAbsolute,scale){
+			var findNode = ZFIND(nodes);
+			if(findNode && (typeof coordinate == "string")) {
+				scale = (typeof scale === 'number') ? scale : 1;
+				
+				var coordinateData = [];
+				coordinate.replace(/(-|)\d+/g,function(s){ coordinateData.push(s); });
+				DATAEACH(coordinateData,function(v,i){
+					var styleName;
+					switch(i){
+						case 0:styleName='left';break;
+						case 1:styleName='top';break;
+						case 2:styleName='width';break;
+						case 3:styleName='height';break;
+						default:return false;break;
+					}
+					var styleValue = ((TONUMBER(v)*scale) + "px");
+					ELSTYLE(findNode,styleName,styleValue);
+				});
+				if(insertAbsolute === true) ELSTYLE(findNode,'position','absolute');
+			}
+			return nodes;
 		}
 	});
 	EL.eachGetterWithPrefix();
@@ -4251,7 +4274,7 @@
 		//
 		nodeData:function(data){
 			if(!this.TemplatePartials) {
-				this.TemplatePartials = {value:{},src:{},"class":{},coordinate:{},dataset:{},href:{},append:{}};
+				this.TemplatePartials = {value:{},src:{},"class":{},dataset:{},href:{},append:{}};
 			}
 			if(typeof data !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다"); }
 			var _ = this;
@@ -4259,8 +4282,10 @@
 			// 파셜 노드 수집 (두번째의 경우 수집한 노드를 다시 수집)
 			PROPEACH(this.TemplatePartials,function(inject,name){
 				_.partialAttr("node-"+name,function(attrValue,node){
-					if (!inject[attrValue]) inject[attrValue] = [];
-					inject[attrValue].push(node);
+					attrValue.replace(/\S+/g,function(s){
+						if (!inject[s]) inject[s] = [];
+						inject[s].push(node);
+					});
 				});
 			});
 			
@@ -4273,26 +4298,6 @@
 							case "src"  :node.setAttribute("src",data[attrValue]);break;
 							case "href" :node.setAttribute("href",data[attrValue]);break;
 							case "class":ELADDCLASS(node,data[attrValue]);break;
-							case "coordinate":
-								if(typeof data[attrValue] == "string") {
-									var coordinateData = [];
-									data[attrValue].replace(/(-|)\d+/g,function(s){ coordinateData.push(s); });
-									DATAEACH(coordinateData,function(v,i){
-										var styleName;
-										switch(i){
-											case 0:styleName='left';break;
-											case 1:styleName='top';break;
-											case 2:styleName='width';break;
-											case 3:styleName='height';break;
-											default:return false;break;
-										}
-										var styleValue = (TONUMBER(v) + "px");
-										ELSTYLE(node,styleName,styleValue);
-									});
-								} else {
-									if(!ISNOTHING(data[attrValue])) console.warn("코디네이트 데이터 에러",data[attrValue]);
-								}
-								break;
 							case "append" : ELAPPEND(node,data[attrValue]);break;
 							case "dataset": PROPEACH(data[attrValue],function(key,value){ node.dataset[key] = value; });break;
 						}
@@ -6401,7 +6406,7 @@
 			if(!this.viewModel) console.warn("DataContextViewController:: Must need set ViewModel before needdisplay");
 			//파라메터 두개가 존재하지 않으면 초기화 진행을 한다
 			if( (!managedData) && (!rootElement) ){
-				this.view.innerHTML= "";
+				this.view.innerHTML= '';
 				this.bindValueNodes = new AArray();
 				this.structureNodes = {};
 				this.placeholderNodes = {};
@@ -6545,6 +6550,7 @@
 		"+dataDidChange":undefined
 	},function(view,managedData,viewModel,needDisplay){
 		this.view          = ZFIND(view);
+		if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
 		if(managedData)this.setManagedData(managedData);
 		this.viewModel     = viewModel || new ViewModel();
 		//선택관련 인자
