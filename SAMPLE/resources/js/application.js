@@ -4,7 +4,7 @@ var GNBNavigationController = new NavigationController("main",function(initActiv
 	return initActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
 		return GNBNavigationController.active((this.textContent || this.innerText).toLowerCase());
-	},6).makeAccessProperty(function(accessData,node){
+	},4).makeAccessProperty(function(accessData,node){
 		//navigation data
 		var name = (node.textContent || node.innerText).toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
@@ -74,7 +74,6 @@ GNBNavigationController.whenActiveToggle("appear",function(){
 	FIND(".appear-ready",DATAEACH,function(node,i){
 		$(node).removeClass("appear-submit");
 	});
-	
 	window.css3Transform(".gage-box-line-container","rotate(-100deg)");
 });
 GNBNavigationController.whenLoad("mvvm",function(){
@@ -112,6 +111,7 @@ var viewData = [
 	{name:"Greece",native:"Ελληνική Δημοκρατία",image:"resources/images/Greece.png"}
 ];
 var viewDataContext = new DataContext(viewData);
+window.viewDataContext = viewDataContext;
 
 var viewModels = {
 	"small":new ViewModel(function(){
@@ -173,54 +173,6 @@ GNBNavigationController.whenLoad("viewmodel",function(){
 	});
 	
 });
-
-GNBNavigationController.whenLoad("multiselect",function(){
-	var multiViewModel = new ViewModel(function(){
-		return this.placeholder("div.row-fluid");
-	},function(){
-		return MAKE("div.col-sm-6",
-			MAKE("div.thumbnail",
-				MAKE("img",{src:this.value("image")}),
-				MAKE("div.caption",
-					this.bind("name","h3"),
-					this.bind("native","p")
-				)
-			)
-		);
-	});
-	multiViewModel.whenSelectToggle(
-		function(node){
-			$(".thumbnail",node).addClass("active");
-	},function(node){
-			$(".thumbnail",node).removeClass("active");
-	})
-	var viewController = new Presenter("#multiselect-display",viewDataContext,multiViewModel);
-	// true is allowMultiSelect
-	viewController.needSelectable(true);
-	viewController.needDisplay();
-	
-	viewController.selectItemDidChange = function(items){
-		(items.length > 0) ? $(".side-bar-container").addClass("side-bar-active") : $(".side-bar-container").removeClass("side-bar-active");
-	};
-	
-	$("#replaceData-submit").click(function(){
-		var model = new Model("#replaceData").removeNothing();
-		
-		if(model.count()){
-			var managedItems = viewController.getSelectableManagedItem();
-			
-			DATAEACH(managedItems,function(managedItem){
-				model.each(function(value,key){
-					managedItem.value(key,value);
-				});
-				_Form("#replaceData").empty();
-				viewController.deselectAll();
-			});
-			
-		}
-		
-	});
-});
 GNBNavigationController.whenLoad("selectbind",function(){
 	// view model
 	var listViewModel = new ViewModel(
@@ -251,22 +203,73 @@ GNBNavigationController.whenLoad("selectbind",function(){
 	});
 	var itemController = new Presenter("#bind-item-display",undefined,itemViewModel);
 	
-	
 	// list view
-	var viewController = new Presenter("#bind-display",viewDataContext,listViewModel);
-	viewController.needSelectable();
-	viewController.needDisplay();
-	
-	viewController.selectItemDidChange = function(items){
-		(items.length > 0) ? $(".side-bar-container").addClass("side-bar-active") : $(".side-bar-container").removeClass("side-bar-active");
-		var item = items.zero();
-		if(item) itemController.needDisplayWithData(item);
-	};
-	
-	$(document).on("click","#bind-close-button",function(){
-		viewController.deselectAll();
+	var viewController = new Presenter("#bind-display",viewDataContext,listViewModel,function(){
+		
+		var activeController = this.needActiveController('/*',function(e,managedData){
+			itemController.needDisplayWithData(managedData);
+		},false,true);
+		
+		activeController.whenActiveStart(function(){
+			$(".side-bar-container").addClass("side-bar-active");
+		});
+		
+		activeController.whenActiveEnd(function(){
+			$(".side-bar-container").removeClass("side-bar-active");
+		});
+		
+		$('#bind-close-button').on('click',function(){
+			activeController.inactiveAll();
+		});
+		
+		return true;
 	});
+	
 });
+GNBNavigationController.whenLoad("multiselect",function(){
+	var multiViewModel = new ViewModel(function(){
+		return this.placeholder("div.row-fluid");
+	},function(){
+		return MAKE("div.col-sm-6",
+			MAKE("div.thumbnail",
+				MAKE("img",{src:this.value("image")}),
+				MAKE("div.caption",
+					this.bind("name","h3"),
+					this.bind("native","p")
+				)
+			)
+		);
+	});
+	var viewController = new Presenter("#multiselect-display",viewDataContext,multiViewModel,function(){
+		var activeController = this.needActiveController('/*',null,true,true);
+		activeController.whenActiveStart(function(){
+			$(".side-bar-container").addClass("side-bar-active");
+		});
+		activeController.whenActiveEnd(function(){
+			$(".side-bar-container").removeClass("side-bar-active");
+		});
+		
+		$("#replaceData-submit").click(function(){
+			var model = new Model("#replaceData").removeNothing();
+		
+			if(model.count()){
+				DATAEACH(DATAMAP(activeController.getActiveSelects(),function(node){
+					return viewController.getManagedDataWithNode(node);
+				}),function(managedItem){
+					model.each(function(value,key){
+						managedItem.value(key,value);
+					});
+					_Form("#replaceData").empty();
+					activeController.inactiveAll();
+				});
+			}
+		});
+		
+		return true;
+	});
+	
+});
+
 GNBNavigationController.whenLoad("scroll",function(){
 	var scrollBox    = new ScrollBox("#scroll-box");
 	var calendarBox  = new ScrollBox("#calendar-box");

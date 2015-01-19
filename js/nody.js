@@ -8,64 +8,68 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.12.2",build = "915";
-	// 이미 불러온 버전이 있는지 확인
-	if(typeof W.nody !== "undefined"){ W.nodyLoadException = true; throw new Error("already loaded NODY core loadded => " + W.nody + " current => " + version); } else { W.nody = version; }
+	var version = "0.13",build = "927";
+	
 	// 코어버전
-	var nodyCoreVersion = "1.8", nodyCoreBuild = "73";	
-	// Console fix // target IE, air
+	var nodyCoreVersion = "1.8", nodyCoreBuild = "73";
+	
+	// Console fix 
+	// target IE, air
 	if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(TOSTRING(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
+	
 	// MARK("name") 두번호출하면 시간을 측정할수 있음
 	var MARKO = {}; W.MARK = function(name){ if(typeof name === "string" || typeof name === "number") { name = name+""; if(typeof MARKO[name] === "number") { var time = (+new Date() - MARKO[name]);console.info("MARK::"+name+" => "+time) ; delete MARKO[name]; return time  } else { console.info("MARK START::"+name); MARKO[name] = +new Date(); } } };
+	
 	//IE8 TRIM FIX
 	if(!String.prototype.trim) String.prototype.trim = function() { return this.replace(/(^\s*)|(\s*$)/gi, ""); };
+	
 	//IE7 JSON FIX
-	if(typeof W.JSON === "undefined"){ W.JSON = {
-			'parse' : function(s) { var r; try { r = eval('(' + s + ')'); } catch(e) { r = TOOBJECT(s); } return r; },
-			'stringify' : function(o) { return W.TOSTRING(obj,Number.POSITIVE_INFINITY,true); }
-	};}
+	if(typeof W.JSON === "undefined"){ W.JSON = { 'parse' : function(s) { var r; try { r = eval('(' + s + ')'); } catch(e) { r = TOOBJECT(s); } return r; }, 'stringify' : function(o) { return W.TOSTRING(obj,Number.POSITIVE_INFINITY,true); } };}
+	
 	//IE8 Success FIX
 	if (typeof W.success === "function"){W.success = "success";}
+	
 	//IE8 function bind FIX
-	if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { /* closest thing possible to the ECMAScript 5 internal IsCallable function */ throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments,1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }	
+	if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { /* closest thing possible to the ECMAScript 5 internal IsCallable function */ throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments,1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }
 	
 	W.NODYENV = (function(){
 		var info = {};
 		
-		var support;
+		if(navigator) {
+			// Operating system
+			info.os = /(win|mac|linux|iphone)/.exec(navigator.platform.toLowerCase());
+			info.os = (info.os !== null) ? info.os[0].replace("sunos", "solaris") : "unknown";
 		
-		// Operating system
-		info.os = /(win|mac|linux|iphone)/.exec(navigator.platform.toLowerCase());
-		info.os = (info.os !== null) ? info.os[0].replace("sunos", "solaris") : "unknown";
+			// Browser Name
+			//http://stackoverflow.com/questions/5916900/detect-version-of-browser 191
+			info.browser = (function(){
+			    var ua= navigator.userAgent, tem, 
+			    M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+			    if(/trident/i.test(M[1])){
+			        tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
+			        return 'IE '+(tem[1] || '');
+			    }
+			    if(M[1]=== 'Chrome'){
+			        tem= ua.match(/\bOPR\/(\d+)/)
+			        if(tem!= null) return 'Opera '+tem[1];
+			    }
+			    M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+			    if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
+			    return M.join(' ');
+			})();
 		
-		// Browser Name
-		//http://stackoverflow.com/questions/5916900/detect-version-of-browser 191
-		var sayswho = (function(){
-		    var ua= navigator.userAgent, tem, 
-		    M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
-		    if(/trident/i.test(M[1])){
-		        tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
-		        return 'IE '+(tem[1] || '');
-		    }
-		    if(M[1]=== 'Chrome'){
-		        tem= ua.match(/\bOPR\/(\d+)/)
-		        if(tem!= null) return 'Opera '+tem[1];
-		    }
-		    M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
-		    if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
-		    return M.join(' ');
-		})();
+			//online
+			info.online = navigator.onLine;
+		} else {
+			info.browser = info.os = 'unknown';
+			info.online  = false; 
+		}
 		
-		info.browser = sayswho;
-		
-		//online
-		info.online = navigator.onLine;
-	
 		//support ComputedStyle
-		info.supportComputedStyle  = window.getComputedStyle ? true : false;
+		info.supportComputedStyle  =  window ? ('getComputedStyle' in window) ? true : false : false;
 		
 		//support Query
-		info.supportQuerySelectAll = document.querySelectorAll ? true : false;
+		info.supportQuerySelectAll = document ? ('querySelectorAll' in document) ? true : false : false;
 		
 		var lab3Prefix = function(s){
 			if( s.match(/^Webkit/) ) return "-webkit-";
@@ -88,7 +92,8 @@
 			return cssName;
 		};
 		
-		var tester = document.createElement('div')
+		var tester = document.createElement('div');
+		
 		//transform
 		support = false;
 		"transform WebkitTransform MozTransform OTransform msTransform".replace(/\S+/g,function(s){ if(s in tester.style){
@@ -645,9 +650,9 @@
 		"TIMES":function(l,f){ l=TONUMBER(l); for(var i=0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
 		"TIMESMAP":FUT.CONTINUTILITY(function(l,f){ l=TONUMBER(l); var r = []; for(var i=0;i<l;i++) r.push(f(i)); return r; },2),
 		// 각각의 값의 function실행
-		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f.call(ev[i],ev[i],i); return ev; },2),
+		"DATAEACH"    :FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
 		// 각각의 값의 function실행
-		"DATAEACHBACK":FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) f(ev[i],i); return ev; },2),
+		"DATAEACHBACK":FUT.CONTINUTILITY(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
 		// 각각의 값을 배열로 다시 구해오기
 		"DATAMAP"     :FUT.CONTINUTILITY(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
 		//
@@ -1817,9 +1822,12 @@
 		getRemoveModel:function(target,space){
 			space = space ? space : " ";
 			var models = this.Source.split(space);
-			var reg = (target instanceof RegExp) ? target : new RegExp(target);
 			var result = [];
-			for (var i=0,l=models.length;i<l;i++) if(reg.test(models[i]) == false) result.push(models[i]);
+			if(target instanceof RegExp) {
+				for (var i=0,l=models.length;i<l;i++) if(target.test(models[i]) == false) result.push(models[i]);
+			} else {
+				for (var i=0,l=models.length;i<l;i++) if(models[i] !== target) result.push(models[i]);
+			}
 			return result.join(space);
 		},
 		removeModel:function(target,space){
@@ -3314,11 +3322,13 @@
 				if(!element.dataset) element.dataset = {};
 				element.dataset[key] = dataset[key];
 			}
-			if(htmlvalue) if(("value" in element) && element.tagName !== "LI") {
-				element.setAttribute("value",htmlvalue)
-			} else {
-				element.innerHTML = htmlvalue;
-			}
+			if(htmlvalue) {
+				if(("value" in element) && !element.tagName.match(/LI|BUTTON/) ) {
+					element.setAttribute("value",htmlvalue)
+				} else {
+					element.innerHTML = htmlvalue;
+				}
+			}			
 			
 			//부모에게 어팬딩함
 			parent = ZFIND(parent);
@@ -3345,7 +3355,11 @@
 			}	
 		},1),
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
-		"MAKECOLS":function(){ return new AArray(arguments).inject(CREATE("colgroup"),function(colvalue,parent){ if(typeof colvalue === "string" || typeof colvalue === "number") ELAPPEND(parent,CREATE("col",{width:colvalue})); }); },
+		"MAKECOLS":function(){ 
+			return MAKE('colgroup', DATAMAP(arguments,function(arg){
+					return CREATE('col', (/^\d/.test(arg)) ? {width:arg} : {'class':arg});
+			}) );
+		},
 		"MAKETEMP":function(innerHTML,id){
 			var temphtml = (typeof id === "string") ? ('<template id="' + id + '">') : '<template>' ;
 				temphtml += innerHTML;
@@ -4034,13 +4048,12 @@
 				if( !didRemoveClassText.length ) {
 					findNodes[i].removeAttribute("class");
 				} else {
-					
 					findNodes[i].setAttribute("class",didRemoveClassText);
 				}
 			} 
 			return findNodes;
 		},
-		"COORD":function(nodes,coordinate,insertAbsolute,scale){
+		"COORD":function(nodes,coordinate,insertAbsolute,offsetX,offsetY,scale){
 			var findNode = ZFIND(nodes);
 			if(findNode && (typeof coordinate == "string")) {
 				scale = (typeof scale === 'number') ? scale : 1;
@@ -4057,6 +4070,10 @@
 						default:return false;break;
 					}
 					var styleValue = ((TONUMBER(v)*scale) + "px");
+					switch(i){
+						case 0:styleValue += TONUMBER(offsetX);break;
+						case 1:styleValue += TONUMBER(offsetY);break;
+					}
 					ELSTYLE(findNode,styleName,styleValue);
 				});
 				if(insertAbsolute === true) ELSTYLE(findNode,'position','absolute');
@@ -4256,9 +4273,9 @@
 	extendModule("Nody","Template",{
 		clone    : function(nodeData){ return new Template(this.TemplateNode,nodeData); },
 		generate : function(nodeData){ return (new Template(this.TemplateNode,nodeData)).get(); },
-		generateMap : function(){ 
+		generateWithDatas : function(){ 
 			var _ = this;
-			return DATAMAP(Array.prototype.slice.call(arguments),function(nodeData){ 
+			return DATAMAP(DATAFLATTEN(Array.prototype.slice.call(arguments)),function(nodeData){ 
 				return (new Template(_.TemplateNode,nodeData)).get(); }
 			);
 		},
@@ -4274,7 +4291,7 @@
 		//
 		nodeData:function(data){
 			if(!this.TemplatePartials) {
-				this.TemplatePartials = {value:{},src:{},"class":{},dataset:{},href:{},append:{}};
+				this.TemplatePartials = {value:{},src:{},"class":{},dataset:{},href:{},append:{},put:{}};
 			}
 			if(typeof data !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다"); }
 			var _ = this;
@@ -4298,6 +4315,7 @@
 							case "src"  :node.setAttribute("src",data[attrValue]);break;
 							case "href" :node.setAttribute("href",data[attrValue]);break;
 							case "class":ELADDCLASS(node,data[attrValue]);break;
+							case "put"    : ELEMPTY(node);
 							case "append" : ELAPPEND(node,data[attrValue]);break;
 							case "dataset": PROPEACH(data[attrValue],function(key,value){ node.dataset[key] = value; });break;
 						}
@@ -4870,13 +4888,11 @@
 			return this;
 		},
 		setSelects : function(selectsOrder,targetsOrder){
-			if(typeof selectsOrder !== "string") console.warn("Context::getSelects::selects order는 string인것이 좋습니다.",selectsOrder);
 			this.initCall[1] = selectsOrder;
 			if(targetsOrder)this.setTargets(targetsOrder);
 			return this;
 		},
 		setTargets : function(targetsOrder){
-			if(typeof targetsOrder !== "string") console.warn("Context::getTargets::targets order는 string인것이 좋습니다.",targetsOrder);
 			this.initCall[2] = targetsOrder;
 			return this;
 		},
@@ -4884,12 +4900,19 @@
 			return FIND(this.initCall[0]); 
 		},
 		getSelects:function(){ 
-			var selectQuery = ISNOTHING(this.initCall[1]) ? "*" : this.initCall[1];
-			if(selectQuery == "self") return this.getContexts();
-			if(selectQuery.charAt(0) == ">"){
-				return FINDON(this.getContexts(),selectQuery);
-			} else {
-				return FINDIN(this.getContexts(),selectQuery);
+			switch(typeof this.initCall[1]) {
+				case 'function':
+					return this.initCall[1]();
+					break;
+				default:
+					var selectQuery = ISNOTHING(this.initCall[1]) ? "*" : this.initCall[1];
+					if(selectQuery == "self") return this.getContexts();
+					if(selectQuery.charAt(0) == ">"){
+						return FINDON(this.getContexts(),selectQuery);
+					} else {
+						return FINDIN(this.getContexts(),selectQuery);
+					}
+					break;
 			}
 		},
 		getGroups:function(){ 
@@ -4994,7 +5017,6 @@
 	},function(cSel,sSel,tSel){
 		if(ISNOTHING(FIND(cSel))) console.warn("Contexts::init::error 첫번째 파라메터의 값을 현재 찾을 수 없습니다. 들어온값", cSel);
 		this.initCall = [cSel,sSel,tSel];
-		this.setContexts(cSel,sSel,tSel);
 	});
 	
 	extendModule("Contexts","ActiveController",{
@@ -5562,6 +5584,10 @@
 			if(!findContainer) return console.warn(key,"의 컨테이너를 찾을 수 없습니다.");
 			this.ContainerPlaceholder[key] = findContainer;
 			return this;
+		},
+		needActiveController:function(){
+			this._ActiveController = APPLY(_ActiveController,undefined,arguments);
+			return this._ActiveController;
 		}
 	},function(baseParam,setupMethod){
 		this.Source = {};
@@ -5586,9 +5612,11 @@
 				EXTEND(this.Source,baseParam);
 				break;
 			case "function":
-				var _                    = this;
-				var initActiveController = function(){ _._ActiveController = APPLY(_ActiveController,undefined,arguments); return _._ActiveController; }
-				var baseFunctionResult   = baseParam.call(this,initActiveController,this);
+				var _ = this;
+				var baseFunctionResult = baseParam.call(this,function(){
+					_._ActiveController = APPLY(_ActiveController,undefined,arguments);
+					return _._ActiveController;
+				},this);
 				if(typeof baseFunctionResult === "object") EXTEND(this.Source,baseFunctionResult);
 				break;
 		}
@@ -5897,11 +5925,9 @@
 						}).remove(undefined);
 					}
 				});
-				
 				return selectData;
 			}
 		},
-		
 		//자식연쇄 메니지드 데이터를 준비합니다.
 		feedDownManagedDataMake:function(data,parent){
 			
@@ -5948,10 +5974,9 @@
 		
 		// path로 메니지드 데이터를 얻습니다.
 		getManagedData:function(path,withChildren){
-			
 			if (path.indexOf("/") == 0) path = this.ID + path;
-			var paths = path.split("/");
-			var thisID = this.ID;
+			var paths    = path.split("/");
+			var thisID   = this.ID;
 			var thisRoot = this.RootManagedData;
 			
 			var selectedManagedData;
@@ -5963,8 +5988,47 @@
 					selectedManagedData = selectedManagedData.Childrens[parseInt(path)];
 				}
 			});
-			
 			return selectedManagedData;
+		},
+		getManagedDatas:function(path){
+			var resultData = [this.RootManagedData];
+			if(path == '/' || path == '') return resultData;
+			var pathes = [];
+			
+			path.replace(/\*\*.+/g,'**').replace(/\/[^\/]+/g,function(s){ pathes.push(s.substr(1)); });
+						
+			DATAEACH(pathes,function(path,i){
+				var searchTarget = resultData;
+				var searchResult = [];
+				if(path == '') return false;
+				if(path == '*'){
+					DATAEACH(searchTarget,function(managedData){
+						searchResult = searchResult.concat(managedData.Childrens.toArray());
+					});
+				} else if(path == '**') {
+					DATAEACH(searchTarget,function(managedData){
+						managedData.feedDownManagedData(function(){
+							searchResult.push(this);
+						});
+					});
+				} else if(ISNUMBERTEXT(path)){
+					DATAEACH(searchTarget,function(managedData){
+						var ch = managedData.Childrens[parseInt(path)];
+						if(ch){ searchResult.push(ch); }
+					});
+				} else {
+					DATAEACH(searchTarget,function(managedData){
+						DATAEACH(searchTarget,function(managedData){
+							if( managedData.BindID == path ) searchResult.push(managedData);
+						});
+					});
+				}
+				resultData = searchResult;
+			});
+			return resultData;
+		},
+		getManagedDataWithID:function(findid){
+			return this.RootManagedData.getManagedDataWithID(findid);
 		},
 		getManagedDataWithOffset:function(path,offset){
 			var value = /(.*)\/([\d]+)$/.exec(path);
@@ -5973,11 +6037,12 @@
 			if(ISARRAY(nextManagedData)) nextManagedData = nextManagedData[0];
 			return nextManagedData;
 		},
+		
 		getRootManagedData:function(){
 			return this.RootManagedData;
 		}
 	},function(source,childrenKey){
-		this.ID                = _Util.base36UniqueRandom(5);
+		this.ID                = 'co'+_Util.base36UniqueRandom(5);
 		this.Source            = TOOBJECT(source,"value");
 		this.SourceChildrenKey = childrenKey || "data";
 		// 데이터 안의 모든 Managed data를 생성하여 메타안에 집어넣음
@@ -5998,8 +6063,9 @@
 			} else {
 				console.warn("경고::",depth,"depth의 ViewModel뷰모델의 렌더값이 입력되지 않았습니다.",this.Source[depth]);
 			}
-			return MAKE("div",{html:TOSTRING(managedData.Source)},feedViews);
+			return MAKE("div",{html:TOSTRING(managedData.value()),style:'padding-left:10px;'},managedData.placeholder("div"));
 		},
+		//deprecated!
 		whenSelectItem:function(m)  { if(typeof m === "function") this.shouldSelectItem = m; },
 		whenDeselectItem:function(m){ if(typeof m === "function") this.shouldDeselectItem = m; },
 		whenSelectToggle:function(se,de){ this.whenSelectItem(se); this.whenDeselectItem(de); },
@@ -6041,10 +6107,21 @@
 				}
 			});
 		},
+		breakableFeedDownManagedData:function(method,param){
+			var newParam = method.call(this,param);
+			
+			if(newParam !== false) {
+				DATAEACH(this.Childrens,function(child){ 
+					return child.breakableFeedDownManagedData(method,newParam); 
+				});
+			}
+			
+			return newParam;
+		},
 		//현재부터 자식으로 
 		feedDownManagedData:function(method,param){
 			var newParam = method.call(this,param);
-			this.Childrens.each(function(child){ child.feedDownManagedData(method,newParam); });
+			DATAEACH(this.Childrens,function(child){ child.feedDownManagedData(method,newParam); });
 			return this;
 		},
 		feedUpManageData:function(method,depth){
@@ -6142,6 +6219,22 @@
 			this.chainUpMangedData(function(){ path.push( this.Parent ? this.Parent.Childrens.indexOf(this) : this.context.ID); });
 			return path.reverse().join("/");
 		},
+		getManagedDatasWithPath:function(path){
+			if(path == '' || path == '/') return [this];
+			return this.context.getManagedDatas( this.getPath() + '/' + path );
+		},
+		getManagedDataWithID:function(findid){
+			if(typeof findid == 'string') {
+				var result;
+				this.breakableFeedDownManagedData(function(){
+					if( this.BindID == findid ) {
+						result = this;
+						return false;
+					}
+				});
+				return result;
+			}
+		},
 		getDepth:function(){
 			var depth = 0;
 			this.feedUpManageData(function(m,d){ if (depth < (d + 1)) depth = (d + 1); });
@@ -6219,7 +6312,7 @@
 			if(this.Parent) this.Parent.addChildData(data);
 		}
 	},function(context,initData,dataType){
-		this.BindID     = _Util.base64UniqueRandom(8);
+		this.BindID     = 'ma'+_Util.base64UniqueRandom(8);
 		this.context    = context;
 		this.Source     = initData;
 		this.SourceType = dataType || "object";
@@ -6486,82 +6579,42 @@
 		needDisplayWithData:function(data){
 			this.setManagedData(data) ? this.needDisplay() : console.warn("데이터를 초기화하는데 실패하였습니다. 데이터의 형식이 잘못되었습니다.",data);
 		},
-		needSelectable:function(allowMultiSelect){
-			if(allowMultiSelect == true) this.allowMultiSelect = true;
-			if(this.allowSelectable == false){
-				this.allowSelectable = true;
-				var owner = this;
-				ELON(this.view,"click",function(e){
-					var targetMangedData = owner.managedData.Childrens;
-					var targetNodes      = targetMangedData.clone().map(function(managedData){ return owner.structureNodes[managedData.BindID]; });
-					targetNodes.each(function(node,index){
-						if(e.target == node){
-							owner.triggingSelectItems(targetMangedData[index]);
-							return false;
-						} else if(ZFIND(e.target,node)) {
-							owner.triggingSelectItems(targetMangedData[index]);
-							return false;
-						}
-					});
-				});
-			}
-		},
-		deselectAll:function(eventBlocking){
-			var owner = this;
-			if(this.selectIndexes.length > 0){
-				if(this.viewModel){
-					this.selectIndexes.each(function(managedData){	
-						CALL(owner.viewModel.shouldDeselectItem,owner.structureNodes[managedData.BindID],owner.structureNodes[managedData.BindID],1);
-					});
-				}
-				this.selectIndexes.clear();
-				if(eventBlocking != true) CALL(this.selectItemDidChange,this,this.selectIndexes);
-			}
-		},
-		triggingSelectItems:function(managedData){
-			if(this.allowMultiSelect == true){
-				if(this.selectIndexes.has(managedData)){
-					this.selectIndexes.remove(managedData);
-					if(this.viewModel) CALL(this.viewModel.shouldDeselectItem,this.structureNodes[managedData.BindID],this.structureNodes[managedData.BindID],1);
-					CALL(this.selectItemDidChange,this,this.selectIndexes);
-				} else {
-					this.selectIndexes.push(managedData);
-					if(this.viewModel) CALL(this.viewModel.shouldSelectItem,this.structureNodes[managedData.BindID],this.structureNodes[managedData.BindID],1);
-					CALL(this.selectItemDidChange,this,this.selectIndexes);
-				}
-			} else {
-				if(this.selectIndexes.length == 1 && this.selectIndexes.has(managedData)){
-					this.deselectAll();
-				} else {
-					this.deselectAll(true);
-					this.selectIndexes.push(managedData)
-					if(this.viewModel) CALL(this.viewModel.shouldSelectItem,this.structureNodes[managedData.BindID],this.structureNodes[managedData.BindID],1);
-					CALL(this.selectItemDidChange,this,this.selectIndexes);
+		getManagedDataWithNode:function(node){
+			var managedData;
+			for(var key in this.structureNodes) {
+				if( this.structureNodes[key] ==  node ){
+					managedData = this.managedData.getManagedDataWithID(key);
+					break;
 				}
 			}
+			return managedData;
 		},
-		getSelectableManagedItem:function(){
-			return CLONE(this.selectIndexes);
+		needActiveController:function(selectPath,allowSelect,allowMultiSelect,allowInactive,firstSelect){
+			var _  = this, __ = this.managedData;
+			selectPath = (typeof selectPath == 'string') ? selectPath : '/*';
+			return new ActiveController(this.view,function(){
+				return DATAMAP(__.getManagedDatasWithPath(selectPath),function(managedData){
+					return _.structureNodes[managedData.BindID];
+				},DATAFILTER);
+				return dm;
+			},'click',function(e){
+				return CALL(allowSelect,this,e,_.getManagedDataWithNode(this));
+			},firstSelect,allowMultiSelect,allowInactive);
 		},
 		//이벤트
-		whenItemDidChange:function(m){ if((typeof m === "function") || m == undefined) this.selectItemDidChange = m; },
 		whenDataDidChange:function(m){ if((typeof m === "function") || m == undefined) this.dataDidChange = m; },
-		"+selectItemDidChange":undefined,
 		"+dataDidChange":undefined
 	},function(view,managedData,viewModel,needDisplay){
-		this.view          = ZFIND(view);
+		this.view = ZFIND(view);
 		if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
 		if(managedData)this.setManagedData(managedData);
 		this.viewModel     = viewModel || new ViewModel();
-		//선택관련 인자
-		this.allowSelectable  = false;
-		this.allowMultiSelect = false;
 		
 		//바인딩 관련 인자
 		this.bindValueNodes = [];
 		this.structureNodes = {};
 		this.placeholderNodes = {};
-		this.selectIndexes  = new AArray();
+		
 		DataContextNotificationCenter.addObserver(this);
 		
 		//needDisplay
@@ -6812,7 +6865,6 @@
 		whenScroll            :function(e){ this.ScrollEvent.Scroll = e; },
 		applyScrollEvent:function(flag){
 			if(typeof flag !== "boolean") return;
-			
 			if(typeof this._applyScrollEvent === "undefined") {
 				var _ = this;
 				if(!this._currentMouseWheelEvent) {
@@ -6845,7 +6897,6 @@
 				
 				this._applyScrollEvent = false;
 			}
-		
 			if(this._applyScrollEvent !== flag) {
 				if(flag){
 					ELON(this.Source,"mousewheel",this._currentMouseWheelEvent);
@@ -6968,24 +7019,66 @@
 		var _ = this;
 		this._currentMouseWheelEvent = function(e){
 			e.preventDefault();
-			if(e.wheelDelta) _.needZoomWithOffset(e.wheelDelta/1500)
+			if(_.allowZoom) if(e.wheelDelta) _.needZoomWithOffset(e.wheelDelta/1500)
 		}
 		
 		this._super(mainNode);
-		
 		this.ZoomValue = 1.0
 		this.zoomMin   = 1.0;
 		this.zoomMax   = 3.0;
 		this.allowZoom = true;
 		this.ZoomEvent;
 		this.resizeFix();
-		
-		this.Finger.whenPinch(function(zoomOffset,e){ if(_.allowZoom) _.needZoomWithOffset(zoomOffset/30); });
-		
+		this.Finger.whenPinch(function(zoomOffset,e){ 
+			if(_.allowZoom) _.needZoomWithOffset(zoomOffset/30); 
+		});
 		this.setAllowVirtureFinger(true);
 		
 		if(typeof initZoom == "number") this.needZoom(initZoom);
 	});
+	
+	makeModule("Counter",{
+		timeoutHandler:function(){
+			if(this._timeout)clearTimeout(this._timeout);
+			if( this._moveEnd > (+(new Date())) ) {
+				CALL(this._whenMoving,this,100 - ( this._moveEnd - (+new Date())) / this.duration * 100);
+				var _ = this;
+				this._timeout = setTimeout(function(){ _.timeoutHandler.call(_) },this.rate);
+			} else {
+				this.moveStart = null;
+				this.moveEnd   = null;
+				CALL(this._whenMoving,this,100);
+				CALL(this._whenMoveFinish,this,100);
+			}
+		},
+		start:function(){
+			var _ = this;
+			this._moveStart = (+(new Date()));
+			this._moveEnd   = this._moveStart + this.duration;
+			this.timeoutHandler();
+		},
+		whenCounting:function(m){
+			this._whenMoving = m;
+		},
+		whenCountFinish:function(m){
+			this._whenMoveFinish = m;
+		}
+	},function(counting,finish,ms,rate,now){
+		if(counting)this.whenCounting(counting);
+		if(finish)this.whenCountFinish(finish);
+		this.duration = typeof ms   === 'number' ? ms   : 300;
+		this.rate     = typeof rate === 'number' ? rate : 20;
+		if(finish === true || ms === true || rate === true || now === true) { this.start() }
+	});
+	
+	makeGetter('ATOB',function(a,b,p){
+		a = TONUMBER(a);
+		b = TONUMBER(b);
+		p = TONUMBER(p);
+		return (((b-a)/100)*p)+a;
+	});
+	
+	//deprecated module
 	
 	makeModule("BoxTracker",{
 		whenTracking:function(m){ this._trackingEvnet = m; }

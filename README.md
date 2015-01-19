@@ -2,11 +2,6 @@ Nody.js
 =======
 Node + Friendly => Nody
 
-
-## 주의 : 현재 소스는 0.12이지만 도큐먼트는 0.11 입니다.
-## 도큐먼트가 변경될때까지 Template모듈과 MVVM모듈들의 API가 다르거나 존재하지 않을수 있습니다.
-
-
 # Sample #
 <a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a>
 
@@ -16,18 +11,11 @@ Node + Friendly => Nody
   - [Featrue](#feature)
   - [Simple showcase](#simple-showcase)
     - [Tag Generator](#showcase-tag-generator)
-      - [Case1](#showcase-tag-generator-01)
-      - [Case2](#showcase-tag-generator-02)
-      - [Case3](#showcase-tag-generator-03)
-      - [Case4](#showcase-tag-generator-04)
     - [셀렉트](#showcase-select)
-      - [Select](#showcase-select-01)
-	  - [Return node](#showcase-select-02)
-      - [Switch to other selector](#showcase-select-03)
     - [Template & Partial](#showcase-template)
       - [Import template node](#showcase-template-01)
       - [Partial template node](#showcase-template-02)
-	  - [Create template node](#showcase-template-03)
+	  - [...](#showcase-template-03)
 	  - [템플릿 안에 노드를 파셜하기](#showcase-template-04)
     - [MVVM](#showcase-mvvm)
       - [Basic](#showcase-template-01)
@@ -60,15 +48,15 @@ Node + Friendly => Nody
 
 <a name="introduce"/>
 # introduce #
-Nody.js는 DHTML 페이지를 쉽게 구성하고 제작하기 위한 라이브러리이다.
+Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리이다.
 
 ### Feature #
 Nody는...
 
-  1. 직관적인 Node 생성이 가능하다.
-  2. 데이터의 관점에서 노드를 핸들링하기 위한 함수나 컨트롤러가 제공된다.
-  3. 인라인 코딩을 지향한다.
-  4. 내부적으로 객체지향을 구현하고 있다.
+  1. 코어 : 객체지향 구현
+  2. 다양한 Enumerate
+  3. 인라인 코딩을 지향
+  4. MVP 컨트롤러가 구현되어있음
 
 ### Compatibility #
 #### Recommend #
@@ -83,43 +71,45 @@ Nody는...
 
 <a name="simple-showcase"/>
 ## Simple showcase #
-To understand the basic concepts of this library for example.
+대략적인 이해를 위한 코드이다.
 
 
 
 <a name="showcase-tag-generator"/>
 ### Tag Generator #
-MAKE("...")이나 _Make("...") 태그생성이 가능하다.
+CSS스타일올 MAKE("...") 함수를 호출하면 Node를 생성할수 있다.
+
 ```
 아래 html결과물은 실질적으로 개행이 되지 않으나 이해를 돕기위해 개행과 들여쓰기를 집어넣었다.
 ```
 
-
-<a name="showcase-tag-generator-01"/>
-#### Case 1 #
-css 스타일로 구현 가능
-
 ```javascript
-        MAKE("div#hello.world[my=code]:disabled","foo"); 
+	MAKE('div#foo');
 ```
 ```html
-        <div id="hello" class="world" my="code" disabled>foo</div>
+	<div id="foo"></div>
 ```
 
-<a name="showcase-tag-generator-02"/>
-#### Case 2 #
-오브젝트를 값을 사용하여 만들수 있음
 ```javascript
-        MAKE("div",{dataset:{hello:"world"},"id":"hello","class":"world",html:"foo"}); 
+	MAKE('div#foo.bar');
+	MAKE('div.foo.bar');
+	MAKE('div[role=foo][role2=foo]');
+	MAKE('button:disabled');
+	MAKE('button','Button');
+	MAKE('input','foo');
+	MAKE('input?radio!group1');
 ```
 ```html
-        <div id="hello" class="world" data-hello="world">foo</div>
+	<div id="foo" class="bar"></div>
+	<div class="foo bar"></div>
+	<div role="foo" role2="foo"></div>
+	<button disabled></button>
+	<button>Button</button>
+	<input value="foo">
+	<input type="radio" name="group1" value>
 ```
 
-<a name="showcase-tag-generator-03"/>
-#### Case 3 #
 파라메터를 중첩하여 생성가능
-
 ```javascript
         MAKE('ul',
           MAKE('li.item','list1'),
@@ -133,63 +123,14 @@ css 스타일로 구현 가능
         </ul>
 ``` 
 
-<a name="showcase-tag-generator-04"/>
-#### Case 4 #
-테이블 생성예제
-
-```javascript
-        MAKE("table#my-table",
-            MAKE("a[href=#]","link1"),
-            MAKE("a[href=#]","link2"),
-            MAKE("a[href=#]","link3")
-        );
-```
-```html
-        <table id="my-table">
-            <tbody>
-                <tr>
-					<td>
-						<a href="#">link1</a>
-					</td>
-				</tr>
-                <tr>
-					<td>
-						<a href="#">link2</a>
-					</td>
-				</tr>
-                <tr>
-					<td>
-						<a href="#">link3</a>
-					</td>
-				</tr>
-            </tbody>
-        </table>
-```
-
 <a name="showcase-select"/>
 ### 셀렉트 #
-
-<a name="showcase-select-01"/>
-#### Select #
 ```javascript
-        FIND("div.target");
-        //result => [div.target,div.target...]  <= native array
+        FIND("div.target");  // array => [div.target,div.target,div.target]
+		ZFIND("div.target"); // node  => div.target
+		
 ```
 
-<a name="showcase-select-02"/>
-#### Return node #
-```javascript
-		// Z(ero)Find
-		ZFIND("div.target");
-		//result => Element (<div class="target"></div>)
-```
-
-<a name="showcase-select-03"/>
-#### Switch to other selector #
-```javascript
-        FIND("div.target",jQuery);
-        //result=> [object jQuery]
-```
 <a name="showcase-template"/>
 ### Template & Partial #
 
@@ -207,9 +148,9 @@ Tag
 ```
 Script
 ```javascript
-		for(var i=0,l=3;i<l;i++) {
-			_Template("template#li-temp").appendTo("ul#container");
-		} 
+		_Template("#li-temp").appendTo("ul#container");
+		_Template("#li-temp").appendTo("ul#container");
+		_Template("#li-temp").appendTo("ul#container");
 ```
 Result
 ```html
@@ -224,7 +165,10 @@ Result
 #### Partial template node #
 Tag
 ```html
+		<!-- Container -->
 		<section id="figure-group"></section>
+		
+		<!-- Template -->
 		<template id="figure-item">
 			<figure>
 				<img node-src="image">
@@ -271,45 +215,16 @@ Result
 		</figure>
 	</section>
 ```
-<a name="showcase-template-03"/>
-#### Create template node #
-자바스크립트로 Template태그를 만들수 있다.
-```javascript
-		var template = MAKETEMP(
-			TAG("ul.list",
-				TAG("li.item"),
-				TAG("li.item"),
-				TAG("li.item")
-			)
-		);
-```
-```html
-	<template>
-		<ul class="list">
-			<li class="item"></li>
-			<li class="item"></li>
-			<li class="item"></li>
-		</ul>
-	</template>
-```
-
-다음과 같이 클론 가능하다.
-```javascript 
-		// import node
-		document.importNode(template.content);
-		//or
-		_Template(template).get();
-		//or
-		IMPORTNODE(template);
-```		
 
 <a name="showcase-template-04"/>
 #### 템플릿 안에 노드를 파셜하기 #
 ```html
-	<div id="container">
-	</div>
+	<!-- container -->
+	<div id="container"></div>
+	
+	<!-- template -->
 	<template id="part">
-		<ul node-placeholder="list"></ul>
+		<ul node-append="list"></ul>
 	</template>
 ```
 ```javascript
@@ -445,10 +360,7 @@ Result
 		DATAEACH([1,2,3],function(value,index){
 			console.log(value,index)
 		});
-		//or
-		_Array([1,2,3]).each(function(value,index){
-			console.log(value,index)
-		});
+		
 		//log => 1,0
 		//log => 2,1
 		//log => 3,2
@@ -460,10 +372,7 @@ Result
 		DATAMAP([1,3,5],function(v){
 			return v+1;
 		});
-		//or
-        _Array([1,3,5]).map(function(v){
-            return v+1;
-        });
+		
         // => [2,4,6]
 ```
 
@@ -473,14 +382,7 @@ Result
 		INJECTOBJECT([2,4,6],function(injectObject,value,index){
 			injectObject[index] = value;
 		});
-		//or
-		INJECTOBJECT([2,4,6],function(injectObject,value,index){
-			injectObject[index] = value;
-		},{});
-		//or
-        _Array([2,4,6]).inject({},function(injectObject,value,index){
-            injectObject[index] = value;
-        });
+		
         //=>{0:2,1:4,2:6}
 ```
 
@@ -490,10 +392,7 @@ Result
 		DATAEACHBACK([1,2,3],function(){
 			console.log(value,index)
 		});
-		//or
-		_Array([1,2,3]).eachback(function(value,index){
-		   console.log(value,index)
-		});
+		
 		//log => 3,2
 		//log => 2,1
 		//log => 1,0
@@ -503,18 +402,11 @@ Result
 #### Object each #
 _Array와 마찬가지로 _Object도 동일하게 동작하도록 하는게 원칙입니다.
 ```javascript
-		
-        var sample = [];
-        _Object({1:2,2:3,4:5}).each(function(value,key){
-            sample.push(key+value);
-        });
-        console.log(sample);
-        //=>["12", "23", "45"]
-		
-		//or
-		ENUMERATION({1:2,2:3,4:5},function(value,key){
+		PROPEACH({1:2,2:3,4:5},function(value,key){
 			console.log(key+value);
 		});
+		
+		//=>["12", "23", "45"]
 ```
 
 <a name="showcase-parsing"/>
@@ -525,9 +417,8 @@ TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브�
         TOOBJECT("{hello:world,foo:bar,1:2}");
         TOOBJECT("hello:world,foo:bar,1:2");
         /*
-        result(3 case equal) => {"hello":"world","foo":"bar","1",2}
+        => {"hello":"world","foo":"bar","1",2}
         */
-        //but top case is 10x more fast (native json parsing)
 ```
 
 <a name="showcase-type-inspect"/>
@@ -733,9 +624,9 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ```
 <a name="version-info"/>
 ## Version info #
-
-#### 0.12 정보
-- Template와 MVVM모듈간의 통일성이 증가되었습니다.
+#### 0.13 정보
+- MVVM 모듈의 셀렉터블 API제거 ActiveController와 긴밀하게 동작하도록 디자인
+- MVVM 모듈의 파셜 API를 Template와 긴밀하게 동작하도록 디자인
 
 #### 0.11 정보
 - 사용법 단순화를 위한 API디자인과, IE9 호환성 작업 및 성능최적화 작업이 주로 이루어질 예정입니다.

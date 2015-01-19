@@ -165,18 +165,21 @@ table.calendar {
 code {
 	text-align:left;
 }
+
 .thumbnail{
 	h3,p {
 		@include ellipsis;
 	}
-	&.active {
-		background:#73a4e5;
-		h3,p {
-			color:white;
-			
-		}
+}
+
+.active > .thumbnail{
+	background:#73a4e5;
+	h3,p {
+		color:white;
+		
 	}
 }
+
 .page-header {
 	small {
 		font-size:40%;

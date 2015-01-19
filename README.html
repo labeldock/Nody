@@ -2,10 +2,6 @@
 
 <p>Node + Friendly => Nody</p>
 
-<h2>주의 : 현재 소스는 0.12이지만 도큐먼트는 0.11 입니다.</h2>
-
-<h2>도큐먼트가 변경될때까지 Template모듈과 MVVM모듈들의 API가 다르거나 존재하지 않을수 있습니다.</h2>
-
 <h1>Sample</h1>
 
 <p><a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a></p>
@@ -18,29 +14,14 @@
 <li><a href="#simple-showcase">Simple showcase</a>
 
 <ul>
-<li><a href="#showcase-tag-generator">Tag Generator</a>
-
-<ul>
-<li><a href="#showcase-tag-generator-01">Case1</a></li>
-<li><a href="#showcase-tag-generator-02">Case2</a></li>
-<li><a href="#showcase-tag-generator-03">Case3</a></li>
-<li><a href="#showcase-tag-generator-04">Case4</a></li>
-</ul>
-</li>
-<li><a href="#showcase-select">셀렉트</a>
-
-<ul>
-<li><a href="#showcase-select-01">Select</a></li>
-<li><a href="#showcase-select-02">Return node</a></li>
-<li><a href="#showcase-select-03">Switch to other selector</a></li>
-</ul>
-</li>
+<li><a href="#showcase-tag-generator">Tag Generator</a></li>
+<li><a href="#showcase-select">셀렉트</a></li>
 <li><a href="#showcase-template">Template &amp; Partial</a>
 
 <ul>
 <li><a href="#showcase-template-01">Import template node</a></li>
 <li><a href="#showcase-template-02">Partial template node</a></li>
-<li><a href="#showcase-template-03">Create template node</a></li>
+<li><a href="#showcase-template-03">&hellip;</a></li>
 <li><a href="#showcase-template-04">템플릿 안에 노드를 파셜하기</a></li>
 </ul>
 </li>
@@ -105,17 +86,17 @@
 
 <h1>introduce</h1>
 
-<p>Nody.js는 DHTML 페이지를 쉽게 구성하고 제작하기 위한 라이브러리이다.</p>
+<p>Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리이다.</p>
 
 <h3>Feature</h3>
 
 <p>Nody는&hellip;</p>
 
 <ol>
-<li> 직관적인 Node 생성이 가능하다.</li>
-<li> 데이터의 관점에서 노드를 핸들링하기 위한 함수나 컨트롤러가 제공된다.</li>
-<li> 인라인 코딩을 지향한다.</li>
-<li> 내부적으로 객체지향을 구현하고 있다.</li>
+<li> 코어 : 객체지향 구현</li>
+<li> 다양한 Enumerate</li>
+<li> 인라인 코딩을 지향</li>
+<li> MVP 컨트롤러가 구현되어있음</li>
 </ol>
 
 
@@ -143,49 +124,46 @@
 
 <h2>Simple showcase</h2>
 
-<p>To understand the basic concepts of this library for example.</p>
+<p>대략적인 이해를 위한 코드이다.</p>
 
 <p><a name="showcase-tag-generator"/></p>
 
 <h3>Tag Generator</h3>
 
-<p>MAKE(&ldquo;&hellip;&rdquo;)이나 _Make(&ldquo;&hellip;&rdquo;) 태그생성이 가능하다.
-<code>
+<p>CSS스타일올 MAKE(&ldquo;&hellip;&rdquo;) 함수를 호출하면 Node를 생성할수 있다.</p>
+
+<p><code>
 아래 html결과물은 실질적으로 개행이 되지 않으나 이해를 돕기위해 개행과 들여쓰기를 집어넣었다.
 </code></p>
 
-<p><a name="showcase-tag-generator-01"/></p>
-
-<h4>Case 1</h4>
-
-<p>css 스타일로 구현 가능</p>
-
 <p><code>javascript
-        MAKE("div#hello.world[my=code]:disabled","foo");
+    MAKE('div#foo');
 </code>
 <code>html
-        &lt;div id="hello" class="world" my="code" disabled&gt;foo&lt;/div&gt;
+    &lt;div id="foo"&gt;&lt;/div&gt;
 </code></p>
 
-<p><a name="showcase-tag-generator-02"/></p>
+<p><code>javascript
+    MAKE('div#foo.bar');
+    MAKE('div.foo.bar');
+    MAKE('div[role=foo][role2=foo]');
+    MAKE('button:disabled');
+    MAKE('button','Button');
+    MAKE('input','foo');
+    MAKE('input?radio!group1');
+</code>
+<code>html
+    &lt;div id="foo" class="bar"&gt;&lt;/div&gt;
+    &lt;div class="foo bar"&gt;&lt;/div&gt;
+    &lt;div role="foo" role2="foo"&gt;&lt;/div&gt;
+    &lt;button disabled&gt;&lt;/button&gt;
+    &lt;button&gt;Button&lt;/button&gt;
+    &lt;input value="foo"&gt;
+    &lt;input type="radio" name="group1" value&gt;
+</code></p>
 
-<h4>Case 2</h4>
-
-<p>오브젝트를 값을 사용하여 만들수 있음
+<p>파라메터를 중첩하여 생성가능
 <code>javascript
-        MAKE("div",{dataset:{hello:"world"},"id":"hello","class":"world",html:"foo"});
-</code>
-<code>html
-        &lt;div id="hello" class="world" data-hello="world"&gt;foo&lt;/div&gt;
-</code></p>
-
-<p><a name="showcase-tag-generator-03"/></p>
-
-<h4>Case 3</h4>
-
-<p>파라메터를 중첩하여 생성가능</p>
-
-<p><code>javascript
         MAKE('ul',
           MAKE('li.item','list1'),
           MAKE('li.item','list2')
@@ -198,73 +176,17 @@
         &lt;/ul&gt;
 </code></p>
 
-<p><a name="showcase-tag-generator-04"/></p>
-
-<h4>Case 4</h4>
-
-<p>테이블 생성예제</p>
-
-<p><code>javascript
-        MAKE("table#my-table",
-            MAKE("a[href=#]","link1"),
-            MAKE("a[href=#]","link2"),
-            MAKE("a[href=#]","link3")
-        );
-</code>
-<code>html
-        &lt;table id="my-table"&gt;
-            &lt;tbody&gt;
-                &lt;tr&gt;
-                    &lt;td&gt;
-                        &lt;a href="#"&gt;link1&lt;/a&gt;
-                    &lt;/td&gt;
-                &lt;/tr&gt;
-                &lt;tr&gt;
-                    &lt;td&gt;
-                        &lt;a href="#"&gt;link2&lt;/a&gt;
-                    &lt;/td&gt;
-                &lt;/tr&gt;
-                &lt;tr&gt;
-                    &lt;td&gt;
-                        &lt;a href="#"&gt;link3&lt;/a&gt;
-                    &lt;/td&gt;
-                &lt;/tr&gt;
-            &lt;/tbody&gt;
-        &lt;/table&gt;
-</code></p>
-
 <p><a name="showcase-select"/></p>
 
 <h3>셀렉트</h3>
 
-<p><a name="showcase-select-01"/></p>
+<p>```javascript
+        FIND(&ldquo;div.target&rdquo;);  // array => [div.target,div.target,div.target]
+        ZFIND(&ldquo;div.target&rdquo;); // node  => div.target</p>
 
-<h4>Select</h4>
+<p>```</p>
 
-<p><code>javascript
-        FIND("div.target");
-        //result =&gt; [div.target,div.target...]  &lt;= native array
-</code></p>
-
-<p><a name="showcase-select-02"/></p>
-
-<h4>Return node</h4>
-
-<p><code>javascript
-        // Z(ero)Find
-        ZFIND("div.target");
-        //result =&gt; Element (&lt;div class="target"&gt;&lt;/div&gt;)
-</code></p>
-
-<p><a name="showcase-select-03"/></p>
-
-<h4>Switch to other selector</h4>
-
-<p><code>javascript
-        FIND("div.target",jQuery);
-        //result=&gt; [object jQuery]
-</code>
-<a name="showcase-template"/></p>
+<p><a name="showcase-template"/></p>
 
 <h3>Template &amp; Partial</h3>
 
@@ -286,9 +208,9 @@
 <p><code>
 Script
 </code>javascript
-        for(var i=0,l=3;i&lt;l;i++) {
-            _Template(&ldquo;template#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
-        }
+        <em>Template(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
+        </em>Template(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
+        _Template(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
 <code>
 Result
 </code>html
@@ -304,20 +226,25 @@ Result
 <h4>Partial template node</h4>
 
 <p>Tag
-<code>html
-        &lt;section id="figure-group"&gt;&lt;/section&gt;
-        &lt;template id="figure-item"&gt;
-            &lt;figure&gt;
-                &lt;img node-src="image"&gt;
-                &lt;figcaption&gt;
-                    &lt;a node-href="link" node-value="title"&gt;&lt;/a&gt;
-                    &lt;input type="text" node-value="index"&gt;
-                &lt;/figcaption&gt;
-            &lt;/figure&gt;
-        &lt;/template&gt;
-</code>
+```html
+        <!-- Container -->
+        <section id="figure-group"></section></p>
+
+<pre><code>    &lt;!-- Template --&gt;
+    &lt;template id="figure-item"&gt;
+        &lt;figure&gt;
+            &lt;img node-src="image"&gt;
+            &lt;figcaption&gt;
+                &lt;a node-href="link" node-value="title"&gt;&lt;/a&gt;
+                &lt;input type="text" node-value="index"&gt;
+            &lt;/figcaption&gt;
+        &lt;/figure&gt;
+    &lt;/template&gt;
+</code></pre>
+
+<p><code>
 Script
-```javascript
+</code>javascript
         var temp = _Template(&ldquo;#figure-item&rdquo;,false);</p>
 
 <pre><code>    temp.generateTo("#figure-group",{
@@ -353,66 +280,37 @@ Result
             </figcaption>
         </figure>
     </section>
-```
-<a name="showcase-template-03"/></p>
-
-<h4>Create template node</h4>
-
-<p>자바스크립트로 Template태그를 만들수 있다.
-<code>javascript
-        var template = MAKETEMP(
-            TAG("ul.list",
-                TAG("li.item"),
-                TAG("li.item"),
-                TAG("li.item")
-            )
-        );
-</code>
-<code>html
-    &lt;template&gt;
-        &lt;ul class="list"&gt;
-            &lt;li class="item"&gt;&lt;/li&gt;
-            &lt;li class="item"&gt;&lt;/li&gt;
-            &lt;li class="item"&gt;&lt;/li&gt;
-        &lt;/ul&gt;
-    &lt;/template&gt;
-</code></p>
-
-<p>다음과 같이 클론 가능하다.
-<code>javascript
-        // import node
-        document.importNode(template.content);
-        //or
-        _Template(template).get();
-        //or
-        IMPORTNODE(template);
-</code></p>
+```</p>
 
 <p><a name="showcase-template-04"/></p>
 
 <h4>템플릿 안에 노드를 파셜하기</h4>
 
-<p><code>html
-    &lt;div id="container"&gt;
-    &lt;/div&gt;
-    &lt;template id="part"&gt;
-        &lt;ul node-placeholder="list"&gt;&lt;/ul&gt;
-    &lt;/template&gt;
-</code>
-<code>javascript
-    _Template("#part",{
-        "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
-    }).appendTo("#container");
-</code>
+<p>```html
+    <!-- container -->
+    <div id="container"></div></p>
+
+<pre><code>&lt;!-- template --&gt;
+&lt;template id="part"&gt;
+    &lt;ul node-append="list"&gt;&lt;/ul&gt;
+&lt;/template&gt;
+</code></pre>
+
+<p><code>
+</code>javascript
+    _Template(&ldquo;#part&rdquo;,{
+        &ldquo;list&rdquo;:[MAKE(&ldquo;li.item::item1&rdquo;),MAKE(&ldquo;li.item::item2&rdquo;)]
+    }).appendTo(&ldquo;#container&rdquo;);
+<code>
 Result
-<code>html
-    &lt;div id="container"&gt;
-        &lt;ul&gt;
-            &lt;li class="item"&gt;item1&lt;/li&gt;
-            &lt;li class="item"&gt;item2&lt;/li&gt;
-        &lt;/ul&gt;
-    &lt;/div&gt;
-</code></p>
+</code>html
+    <div id="container">
+        <ul>
+            <li class="item">item1</li>
+            <li class="item">item2</li>
+        </ul>
+    </div>
+```</p>
 
 <p><a name="showcase-mvvm"/></p>
 
@@ -538,88 +436,73 @@ Result
 
 <h4>Each</h4>
 
-<p><code>javascript
+<p>```javascript
         DATAEACH([1,2,3],function(value,index){
             console.log(value,index)
-        });
-        //or
-        _Array([1,2,3]).each(function(value,index){
-            console.log(value,index)
-        });
-        //log =&gt; 1,0
-        //log =&gt; 2,1
-        //log =&gt; 3,2
-</code></p>
+        });</p>
+
+<pre><code>    //log =&gt; 1,0
+    //log =&gt; 2,1
+    //log =&gt; 3,2
+</code></pre>
+
+<p>```</p>
 
 <p><a name="showcase-enumerate-map"/></p>
 
 <h4>Map</h4>
 
-<p><code>javascript
+<p>```javascript
         DATAMAP([1,3,5],function(v){
             return v+1;
-        });
-        //or
-        _Array([1,3,5]).map(function(v){
-            return v+1;
-        });
-        // =&gt; [2,4,6]
-</code></p>
+        });</p>
+
+<pre><code>    // =&gt; [2,4,6]
+</code></pre>
+
+<p>```</p>
 
 <p><a name="showcase-enumerate-inject"/></p>
 
 <h4>Inject</h4>
 
-<p><code>javascript
+<p>```javascript
         INJECTOBJECT([2,4,6],function(injectObject,value,index){
             injectObject[index] = value;
-        });
-        //or
-        INJECTOBJECT([2,4,6],function(injectObject,value,index){
-            injectObject[index] = value;
-        },{});
-        //or
-        _Array([2,4,6]).inject({},function(injectObject,value,index){
-            injectObject[index] = value;
-        });
-        //=&gt;{0:2,1:4,2:6}
-</code></p>
+        });</p>
+
+<pre><code>    //=&gt;{0:2,1:4,2:6}
+</code></pre>
+
+<p>```</p>
 
 <p><a name="showcase-enumerate-eachback"/></p>
 
 <h4>Eachback</h4>
 
-<p><code>javascript
+<p>```javascript
         DATAEACHBACK([1,2,3],function(){
             console.log(value,index)
-        });
-        //or
-        _Array([1,2,3]).eachback(function(value,index){
-           console.log(value,index)
-        });
-        //log =&gt; 3,2
-        //log =&gt; 2,1
-        //log =&gt; 1,0
-</code></p>
+        });</p>
+
+<pre><code>    //log =&gt; 3,2
+    //log =&gt; 2,1
+    //log =&gt; 1,0
+</code></pre>
+
+<p>```</p>
 
 <p><a name="showcase-enumerate-object-each"/></p>
 
 <h4>Object each</h4>
 
 <p><em>Array와 마찬가지로 </em>Object도 동일하게 동작하도록 하는게 원칙입니다.
-```javascript</p>
+```javascript
+        PROPEACH({1:2,2:3,4:5},function(value,key){
+            console.log(key+value);
+        });</p>
 
-<pre><code>    var sample = [];
-    _Object({1:2,2:3,4:5}).each(function(value,key){
-        sample.push(key+value);
-    });
-    console.log(sample);
-    //=&gt;["12", "23", "45"]
-
-    //or
-    ENUMERATION({1:2,2:3,4:5},function(value,key){
-        console.log(key+value);
-    });
+<pre><code>    //=&gt;["12", "23", "45"]
 </code></pre>
 
 <p>```</p>
@@ -634,9 +517,8 @@ Result
         TOOBJECT("{hello:world,foo:bar,1:2}");
         TOOBJECT("hello:world,foo:bar,1:2");
         /*
-        result(3 case equal) =&gt; {"hello":"world","foo":"bar","1",2}
+        =&gt; {"hello":"world","foo":"bar","1",2}
         */
-        //but top case is 10x more fast (native json parsing)
 </code></p>
 
 <p><a name="showcase-type-inspect"/></p>
@@ -883,10 +765,11 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <h2>Version info</h2>
 
-<h4>0.12 정보</h4>
+<h4>0.13 정보</h4>
 
 <ul>
-<li>Template와 MVVM모듈간의 통일성이 증가되었습니다.</li>
+<li>MVVM 모듈의 셀렉터블 API제거 ActiveController와 긴밀하게 동작하도록 디자인</li>
+<li>MVVM 모듈의 파셜 API를 Template와 긴밀하게 동작하도록 디자인</li>
 </ul>
 
 

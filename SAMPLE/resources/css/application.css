@@ -52,8 +52,9 @@ table.calendar td.before, table.calendar td.after { color: #ccc; }
 code { text-align: left; }
 
 .thumbnail h3, .thumbnail p { white-space: nowrap; word-wrap: normal; text-overflow: ellipsis; -o-text-overflow: ellipsis; -ms-text-overflow: ellipsis; overflow: hidden; }
-.thumbnail.active { background: #73a4e5; }
-.thumbnail.active h3, .thumbnail.active p { color: white; }
+
+.active > .thumbnail { background: #73a4e5; }
+.active > .thumbnail h3, .active > .thumbnail p { color: white; }
 
 .page-header small { font-size: 40%; }
 
