@@ -626,6 +626,8 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 #### 0.13 정보
 - MVVM 모듈의 셀렉터블 API제거 ActiveController와 긴밀하게 동작하도록 디자인
 - MVVM 모듈의 파셜 API를 Template와 긴밀하게 동작하도록 디자인
+- 기능이 많고 사용하기 어려운 ViewController모듈이 제거되었고 경량화된 FormController모듈이 새로 만들어졌습니다.
+- TimeCounter 모듈이 추가되었습니다.
 
 #### 0.11 정보
 - 사용법 단순화를 위한 API디자인과, IE9 호환성 작업 및 성능최적화 작업이 주로 이루어질 예정입니다.

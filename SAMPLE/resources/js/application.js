@@ -4,7 +4,7 @@ var GNBNavigationController = new NavigationController("main",function(initActiv
 	return initActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
 		return GNBNavigationController.active((this.textContent || this.innerText).toLowerCase());
-	},4).makeAccessProperty(function(accessData,node){
+	},2).makeAccessProperty(function(accessData,node){
 		//navigation data
 		var name = (node.textContent || node.innerText).toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
@@ -423,18 +423,74 @@ GNBNavigationController.whenLoad("speedtest2",function(){
 GNBNavigationController.whenLoad("canvas2d",function(){
 	var canvasArea = $("#canvas-area",this);
 	var canvasBackground = $("#canvas-background td",this);
-	_Context2D(100).drawCrossConnect(true,false,false,false).needDisplay().appendTo(canvasArea);
-	_Context2D(100).drawCrossConnect(true,true,false,false,2).needDisplay().appendTo(canvasArea);
-	_Context2D(100).drawCrossConnect(true,true,true,false,4).needDisplay().appendTo(canvasArea);
-	_Context2D(100).drawCrossConnect(true,true,true,true,6).needDisplay().appendTo(canvasArea);
+	_Context2D(100).drawCrossLine(2,0,0,0).needDraw().appendTo(canvasArea);
+	_Context2D(100).drawCrossLine(2,2,0,0).needDraw().appendTo(canvasArea);
+	_Context2D(100).drawCrossLine(4,4,4,0).needDraw().appendTo(canvasArea);
+	_Context2D(100).drawCrossLine(6,6,6,6).needDraw().appendTo(canvasArea);
 	
 	
-	_Context2D(canvasBackground.eq(0)).drawCrossConnect(true,true,true,true).needDisplay().backgroundToResponder();
-	_Context2D(canvasBackground.eq(1)).drawCrossConnect(false,true,false,true,4,"#5c5").needDisplay().backgroundToResponder();
-	_Context2D(canvasBackground.eq(2)).drawCrossConnect(false,false,true,true).needDisplay().backgroundToResponder();
-	_Context2D(canvasBackground.eq(3)).drawCrossConnect(true,true,false,false,4,"#cc5").needDisplay().backgroundToResponder();
-	_Context2D(canvasBackground.eq(4)).drawCrossConnect(false,true,true,true).needDisplay().backgroundToResponder();
-	_Context2D(canvasBackground.eq(5)).drawCrossConnect(true,false,false,true).needDisplay().backgroundToResponder();
+	_Context2D(canvasBackground.eq(0)).drawCrossLine(4,4,4,5).needDraw().backgroundToResponder();
+	_Context2D(canvasBackground.eq(1)).drawCrossLine(0,4,0,4,"#5c5").needDraw().backgroundToResponder();
+	_Context2D(canvasBackground.eq(2)).drawCrossLine(0,0,4,4).needDraw().backgroundToResponder();
+	_Context2D(canvasBackground.eq(3)).drawCrossLine(4,4,0,0,"#cc5").needDraw().backgroundToResponder();
+	_Context2D(canvasBackground.eq(4)).drawCrossLine(0,4,4,4).needDraw().backgroundToResponder();
+	_Context2D(canvasBackground.eq(5)).drawCrossLine(4,0,0,4).needDraw().backgroundToResponder();
 	
 });
 
+GNBNavigationController.whenLoad('formcontroller',function(){	
+	
+	var plainFormController = new FormController('.plain-form-area',null,{
+		normal:function(){
+			this.controls(function(){
+				$(this).css('color','inherit');
+			},'.em-target');
+		},
+		disabled:function(){
+			this.controls(function(){
+				$(this).css('color','red');
+			},'.em-target');
+			
+		}
+	});
+	var realFormController  = new FormController('.real-form-area',null,{
+		normal:function(){
+			this.disabled(false);
+		},
+		disabled:function(){
+			this.disabled(true,'.disabled-target');
+		}
+	});
+	
+	window.lastForm = realFormController;
+	
+	$(".setdata-action-1").on('click',function(){
+		var data = JSON.parse($(".data-example-1").text())
+		plainFormController.setData(data);
+		realFormController.setData(data);
+	});
+	$(".setdata-action-2").on('click',function(){
+		var data = JSON.parse($(".data-example-2").text())
+		plainFormController.setData(data);
+		realFormController.setData(data);
+	});
+	$(".setdata-action-3").on('click',function(){
+		var data = JSON.parse($(".data-example-3").text())
+		plainFormController.setData(data);
+		realFormController.setData(data);
+	});
+	
+	$(".form-status-1").on('click',function(){
+		plainFormController.status('normal');
+		realFormController.status('normal');
+	});
+	$(".form-status-2").on('click',function(){
+		plainFormController.status('disabled');
+		realFormController.status('disabled');
+	});
+	
+	$('.getdata-action').on('click',function(){
+		$('.getdata-veriant').text( JSON.stringify( realFormController.getData() ) );
+	});
+	
+});

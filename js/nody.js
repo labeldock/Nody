@@ -8,7 +8,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody 버전
-	var version = "0.13",build = "927";
+	var version = "0.13.3",build = "935";
 	
 	// 코어버전
 	var nodyCoreVersion = "1.8", nodyCoreBuild = "73";
@@ -696,7 +696,7 @@
 		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 		"SPRINGINDEX":function(index,maxIndex){ index = TONUMBER(index); maxIndex = TONUMBER(maxIndex); return (index == 0 || (Math.floor(index/maxIndex)%2 == 0))?index%maxIndex:maxIndex-(index%maxIndex); },
 		//오브젝트의 key를 each열거함
-		"PROPEACH":FUT.CONTINUTILITY(function(v,f){if((typeof v === "object") && (typeof f === "function")){for(k in v) {f(v[k],k)}}; return v; },2),
+		"PROPEACH":FUT.CONTINUTILITY(function(v,f){if((typeof v === "object") && (typeof f === "function")){ for(k in v) if(f(v[k],k)===false) break; }; return v; },2),
 		//
 		"PROPMAP":FUT.CONTINUTILITY(function(v,f){ var result = {}; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result[k] = f(v[k],k); return result; } return result;},2),
 		//오브젝트의 key value값을 Array 맵으로 구한다.
@@ -4069,12 +4069,12 @@
 						case 3:styleName='height';break;
 						default:return false;break;
 					}
-					var styleValue = ((TONUMBER(v)*scale) + "px");
+					var styleValue = (TONUMBER(v)*scale);
 					switch(i){
 						case 0:styleValue += TONUMBER(offsetX);break;
 						case 1:styleValue += TONUMBER(offsetY);break;
 					}
-					ELSTYLE(findNode,styleName,styleValue);
+					ELSTYLE(findNode,styleName,styleValue+"px");
 				});
 				if(insertAbsolute === true) ELSTYLE(findNode,'position','absolute');
 			}
@@ -4185,7 +4185,7 @@
 		addDrawRect:function(m){
 			this._drawRect.push(m);
 		},
-		needDisplay:function(){
+		needDraw:function(){
 			var _ = this;
 			var dirtyRectParam = {
 				width:this._drawTargetWidth,
@@ -4202,43 +4202,52 @@
 			});
 			return this;
 		},
-		drawCrossConnect:function(top,right,bottom,left,lineWidth,lineColor,alpha){
-			lineWidth = lineWidth || 1;
+		drawCrossLine:function(top,right,bottom,left,lineColor,offsetX,offsetY){
+			top = TONUMBER(top);
+			right = TONUMBER(right);
+			bottom = TONUMBER(bottom);
+			left = TONUMBER(left);
+			offsetX = TONUMBER(offsetX);
+			offsetY = TONUMBER(offsetY);
+			
 			lineColor = lineColor || "#777";
-			alpha     = alpha || 1.0;
+			//alpha = alpha || 1.0;
 			
 			this.addDrawRect(function(b,c){
 				var quickStroke = function(m){
 					c.beginPath();
-					c.globalAlpha = alpha;
+					//c.globalAlpha = alpha;
 					c.strokeStyle = lineColor;
-					c.lineWidth   = lineWidth;
 					m(b,c);
 					c.closePath();
 					c.stroke();
 				};
 				if(top) {
 					quickStroke(function(b,c){
-						c.moveTo(b.horizontalCenter,b.verticalCenter);
-						c.lineTo(b.horizontalCenter,b.top);
+						c.lineWidth = top;
+						c.moveTo(b.horizontalCenter + offsetX, b.verticalCenter + offsetY);
+						c.lineTo(b.horizontalCenter + offsetX, b.top);
 					});
 				}
 				if(right) {
 					quickStroke(function(b,c){
-						c.moveTo(b.horizontalCenter,b.verticalCenter);
-						c.lineTo(b.right,b.verticalCenter);
+						c.lineWidth = right;
+						c.moveTo(b.horizontalCenter + offsetX, b.verticalCenter + offsetY);
+						c.lineTo(b.right,b.verticalCenter + offsetY);
 					});
 				}
 				if(bottom) {
 					quickStroke(function(b,c){
-						c.moveTo(b.horizontalCenter,b.verticalCenter);
-						c.lineTo(b.horizontalCenter,b.bottom);
+						c.lineWidth = bottom;
+						c.moveTo(b.horizontalCenter + offsetX, b.verticalCenter + offsetY);
+						c.lineTo(b.horizontalCenter + offsetX, b.bottom);
 					});
 				}
 				if(left) {
 					quickStroke(function(b,c){
-						c.moveTo(b.horizontalCenter,b.verticalCenter);
-						c.lineTo(b.left,b.verticalCenter);
+						c.lineWidth = left;
+						c.moveTo(b.horizontalCenter + offsetX, b.verticalCenter  + offsetY);
+						c.lineTo(b.left,b.verticalCenter + offsetY);
 					});
 				}
 			});
@@ -4350,6 +4359,7 @@
 	//여러 엘리먼트를 셀렉트하여 한번에 컨트롤
 	makeModule("Controls",{
 		getSelects:function(){ return this.Source; },
+		find:function(f){ if(f) return FIND(f,this.Source); return []; },
 		statusFunction:function(f,param,filter,requireElement){
 			var fe = filter ? function(node){ return ELIS(node,filter)?f(node, param):undefined } : function(node){ return f(node, param); };
 			var r  = new AArray(this.getSelects()).map( fe ).filter();
@@ -4359,6 +4369,7 @@
 		readonly:function(status,filter){ return this.statusFunction(ELREADONLY,(status !== false ? true : false),filter); },
 		empty   :function(filter)       { filter = filter?filter+",:not(button,select)":":not(button,select)"; return this.statusFunction(ELVALUE   ,"",filter); },
 		map     :function(mapf,filter)  { return this.statusFunction(function(node){ var r = mapf(node); if(ISTEXT(r)){ ELVALUE(node,r); } },"",filter); },
+		controls:function(eachf,filter) { return this.statusFunction(function(node){ var r = eachf.call(node,node); },"",filter); },
 		removePartClass:function(rmClass,filter,req){
 			var r = this.statusFunction(function(node,param){
 				var classes = ELATTR(node,"class");
@@ -4460,6 +4471,100 @@
 		this.CommandFilter = typeof filter === "object" ? filter : {} ;
 	});
 	
+	makeModule("ActiveStatus",{
+		whenAnyWillActive  :function(m)  { this.StatusEvents.AnyWillActive = m; },
+		whenAnyDidActive   :function(m)  { this.StatusEvents.AnyDidActive = m; },
+		whenAnyWillInactive:function(m)  { this.StatusEvents.AnyWillInactive = m; },
+		whenAnyDidInactive :function(m)  { this.StatusEvents.AnyDidInactive = m; },
+		whenAllActive      :function(m)  { this.StatusEvents.AllInactive = m; },
+		whenAllInactive    :function(m)  { this.StatusEvents.AllInactive = m; },
+		whenWillActive     :function(n,m){ this.StatusEvents.StatusWillActive[n] = m; },
+		whenDidActive      :function(n,m){ this.StatusEvents.StatusDidActive[n] = m; },
+		whenWillInactive   :function(n,m){ this.StatusEvents.StatusWillInactive[n] = m; },
+		whenDidInactive    :function(n,m){ this.StatusEvents.StatusDidInactive[n] = m; },
+		setInactiveStatus  :function(status,param,owner){
+			if( this.ActiveKeys.has(status) ){
+				if(this.ActiveKeys.length === 1 && !this.AllowInactive) return;
+				if( APPLY(this.StatusEvents.AnyWillInactive          ,owner,param) !== false &&
+					CALL(this.StatusEvents.StatusWillInactive[status],owner,param) !== false )
+				{
+					this.ActiveKeys.remove(status);
+					CALL(this.StatusEvents.AnyDidInactive           ,owner,param);
+					CALL(this.StatusEvents.StatusDidInactive[status],owner,param);
+					if( this.ActiveKeys.length === 0 ) CALL(this.StatusEvents.AnyActive);
+				}
+			}
+		},
+		setActiveStatus:function(status,param,owner){
+			if( !this.ActiveKeys.has(status) ){
+				if( this.AllowMultiStatus || (this.ActiveKeys.length === 0) ) {
+					if( CALL(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
+						CALL(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
+					{
+						this.ActiveKeys.push(status);
+						CALL(this.Source[status],owner,param);
+						CALL(this.StatusEvents.AnyDidActive           ,owner,param);
+						CALL(this.StatusEvents.StatusDidActive[status],owner,param);
+						if( this.ActiveKeys.length === PROPLENGTH(this.Source) ) 
+							CALL(this.AllActive,owner,param);
+					}
+				} else  {
+					if( CALL(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
+						CALL(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
+					{
+						this.ActiveKeys.clear().push(status);
+						CALL(this.Source[status],owner,param);
+						CALL(this.StatusEvents.AnyDidActive           ,owner,param);
+						CALL(this.StatusEvents.StatusDidActive[status],owner,param);
+						if( this.ActiveKeys.length === PROPLENGTH(this.Source) ) 
+							CALL(this.AllActive,owner,param);
+					}
+				}
+			}
+		},
+		getActiveStatus:function(){
+			return this.ActiveKeys.join(" ");
+		}
+	},function(statusProp,allowMulti,allowInactive){
+		this.Source           = statusProp;
+		this.AllowMultiStatus = !!allowMulti;
+		this.AllowInactive    = !!allowInactive;
+		this.StatusEvents     = {
+			"AnyWillActive":undefined,
+			"AnyDidActive":undefined,
+			"AnyWillInactive":undefined,
+			"AnyDidInactive":undefined,
+			"AllActive":undefined,
+			"AllInactive":undefined,
+			"StatusWillActive":{},
+			"StatusDidActive":{},
+			"StatusWillInactive":{},
+			"StatusDidInactive":{}
+		}
+		this.ActiveKeys = new AArray();
+	});
+	
+	extendModule("ActiveStatus","FormController",{
+		status:function(status){
+			if(typeof name === 'string') 
+				this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this.FormHelper);
+		},
+		setData:function(data,v2){
+			return this.FormHelper.checkin(data,v2);
+		},
+		getData:function(){
+			return this.FormHelper.checkout();
+		}
+	},function(context,formData,statusProp){
+		this.view = ZFIND(context);
+		if(this.view){
+			this.FormHelper = _Form(this.view);
+			this._super(statusProp);
+		} else {
+			console.warn('FormController에 view를 정상적으로 로드할수 없었습니다.',context,this.view);
+		}
+	});
+	
 	//value 값이 있는 엘리먼트 컨트롤
 	makeModule("Inside",{
 		__setInputConfig:function(){ ELATTR(this.Source,"autocomplete","off"); },
@@ -4531,354 +4636,6 @@
 		this.Source = ZFIND(el);
 		if(!this.Source) console.warn("Inside의 초기값을 설정하지 못했습니다. command =>",el);
 	});
-	
-	//피드가능한 노드오브젝트 인터페이스
-	makeModule("FeedNode",{
-		//최상위 노드에게 메서드 호출
-		feedFromTop:function(f,d){ d=(typeof d === "number")?d++:0; if(this.NodeParent) return this.NodeParent.feedToTop(f,d); return f.call(this,d); },
-		//아래부터 현재까지 메서드 호출
-		feedup:function(ff,depth,infinityTop){
-			depth = (typeof depth === "undefined" ? 0 : depth ); 
-			if(depth == infinityTop) return undefined;
-			var feedData = [];
-			this.NodeChildrens.each(function(feednode){
-				var feed = feednode.feedup.call(feednode,ff,depth + 1,infinityTop);
-				if(typeof feed !== undefined) feedData.push(feed);	
-			});
-			return ff.call(this,feedData,depth);
-		},
-		//현재부터 아래로 호출
-		feeddown:function(ff,cutIndex,depth,feedData){
-			depth = (typeof depth === "undefined" ? 0 : depth ); 
-			var feedData = [];
-			if(depth == cutIndex) return undefined;
-			this.NodeChildrens.each(function(feednode){
-				var feed = feednode.feeddown.call(feednode,ff,cutIndex,depth + 1);
-				if(typeof feed !== undefined) feedData.push(feed);
-			});
-			return ff.call(this,feedData,depth);
-		},
-		injectNode:function(){ return AArray.prototype.inject.apply(new AArray(this.NodeChildrens),Array.prototype.slice.call(arguments)); },
-		isEqualNode:function(obj){ return (obj instanceof this.constructor); },
-		getChildNodes:function(){ return this.NodeChildrens.clone(); },
-		removeChildNode:function(obj){ return this.NodeChildrens.remove(obj); },
-		addChildNode:function(obj,n){
-			if(this.isEqualNode(obj)){ this.NodeChildrens.push(obj,n); obj.setParentNode(this,false); return true; } 
-			console.error("NodeInterface error #1",obj); return false;
-		},
-		setParentNode:function(obj,n){
-			if(n == false) {
-				this.NodeParent = obj;
-				return true;
-			} else {
-				if(this.isEqualNode(obj)){
-					if(this.NodeParent) this.NodeParent.removeChildNode(this);
-					this.NodeParent = obj;
-					this.NodeParent.addChildNode(this);
-				}
-			}
-		},
-		getParentNode:function(){ return this.NodeParent; },
-		getTopNode:function(){ var topNode; this.feedFromTop(function(){ topNode = this; }); return topNode; }
-	},function(){
-		this.NodeChildrens = _Object();
-		this.NodeParent    = undefined;
-	});
-
-	extendModule("FeedNode","ViewController",{
-			//override tree interface
-			setTreeParent:function(p){ if(this._super(p)){ this.parentViewController = p; return true; } return false; },
-			//debuging
-			trace:function(){
-				console.log(":: ViewController :: trace :: start");
-				console.log(":",this.Parent,"::parent::");
-				this.Childrens.each(function(o,k){
-					console.log(":",k,"  => ",o);
-				});
-				console.log(":: ViewController :: trace :: end");
-			},
-			// view controller
-			// controller gs
-			addChildViewController:function(context,property,viewStatus){
-				var nvc     = new ViewController(context,property,viewStatus,this);
-				var nvcName = PASCAL(ELTRACE(nvc.view,"id"));
-				this.addChildNode(nvc,nvcName);
-				return nvc;
-			},
-			getChildViewController:function(s){ 
-				return this.NodeChildrens.Source[s];
-			},
-			hasChildViewController:function(s){ return s in this.NodeChildrens.Source; },		
-			// view controller
-			// status
-			//이 값은 status가 순간적으로 바뀔때에만 구할수 있습니다.
-			getPreviousStatus:function(){ return this.PreviousViewStatus; },
-			//상환관련
-			getStatus:function(status){
-				if( typeof status === "string" || typeof status === "number" ){
-					return this.CurrentViewStatus == status;
-				} else {
-					return this.CurrentViewStatus;
-				}
-			},
-			setStatus:function(setStatus){
-				this.CurrentViewStatus = status;
-			},
-			isStatus:function(statusName){ 
-				var inspects = TOARRAY(statusName," ");
-				for(var i=0,l=inspects.length;i<l;i++) if(this.CurrentViewStatus == statusName) return true;
-				return false;
-			},
-			notStatus:function(statusName){ return !this.isStatus(statusName); },
-			frameStatusSetter:function(setStatus,forced,touched){
-				if(typeof setStatus === "string" || typeof setStatus === "number"){
-					if( IS(setStatus,"text>0") ) {
-						if(typeof setStatus === "string") setStatus = setStatus.trim();
-						if(forced || this.CurrentViewStatus !== setStatus){
-							if(setStatus in this.ViewStatus){
-								if(typeof this.ViewStatus[setStatus] === "function"){
-									this.PreviousViewStatus = this.CurrentViewStatus;
-									this.CurrentViewStatus  = setStatus;
-									var result               = this.ViewStatus[setStatus].apply(this,_Array(arguments).subarr(3).toArray());
-									this.PreviousViewStatus = undefined;
-									return result;
-								} else {
-									if(!touched) console.warn("FrameController::frameStatusSetter:: 처음 정의의 다음의 status가 반드시 함수로 정의되어야 합니다. =>",setStatus);
-								}
-							} else {
-								if(!touched) console.warn("FrameController::frameStatusSetter:: 정의되지 않은 status를 호출하였습니다.",setStatus,this.ViewStatus);
-							}
-						}
-					} else {
-						if(!touched) console.warn("FrameController::frameStatusSetter:: status값이 올바르지 않습니다. (문자형 필요)",setStatus);
-					}
-				} else {
-					console.warn("FrameController::frameStatusSetter:: 불러올 status값은 숫자나 문자여야 합니다. 올바르지 않습니다.",setStatus);
-				}
-				if(typeof setStatus === "string" || typeof setStatus === "number"){
-					if(typeof setStatus === "string") setStatus = setStatus.trim();
-					if( AS(setStatus,"text>0") ) if(setStatus in this.ViewStatus) if(typeof this.ViewStatus[setStatus] === "function") {
-						var result = this.ViewStatus[setStatus].apply(this,_Array(arguments).subarr(1).toArray());
-						this.CurrentViewStatus = setStatus;
-						return result;
-					}
-				}
-			},
-			// 불러운 내용도 다시 불러온다 // 내용을 부른다 // 내용을 부를때 에러가 나도 표시하지 않는다
-			loadChildStatus:function(){
-				var args = Array.prototype.slice.call(arguments);
-				this.NodeChildrens.each(function(frame){ frame.setupStatus.apply(frame,args); });
-				return this;
-			},
-			touchChildStatus:function(){
-				var args = Array.prototype.slice.call(arguments);
-				this.NodeChildrens.each(function(frame){ frame.touchStatus.apply(frame,args); });
-				return this;
-			},
-			//칠드런까지 함께 설정한다.
-			setupStatus:function() { 
-				var args = Array.prototype.slice.call(arguments);
-				var statusValue = args.shift();
-				args.unshift(statusValue,true,true);
-				this.frameStatusSetter.apply(this,args);
-				this.loadChildStatus.apply(this,Array.prototype.slice.call(arguments));
-				return 
-			},
-			loadStatus :function() { 
-				var args = Array.prototype.slice.call(arguments);
-				var statusValue = args.shift();
-				args.unshift(statusValue,true,false);
-				return this.frameStatusSetter.apply(this,args); 
-			},
-			status     :function() { 
-				var args = Array.prototype.slice.call(arguments);
-				var statusValue = args.shift();
-				args.unshift(statusValue,false,false);
-				return this.frameStatusSetter.apply(this,args); 
-			},
-			touchStatus:function() { 
-				var args = Array.prototype.slice.call(arguments);
-				var statusValue = args.shift();
-				args.unshift(statusValue,false,true);
-				return this.frameStatusSetter.apply(this,args); 
-			},
-			syncStatusWith:function(moduleName){
-				var module = this.parentViewController.get(moduleName);
-				if(module) {
-					var args = Array.prototype.slice.call(arguments);
-					args.shift();
-					args.unshift(this.getStatus());
-					return module.setupStatus.apply(module,args);
-				} else {
-					console.error("ViewController::syncStatusWith 동기화할 대상을 찾을수 없습니다. => ",moduleName);
-				}
-			},
-			//w is wrapper (function)
-			find      : function(s,w) { return FIND(s,       this.ControllerElement, w); },
-			findClass : function(s,w) { return this.find("."+s.split(" ").join("."), w); },
-			findName  : function(s,w) { return this.find("[name="+s+"]",             w); },
-			findId    : function(s,w) { return this.find("#"+s,                      w); },
-			parentFind: function(s,w) { var p = this.getTreeParent();    if(!p){ console.warn("부모가 존재하지 않습니다"); return this.find(s,w); } else { return p.find(s,w) } },
-			topFind   : function(s,w) { var p = this.getTreeTopParent(); if(!p){ console.warn("부모가 존재하지 않습니다"); return this.find(s,w); } else { return p.find(s,w) } },
-			//control view
-			form      : function(a,b){ return new Form(this.ControllerElement,a,b); },
-			controls  : function(a)  { return new Controls(a,this.ControllerElement); },
-			// view controller
-			// default Data
-			//default Data가 있는지 확인
-			hasDefaultData:function(name){
-				name = (typeof name === "string" || typeof name === "number") ? name  : "defualtData" ;
-				return (typeof this.DefaultDataModels[name] === "undefined") ? false : true ;
-			},
-			setDefaultDataWithName:function(data,name){
-				if(typeof name === "string" || typeof name === "number"){
-					this.DefaultDataModels[name] = data;
-				} else {
-					console.warn("FrameController::setDefaultDataWithName 두번째 파라메터값은 반드시 String이나 Number이여야 합니다. param => ",data,name);
-				}
-			},
-			getDefaultDataList:function(){ return CLONE(this.DefaultDataModels); },
-			getDefaultData:function(index){
-				if( typeof index === "undefined") {
-					//아무거나 나옴
-					if("defualtData" in this.DefaultDataModels) return CLONE(this.DefaultDataModels[key]);
-					for(var key in this.DefaultDataModels) return CLONE(this.DefaultDataModels[key]);
-				} else {
-					return CLONE(this.DefaultDataModels[index]);
-				}
-			},
-			//
-			setControllerData:function(data){
-				this.FrameControllerHasData = data;
-				return this.FrameControllerHasData;
-			},
-			getControllerData:function(key){
-				if( typeof key === "undefined" ){
-					return this.FrameControllerHasData;
-				} else {
-					if(typeof this.FrameControllerHasData === "object"){
-						return this.FrameControllerHasData[key];
-					}
-				}
-			},
-			removeControllerData :function(){
-				delete this["FrameControllerHasData"];
-				return this;
-			},
-			//
-			hasControllerData :function(){ return (typeof this.FrameControllerHasData !== "undefined") },
-			//
-			setParentControllerData:function(data){
-				var pn = this.getParentNode();
-				if(pn) return pn.setControllerData(data);
-				console.warn("ViewController :: setParentControllerData :: 부모객체가 없는데 호출하였습니다.",this,data);
-			},
-			getParentControllerData:function(key){
-				var pn = this.getParentNode();
-				if(pn) return pn.getControllerData();
-				console.warn("ViewController :: getParentControllerData :: 부모객체가 없는데 호출하였습니다.",this,key);
-			},
-			removeParentControllerData:function(){
-				var pn = this.getParentNode();
-				if(pn) { pn.removeControllerData(); } else { console.warn("ViewController :: removeParentControllerData :: 부모객체가 없는데 호출하였습니다.",this); }
-				return this;
-			},
-			hasParentControllerData:function(){
-				var pn = this.getParentNode();
-				if(pn) { return pn.hasControllerData(); } 
-				console.warn("ViewController :: hasParentControllerData :: 부모객체가 없는데 호출하였습니다.",this);
-			},
-			//model controller
-			modelOfControllerData:function(){ if( this.hasControllerData () == true) return _Model(this.FrameControllerHasData); },
-			modelOfControllerView:function(){ if( typeof this.ControllerElement !== "undefined") return _Model(this.ControllerElement); },
-			//
-			updateControllerDataFilter:function(f) { this.FrameControllerUpdateDataFilter = f; return this; },
-			exportsControllerDataFilter:function(f){ this.FrameControllerExportsDataFilter = f; return this; },
-			//뷰에 있는 데이터를 데이터 모델로 가져옵니다.
-			updateControllerData:function(overwrite){
-				var d = this.modelOfControllerView().data()
-				if (typeof this.FrameControllerUpdateDataFilter === "function") d = this.FrameControllerUpdateDataFilter(d);
-			
-				if( this.hasControllerData () == false || overwrite == true){
-					this.setControllerData(d);
-				} else {
-					if(typeof this.FrameControllerHasData === "object"){
-						_Object(this.FrameControllerHasData).concat(d);
-					} else {
-						console.error("FrameController::다음 데이터에 updateControllerData를 실행 할 수 없습니다.",this.FrameControllerHasData);
-					}
-				}
-				if(typeof overwrite === "function"){
-					return overwrite(this.getControllerData());
-				} else {
-					return this.getControllerData();
-				}
-			},
-			//데이터 모델을 뷰로 뿌려줍니다.
-			exportsControllerData:function(){
-				if( this.hasControllerData () == true ){
-					var d = this.getControllerData();
-					if (typeof this.FrameControllerExportsDataFilter === "function") d = this.FrameControllerExportsDataFilter(d);
-					_Model(d).exports(this.ControllerElement);
-				} else {
-					console.warn("프레임 데이터가 존재하지 않아 뷰로 적용되지 못하였습니다.");
-				}
-			},
-			getMemberController:function(s){
-				var pn = this.getParentNode();
-				if(pn && (typeof s === "string" || typeof s === "number")){
-					if("get" in pn){
-						return pn.get(s);
-					} else {
-						console.warn("ViewController :: getMemberController :: parentViewController이 올바르지 않습니다. get이 존재하지 않음");
-					}
-				} else {
-					console.warn("ViewController :: getMemberController :: FrameController의 parentViewController이 존재하지 않거나 파라메터가 올바르지 않습니다. (parentViewController,param)",this.parentViewController,s);
-				}
-			}
-		},function(context,property,viewStatus,parentViewController){
-			this._super();
-			// view context
-			var c = ZFIND(context);
-			if( ISELNODE(c) == false ) console.error("FrameController::context => 현재 Context안에 해당 영역을 찾지 못했습니다. \ncontext는 고정적인 element에 지정하는것이 좋습니다. params =>",context,property,viewStatus);
-			this.ControllerElement = c;
-			this.view              = c;
-	
-			//status data
-			this.ViewStatus   = CLONE(TOOBJECT(viewStatus));
-			this.CurrentViewStatus = undefined;
-		
-			//attribute & default data
-			property = CLONE(TOOBJECT(property,"init"));
-			this.DefaultDataModels = {};
-			for(var key in property) {
-				var keySign = /([\#]+|)(.*)/.exec(key);
-				if(keySign[1] == ""){
-					if(key in this){
-						console.warn("FrameController:: error key => "+ key +" 추가 하려는 '메서드'는 이미 존재하는 메서드입니다. 추가할수 없습니다.");
-					} else {
-						this[key] = property[key];
-					}
-				} else {
-					if(keySign[2] in this.DefaultDataModels){
-						console.warn("FrameController:: error key => "+ key +" 추가 하려는 '기본 데이터'는 이미 존재하는 메서드입니다. 추가할수 없습니다.");
-					} else {
-						this.DefaultDataModels[keySign[2]] = CLONE(property[key]);
-					}
-				}
-			}
-			//parent
-			this.setTreeParent(parentViewController);
-		
-			//init
-			if( ("init" in this) && (typeof this.init === "function") ){
-				this.init.call(this,this,c,this.parentViewController);
-				delete this["init"];
-			}
-		},function(s){
-			return this.getChildViewController(s);
-		}
-	);
 	
 	// 컨텍스트 컨트롤러
 	makeModule("Contexts",{
@@ -5028,7 +4785,7 @@
 		whenActiveToggle:function(am,im){ this.whenDidActive(am); return this.whenDidInactive(im); },
 		whenActiveStart:function(method){ this.ContextsEvents.activeStart = method; return this; },
 		whenActiveEnd:function(method){this.ContextsEvents.activeEnd = method; return this;},
-		shouldActive:function(index,wait){
+		shouldTrigging:function(index,wait){
 			var _ = this;
 			if(wait === 0) {
 				_.onSelects(_.ContextsEventName,TONUMBER(index));
@@ -5042,22 +4799,71 @@
 			}
 			return this;
 		},
+		shouldActive:function(index,wait){
+			//! api change devel
+			this.shouldTrigging(index,wait);
+		},
+		shouldInactive:function(index,wait){
+			//! api change devel
+			this.shouldTrigging(index,wait);
+		},
+		getActiveIndexes:function(){
+			var indexes = [];
+			DATAEACH(this.getSelects(),function(node,i){ if(ELHASCLASS(node,'active')) indexes.push(i);  });
+			return indexes;
+		},
+		setActiveIndexes:function(indexes,noEvent){
+			var _ = this;
+			var indexesObject = _Array(indexes);
+			DATAEACH(this.getSelects(),function(node,i){
+				if( indexesObject.has(i) ) {
+					//active 대상
+					if( !ELHASCLASS(node,'active') ){
+						if(noEvent === true) {
+							ELADDCLASS(node,'active');
+						} else {
+							_.shouldActive(i);
+						}
+					}
+				} else {
+					//inactive 대상
+					if( ELHASCLASS(node,'active') ){
+						if(noEvent === true) {
+							ELREMOVECLASS(node,'active');
+						} else {
+							_.shouldInactive(i);
+						}
+					}
+				}
+			});
+		},
 		getActiveSelects:function(){
 			return DATAFILTER(this.getSelects(),function(node){ return ELHASCLASS(node,'active'); });
 		},
 		getInactiveSelects:function(){
 			return DATAFILTER(this.getSelects(),function(node){ return !ELHASCLASS(node,'active'); });
 		},
-		activeAll:function(ignoreEvent){
+		activeAll:function(noEvent){
 			var _=this;selects=this.getSelects();
 			DATAEACH(selects,function(node,index){
-				if( !ELHASCLASS(node,'active') ) _.shouldActive(index,0);
+				if( !ELHASCLASS(node,'active') ) {
+					if(noEvent === true) {
+						_.shouldTrigging(index,0);
+					} else {
+						
+					}
+				} 
 			});
 		},
-		inactiveAll:function(ignoreEvent){
+		inactiveAll:function(noEvent){
 			var _=this;selects=this.getSelects();
 			DATAEACH(selects,function(node,index){
-				if( ELHASCLASS(node,'active') ) _.shouldActive(index,0);
+				if(noEvent === true) {
+					
+				} else {
+					
+				}
+				if( ELHASCLASS(node,'active') ) _.shouldTrigging(index,0);
 			});
 		},
 		makeAccessProperty:function(method){
@@ -5127,7 +4933,7 @@
 		});
 		//
 		if(willActive) this.whenWillActive(willActive);
-		if(typeof shouldActiveIndex === "number") this.shouldActive(shouldActiveIndex);
+		if(typeof shouldActiveIndex === "number") this.shouldTrigging(shouldActiveIndex);
 	});
 	
 	// Model은 순수 데이터 모델에 접근하기 위해 사용합니다.
@@ -5465,6 +5271,7 @@
 		});
 		this.send();
 	});
+	
 	
 	makeModule("LoadContainerBase",{
 		"+_ActiveController":undefined,
@@ -5996,7 +5803,7 @@
 			var pathes = [];
 			
 			path.replace(/\*\*.+/g,'**').replace(/\/[^\/]+/g,function(s){ pathes.push(s.substr(1)); });
-						
+			
 			DATAEACH(pathes,function(path,i){
 				var searchTarget = resultData;
 				var searchResult = [];
@@ -6011,6 +5818,46 @@
 							searchResult.push(this);
 						});
 					});
+				} else if(/\[[^\]]+\]/.test(path)){
+					//속성만 명시된경우
+					var wantedProps = {};
+					
+					//FROM ELUT_REGEX
+					path.replace(new RegExp("\\[[\\w\\-\\_]+\\]|\\[\\\'[\\w\\-\\_]+\\\'\\]|\\[\\\"[\\w\\-\\_]+\\\"\\]","gi"),function(s){
+						wantedProps[s.substr(1,s.length-2)] = null;
+						return '';
+					}).replace(new RegExp("\\[[\\w\\-\\_]+\\=[^\\]]+\\]|\\[\\\'[\\w\\-\\_]+\\\'\\=\\\'[^\\]]+\\\'\\]|\\[\\\"[\\w\\-\\_]+\\\"\\=\\\"[^\\]]+\\\"\\]","gi"),function(s){
+						var attr = /\[([\"\'\w\-\_]+)(=|~=|)(.*|)\]$/.exec(s);
+						if(attr) {
+							wantedProps[UNWRAP(attr[1],["''",'""'])] = (attr[3]) ? UNWRAP(attr[3],["''",'""']) : null;
+						} else {
+							console.warn('//!devel target parse err',attr,path);
+						}
+					});
+					
+					if(/\[[^\]]+\]\*\*$/.test(path)) {
+						DATAEACH(searchTarget,function(managedData){
+							managedData.feedDownManagedData(function(){
+								var md   = this;
+								var pass = true;
+								PROPEACH(wantedProps,function(v,k){
+									return pass = (v === null || v === '') ? md.hasValue(k) : (md.value(k) == v);
+								});
+								if(pass === true) searchResult.push(md);
+							});
+						});
+					} else {
+						DATAEACH(searchTarget,function(managedData){
+							var passData = [];
+							DATAEACH(managedData.Childrens,function(managedData){
+								var pass = true;
+								PROPEACH(wantedProps,function(v,k){
+									return pass = (v === null || v === '') ? managedData.hasValue(k) : (managedData.value(k) == v);
+								});
+								if(pass === true) searchResult.push(managedData);
+							});
+						});
+					}
 				} else if(ISNUMBERTEXT(path)){
 					DATAEACH(searchTarget,function(managedData){
 						var ch = managedData.Childrens[parseInt(path)];
@@ -6064,13 +5911,7 @@
 				console.warn("경고::",depth,"depth의 ViewModel뷰모델의 렌더값이 입력되지 않았습니다.",this.Source[depth]);
 			}
 			return MAKE("div",{html:TOSTRING(managedData.value()),style:'padding-left:10px;'},managedData.placeholder("div"));
-		},
-		//deprecated!
-		whenSelectItem:function(m)  { if(typeof m === "function") this.shouldSelectItem = m; },
-		whenDeselectItem:function(m){ if(typeof m === "function") this.shouldDeselectItem = m; },
-		whenSelectToggle:function(se,de){ this.whenSelectItem(se); this.whenDeselectItem(de); },
-		"+shouldSelectItem"  :function(node,depth){ ELSTYLE(node,"background","#dae8f2"); },
-		"+shouldDeselectItem":function(node,depth){ ELSTYLE(node,"background","none") }
+		}
 	},function(renderDepth){
 		//tempate 타겟을 설정
 		this.Source = new AArray(Array.prototype.slice.call(arguments)).getMap(function(a){ 
@@ -7037,7 +6878,7 @@
 		if(typeof initZoom == "number") this.needZoom(initZoom);
 	});
 	
-	makeModule("Counter",{
+	makeModule("TimeCounter",{
 		timeoutHandler:function(){
 			if(this._timeout)clearTimeout(this._timeout);
 			if( this._moveEnd > (+(new Date())) ) {
@@ -7057,12 +6898,8 @@
 			this._moveEnd   = this._moveStart + this.duration;
 			this.timeoutHandler();
 		},
-		whenCounting:function(m){
-			this._whenMoving = m;
-		},
-		whenCountFinish:function(m){
-			this._whenMoveFinish = m;
-		}
+		whenCounting   :function(m){ this._whenMoving = m; },
+		whenCountFinish:function(m){ this._whenMoveFinish = m; }
 	},function(counting,finish,ms,rate,now){
 		if(counting)this.whenCounting(counting);
 		if(finish)this.whenCountFinish(finish);
@@ -7073,7 +6910,7 @@
 	
 	makeGetter('ATOB',function(a,b,p){
 		a = TONUMBER(a);
-		b = TONUMBER(b);
+		b = TONUMBER(b);	
 		p = TONUMBER(p);
 		return (((b-a)/100)*p)+a;
 	});
