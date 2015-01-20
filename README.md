@@ -52,11 +52,10 @@ Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브�
 
 ### Feature #
 Nody는...
-
-  1. 코어 : 객체지향 구현
-  2. 다양한 Enumerate
-  3. 인라인 코딩을 지향
-  4. MVP 컨트롤러가 구현되어있음
+  1. 노드를 손쉽게 구성
+  2. 데이터와 노드를 긴밀하게 구현
+  3. 다양한 Enumerate
+  4. 인라인 코딩을 지향
 
 ### Compatibility #
 #### Recommend #
