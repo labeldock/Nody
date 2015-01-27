@@ -1,12 +1,12 @@
 (function(){
 	
 	makeGetter("CODE",function(){
-		return _Array(arguments).map(function(func){
+		return _NFArray(arguments).map(function(func){
 			if(ISELNODE(func)){
-				return _String(func.innerHTML).trimLine().getTabsAlign();
+				return _NFString(func.innerHTML).trimLine().getTabsAlign();
 			} else if(typeof func == "function"){
 				var hideSwitch = false;
-				return _String(UNWRAP((func+"").replace(/(^[^{]+)/g,""))).trimLine().tabsAlign().eachLine(function(line){
+				return _NFString(UNWRAP((func+"").replace(/(^[^{]+)/g,""))).trimLine().tabsAlign().eachLine(function(line){
 					if(line.indexOf("/*break*/") > -1) return "";
 					if(line.indexOf("/*linehide*/") > -1) {
 						hideSwitch = hideSwitch ? false : true;

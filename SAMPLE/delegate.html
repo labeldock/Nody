@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=2">
+  <title>Command Zone</title>
+  <link rel="stylesheet" href="resources/css/bootstrap.min.css">
+  <link rel="stylesheet" href="resources/css/nody.css">
+  <link rel="stylesheet" href="resources/css/application.css">
+  <link rel="stylesheet" href="resources/css/bootstrap-slider.css">
+  <style>
+  .light {
+	  width:200px;
+	  height:200px;
+	  border:1px solid gray;
+  }
+  </style>
+</head>
+<body>
+	<div class='btn-group'>
+		<a class='btn btn-default'>
+			이것도
+		</a>
+		<a class='btn btn-default'>
+			<div>저것도</div>
+		</a>
+		<a class='btn btn-default'>
+			<label>요것도</label>
+		</a>
+		<a class='btn btn-default'>
+			<img src='resources/images/Gabon.png'>
+		</a>
+	</div>
+	
+	<script src="../js/nody.js"></script>
+	<script src="resources/js/jquery-1.11.1.min.js"></script>
+	<script src="../mixed-module/mixed/nody.mixed.js"></script>
+	<script src="resources/js/bootstrap.min.js"></script>
+	<script src="resources/js/bootstrap-slider.js"></script>
+	<script>
+		new ActiveController('.btn-group','.btn','click',true);
+	</script>	
+</body>
+</html>

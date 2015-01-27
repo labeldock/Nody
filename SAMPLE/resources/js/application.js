@@ -1,16 +1,16 @@
 
-var GNBNavigationController = new NavigationController("main",function(initActiveController,navigation){	
+var GNBNFHTMLLoader = new NFHTMLLoader("main",function(){	
 	//active event controller
-	return initActiveController("#gnb menu","a","click",function(){
+	return this.needActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
-		return GNBNavigationController.active((this.textContent || this.innerText).toLowerCase());
+		return GNBNFHTMLLoader.active((this.textContent || this.innerText).toLowerCase());
 	},2).makeAccessProperty(function(accessData,node){
 		//navigation data
 		var name = (node.textContent || node.innerText).toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
 	});
 });
-var gnb = GNBNavigationController;
+var gnb = GNBNFHTMLLoader;
 var appearLoad = function(){
 	/*linehide*/
 	var css3Transform = function(query,value){
@@ -59,7 +59,7 @@ var appearOpen = function(){
 	)
 };
 
-GNBNavigationController.whenLoad("appear",function(){
+GNBNFHTMLLoader.whenLoad("appear",function(){
 	FIND(".code-block-1 code",ELVALUE,CODE(ZFIND(".read-block-1")));
 	CODEBLOCK(".code-block-1");
 	
@@ -68,7 +68,7 @@ GNBNavigationController.whenLoad("appear",function(){
 	
 	appearLoad();
 })
-GNBNavigationController.whenActiveToggle("appear",function(){	
+GNBNFHTMLLoader.whenActiveToggle("appear",function(){	
 	appearOpen();
 },function(){
 	FIND(".appear-ready",DATAEACH,function(node,i){
@@ -76,7 +76,7 @@ GNBNavigationController.whenActiveToggle("appear",function(){
 	});
 	window.css3Transform(".gage-box-line-container","rotate(-100deg)");
 });
-GNBNavigationController.whenLoad("mvvm",function(){
+GNBNFHTMLLoader.whenLoad("mvvm",function(){
     var data = {"list":[
     	{title:"Section1",list:[{title:"Item1"},{title:"Item2"}]},
   		{title:"Section2",list:[{title:"Item4"},{title:"Item5"}]},
@@ -86,13 +86,13 @@ GNBNavigationController.whenLoad("mvvm",function(){
 	var mvvmXMP =  $(MAKE("XMP")).appendTo("#init-data-view");
 	
 	//데이터를 불러거나 다시 출력하는 역활
-    var dataContext = new DataContext(data,"list");
+    var dataContext = new NFDataContext(data,"list");
 	
 	//뷰를 그리는 방법을 정의
 	var itemIndex = 10;
-	var viewModel = new ViewModel("template#mvvm-ul","template#mvvm-list","template#mvvm-td");
+	var viewModel = new NFViewModel("template#mvvm-ul","template#mvvm-list","template#mvvm-td");
 	//뷰를 그리고 이벤트를 등록함
-    var listViewController = new Presenter("#listContainer",dataContext.getRootManagedData(),viewModel);
+    var listViewController = new NFPresentor("#listContainer",dataContext.getRootManagedData(),viewModel);
 	listViewController.dataDidChange = function(){
 		var xmpText = dataContext.getJSONString().replace(/\:\[/,":[\n\t").replace(/\}\]\}\,(\s|)/g,"}]},\n\t").replace("]}]}","]}\n]}");
 		mvvmXMP.text(xmpText);
@@ -110,18 +110,18 @@ var viewData = [
 	{name:"Guatemala",native:"República de Guatemala",image:"resources/images/Guatemala.png"},
 	{name:"Greece",native:"Ελληνική Δημοκρατία",image:"resources/images/Greece.png"}
 ];
-var viewDataContext = new DataContext(viewData);
-window.viewDataContext = viewDataContext;
+var viewNFDataContext = new NFDataContext(viewData);
+window.viewNFDataContext = viewNFDataContext;
 
 var viewModels = {
-	"small":new ViewModel(function(){
+	"small":new NFViewModel(function(){
 		return this.placeholder("ul");
 	},function(){
 		return MAKE("li.inline-box.small-box.text-center",
 			MAKE("img",{src:this.value("image")})
 		);
 	}),
-	"large":new ViewModel(function(){
+	"large":new NFViewModel(function(){
 		return this.placeholder("ul");
 	},function(){
 		return MAKE("li.inline-box.text-center",
@@ -129,7 +129,7 @@ var viewModels = {
 			this.bind("native","p")
 		);
 	}),
-	"list":new ViewModel(function(){
+	"list":new NFViewModel(function(){
 		return MAKE("table.table",
 			MAKE("thead",
 				MAKE("tr",
@@ -150,11 +150,11 @@ var viewModels = {
 	})
 }
 
-GNBNavigationController.whenLoad("viewmodel",function(){	
+GNBNFHTMLLoader.whenLoad("viewmodel",function(){	
 
-	var viewController = new Presenter("#view-display",viewDataContext);
+	var viewController = new NFPresentor("#view-display",viewNFDataContext);
 	
-	var viewType = new Contexts("#view-type","button");
+	var viewType = new NFContexts("#view-type","button");
 	
 	viewType.onSelects("click",function(){
 		
@@ -168,14 +168,14 @@ GNBNavigationController.whenLoad("viewmodel",function(){
 	$("#view-type button").eq(1).trigger("click");
 	
 	$("#view-data-2").click(function(){
-		$("#viewmodel-modal").find("#viewmodel-modal-data").text(viewDataContext.getJSONString());
+		$("#viewmodel-modal").find("#viewmodel-modal-data").text(viewNFDataContext.getJSONString());
 		$("#viewmodel-modal").modal();
 	});
 	
 });
-GNBNavigationController.whenLoad("selectbind",function(){
+GNBNFHTMLLoader.whenLoad("selectbind",function(){
 	// view model
-	var listViewModel = new ViewModel(
+	var listNFViewModel = new NFViewModel(
 	function(){
 		return this.placeholder("div.menu.list-group");
 	},function(){
@@ -185,13 +185,7 @@ GNBNavigationController.whenLoad("selectbind",function(){
 		);
 	});
 	
-	listViewModel.whenSelectToggle(function(node){
-		$(node).addClass("active");
-	},function(node){
-		$(node).removeClass("active");
-	});
-	
-	var itemViewModel = new ViewModel(function(){
+	var itemNFViewModel = new NFViewModel(function(){
 		return MAKE("div",
 			MAKE("h5::Name"),
 			this.bind("name"),
@@ -201,10 +195,10 @@ GNBNavigationController.whenLoad("selectbind",function(){
 			this.bind("image","p")
 		);
 	});
-	var itemController = new Presenter("#bind-item-display",undefined,itemViewModel);
+	var itemController = new NFPresentor("#bind-item-display",undefined,itemNFViewModel);
 	
 	// list view
-	var viewController = new Presenter("#bind-display",viewDataContext,listViewModel,function(){
+	var viewController = new NFPresentor("#bind-display",viewNFDataContext,listNFViewModel,function(){
 		
 		var activeController = this.needActiveController('/*',function(e,managedData){
 			itemController.needDisplayWithData(managedData);
@@ -226,8 +220,8 @@ GNBNavigationController.whenLoad("selectbind",function(){
 	});
 	
 });
-GNBNavigationController.whenLoad("multiselect",function(){
-	var multiViewModel = new ViewModel(function(){
+GNBNFHTMLLoader.whenLoad("multiselect",function(){
+	var multiNFViewModel = new NFViewModel(function(){
 		return this.placeholder("div.row-fluid");
 	},function(){
 		return MAKE("div.col-sm-6",
@@ -240,7 +234,7 @@ GNBNavigationController.whenLoad("multiselect",function(){
 			)
 		);
 	});
-	var viewController = new Presenter("#multiselect-display",viewDataContext,multiViewModel,function(){
+	var viewController = new NFPresentor("#multiselect-display",viewNFDataContext,multiNFViewModel,function(){
 		var activeController = this.needActiveController('/*',null,true,true);
 		activeController.whenActiveStart(function(){
 			$(".side-bar-container").addClass("side-bar-active");
@@ -270,9 +264,9 @@ GNBNavigationController.whenLoad("multiselect",function(){
 	
 });
 
-GNBNavigationController.whenLoad("scroll",function(){
-	var scrollBox    = new ScrollBox("#scroll-box");
-	var calendarBox  = new ScrollBox("#calendar-box");
+GNBNFHTMLLoader.whenLoad("scroll",function(){
+	var scrollBox    = new NFScrollBox("#scroll-box");
+	var calendarBox  = new NFScrollBox("#calendar-box");
 	var countDisplay = $("#calendar-box-count");
 	var nowMoment    = new MixedMoment("ko");
 	
@@ -352,10 +346,10 @@ function(){
 IMPORTNODE( ZFIND("template#test") );
 },
 function(){
-_Template("template#test").get();
+_NFTemplate("template#test").get();
 }
 ]
-GNBNavigationController.whenLoad("speedtest",function(){
+GNBNFHTMLLoader.whenLoad("speedtest",function(){
 	setTimeout(function(){
 		TIMES(testset.length,function(i){
 			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset[i]));
@@ -399,7 +393,7 @@ function(){
 
 ]
 
-GNBNavigationController.whenLoad("speedtest2",function(){
+GNBNFHTMLLoader.whenLoad("speedtest2",function(){
 	setTimeout(function(){
 		TIMES(testset2.length,function(i){
 			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset2[i]));
@@ -420,27 +414,27 @@ GNBNavigationController.whenLoad("speedtest2",function(){
 	},500);
 });
 
-GNBNavigationController.whenLoad("canvas2d",function(){
+GNBNFHTMLLoader.whenLoad("canvas2d",function(){
 	var canvasArea = $("#canvas-area",this);
 	var canvasBackground = $("#canvas-background td",this);
-	_Context2D(100).drawCrossLine(2,0,0,0).needDraw().appendTo(canvasArea);
-	_Context2D(100).drawCrossLine(2,2,0,0).needDraw().appendTo(canvasArea);
-	_Context2D(100).drawCrossLine(4,4,4,0).needDraw().appendTo(canvasArea);
-	_Context2D(100).drawCrossLine(6,6,6,6).needDraw().appendTo(canvasArea);
+	_NFContext2D(100).drawCrossLine(2,0,0,0).needDraw().appendTo(canvasArea);
+	_NFContext2D(100).drawCrossLine(2,2,0,0).needDraw().appendTo(canvasArea);
+	_NFContext2D(100).drawCrossLine(4,4,4,0).needDraw().appendTo(canvasArea);
+	_NFContext2D(100).drawCrossLine(6,6,6,6).needDraw().appendTo(canvasArea);
 	
 	
-	_Context2D(canvasBackground.eq(0)).drawCrossLine(4,4,4,5).needDraw().backgroundToResponder();
-	_Context2D(canvasBackground.eq(1)).drawCrossLine(0,4,0,4,"#5c5").needDraw().backgroundToResponder();
-	_Context2D(canvasBackground.eq(2)).drawCrossLine(0,0,4,4).needDraw().backgroundToResponder();
-	_Context2D(canvasBackground.eq(3)).drawCrossLine(4,4,0,0,"#cc5").needDraw().backgroundToResponder();
-	_Context2D(canvasBackground.eq(4)).drawCrossLine(0,4,4,4).needDraw().backgroundToResponder();
-	_Context2D(canvasBackground.eq(5)).drawCrossLine(4,0,0,4).needDraw().backgroundToResponder();
+	_NFContext2D(canvasBackground.eq(0)).drawCrossLine(4,4,4,5).needDraw().backgroundToResponder();
+	_NFContext2D(canvasBackground.eq(1)).drawCrossLine(0,4,0,4,"#5c5").needDraw().backgroundToResponder();
+	_NFContext2D(canvasBackground.eq(2)).drawCrossLine(0,0,4,4).needDraw().backgroundToResponder();
+	_NFContext2D(canvasBackground.eq(3)).drawCrossLine(4,4,0,0,"#cc5").needDraw().backgroundToResponder();
+	_NFContext2D(canvasBackground.eq(4)).drawCrossLine(0,4,4,4).needDraw().backgroundToResponder();
+	_NFContext2D(canvasBackground.eq(5)).drawCrossLine(4,0,0,4).needDraw().backgroundToResponder();
 	
 });
 
-GNBNavigationController.whenLoad('formcontroller',function(){	
+GNBNFHTMLLoader.whenLoad('formcontroller',function(){	
 	
-	var plainFormController = new FormController('.plain-form-area',null,{
+	var plainNFFormController = new NFFormController('.plain-form-area',null,{
 		normal:function(){
 			this.controls(function(){
 				$(this).css('color','inherit');
@@ -453,7 +447,7 @@ GNBNavigationController.whenLoad('formcontroller',function(){
 			
 		}
 	});
-	var realFormController  = new FormController('.real-form-area',null,{
+	var realNFFormController  = new NFFormController('.real-form-area',null,{
 		normal:function(){
 			this.disabled(false);
 		},
@@ -462,35 +456,35 @@ GNBNavigationController.whenLoad('formcontroller',function(){
 		}
 	});
 	
-	window.lastForm = realFormController;
+	window.lastForm = realNFFormController;
 	
 	$(".setdata-action-1").on('click',function(){
 		var data = JSON.parse($(".data-example-1").text())
-		plainFormController.setData(data);
-		realFormController.setData(data);
+		plainNFFormController.setData(data);
+		realNFFormController.setData(data);
 	});
 	$(".setdata-action-2").on('click',function(){
 		var data = JSON.parse($(".data-example-2").text())
-		plainFormController.setData(data);
-		realFormController.setData(data);
+		plainNFFormController.setData(data);
+		realNFFormController.setData(data);
 	});
 	$(".setdata-action-3").on('click',function(){
 		var data = JSON.parse($(".data-example-3").text())
-		plainFormController.setData(data);
-		realFormController.setData(data);
+		plainNFFormController.setData(data);
+		realNFFormController.setData(data);
 	});
 	
 	$(".form-status-1").on('click',function(){
-		plainFormController.status('normal');
-		realFormController.status('normal');
+		plainNFFormController.status('normal');
+		realNFFormController.status('normal');
 	});
 	$(".form-status-2").on('click',function(){
-		plainFormController.status('disabled');
-		realFormController.status('disabled');
+		plainNFFormController.status('disabled');
+		realNFFormController.status('disabled');
 	});
 	
 	$('.getdata-action').on('click',function(){
-		$('.getdata-veriant').text( JSON.stringify( realFormController.getData() ) );
+		$('.getdata-veriant').text( JSON.stringify( realNFFormController.getData() ) );
 	});
 	
 });

@@ -147,9 +147,9 @@ Tag
 ```
 Script
 ```javascript
-		_Template("#li-temp").appendTo("ul#container");
-		_Template("#li-temp").appendTo("ul#container");
-		_Template("#li-temp").appendTo("ul#container");
+		_NFTemplate("#li-temp").appendTo("ul#container");
+		_NFTemplate("#li-temp").appendTo("ul#container");
+		_NFTemplate("#li-temp").appendTo("ul#container");
 ```
 Result
 ```html
@@ -163,32 +163,26 @@ Result
 <a name="showcase-template-02"/>
 #### Partial template node #
 Tag
-```html
-		<!-- Container -->
-		<section id="figure-group"></section>
-		
-		<!-- Template -->
-		<template id="figure-item">
-			<figure>
-				<img node-src="image">
-				<figcaption>
-					<a node-href="link" node-value="title"></a>
-					<input type="text" node-value="index">
-				</figcaption>
-			</figure>
-		</template>
-```
 Script
 ```javascript
-		var temp = _Template("#figure-item",false);
-		
-		temp.generateTo("#figure-group",{
+		var temp = _NFTemplate(
+			'<figure>\
+				<img node-src="image">\
+				<figcaption>\
+					<a node-href="link" node-value="title"></a>\
+					<input type="text" node-value="index">\
+				</figcaption>\
+			</figure>',false
+		);
+		//1
+		temp.generate("#figure-group",{
 			"image":"somewhere.png",
 			"link" :"#someplace",
 			"title":"awesome",
 			"index":"100"
 		});
-		temp.generateTo("#figure-group",{
+		//2
+		temp.generate("#figure-group",{
 			"image":"somewhere2.png",
 			"link" :"#someplace2",
 			"title":"great",
@@ -197,48 +191,59 @@ Script
 ```
 Result
 ```html
-	<section id="figure-group">
-		<figure>
-			<img src="somewhere.png">
-			<figcaption>
-				<a href="#someplace">awesome</a>
-				<input type="text" value="100">
-			</figcaption>
-		</figure>
-		<figure>
-			<img src="somewhere2.png">
-			<figcaption>
-				<a href="#someplace2">great</a>
-				<input type="text" value="101">
-			</figcaption>
-		</figure>
-	</section>
+	<!-- 1 -->
+	<figure>
+		<img src="somewhere.png">
+		<figcaption>
+			<a href="#someplace">awesome</a>
+			<input type="text" value="100">
+		</figcaption>
+	</figure>
+	<!-- 2 -->
+	<figure>
+		<img src="somewhere2.png">
+		<figcaption>
+			<a href="#someplace2">great</a>
+			<input type="text" value="101">
+		</figcaption>
+	</figure>
 ```
 
 <a name="showcase-template-04"/>
 #### 템플릿 안에 노드를 파셜하기 #
-```html
-	<!-- container -->
-	<div id="container"></div>
-	
-	<!-- template -->
-	<template id="part">
-		<ul node-append="list"></ul>
-	</template>
-```
 ```javascript
-	_Template("#part",{
+	//1
+	_NFTemplate('<ul node-append="list"><li>hello</li></ul>',{
 		"list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
-	}).appendTo("#container");
+	});
+	//2
+	_NFTemplate('<ul node-prepend="list"><li>hello</li></ul>',{
+		"list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
+	});
+	//3
+	_NFTemplate('<ul node-put="list"><li>hello</li></ul>',{
+		"list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
+	});
 ```
 Result
 ```html
-	<div id="container">
-		<ul>
-			<li class="item">item1</li>
-			<li class="item">item2</li>
-		</ul>
-	</div>
+	<!-- 1 -->
+	<ul>
+		<li>hello</li>
+		<li class="item">item1</li>
+		<li class="item">item2</li>
+	</ul>
+	<!-- 2 -->
+	<ul>
+		<li class="item">item1</li>
+		<li class="item">item2</li>
+		<li>hello</li>
+	</ul>
+	<!-- 3 -->
+	<ul>
+		<li class="item">item1</li>
+		<li class="item">item2</li>
+	</ul>
 ```
 
 <a name="showcase-mvvm"/>
@@ -261,10 +266,10 @@ Result
 	];
 	
 	// Presentation object
-	var dataContext = _DataContext(data);
+	var dataContext = _NFDataContext(data);
 	
 	// Draw model
-	var viewModel = _ViewModel(
+	var viewModel = _NFViewModel(
 	//depth1
 	function(){
 		return this.placeholder("ul.top");
@@ -275,7 +280,7 @@ Result
 	});
 	
 	// View controller
-	var viewController = _DataContextViewController("#container",dataContext,viewModel);
+	var viewController = _NFDataContextViewController("#container",dataContext,viewModel);
 	viewController.needDisplay(); // draw view start
 	
 	//Get data
@@ -313,12 +318,11 @@ Result
 			<td node-value="value"></td>
 		</tr>
 	</template>
-	
 ```
 ```javascript
-		var dataContext = _DataContext(data);
-		var viewModel = _ViewModel("template#table","template#tbody-item");
-		var viewController = _DataContextViewController("#container",dataContext,viewModel);
+		var dataContext = _NFDataContext(data);
+		var viewModel = _NFViewModel("template#table","template#tbody-item");
+		var viewController = _NFDataContextViewController("#container",dataContext,viewModel);
 		viewController.needDisplay();
 ```
 Result
@@ -399,7 +403,6 @@ Result
 
 <a name="showcase-enumerate-object-each"/>
 #### Object each #
-_Array와 마찬가지로 _Object도 동일하게 동작하도록 하는게 원칙입니다.
 ```javascript
 		PROPEACH({1:2,2:3,4:5},function(value,key){
 			console.log(key+value);
@@ -465,18 +468,18 @@ as 는 스트링 값만을 위한 api이다
 #### byteSize #
 바이트사이즈를 출력할수 있다.
 ```javascript
-        _String("McDonald's").getByteSize(); //=> 10
-        _String("맥도널드").getByteSize(); //=>8
-        _String("マクドナルド").getByteSize(); //=>12
+        _NFString("McDonald's").getByteSize(); //=> 10
+        _NFString("맥도널드").getByteSize(); //=>8
+        _NFString("マクドナルド").getByteSize(); //=>12
 ```
 
 <a name="showcase-string-02"/>
 #### String model #
 class attribute 같은 string의 추가제거에 사용가능하다.
 ```javascript
-        _String("McDonald's").addModel("good").get(); //=>"McDonald's good"
-        _String("McDonald's").removeModel("Mc").get(); //=>"McDonald's"
-        _String("McDonald's").removeModel("McDonald's").get(); //=>""
+        _NFString("McDonald's").addModel("good").get(); //=>"McDonald's good"
+        _NFString("McDonald's").removeModel("Mc").get(); //=>"McDonald's"
+        _NFString("McDonald's").removeModel("McDonald's").get(); //=>""
 ```
 
 <a name="showcase-zstring"/>
@@ -540,14 +543,14 @@ ZSTRING을 실제로 _ZString모듈을 호출하여 값을 반환한다. 직접�
 ### 숫자 #
 Nody는 글자사이의 숫자를 인식한다. 내부적으로 숫자를 글자로 취급한다.
 ```javascript
-        _Number(3000).getNumber(); //=> "3000"
-        _Number(3000).getDecimal(); //=> "3,000"
-        _Number("halfby $3000 dance").number(); //=> 3000
-        _Number("halfby $3000 dance").getNumber(); //=> "3000"
-        _Number("halfby $3000 dance").getDecimal(); //=> "3,000"
-        _Number("halfby $3000 dance").getPrefix(); //=> "halfby $"
-        _Number("halfby $3000 dance").getSuffix(); //=> " dance"
-        _Number("hello world").number(); // => 0
+        _NFNumber(3000).getNumber(); //=> "3000"
+        _NFNumber(3000).getDecimal(); //=> "3,000"
+        _NFNumber("halfby $3000 dance").number(); //=> 3000
+        _NFNumber("halfby $3000 dance").getNumber(); //=> "3000"
+        _NFNumber("halfby $3000 dance").getDecimal(); //=> "3,000"
+        _NFNumber("halfby $3000 dance").getPrefix(); //=> "halfby $"
+        _NFNumber("halfby $3000 dance").getSuffix(); //=> " dance"
+        _NFNumber("hello world").number(); // => 0
         
 ```
 
@@ -623,12 +626,11 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ```
 <a name="version-info"/>
 ## Version info #
+#### 0.20 정보
+- 모든 기본 모듈은 'NF' Prefix가 붙도록 디자인이 바뀌었습니다.
+
 #### 0.13 정보
 - MVVM 모듈의 셀렉터블 API제거 ActiveController와 긴밀하게 동작하도록 디자인
 - MVVM 모듈의 파셜 API를 Template와 긴밀하게 동작하도록 디자인
 - 기능이 많고 사용하기 어려운 ViewController모듈이 제거되었고 경량화된 FormController모듈이 새로 만들어졌습니다.
 - TimeCounter 모듈이 추가되었습니다.
-
-#### 0.11 정보
-- 사용법 단순화를 위한 API디자인과, IE9 호환성 작업 및 성능최적화 작업이 주로 이루어질 예정입니다.
-- IE, Firefox 호환성 증가
