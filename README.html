@@ -204,9 +204,9 @@
 <p><code>
 Script
 </code>javascript
-        <em>Template(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
-        </em>Template(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
-        _Template(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
+        <em>NFTemplate(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
+        </em>NFTemplate(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
+        _NFTemplate(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
 <code>
 Result
 </code>html
@@ -222,91 +222,90 @@ Result
 <h4>Partial template node</h4>
 
 <p>Tag
-```html
-        <!-- Container -->
-        <section id="figure-group"></section></p>
-
-<pre><code>    &lt;!-- Template --&gt;
-    &lt;template id="figure-item"&gt;
-        &lt;figure&gt;
-            &lt;img node-src="image"&gt;
-            &lt;figcaption&gt;
-                &lt;a node-href="link" node-value="title"&gt;&lt;/a&gt;
-                &lt;input type="text" node-value="index"&gt;
-            &lt;/figcaption&gt;
-        &lt;/figure&gt;
-    &lt;/template&gt;
-</code></pre>
-
-<p><code>
 Script
-</code>javascript
-        var temp = _Template(&ldquo;#figure-item&rdquo;,false);</p>
-
-<pre><code>    temp.generateTo("#figure-group",{
-        "image":"somewhere.png",
-        "link" :"#someplace",
-        "title":"awesome",
-        "index":"100"
-    });
-    temp.generateTo("#figure-group",{
-        "image":"somewhere2.png",
-        "link" :"#someplace2",
-        "title":"great",
-        "index":"101"
-    });
-</code></pre>
-
-<p><code>
+<code>javascript
+        var temp = _NFTemplate(
+            '&lt;figure&gt;\
+                &lt;img node-src="image"&gt;\
+                &lt;figcaption&gt;\
+                    &lt;a node-href="link" node-value="title"&gt;&lt;/a&gt;\
+                    &lt;input type="text" node-value="index"&gt;\
+                &lt;/figcaption&gt;\
+            &lt;/figure&gt;',false
+        );
+        //1
+        temp.generate("#figure-group",{
+            "image":"somewhere.png",
+            "link" :"#someplace",
+            "title":"awesome",
+            "index":"100"
+        });
+        //2
+        temp.generate("#figure-group",{
+            "image":"somewhere2.png",
+            "link" :"#someplace2",
+            "title":"great",
+            "index":"101"
+        });
+</code>
 Result
-</code>html
-    <section id="figure-group">
-        <figure>
-            <img src="somewhere.png">
-            <figcaption>
-                <a href="#someplace">awesome</a>
-                <input type="text" value="100">
-            </figcaption>
-        </figure>
-        <figure>
-            <img src="somewhere2.png">
-            <figcaption>
-                <a href="#someplace2">great</a>
-                <input type="text" value="101">
-            </figcaption>
-        </figure>
-    </section>
-```</p>
+<code>html
+    &lt;!-- 1 --&gt;
+    &lt;figure&gt;
+        &lt;img src="somewhere.png"&gt;
+        &lt;figcaption&gt;
+            &lt;a href="#someplace"&gt;awesome&lt;/a&gt;
+            &lt;input type="text" value="100"&gt;
+        &lt;/figcaption&gt;
+    &lt;/figure&gt;
+    &lt;!-- 2 --&gt;
+    &lt;figure&gt;
+        &lt;img src="somewhere2.png"&gt;
+        &lt;figcaption&gt;
+            &lt;a href="#someplace2"&gt;great&lt;/a&gt;
+            &lt;input type="text" value="101"&gt;
+        &lt;/figcaption&gt;
+    &lt;/figure&gt;
+</code></p>
 
 <p><a name="showcase-template-04"/></p>
 
 <h4>템플릿 안에 노드를 파셜하기</h4>
 
-<p>```html
-    <!-- container -->
-    <div id="container"></div></p>
-
-<pre><code>&lt;!-- template --&gt;
-&lt;template id="part"&gt;
-    &lt;ul node-append="list"&gt;&lt;/ul&gt;
-&lt;/template&gt;
-</code></pre>
-
-<p><code>
-</code>javascript
-    _Template(&ldquo;#part&rdquo;,{
-        &ldquo;list&rdquo;:[MAKE(&ldquo;li.item::item1&rdquo;),MAKE(&ldquo;li.item::item2&rdquo;)]
-    }).appendTo(&ldquo;#container&rdquo;);
-<code>
+<p><code>javascript
+    //1
+    _NFTemplate('&lt;ul node-append="list"&gt;&lt;li&gt;hello&lt;/li&gt;&lt;/ul&gt;',{
+        "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
+    });
+    //2
+    _NFTemplate('&lt;ul node-prepend="list"&gt;&lt;li&gt;hello&lt;/li&gt;&lt;/ul&gt;',{
+        "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
+    });
+    //3
+    _NFTemplate('&lt;ul node-put="list"&gt;&lt;li&gt;hello&lt;/li&gt;&lt;/ul&gt;',{
+        "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
+    });
+</code>
 Result
-</code>html
-    <div id="container">
-        <ul>
-            <li class="item">item1</li>
-            <li class="item">item2</li>
-        </ul>
-    </div>
-```</p>
+<code>html
+    &lt;!-- 1 --&gt;
+    &lt;ul&gt;
+        &lt;li&gt;hello&lt;/li&gt;
+        &lt;li class="item"&gt;item1&lt;/li&gt;
+        &lt;li class="item"&gt;item2&lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;!-- 2 --&gt;
+    &lt;ul&gt;
+        &lt;li class="item"&gt;item1&lt;/li&gt;
+        &lt;li class="item"&gt;item2&lt;/li&gt;
+        &lt;li&gt;hello&lt;/li&gt;
+    &lt;/ul&gt;
+    &lt;!-- 3 --&gt;
+    &lt;ul&gt;
+        &lt;li class="item"&gt;item1&lt;/li&gt;
+        &lt;li class="item"&gt;item2&lt;/li&gt;
+    &lt;/ul&gt;
+</code></p>
 
 <p><a name="showcase-mvvm"/></p>
 
@@ -331,10 +330,10 @@ Result
     ];</p>
 
 <pre><code>// Presentation object
-var dataContext = _DataContext(data);
+var dataContext = _NFDataContext(data);
 
 // Draw model
-var viewModel = _ViewModel(
+var viewModel = _NFViewModel(
 //depth1
 function(){
     return this.placeholder("ul.top");
@@ -345,7 +344,7 @@ function(){
 });
 
 // View controller
-var viewController = _DataContextViewController("#container",dataContext,viewModel);
+var viewController = _NFDataContextViewController("#container",dataContext,viewModel);
 viewController.needDisplay(); // draw view start
 
 //Get data
@@ -368,59 +367,58 @@ Result
 
 <h4>With template</h4>
 
-<p>```html
-    <template id="table" hidden>
-        <table>
-            <thead>
-                <tr>
-                    <th>index</th>
-                    <th>value</th>
-                </tr>
-            </thead>
-            <tbody node-placeholder></tbody>
-        </table>
-    </template>
-    <template id="tbody-item">
-        <tr>
-            <td node-value="index"></td>
-            <td node-value="value"></td>
-        </tr>
-    </template></p>
-
-<p><code>
-</code>javascript
-        var dataContext = <em>DataContext(data);
-        var viewModel = </em>ViewModel(&ldquo;template#table&rdquo;,&ldquo;template#tbody-item&rdquo;);
-        var viewController = _DataContextViewController(&ldquo;#container&rdquo;,dataContext,viewModel);
+<p><code>html
+    &lt;template id="table" hidden&gt;
+        &lt;table&gt;
+            &lt;thead&gt;
+                &lt;tr&gt;
+                    &lt;th&gt;index&lt;/th&gt;
+                    &lt;th&gt;value&lt;/th&gt;
+                &lt;/tr&gt;
+            &lt;/thead&gt;
+            &lt;tbody node-placeholder&gt;&lt;/tbody&gt;
+        &lt;/table&gt;
+    &lt;/template&gt;
+    &lt;template id="tbody-item"&gt;
+        &lt;tr&gt;
+            &lt;td node-value="index"&gt;&lt;/td&gt;
+            &lt;td node-value="value"&gt;&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/template&gt;
+</code>
+<code>javascript
+        var dataContext = _NFDataContext(data);
+        var viewModel = _NFViewModel("template#table","template#tbody-item");
+        var viewController = _NFDataContextViewController("#container",dataContext,viewModel);
         viewController.needDisplay();
-<code>
+</code>
 Result
-</code>html
-    <section id="container">
-        <table>
-            <thead>
-                <tr>
-                    <th>index</th>
-                    <th>value</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>one</td>
-                </tr>
-                <tr>
-                    <td>2</td>
-                    <td>two</td>
-                </tr>
-                <tr>
-                    <td>3</td>
-                    <td>three</td>
-                </tr>
-            </tbody>
-        </table>
-    </section>
-```</p>
+<code>html
+    &lt;section id="container"&gt;
+        &lt;table&gt;
+            &lt;thead&gt;
+                &lt;tr&gt;
+                    &lt;th&gt;index&lt;/th&gt;
+                    &lt;th&gt;value&lt;/th&gt;
+                &lt;/tr&gt;
+            &lt;/thead&gt;
+            &lt;tbody&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;1&lt;/td&gt;
+                    &lt;td&gt;one&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;2&lt;/td&gt;
+                    &lt;td&gt;two&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;3&lt;/td&gt;
+                    &lt;td&gt;three&lt;/td&gt;
+                &lt;/tr&gt;
+            &lt;/tbody&gt;
+        &lt;/table&gt;
+    &lt;/section&gt;
+</code></p>
 
 <p><a name="showcase-enumerate"/></p>
 
@@ -492,8 +490,7 @@ Result
 
 <h4>Object each</h4>
 
-<p><em>Array와 마찬가지로 </em>Object도 동일하게 동작하도록 하는게 원칙입니다.
-```javascript
+<p>```javascript
         PROPEACH({1:2,2:3,4:5},function(value,key){
             console.log(key+value);
         });</p>
@@ -571,9 +568,9 @@ Result
 
 <p>바이트사이즈를 출력할수 있다.
 <code>javascript
-        _String("McDonald's").getByteSize(); //=&gt; 10
-        _String("맥도널드").getByteSize(); //=&gt;8
-        _String("マクドナルド").getByteSize(); //=&gt;12
+        _NFString("McDonald's").getByteSize(); //=&gt; 10
+        _NFString("맥도널드").getByteSize(); //=&gt;8
+        _NFString("マクドナルド").getByteSize(); //=&gt;12
 </code></p>
 
 <p><a name="showcase-string-02"/></p>
@@ -582,9 +579,9 @@ Result
 
 <p>class attribute 같은 string의 추가제거에 사용가능하다.
 <code>javascript
-        _String("McDonald's").addModel("good").get(); //=&gt;"McDonald's good"
-        _String("McDonald's").removeModel("Mc").get(); //=&gt;"McDonald's"
-        _String("McDonald's").removeModel("McDonald's").get(); //=&gt;""
+        _NFString("McDonald's").addModel("good").get(); //=&gt;"McDonald's good"
+        _NFString("McDonald's").removeModel("Mc").get(); //=&gt;"McDonald's"
+        _NFString("McDonald's").removeModel("McDonald's").get(); //=&gt;""
 </code></p>
 
 <p><a name="showcase-zstring"/></p>
@@ -662,14 +659,14 @@ Result
 
 <p>Nody는 글자사이의 숫자를 인식한다. 내부적으로 숫자를 글자로 취급한다.
 ```javascript
-        <em>Number(3000).getNumber(); //=> &ldquo;3000&rdquo;
-        </em>Number(3000).getDecimal(); //=> &ldquo;3,000&rdquo;
-        <em>Number(&ldquo;halfby $3000 dance&rdquo;).number(); //=> 3000
-        </em>Number(&ldquo;halfby $3000 dance&rdquo;).getNumber(); //=> &ldquo;3000&rdquo;
-        <em>Number(&ldquo;halfby $3000 dance&rdquo;).getDecimal(); //=> &ldquo;3,000&rdquo;
-        </em>Number(&ldquo;halfby $3000 dance&rdquo;).getPrefix(); //=> &ldquo;halfby $&rdquo;
-        <em>Number(&ldquo;halfby $3000 dance&rdquo;).getSuffix(); //=> &ldquo; dance&rdquo;
-        </em>Number(&ldquo;hello world&rdquo;).number(); // => 0</p>
+        <em>NFNumber(3000).getNumber(); //=> &ldquo;3000&rdquo;
+        </em>NFNumber(3000).getDecimal(); //=> &ldquo;3,000&rdquo;
+        <em>NFNumber(&ldquo;halfby $3000 dance&rdquo;).number(); //=> 3000
+        </em>NFNumber(&ldquo;halfby $3000 dance&rdquo;).getNumber(); //=> &ldquo;3000&rdquo;
+        <em>NFNumber(&ldquo;halfby $3000 dance&rdquo;).getDecimal(); //=> &ldquo;3,000&rdquo;
+        </em>NFNumber(&ldquo;halfby $3000 dance&rdquo;).getPrefix(); //=> &ldquo;halfby $&rdquo;
+        <em>NFNumber(&ldquo;halfby $3000 dance&rdquo;).getSuffix(); //=> &ldquo; dance&rdquo;
+        </em>NFNumber(&ldquo;hello world&rdquo;).number(); // => 0</p>
 
 <p>```</p>
 
@@ -761,6 +758,13 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 
 <h2>Version info</h2>
 
+<h4>0.20 정보</h4>
+
+<ul>
+<li>모든 기본 모듈은 &lsquo;NF&rsquo; Prefix가 붙도록 디자인이 바뀌었습니다.</li>
+</ul>
+
+
 <h4>0.13 정보</h4>
 
 <ul>
@@ -768,13 +772,5 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 <li>MVVM 모듈의 파셜 API를 Template와 긴밀하게 동작하도록 디자인</li>
 <li>기능이 많고 사용하기 어려운 ViewController모듈이 제거되었고 경량화된 FormController모듈이 새로 만들어졌습니다.</li>
 <li>TimeCounter 모듈이 추가되었습니다.</li>
-</ul>
-
-
-<h4>0.11 정보</h4>
-
-<ul>
-<li>사용법 단순화를 위한 API디자인과, IE9 호환성 작업 및 성능최적화 작업이 주로 이루어질 예정입니다.</li>
-<li>IE, Firefox 호환성 증가</li>
 </ul>
 
