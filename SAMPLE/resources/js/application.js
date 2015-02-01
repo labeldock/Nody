@@ -1,16 +1,16 @@
 
-var GNBNFHTMLLoader = new NFHTMLLoader("main",function(){	
+var GNBNFContentLoader = new NFContentLoader("main",function(){	
 	//active event controller
 	return this.needActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
-		return GNBNFHTMLLoader.active((this.textContent || this.innerText).toLowerCase());
+		return GNBNFContentLoader.active((this.textContent || this.innerText).toLowerCase());
 	},2).makeAccessProperty(function(accessData,node){
 		//navigation data
 		var name = (node.textContent || node.innerText).toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
 	});
 });
-var gnb = GNBNFHTMLLoader;
+var gnb = GNBNFContentLoader;
 var appearLoad = function(){
 	/*linehide*/
 	var css3Transform = function(query,value){
@@ -59,8 +59,8 @@ var appearOpen = function(){
 	)
 };
 
-GNBNFHTMLLoader.whenLoad("appear",function(){
-	FIND(".code-block-1 code",ELVALUE,CODE(ZFIND(".read-block-1")));
+GNBNFContentLoader.whenLoad("appear",function(){
+	FIND(".code-block-1 code",ELVALUE,CODE(FIND(".read-block-1",0)));
 	CODEBLOCK(".code-block-1");
 	
 	FIND(".code-block-2 code",ELVALUE,CODE(appearOpen,appearLoad));
@@ -68,7 +68,7 @@ GNBNFHTMLLoader.whenLoad("appear",function(){
 	
 	appearLoad();
 })
-GNBNFHTMLLoader.whenActiveToggle("appear",function(){	
+GNBNFContentLoader.whenActiveToggle("appear",function(){	
 	appearOpen();
 },function(){
 	FIND(".appear-ready",DATAEACH,function(node,i){
@@ -76,7 +76,7 @@ GNBNFHTMLLoader.whenActiveToggle("appear",function(){
 	});
 	window.css3Transform(".gage-box-line-container","rotate(-100deg)");
 });
-GNBNFHTMLLoader.whenLoad("mvvm",function(){
+GNBNFContentLoader.whenLoad("mvvm",function(){
     var data = {"list":[
     	{title:"Section1",list:[{title:"Item1"},{title:"Item2"}]},
   		{title:"Section2",list:[{title:"Item4"},{title:"Item5"}]},
@@ -150,7 +150,7 @@ var viewModels = {
 	})
 }
 
-GNBNFHTMLLoader.whenLoad("viewmodel",function(){	
+GNBNFContentLoader.whenLoad("viewmodel",function(){	
 
 	var viewController = new NFPresentor("#view-display",viewNFDataContext);
 	
@@ -173,7 +173,7 @@ GNBNFHTMLLoader.whenLoad("viewmodel",function(){
 	});
 	
 });
-GNBNFHTMLLoader.whenLoad("selectbind",function(){
+GNBNFContentLoader.whenLoad("selectbind",function(){
 	// view model
 	var listNFViewModel = new NFViewModel(
 	function(){
@@ -220,7 +220,7 @@ GNBNFHTMLLoader.whenLoad("selectbind",function(){
 	});
 	
 });
-GNBNFHTMLLoader.whenLoad("multiselect",function(){
+GNBNFContentLoader.whenLoad("multiselect",function(){
 	var multiNFViewModel = new NFViewModel(function(){
 		return this.placeholder("div.row-fluid");
 	},function(){
@@ -244,7 +244,7 @@ GNBNFHTMLLoader.whenLoad("multiselect",function(){
 		});
 		
 		$("#replaceData-submit").click(function(){
-			var model = new Model("#replaceData").removeNothing();
+			var model = new NFModel("#replaceData").removeNothing();
 		
 			if(model.count()){
 				DATAEACH(DATAMAP(activeController.getActiveSelects(),function(node){
@@ -253,7 +253,7 @@ GNBNFHTMLLoader.whenLoad("multiselect",function(){
 					model.each(function(value,key){
 						managedItem.value(key,value);
 					});
-					_Form("#replaceData").empty();
+					_NFForm("#replaceData").empty();
 					activeController.inactiveAll();
 				});
 			}
@@ -264,7 +264,7 @@ GNBNFHTMLLoader.whenLoad("multiselect",function(){
 	
 });
 
-GNBNFHTMLLoader.whenLoad("scroll",function(){
+GNBNFContentLoader.whenLoad("scroll",function(){
 	var scrollBox    = new NFScrollBox("#scroll-box");
 	var calendarBox  = new NFScrollBox("#calendar-box");
 	var countDisplay = $("#calendar-box-count");
@@ -343,20 +343,20 @@ IMPORTNODE(
 );
 },
 function(){
-IMPORTNODE( ZFIND("template#test") );
+IMPORTNODE( FIND("template#test",0) );
 },
 function(){
 _NFTemplate("template#test").get();
 }
 ]
-GNBNFHTMLLoader.whenLoad("speedtest",function(){
+GNBNFContentLoader.whenLoad("speedtest",function(){
 	setTimeout(function(){
 		TIMES(testset.length,function(i){
 			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset[i]));
 			CODEBLOCK(".code-block-"+ i);
 		});
 		FIND(".code-block-template code",ELVALUE,CODE("template#test"));
-		CODEBLOCK(ZFIND(".code-block-template"));
+		CODEBLOCK(FIND(".code-block-template",0));
 	
 		ELON("#teststart","click",function(){
 			DATAEACH(testset,function(method,i){
@@ -393,14 +393,14 @@ function(){
 
 ]
 
-GNBNFHTMLLoader.whenLoad("speedtest2",function(){
+GNBNFContentLoader.whenLoad("speedtest2",function(){
 	setTimeout(function(){
 		TIMES(testset2.length,function(i){
 			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset2[i]));
 			CODEBLOCK(".code-block-"+ i);
 		});
 		FIND(".code-block-template code",ELVALUE,CODE("template#test"));
-		CODEBLOCK(ZFIND(".code-block-template"));
+		CODEBLOCK(FIND(".code-block-template",0));
 	
 		ELON("#teststart","click",function(){
 			DATAEACH(testset2,function(method,i){
@@ -414,7 +414,7 @@ GNBNFHTMLLoader.whenLoad("speedtest2",function(){
 	},500);
 });
 
-GNBNFHTMLLoader.whenLoad("canvas2d",function(){
+GNBNFContentLoader.whenLoad("canvas2d",function(){
 	var canvasArea = $("#canvas-area",this);
 	var canvasBackground = $("#canvas-background td",this);
 	_NFContext2D(100).drawCrossLine(2,0,0,0).needDraw().appendTo(canvasArea);
@@ -432,7 +432,7 @@ GNBNFHTMLLoader.whenLoad("canvas2d",function(){
 	
 });
 
-GNBNFHTMLLoader.whenLoad('formcontroller',function(){	
+GNBNFContentLoader.whenLoad('formcontroller',function(){	
 	
 	var plainNFFormController = new NFFormController('.plain-form-area',null,{
 		normal:function(){
@@ -447,7 +447,7 @@ GNBNFHTMLLoader.whenLoad('formcontroller',function(){
 			
 		}
 	});
-	var realNFFormController  = new NFFormController('.real-form-area',null,{
+	var realNFFormController  = new NFFormController('.real-form-area',{
 		normal:function(){
 			this.disabled(false);
 		},
@@ -475,12 +475,12 @@ GNBNFHTMLLoader.whenLoad('formcontroller',function(){
 	});
 	
 	$(".form-status-1").on('click',function(){
-		plainNFFormController.status('normal');
-		realNFFormController.status('normal');
+		plainNFFormController.statusTo('normal');
+		realNFFormController.statusTo('normal');
 	});
 	$(".form-status-2").on('click',function(){
-		plainNFFormController.status('disabled');
-		realNFFormController.status('disabled');
+		plainNFFormController.statusTo('disabled');
+		realNFFormController.statusTo('disabled');
 	});
 	
 	$('.getdata-action').on('click',function(){

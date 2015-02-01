@@ -628,7 +628,7 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ## Version info #
 #### 0.20 정보
 - 모든 기본 모듈은 'NF' Prefix가 붙도록 디자인이 바뀌었습니다.
-
+- ZFIND가 제거되었습니다. FIND('.some',0); 의 식으로 사용합니다.
 #### 0.13 정보
 - MVVM 모듈의 셀렉터블 API제거 ActiveController와 긴밀하게 동작하도록 디자인
 - MVVM 모듈의 파셜 API를 Template와 긴밀하게 동작하도록 디자인
