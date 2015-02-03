@@ -629,8 +629,8 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 #### 0.20 정보
 - 모든 기본 모듈은 'NF' Prefix가 붙도록 디자인이 바뀌었습니다.
 - ZFIND가 제거되었습니다. FIND('.some',0); 의 식으로 사용합니다.
-#### 0.13 정보
-- MVVM 모듈의 셀렉터블 API제거 ActiveController와 긴밀하게 동작하도록 디자인
-- MVVM 모듈의 파셜 API를 Template와 긴밀하게 동작하도록 디자인
-- 기능이 많고 사용하기 어려운 ViewController모듈이 제거되었고 경량화된 FormController모듈이 새로 만들어졌습니다.
-- TimeCounter 모듈이 추가되었습니다.
+- NFForm, NFFormController의 데이터 I/O API가 setFormData, getFormData로 변경되었습니다.
+- NFNumber 업데이트
+- 0.20.4 부터 ELVALUE에서 img값은 src속성을 참조하게 됩니다.
+- NFActiveController // 재사용성 강화 // willActive에서 취소 액션을 취할때 inactive Function이 실행되는 문제 수정
+- NFActiveControllerManager추가 NFActiveController를 서로 동기화하여 사용할 수 있음

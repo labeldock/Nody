@@ -7,7 +7,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.20.2",build = "1006";
+	var version = "0.20.4",build = "1010";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9", nodyCoreBuild = "74";
@@ -1915,14 +1915,16 @@
 			this.Source = i.prefix + (parseInt(i.integer) + parseFloat(i.floatValue)) + i.suffix;
 		},
 		// getter // setter
-		getInteger : function()  { return this.getNumberInfo(2); },
-		getFloat   : function()  { return this.getNumberInfo(3); },
-		getNumber  : function()  { return this.getNumberInfo(5); },
-		getPrefix  : function()  { return this.getNumberInfo(1); }, 
-		getSuffix  : function()  { return this.getNumberInfo(4); },
-		integer    : function() { var p = this.getInteger(); return typeof p === "string" ? p*1 : this;},
-		floatValue : function() { var p = this.getFloat();   return typeof p === "string" ? p*1 : this;},
-		number     : function() { var p = this.getNumber();  return typeof p === "string" ? p*1 : this;},
+		getInteger     : function()  { return this.getNumberInfo(2); },
+		getFloat       : function()  { return this.getNumberInfo(3); },
+		getFloatNumber : function()  { return this.getNumberInfo(3).replace(/^0\./,''); },
+		getNumber      : function()  { return this.getNumberInfo(5); },
+		getPrefix      : function()  { return this.getNumberInfo(1); }, 
+		getSuffix      : function()  { return this.getNumberInfo(4); },
+		integer        : function() { return this.getInteger()*1;},
+		floatNumber    : function() { return this.getFloatNumber()*1;},
+		floatValue     : function() { return this.getFloat()*1;},
+		number         : function() { return this.getNumber()* 1;},
 		// already not support minus
 		getTrunc : function(s) { var n = this.number(); return isNaN(s) ? (Math[n > 0 ? "floor" : "ceil"](n)) : (Math[n > 0 ? "floor" : "ceil"](n * Math.pow(0.1,parseInt(s))) * Math.pow(10,parseInt(s))); },
 		trunc    : function(s){ this.setNumberInfo( this.getTrunc(s) , 5 ); return this; },
@@ -3534,6 +3536,16 @@
 			node     = DATAZERO(nodes);
 			nodeName = node.tagName.toLowerCase();
 			switch(nodeName){
+				case "img":
+					if(arguments.length < 3) {
+						//get
+						return node.src;
+					} else {
+						//set
+						node.src = '';
+						return node;
+					}
+					break;
 				case "input": case "option": case "textarea":
 					//get
 					if(nodeName == "option"){
@@ -3543,8 +3555,6 @@
 					} else {
 						if(typeof value === "undefined") return node.value;
 					}
-				
-				
 					//set
 					var setVal = value+"";
 			
@@ -4508,6 +4518,17 @@
 				console.warn("Frame::checkin set data를 object형으로 넣어주세요");
 			}
 			return this;
+		},
+		//checkin, checkout이 의미가 모호한것 같아 새로 API추가
+		clearFormData:function(){
+			return this.empty();
+		},
+		setFormData:function(hashMap,v2){
+			return this.checkin(hashMap,v2);
+		},
+		getFormData:function(key){
+			if(typeof key === 'string') return this.checkout()[key];
+			return this.checkout();
 		}
 	},function(context,selectRule,filter){
 		this.Source = FIND(context,0);
@@ -4608,10 +4629,10 @@
 			if(typeof name === 'string') 
 				this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this.FormHelper);
 		},
-		setData:function(data,v2){
+		setFormData:function(data,v2){
 			return this.FormHelper.checkin(data,v2);
 		},
-		getData:function(){
+		getFormData:function(){
 			return this.FormHelper.checkout();
 		}
 	},function(context,statusProp){
@@ -4619,6 +4640,7 @@
 		if(this.view){
 			this.FormHelper = _NFForm(this.view);
 			this._super(false,true);
+			
 			var _ = this;
 			PROPEACH(statusProp,function(method,name){
 				_.whenDidActive(name,method);
@@ -4702,20 +4724,6 @@
 	
 	// 컨텍스트 컨트롤러
 	makeModule("NFContexts",{
-		setContexts : function(contextsOrder,selectsOrder,targetsOrder) {
-			this.initCall[0] = contextsOrder;
-			if(selectsOrder)this.setSelects(selectsOrder,targetsOrder);
-			return this;
-		},
-		setSelects : function(selectsOrder,targetsOrder){
-			this.initCall[1] = selectsOrder;
-			if(targetsOrder)this.setTargets(targetsOrder);
-			return this;
-		},
-		setTargets : function(targetsOrder){
-			this.initCall[2] = targetsOrder;
-			return this;
-		},
 		getContexts:function(){ 
 			return FIND(this.initCall[0]); 
 		},
@@ -4901,14 +4909,14 @@
 			//! api change devel
 			this.__cacheSelects = this.getSelects();
 			if(typeof index === 'number') this.setActiveIndexes(new NFArray(this.getActiveIndexes()).add(index),withEvent);
-			this.__cacheSelects = undefined;
+			delete this.__cacheSelects;
 			return this;
 		},
 		shouldInactive:function(index,withEvent){
 			//! api change devel
 			this.__cacheSelects = this.getSelects();
 			if(typeof index === 'number') this.setActiveIndexes(new NFArray(this.getActiveIndexes()).remove(index),withEvent);
-			this.__cacheSelects = undefined;
+			delete  this.__cacheSelects;
 			return this;
 		},
 		getActiveSelects:function(){
@@ -4926,6 +4934,19 @@
 		inactiveAll:function(withEvent){
 			this.setActiveIndexes([],withEvent);
 			return this;
+		},
+		resetActiveTargetWithContexts:function(con,sel,pool){	
+			var selects = this.getActiveIndexes();
+			CALL(pool);
+			this.initCall[0] = con || this.initCall[0];
+			this.initCall[1] = sel || this.initCall[1];
+			if(selects.length) this.setActiveIndexes(selects,false);
+		},
+		resetActiveTarget:function(sel){
+			this.resetActiveTargetWithContexts(undefined,sel);
+		},
+		resetActiveTargetWithPool:function(sel,pool){
+			this.resetActiveTargetWithContexts(undefined,sel,pool);
 		},
 		makeAccessProperty:function(method){
 			if(typeof method !== "function") return {};
@@ -4948,7 +4969,7 @@
 			if(_.preventDefault) e.preventDefault();
 			
 			//액티브가 실행될시
-			if( CALL(_.ContextsEvents.willActive,this,e,i) == false ) return;
+			if( CALL(_.ContextsEvents.willActive,this,e,i) === false ) return false;
 			//자동으로 액티브 실행
 			if(_.allowAutoActive) {
 				//이미 액티브 된 상태의 아이템의 경우 
@@ -4997,6 +5018,74 @@
 		//shouldActiveSet
 		if(typeof shouldActiveIndex === "function") shouldActiveIndex = shouldActiveIndex.call(this);
 		if(typeof shouldActiveIndex === "number") this.shouldActive(shouldActiveIndex,1);
+	});
+	
+	
+	makeModule('NFActiveControllerManager',{
+		syncActiveController:function(activeController){
+			this.Source.push(activeController);
+			var _ = this;
+			activeController.whenWillActive(
+				function(i){ 
+					var who=this; 
+					return CALL(_.ContextsEvents.willActive,who,i); 
+				}
+			);
+			activeController.whenDidActive(
+				function(i){ 
+					var who=this; 
+					_NFArray(_.Source).remove(activeController).each(function(ac){ ac.setActiveIndexes( activeController.getActiveIndexes() , false ); });
+					return CALL(_.ContextsEvents.didActive,who,i);
+				}
+			);
+			activeController.whenDidInactive(
+				function(i){
+					_NFArray(_.Source).remove(activeController).each(function(ac){ ac.setActiveIndexes( activeController.getActiveIndexes() , false ); });
+					var who=this; 
+					return CALL(_.ContextsEvents.didInactive,who,i);
+				}
+			);
+			activeController.whenWillChange(
+				function(){ 
+					var who=this; 
+					return CALL(_.ContextsEvents.willChange,who);
+				}
+			);
+			activeController.whenDidChange(
+				function(i){ 
+					var who=this; 
+					_NFArray(_.Source).remove(activeController).each(function(ac){ ac.setActiveIndexes( activeController.getActiveIndexes() , false ); });
+					return CALL(_.ContextsEvents.didChange,who,i);
+				}
+			);
+			activeController.whenActiveStart(
+				function(i){ 
+					var who=this;
+					return CALL(_.ContextsEvents.activeStart,who,i);
+				}
+			);
+			activeController.whenActiveEnd(
+				function(i){ 
+					var who=this;
+					return CALL(_.ContextsEvents.activeEnd,who,i);
+				}
+			);
+			return activeController;
+		},
+		makeActiveController:function(){
+			return this.syncActiveController(_NFActiveController.apply(NFActiveController,Array.prototype.slice.call(arguments)));
+		},
+		whenWillActive:function(method){ this.ContextsEvents.willActive = method; return this; },
+		whenDidActive:function(method){ this.ContextsEvents.didActive = method; return this;},
+		whenDidInactive:function(method){ this.ContextsEvents.didInactive = method; return this; },
+		whenWillChange:function(method){ this.ContextsEvents.willChange = method; return this;},
+		whenDidChange:function(method){ this.ContextsEvents.didChange = method; return this;},
+		whenActiveToggle:function(am,im){ this.whenDidActive(am); return this.whenDidInactive(im); },
+		whenActiveStart:function(method){ this.ContextsEvents.activeStart = method; return this; },
+		whenActiveEnd:function(method){this.ContextsEvents.activeEnd = method; return this;}
+	},function(controller){ 
+		this.ContextsEvents = {};
+		this.Source = []; 
 	});
 	
 	// Model은 순수 데이터 모델에 접근하기 위해 사용합니다.
@@ -5336,17 +5425,17 @@
 	});
 	
 	
-	makeModule("NFLoadContainerBase",{
+	makeModule("NFContentLoaderBase",{
 		"+_ActiveController":undefined,
 		getActiveController:function(){ return this._ActiveController; },
 		_setEvent:function(eventType,eventName,method){
 			var _ = this;
 			DATAEACH(eventName,function(eventName){
 				if(eventName == "!global"){
-					if(typeof method === "function") _.NFLoadContainerBaseEvents[eventType] = method;
+					if(typeof method === "function") _.NFContentLoaderBaseEvents[eventType] = method;
 				} else {
 					if((typeof eventName === "string") && (typeof method === "function")) 
-					return  _.NFLoadContainerBaseEvents[eventType][eventName] = method;
+					return  _.NFContentLoaderBaseEvents[eventType][eventName] = method;
 				}
 			});
 		},
@@ -5378,26 +5467,26 @@
 			this.whenActive(eventName,openMethod);
 			this.whenInactive(eventName,disappearMethod);
 		},
-		getActiveContainerName:function(){
+		getNameOfActive:function(){
 			return this.ContainerActiveKeys.join(" ");
 		},
-		getActiveContainerURL:function(){
+		getURLOfActive:function(){
 			return this.Source[this.ContainerActiveKeys.last()];
 		},
 		_triggingActiveEvents:function(container,activeName,containerEvent,userArgs){
 			// 로드가 완료되었을때
 			if( containerEvent.match("load")) {
-				APPLY(this.NFLoadContainerBaseEvents.AnyLoadEvent,container,userArgs);
-				APPLY(this.NFLoadContainerBaseEvents.ContainerLoadEvents[activeName],container,userArgs);
+				APPLY(this.NFContentLoaderBaseEvents.AnyLoadEvent,container,userArgs);
+				APPLY(this.NFContentLoaderBaseEvents.ContainerLoadEvents[activeName],container,userArgs);
 			}
 			if( containerEvent.match("active")) {
-				APPLY(this.NFLoadContainerBaseEvents.AnyActiveEvent,container,userArgs);
-				APPLY(this.NFLoadContainerBaseEvents.ContainerOpenEvents[activeName],container,userArgs);
+				APPLY(this.NFContentLoaderBaseEvents.AnyActiveEvent,container,userArgs);
+				APPLY(this.NFContentLoaderBaseEvents.ContainerOpenEvents[activeName],container,userArgs);
 			}
 		},
 		_triggingInactiveEvents:function(container,inactiveName){
-			APPLY(this.NFLoadContainerBaseEvents.AnyInactiveEvent,container);
-			APPLY(this.NFLoadContainerBaseEvents.ContainerInactiveEvents[inactiveName],container);
+			APPLY(this.NFContentLoaderBaseEvents.AnyInactiveEvent,container);
+			APPLY(this.NFContentLoaderBaseEvents.ContainerInactiveEvents[inactiveName],container);
 		},
 		loadHTML:function(loadKey,loadPath,success,error){
 			var _ = this;
@@ -5415,7 +5504,7 @@
 							CALL(success,_,loadKey,doms);
 						},
 						"error":function(){
-							console.error("NFLoadContainerBase::URL링크에서 데이트럴 찾지 못했습니다"+loadPath);
+							console.error("NFContentLoaderBase::URL링크에서 데이트럴 찾지 못했습니다"+loadPath);
 							CALL(error,_,loadKey);
 						}
 					});
@@ -5424,7 +5513,7 @@
 					//엘리먼트 배열로 들어올경우
 					var doms = FIND(loadPath);
 					if( doms.length < 1 ){
-						console.error("NFLoadContainerBase::불러올 엘리먼트가 존재하지 않습니다."+loadPath);
+						console.error("NFContentLoaderBase::불러올 엘리먼트가 존재하지 않습니다."+loadPath);
 						CALL(error,_,loadKey);
 					} else {
 						_.saveContainerContents(doms,loadKey);
@@ -5432,7 +5521,7 @@
 					}
 					break;
 				default :
-					console.log("NFLoadContainerBase::올바르지 않은 loadPath =>",loadPath,loadKey);
+					console.log("NFContentLoaderBase::올바르지 않은 loadPath =>",loadPath,loadKey);
 					CALL(error,_,loadKey);
 					return false;
 					break;
@@ -5458,6 +5547,9 @@
 		needActiveController:function(){
 			this._ActiveController = APPLY(_NFActiveController,undefined,arguments);
 			return this._ActiveController;
+		},
+		currentActiveController:function(){
+			return this._ActiveController;
 		}
 	},function(baseParam,setupMethod){
 		this.Source = {};
@@ -5466,7 +5558,7 @@
 		this.ContainerActiveKeys  = new NFArray();
 		
 		// 로드될때 이벤트입니다.
-		this.NFLoadContainerBaseEvents = {
+		this.NFContentLoaderBaseEvents = {
 			"AnyLoadEvent":undefined,
 			"AnyActiveEvent":undefined,
 			"AnyInactiveEvent":undefined,
@@ -5504,7 +5596,7 @@
 		});
 	});
 	
-	extendModule("NFLoadContainerBase","NFMultiContentLoader",{
+	extendModule("NFContentLoaderBase","NFMultiContentLoader",{
 		loadWithProperty:function(loadset,success){
 			//lo
 			if(typeof loadset !== "object") return console.error("loadAll이 중지되었습니다.");
@@ -5570,7 +5662,7 @@
 		});
 	});
 	
-	extendModule("NFLoadContainerBase","NFContentLoader",{
+	extendModule("NFContentLoaderBase","NFContentLoader",{
 		_inactiveActivatedContents:function(removeInPlaceholder){
 			var _ = this;
 			this.ContainerActiveKeys.each(function(activatedKey){

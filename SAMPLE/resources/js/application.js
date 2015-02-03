@@ -330,17 +330,16 @@ function(){
 CLONENODES(somenode)[0];
 },
 function(){
-IMPORTNODE( 
-	MAKETEMP(
-		TAG("div#one.two.three",
-			TAG("ul.list",
-				TAG("li.item"),
-				TAG("li.item"),
-				TAG("li.item")
-			)
-		)  
-	) 
-);
+var data = [
+	{'class':'item','data-alias':'item'},
+	{'class':'item','data-alias':'item'},
+	{'class':'item','data-alias':'item'}
+];
+new NFTemplate(
+	"<div id='one' class='two three' node-put='items'></div>",
+	{items:data},
+	{items:function(data){ return DATAMAP(data,function(itemData){ return MAKE('li',itemData); }); }}
+)
 },
 function(){
 IMPORTNODE( FIND("template#test",0) );
@@ -460,18 +459,18 @@ GNBNFContentLoader.whenLoad('formcontroller',function(){
 	
 	$(".setdata-action-1").on('click',function(){
 		var data = JSON.parse($(".data-example-1").text())
-		plainNFFormController.setData(data);
-		realNFFormController.setData(data);
+		plainNFFormController.setFormData(data);
+		realNFFormController.setFormData(data);
 	});
 	$(".setdata-action-2").on('click',function(){
 		var data = JSON.parse($(".data-example-2").text())
-		plainNFFormController.setData(data);
-		realNFFormController.setData(data);
+		plainNFFormController.setFormData(data);
+		realNFFormController.setFormData(data);
 	});
 	$(".setdata-action-3").on('click',function(){
 		var data = JSON.parse($(".data-example-3").text())
-		plainNFFormController.setData(data);
-		realNFFormController.setData(data);
+		plainNFFormController.setFormData(data);
+		realNFFormController.setFormData(data);
 	});
 	
 	$(".form-status-1").on('click',function(){
@@ -484,7 +483,7 @@ GNBNFContentLoader.whenLoad('formcontroller',function(){
 	});
 	
 	$('.getdata-action').on('click',function(){
-		$('.getdata-veriant').text( JSON.stringify( realNFFormController.getData() ) );
+		$('.getdata-veriant').text( JSON.stringify( realNFFormController.getFormData() ) );
 	});
 	
 });
