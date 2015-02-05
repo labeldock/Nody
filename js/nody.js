@@ -7,7 +7,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.20.4",build = "1010";
+	var version = "0.20.5",build = "1016";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9", nodyCoreBuild = "74";
@@ -3211,7 +3211,7 @@
 				case "string": return DATAFILTER(finds,function(node){ return NUT.IS(node,find); }); break;
 				default      : return finds; break;
 			}
-		},2),
+		},1),
 		"FINDPARENTS":FUT.CONTINUTILITY(function(el){ return NUT.PARENTS(FINDCORE(el)[0]); }),
 		"FINDPARENT" :FUT.CONTINUTILITY(function(el,require){
 			var node = FINDCORE(el)[0];
@@ -3223,11 +3223,32 @@
 			} else {
 				return node.parentElement;
 			}
-		},2),
+		},1),
 		"IFRAMEDOCUMENT":function(iframe){
 			var iframe = FIND(iframe,0);
 			if(iframe.tagName == "IFRAME") return iframe.contentDocument || iframe.contentWindow.document;
 			if(ISDOCUMENT(iframe)) return iframe;
+		},
+		"FINDOFFSET" :function(node,target,debug){
+			var node = FIND(node,0);
+			if(node) {
+				var l=t=0,w=node.offsetWidth,h=node.offsetHeight;
+				target = FIND(target,0) || document.body;
+				do {
+					l += node.offsetLeft;
+					t += node.offsetTop;
+					if(debug === true)console.log(l,t,node,target);
+					if(!node.offsetParent) break;
+					if(node === target) break;
+					node = node.offsetParent;
+				} while(true);
+				var dualObject = [l,t,w,h];
+				dualObject.x = l;
+				dualObject.y = t;
+				dualObject.width  = w;
+				dualObject.height = h;
+				return dualObject;
+			}
 		}
 	});
 	FINDEL.eachGetter();
@@ -3619,7 +3640,7 @@
 					var r = t.tagName.toLowerCase();
 					var b;
 					b = ELATTR(t,"id");    if(b) r = r + "#"+b;
-					b = ELATTR(t,"class"); if(b) r = r + "."+b.split(" ").join(".");
+					b = ELATTR(t,"class"); if(b) r = r + "."+b.trim().split(" ").join(".");
 					b = ELATTR(t,"name");  if(b) r = r + "[name="+b+"]"
 					if( ((typeof sign === "undefined") && (withValue == true)) || ((sign == true) && (typeof withValue === "undefined")) ){
 						b = ELVALUE(t); if(!ISNOTHING(b)) r = r + ":" + b;
@@ -4625,6 +4646,9 @@
 	});
 	
 	extendModule("NFActiveStatus","NFFormController",{
+		isStatus:function(k){
+			return this.ActiveKeys.has(k);
+		},
 		statusTo:function(status){
 			if(typeof name === 'string') 
 				this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this.FormHelper);
@@ -4799,6 +4823,7 @@
 							}
 						});
 						if(eventCapture){
+							//이벤트를 다시 발생시킴
 							ELTRIGGER(eventCapture,e.type);
 							return false;
 						}
@@ -5022,7 +5047,34 @@
 	
 	
 	makeModule('NFActiveControllerManager',{
-		syncActiveController:function(activeController){
+		getActiveIndexes:function(sourceIndex){
+			var selectSource = this.Source[sourceIndex || (this.Source.length - 1) ];
+			if(selectSource) return selectSource.getActiveIndexes();return [];
+		},
+		setActiveIndexes:function(indexes,withEvent,sender){
+			_NFArray(this.Source).remove(sender).each(function(ac){ ac.setActiveIndexes( indexes, withEvent || false ); });
+			return this;
+		},
+		shouldInactive:function(index,withEvent,sender){
+			_NFArray(this.Source).remove(sender).each(function(ac){ ac.shouldInactive( index, withEvent || false ); });
+			return this;
+		},
+		shouldActive:function(index,withEvent,sender){
+			_NFArray(this.Source).remove(sender).each(function(ac){ ac.shouldActive( index, withEvent || false ); });
+			return this;
+		},
+		activeAll:function(withEvent, sourceIndex){
+			var lastSource = this.Source[ sourceIndex || (this.Source.length - 1) ];
+			if(lastSource) this.setActiveIndexes(DATAMAP(lastSource.getSelects(),function(n,i){
+				return i;
+			}),withEvent || true);
+			
+			return this;
+		},
+		inactiveAll:function(withEvent){
+			this.setActiveIndexes([],withEvent || true);
+		},
+		syncActiveController:function(activeController,syncPrevIndexes){
 			this.Source.push(activeController);
 			var _ = this;
 			activeController.whenWillActive(
@@ -5033,14 +5085,14 @@
 			);
 			activeController.whenDidActive(
 				function(i){ 
-					var who=this; 
-					_NFArray(_.Source).remove(activeController).each(function(ac){ ac.setActiveIndexes( activeController.getActiveIndexes() , false ); });
+					var who=this;
+					_.setActiveIndexes(activeController.getActiveIndexes(),false,activeController);
 					return CALL(_.ContextsEvents.didActive,who,i);
 				}
 			);
 			activeController.whenDidInactive(
 				function(i){
-					_NFArray(_.Source).remove(activeController).each(function(ac){ ac.setActiveIndexes( activeController.getActiveIndexes() , false ); });
+					_.setActiveIndexes(activeController.getActiveIndexes(),false,activeController);
 					var who=this; 
 					return CALL(_.ContextsEvents.didInactive,who,i);
 				}
@@ -5054,7 +5106,7 @@
 			activeController.whenDidChange(
 				function(i){ 
 					var who=this; 
-					_NFArray(_.Source).remove(activeController).each(function(ac){ ac.setActiveIndexes( activeController.getActiveIndexes() , false ); });
+					_.setActiveIndexes(activeController.getActiveIndexes(),false,activeController);
 					return CALL(_.ContextsEvents.didChange,who,i);
 				}
 			);
@@ -5070,6 +5122,11 @@
 					return CALL(_.ContextsEvents.activeEnd,who,i);
 				}
 			);
+			
+			if(syncPrevIndexes === true) {
+				var lastSource = this.Source[this.Source.length - 1];
+				if(lastSource) activeController.setActiveIndexes(lastSource.getActiveIndexes(),false);
+			}
 			return activeController;
 		},
 		makeActiveController:function(){
@@ -6316,13 +6373,15 @@
 			if(typeof data === "function") data = data();
 			if(typeof data === "object") {
 				this.context.feedDownManagedDataMake(data||{},this);
-				NFDataContextNotificationCenter.addChildData(this.BindID,this.Childrens.getLast());
+				var makedData = this.Childrens.getLast();
+				NFDataContextNotificationCenter.addChildData(this.BindID,makedData);
+				return makedData;
 			} else {
 				console.warn("addChildData :: append data가 들어오지 않았습니다", data);
 			}
 		},
 		addMemberData:function(data){
-			if(this.Parent) this.Parent.addChildData(data);
+			if(this.Parent) return this.Parent.addChildData(data);
 		}
 	},function(context,initData,dataType){
 		this.BindID     = 'ma'+NFUtil.base64UniqueRandom(8);
@@ -6531,11 +6590,18 @@
 			var topLevel       = this.managedData.getLevel();
 			var startDepth     = managedData.getLevel();
 			
+			//후가공
+			var renderPostpress = function(node,managedData,depth){
+				node.setAttribute('data-managed-id',managedData.BindID);
+				node.setAttribute('data-managed-depth',depth);
+			};
+			
 			if (sigleRenderMode == true) {
 				// 메니지드 데이터에 현재 스코프를 등록함
 				managedData.scope = viewController;
 				//slngleRenderMode의 관리는 매우 중요함 else문의 블럭과 동일하게 동작하도록 주의할것
 				var renderResult = viewController.viewModel.needRenderView(startDepth-topLevel,managedData,[],viewController);
+				renderPostpress(renderResult,managedData,startDepth-topLevel);
 				// 루트에 추가함
 				rootElement.appendChild(renderResult);
 				// 그린내역을 기록함
@@ -6555,6 +6621,7 @@
 					if (depth == startDepth) {
 						// 최상위 렌더링
 						renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[depth+1],viewController);
+						renderPostpress(renderResult,managedData,startDepth-topLevel);
 						//루트에 추가
 						rootElement.appendChild(renderResult);
 						//컨테이너에 추가
@@ -6563,6 +6630,7 @@
 					} else if (depth < lastFeed) {
 						// 렌더 피드가 올라감
 						var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[lastFeed],viewController);
+						renderPostpress(renderResult,managedData,startDepth-topLevel);
 						//컨테이너에 추가
 						if( viewController.placeholderNodes[managedData.BindID] ){ 
 							ELAPPEND(viewController.placeholderNodes[managedData.BindID],feedCollection[lastFeed])
@@ -6574,6 +6642,7 @@
 						// 최하위 피드모음
 						// 렌더 피드가 내려감
 						var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,[],viewController);
+						renderPostpress(renderResult,managedData,startDepth-topLevel);
 						feedCollection[depth].push(renderResult);
 					}
 					// 마지막 피드 depth를 기록함
@@ -6597,30 +6666,37 @@
 		needDisplayWithData:function(data){
 			this.setManagedData(data) ? this.needDisplay() : console.warn("데이터를 초기화하는데 실패하였습니다. 데이터의 형식이 잘못되었습니다.",data);
 		},
-		getManagedDataWithNode:function(node){
-			var managedData;
-			for(var key in this.structureNodes) {
-				if( this.structureNodes[key] ==  node ){
-					managedData = this.managedData.getManagedDataWithID(key);
-					break;
-				}
+		getManagedDataWithNode:function(node,strict){
+			if(strict === true) {
+				for(var key in this.structureNodes) if(this.structureNodes[key] === node) return this.managedData.getManagedDataWithID(key);
+			} else {
+				if( ELIS(node,'[data-managed-id]') ) return this.getManagedDataWithNode(node,true);
+				var parentNode = FINDPARENT(node,'[data-managed-id]');
+				if(parentNode) return this.getManagedDataWithNode(parentNode,true);
 			}
-			return managedData;
+		},
+		findWithBindID:function(bindID){
+			return this.structureNodes[bindID];
 		},
 		needActiveController:function(selectPath,allowSelect,allowMultiSelect,allowInactive,firstSelect){
-			var _  = this, __ = this.managedData;
-			selectPath = (typeof selectPath == 'string') ? selectPath : '/*';
-			return new NFActiveController(this.view,function(){
-				return DATAMAP(__.getManagedDatasWithPath(selectPath),function(managedData){
-					return _.structureNodes[managedData.BindID];
-				},DATAFILTER);
-				return dm;
-			},'click',function(e){
-				return CALL(allowSelect,this,e,_.getManagedDataWithNode(this));
-			},firstSelect,allowMultiSelect,allowInactive);
+			if(selectPath.indexOf('/')  >= 0) {
+				var _  = this, __ = this.managedData;
+				selectPath = (typeof selectPath == 'string') ? selectPath : '/*';
+				return new NFActiveController(this.view,function(){
+					return DATAMAP(__.getManagedDatasWithPath(selectPath),function(managedData){ return _.structureNodes[managedData.BindID]; },DATAFILTER);
+				},'click',function(e){
+					return CALL(allowSelect,this,e,_.getManagedDataWithNode(this));
+				},firstSelect,allowMultiSelect,allowInactive);
+			} else {
+				var _ = this;
+				return new NFActiveController(this.view,selectPath,'click',function(e){
+					return CALL(allowSelect,this,e,_.getManagedDataWithNode(this),_);
+				},firstSelect,allowMultiSelect,allowInactive);
+			}
 		},
 		//이벤트
 		whenDataDidChange:function(m){ if((typeof m === "function") || m == undefined) this.dataDidChange = m; },
+		
 		"+dataDidChange":undefined
 	},function(view,managedData,viewModel,needDisplay){
 		this.view = FIND(view,0);
@@ -6801,7 +6877,7 @@
 	makeModule("NFScrollBox",{
 		
 		needScrollingOffsetX:function(offset){
-			if(!this.allowScrollX || offset == 0) return false;
+			if(!this.allowScrollX || offset == 0 || (typeof offset !== 'number') ) return false;
 			var needTo = this.Source.scrollLeft + (-offset);
 			if (needTo < 0) { needTo = 0; }
 			if (needTo > this.Source.scrollWidth) needTo = this.Source.scrollWidth;
@@ -6813,7 +6889,7 @@
 			}
 		},
 		needScrollingOffsetY:function(offset){
-			if(!this.allowScrollY || offset == 0) return false;
+			if(!this.allowScrollY || offset == 0 || (typeof offset !== 'number') ) return false;
 			
 			var needTo = this.Source.scrollTop + (-offset);
 
@@ -6835,6 +6911,15 @@
 				return true;
 			}
 			return false;
+		},
+		needScrollingToX:function(needTo){
+			return this.needScrollingOffsetX( this.Source.scrollLeft - needTo );
+		},
+		needScrollingToY:function(needTo){
+			return this.needScrollingOffsetY( this.Source.scrollTop - needTo );
+		},
+		needScrollingTo:function(needX,needY){
+			return (this.needScrollingToX(needX),this.needScrollingToY(needY));
 		},
 		needScrollingPercentY:function(per){
 			if(typeof per === 'number'){
