@@ -626,11 +626,19 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ```
 <a name="version-info"/>
 ## Version info #
+#### 0.20.5 정보
+- FINDON,FINDPARENT 컨티뉴틸리티 규칙 변경
+- FINDOFFSET 추가
+- ELTRACE 클래스 인식 에러 수정
+- NFFormController isStatus 추가
+- NFActiveControllerManager 기능 대폭 향상 (아직 완전하지 않은 기능)
+- NFPresentor의 needActiveController를 노드 기준으로 가능하도록 지원
+- NFPresentor에서 렌더 결과에 데이터컨텍스트 정보 삽입
+- NFScrollBox에서 절대값 스크롤링 지원 추가
+
 #### 0.20 정보
 - 모든 기본 모듈은 'NF' Prefix가 붙도록 디자인이 바뀌었습니다.
 - ZFIND가 제거되었습니다. FIND('.some',0); 의 식으로 사용합니다.
 - NFForm, NFFormController의 데이터 I/O API가 setFormData, getFormData로 변경되었습니다.
 - NFNumber 업데이트
-- 0.20.4 부터 ELVALUE에서 img값은 src속성을 참조하게 됩니다.
-- NFActiveController // 재사용성 강화 // willActive에서 취소 액션을 취할때 inactive Function이 실행되는 문제 수정
-- NFActiveControllerManager추가 NFActiveController를 서로 동기화하여 사용할 수 있음
+- ELVALUE에서 img값은 src속성을 참조하게 됩니다.

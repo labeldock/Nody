@@ -540,6 +540,28 @@
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
+	"\/mixed-module\/mixed\/nody.mixed.js": {
+		"fileType": 64,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/nody.mixed.js",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/nody.mixed.min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 1,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 0
+		},
+	"\/mixed-module\/mixed\/nody.mixed.min.js": {
+		"fileType": 64,
+		"ignore": 1,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/mixed-module\/mixed\/nody.mixed.min.js",
+		"outputAbbreviatedPath": "\/mixed-module\/mixed\/min\/nody.mixed.min-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
 	"\/mixed-module\/mixed\/ol.css": {
 		"fileType": 16,
 		"ignore": 0,
@@ -625,6 +647,36 @@
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
+		},
+	"\/README.html": {
+		"fileType": 8192,
+		"ignore": 1,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/README.html",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/README.md": {
+		"enableFootnoteSupport": 0,
+		"enableSmartyPants": 1,
+		"expandTabs": 1,
+		"fileType": 4096,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/README.md",
+		"outputAbbreviatedPath": "\/README.html",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/SAMPLE\/delegate.html": {
+		"fileType": 8192,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/SAMPLE\/delegate.html",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
 		},
 	"\/SAMPLE\/map.html": {
 		"fileType": 8192,
@@ -806,6 +858,17 @@
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
+	"\/SAMPLE\/resources\/js\/application.js": {
+		"fileType": 64,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/application.js",
+		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/application-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 0
+		},
 	"\/SAMPLE\/resources\/js\/bootstrap-slider.js": {
 		"fileType": 64,
 		"ignore": 0,
@@ -856,6 +919,17 @@
 		"ignoreWasSetByUser": 0,
 		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/jquery-ui.touch-punch.min.js",
 		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/jquery-ui.touch-punch.min-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
+	"\/SAMPLE\/resources\/js\/min\/application-min.js": {
+		"fileType": 64,
+		"ignore": 1,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/application-min.js",
+		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/min\/application-min-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
@@ -968,6 +1042,15 @@
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"inputAbbreviatedPath": "\/SAMPLE\/subview\/multiselect.html",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/SAMPLE\/subview\/mvvm.html": {
+		"fileType": 8192,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/SAMPLE\/subview\/mvvm.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
