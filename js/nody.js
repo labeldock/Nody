@@ -7,7 +7,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.20.5",build = "1016";
+	var version = "0.20.7",build = "1024";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9", nodyCoreBuild = "74";
@@ -470,7 +470,7 @@
 		"ISNUMBERTEXT" : function (t) {return (typeof t === "number") ? true : ((typeof t === "string") ? (parseFloat(t)+"") == (t+"") : false );},
 		
 		"ISJQUERY"   : function(o){ return (typeof o === "object" && o !== null ) ? ("jquery" in o) ? true : false : false; },
-		"ISARRAY"    : function(a){ return (typeof a === "object" || typeof a === "function") ? ( a !== null && ((a instanceof Array || a instanceof NodeList || ISJQUERY(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) && !(a instanceof Window) ) ? true : false) : false; },
+		"ISARRAY"    : function(a){ return (typeof a === "object") ? ( a !== null && ((a instanceof Array || a instanceof NodeList || ISJQUERY(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) && !(a instanceof Window) ) ? true : false) : false; },
 		"ISEMAIL"    : function(t){ return TypeBase.ISTEXT(t) ? /^[\w]+\@[\w]+\.[\.\w]+/.test(t) : false;},
 		"ISASCII"    : function(t){ return TypeBase.ISTEXT(t) ? /^[\x00-\x7F]*$/.test(t)         : false;},
 		"ISTRUE"     : function(t){ return !!t ? true : false;},
@@ -641,9 +641,32 @@
 		},
 		//좌측으로 0을 붙임
 		"PADLEFT":function(nr,n,str){ return new Array(n-new String(nr).length+1).join(str||'0')+nr; },
+		// 참고! : human readable month
+		"ZDATE":function(dv,format,pad){
+			if(ISARRAY(dv)) dv = dv.join(' ');
+			
+			var dt = /(\d\d\d\d|)[^\d]?(\d\d|\d|).?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)/.exec(dv);
+			dt[1] = dt[1] || (((new Date()).getYear() + 1900) +'');
+			dt[2] = dt[2] || ((new Date()).getMonth()+1);
+			dt[3] = dt[3] || ((new Date()).getDate());
+			dt[4] = dt[4] || ("00");
+			dt[5] = dt[5] || ("00");
+			dt[6] = dt[6] || ("00");
+			
+			var r    = [ dt[1],dt[2],dt[3],dt[4],dt[5],dt[6],dt[0] ];
+			r.year   = dt[1],r.month  = dt[2],r.date = dt[3],r.hour = dt[4],r.minute = dt[5],r.second = dt[6],r.init = dt[7];
+			r.format = function(s){
+				return s.replace('YYYY',r.year).replace(/(MM|M)/,r.month).replace(/(DD|D)/,r.date)
+				.replace(/(hh|h)/,r.hour).replace(/(mm|m)/,r.minute).replace(/(ss|s)/,r.second)
+				.replace(/(A)/,(TONUMBER(r.hour) > 12) ? 'PM' : 'AM');
+			}
+			if(typeof format === 'string') 
+				return r.format(format);
+				return r;
+		},
 		//1:길이와 같이 2: 함수호출
-		"TIMES":function(l,f){ l=TONUMBER(l); for(var i=0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
-		"TIMESMAP":FUT.CONTINUTILITY(function(l,f){ l=TONUMBER(l); var r = []; for(var i=0;i<l;i++) r.push(f(i)); return r; },2),
+		"TIMES":function(l,f,s){ l=TONUMBER(l); for(var i=(typeof s === 'number')?s:0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
+		"TIMESMAP":FUT.CONTINUTILITY(function(l,f,s){ l=TONUMBER(l); var r = []; for(var i=(typeof s === 'number')?s:0;i<l;i++) r.push(f(i)); return r; },2),
 		//배열의 하나추출
 		"DATAZERO"   :function(t){ return typeof t === "object" ? typeof t[0] === "undefined" ? undefined : t[0] : t; },
 		//배열의 뒤
@@ -709,6 +732,11 @@
 		    return v;
 		},
 		"DATAINDEX":function(data,compare){ var v = TOARRAY(data); for(var i in v) if(compare == v[i]) return TONUMBER(i); },
+		//확률적으로 나옵니다. 0~1 true 가 나올 확률
+		"FLAGRANDOM":function(probabilityOfTrue){
+			if(typeof probabilityOfTrue !== 'number') probabilityOfTrue = 0.5;
+			return !!probabilityOfTrue && Math.random() <= probabilityOfTrue;
+		},
 		//i 값이 제귀합니다.
 		"REVERSEINDEX":function(index,maxIndex){ return (maxIndex-1) - index },
 		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
@@ -1328,6 +1356,20 @@
 		// undefined요소를 제거한다.
 		getCompact : function(){ return this.getFilter(function(a){ return a == undefined ? false : true; }); },
 		compact    : function(){ return this.setSource(this.getCompact());},
+		// time // 오버라이팅
+		getTimesmap : function(time,method,start,end){
+			var _ = this;
+			var length = _.length;
+			var result = this.clone();
+			var timef  = (typeof method === 'function') ? method : function(){return method;}
+			
+			TIMESMAP(time,function(i){
+				if( length <= i ) result.push( timef(_[i],i) ); else result[i] = timef(_[i],i);
+			},start,end);
+			
+			return result;
+		},
+		timesmap:function(time,method,start,end){ return this.setSource(this.getTimesmap(time,method,start,end)); },
 		// 파라메터 함수가 모두 true이면 true입니다.
 		passAll:function(passMethod) { for(var i=0,l=this.length;i<l;i++) if(passMethod(this[i],i) != true) return false; return true; },
 		// 하나라도 참이면 true입니다
@@ -2945,7 +2987,7 @@
 						var infoClass = tagInfo[key];
 						if(typeof nodeClass === "string"){
 							var hasNotClass = false;
-						
+							
 							nodeClass = nodeClass.split(" ");
 							infoClass = infoClass.split(" ");
 						
@@ -3557,15 +3599,19 @@
 			node     = DATAZERO(nodes);
 			nodeName = node.tagName.toLowerCase();
 			switch(nodeName){
-				case "img":
-					if(arguments.length < 3) {
-						//get
-						return node.src;
-					} else {
-						//set
-						node.src = '';
-						return node;
-					}
+				case "img": case "script":
+					//get
+					if(arguments.length < 2) return node.src;
+					//set
+					node.src = value;
+					return node;
+					break;
+				case "link":
+					//get
+					if(arguments.length < 2) return node.rel;
+					//set
+					node.rel = value;
+					return node;
 					break;
 				case "input": case "option": case "textarea":
 					//get
@@ -3851,16 +3897,20 @@
 					//mordern-style-name
 					var prefixedName = ENV.getCSSName(styleName);
 					//get
-					if(typeof value === "undefined") return ENV.supportComputedStyle ? window.getComputedStyle(target,null).getPropertyValue(prefixedName) : target.currentStyle[CAMEL(prefixedName)];
+					if(typeof value === "undefined") 
+						return ENV.supportComputedStyle ? window.getComputedStyle(target,null).getPropertyValue(prefixedName) : target.currentStyle[CAMEL(prefixedName)];
 					
 					//set
-					var prefixedValue = ENV.getCSSName(value);
 					var wasStyle = ELATTR(target,"style") || "";
-					
-					//set //with iefix
-					wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+"[^\;]+\;","g"),"");
-					
-					ELATTR(target,"style",prefixedName+":"+prefixedValue+";"+wasStyle);
+					if(value === null) {
+						wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+"(.?:.?|)[^\;]+\;","g"),function(s){console.log(s); return ''});
+						ELATTR(target,"style",wasStyle);
+					} else {
+						var prefixedValue = ENV.getCSSName(value);
+						//set //with iefix
+						wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+".?:.?[^\;]+\;","g"),"");
+						ELATTR(target,"style",prefixedName+":"+prefixedValue+";"+wasStyle);
+					}
 				}
 			}
 			return target;
@@ -4116,7 +4166,7 @@
 				return nodes;
 			}
 		},
-		"COORD":function(nodes,coordinate,insertAbsolute,offsetX,offsetY,scale){
+		"COORDS":function(nodes,coordinate,insertAbsolute,offsetX,offsetY,scale){
 			var findNode = FIND(nodes,0);
 			if(findNode && (typeof coordinate == "string")) {
 				scale = (typeof scale === 'number') ? scale : 1;
@@ -4139,7 +4189,15 @@
 					}
 					ELSTYLE(findNode,styleName,styleValue+"px");
 				});
-				if(insertAbsolute === true) ELSTYLE(findNode,'position','absolute');
+				switch(insertAbsolute) {
+					case true :
+					case 'absolute':
+						ELSTYLE(findNode,'position','absolute');
+						break;
+					case 'relative':
+						ELSTYLE(findNode,'position','relative');
+						break;
+				}
 			}
 			return nodes;
 		}
@@ -4361,16 +4419,16 @@
 			return this;
 		},
 		//
-		setNodeValue:function(refData,dataFilter){
+		setNodeData:function(refData,dataFilter){
 			if(!this.TemplatePartials) this.TemplatePartials = {};
 			
 			
-			if(typeof refData !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다"); }
+			if(typeof refData !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다",refData); }
 			var _ = this,data = CLONEOBJECT(refData),dataPointer = this.TemplatePartials;
 			dataFilter = dataFilter || this._persistantDataFilter;
 			
 			// 파셜 노드 수집 // 재사용 가능하도록 고려해야함
-			DATAEACH(['value','src','class','dataset','href','append','prepend','put','display'],function(name){
+			DATAEACH(['value','class','dataset','href','append','prepend','put','display'],function(name){
 				_.partialAttr("node-"+name,function(attrValue,node){
 					if(!(name in dataPointer)) dataPointer[name] = {};
 					attrValue.replace(/\S+/g,function(s){
@@ -4397,7 +4455,7 @@
 						DATAEACH(nodelist,function(node){
 							switch(partialCase){
 								case "value":ELVALUE(node,data[attrValue]);break;
-								case "src"  :node.setAttribute("src",data[attrValue]);break;
+								//case "src"  :node.setAttribute("src",data[attrValue]);break;
 								case "href" :node.setAttribute("href",data[attrValue]);break;
 								case "class":ELADDCLASS(node,data[attrValue]);break;
 								case "put"    : ELEMPTY(node);
@@ -4424,7 +4482,7 @@
 			if (this.TemplateNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
 			if (this.TemplateNode.length !== 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
 			this.setSource(IMPORTNODE(DATAZERO(this.TemplateNode)));
-			if(typeof nodeData == "object") this.setNodeValue(nodeData,dataFilter);
+			if(typeof nodeData == "object") this.setNodeData(nodeData,dataFilter);
 			return this;
 		}
 	},function(node,nodeData,dataFilter,cancel){
@@ -4489,10 +4547,11 @@
 		getSelects     :function(){ return FIND(this.SelectRule,this.Source); },
 		getSelectTokens:function(){
 			return new NFArray(this.SelectRule.split(",")).map(function(selString){
-				var execResult = /\[([^\[\]+]+)\]/.exec(selString);
+				var execResult = /\[([a-zA-Z0-9\-]+)(.*)\]/.exec(selString);
 				if( execResult === null) return ;
 				return execResult[1];
 			}).filter().toArray();
+			
 		},
 		//체크아웃 대상 (key와 무관)
 		getCheckoutElement:function(){
@@ -4551,25 +4610,16 @@
 			if(typeof key === 'string') return this.checkout()[key];
 			return this.checkout();
 		}
-	},function(context,selectRule,filter){
+	},function(context,selectRule){
 		this.Source = FIND(context,0);
 		this.form   = this.Source;
 		if( !ISELNODE(this.Source) ) { console.error( "Frame::Context를 처리할 수 없습니다. => ",this.Source," <= ", context); }
-		//options
-		//Polymorphism
-		var r,f;
-		if(typeof selectRule === "object" && typeof selectRule !== "object"){ r = undefined; f = selectRule; } else { r = selectRule; f = filter; }
+		
 		//SelectRule
-		switch(typeof rule){
-			case "string":
-				this.SelectRule = r+",[name],button";
-				break;
-			default :
-				this.SelectRule = "[name],button";
-				break;
+		switch(typeof selectRule){
+			case "string": this.SelectRule = selectRule+",[name]"; break;
+			default : this.SelectRule = "[name]"; break;
 		}
-		//CommandFilter
-		this.CommandFilter = typeof filter === "object" ? filter : {} ;
 	});
 	
 	makeModule("NFActiveStatus",{
@@ -4649,9 +4699,20 @@
 		isStatus:function(k){
 			return this.ActiveKeys.has(k);
 		},
+		statusReset:function(status){
+			if(typeof name === 'string'){
+				this.ActiveKeys.remove(name);
+				this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this.FormHelper);
+			}
+		},
 		statusTo:function(status){
 			if(typeof name === 'string') 
 				this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this.FormHelper);
+		},
+		addStatus:function(key,val){
+			if(!key)return;
+			if(typeof key === 'object') for(var k in key) this.addStatus(k,key[k]);	
+			else this.whenDidActive(key,val);
 		},
 		setFormData:function(data,v2){
 			return this.FormHelper.checkin(data,v2);
@@ -4664,11 +4725,7 @@
 		if(this.view){
 			this.FormHelper = _NFForm(this.view);
 			this._super(false,true);
-			
-			var _ = this;
-			PROPEACH(statusProp,function(method,name){
-				_.whenDidActive(name,method);
-			});
+			if(statusProp) this.addStatus(statusProp);
 		} else {
 			console.warn('FormController에 view를 정상적으로 로드할수 없었습니다.',context,this.view);
 		}
@@ -4867,10 +4924,49 @@
 				break;
 			}
 			return false;
+		},
+		needFilterController:function(fm,fwc){
+			return new NFFilterController(this.initCall[0],this.initCall[1],fm,fwc);
 		}
 	},function(cSel,sSel,tSel){
 		if(ISNOTHING(FIND(cSel))) console.warn("Contexts::init::error 첫번째 파라메터의 값을 현재 찾을 수 없습니다. 들어온값", cSel);
 		this.initCall = [cSel,sSel,tSel];
+	});
+	
+	extendModule('NFContexts','NFFilterController',{
+		needFiltering:function(filterData){
+			var selectNodes = this.getSelects();
+			var fm = this.filterMethod;
+			var filteringDataIndexes = [];
+			if(this.filterClass) {
+				var fc = this.filterClass;
+				DATAEACH(this.getSelects(),function(sNode,i){
+					if( fm.call(sNode,sNode,i,filterData) === true ){
+						ELREMOVECLASS(sNode,fc)
+					} else {
+						ELADDCLASS(sNode,fc);
+						filteringDataIndexes.push(i);
+					}
+				});
+			} else {
+				DATAEACH(this.getSelects(),function(sNode,i){
+					if( fm.call(sNode,sNode,i,filterData) === true ){
+						ELSTYLE(sNode,'display',null)
+					} else {
+						ELSTYLE(sNode,'display','none')
+						filteringDataIndexes.push(i)
+					}
+				});
+			}
+			return filteringDataIndexes;
+		}
+	},function(cSel,sSel,filterMethod,filterWithClass){
+		this._super(cSel,sSel);
+		if(typeof filterMethod !== 'function') console.error('NFFilter::세번째 파라메터는 반드시 함수를 넣어주세요',filterMethod);
+		this.filterMethod = filterMethod;
+		
+		if(typeof filterWithClass === 'string') this.filterClass = filterWithClass;
+		if(filterWithClass === true) this.filterClass = 'hidden';
 	});
 	
 	extendModule("NFContexts","NFActiveController",{
@@ -5073,6 +5169,10 @@
 		},
 		inactiveAll:function(withEvent){
 			this.setActiveIndexes([],withEvent || true);
+		},
+		getActiveSelects:function(sourceIndex){
+			var selectSource = this.Source[sourceIndex || (this.Source.length - 1)];
+			return selectSource.getActiveSelects();
 		},
 		syncActiveController:function(activeController,syncPrevIndexes){
 			this.Source.push(activeController);
@@ -5569,7 +5669,8 @@
 				case "object":
 					//엘리먼트 배열로 들어올경우
 					var doms = FIND(loadPath);
-					if( doms.length < 1 ){
+					//loadPath가 빈 배열이라면 정상적인 처리로 간주합니다.
+					if( doms.length < 1 && !ISARRAY(loadPath) ){
 						console.error("NFContentLoaderBase::불러올 엘리먼트가 존재하지 않습니다."+loadPath);
 						CALL(error,_,loadKey);
 					} else {
@@ -5585,6 +5686,7 @@
 			}
 			return true;
 		},
+		//컨테이너 컨텐츠
 		saveContainerContents:function(doms,key){
 			if(typeof key === "string") { this.ContainerContents[key] = TOARRAY(doms); }
 		},
@@ -5595,6 +5697,7 @@
 			delete Containers[key];
 			return this;
 		},
+		//
 		addContainer:function(container,key){
 			var findContainer = FIND(container,0);
 			if(!findContainer) return console.warn(key,"의 컨테이너를 찾을 수 없습니다.");
@@ -5632,10 +5735,7 @@
 				break;
 			case "function":
 				var _ = this;
-				var baseFunctionResult = baseParam.call(this,function(){
-					_._ActiveController = APPLY(_NFActiveController,undefined,arguments);
-					return _._ActiveController;
-				},this);
+				var baseFunctionResult = baseParam.call(this,this);
 				if(typeof baseFunctionResult === "object") EXTEND(this.Source,baseFunctionResult);
 				break;
 		}
@@ -5777,14 +5877,11 @@
 			});
 		}
 	},function(container,baseParam){
-		// context    => 컨텐츠를 채울 곳
-		// navs       => object: key value로 해당이 호출되면 context에 내용이 체워짐
-		//소스셋팅
 		var _container = FIND(container,0),_ = this;
 		if (_container){
 			this._super(baseParam,function(){
 				//defaultContainer를 보존합니다.
-				var dcf = "defaultContainer";
+				var dcf = "initialContainer";
 				this.addContainer(_container,dcf);
 				this.saveContainerContents(_container.children,dcf);
 				this.ContainerActiveKeys.push(dcf);
@@ -5793,6 +5890,105 @@
 			PROPEACH(this.Source,function(value,key){ _.addContainer(_container,key); });
 		} else {
 			console.error("NFContentLoader::해당 컨테이너를 찾을수 없습니다. Navigation Controller의 작동을 완전히 중지합니다.=> ",container);
+		}
+	});
+	
+	extendModule("NFContentLoaderBase","NFTabContents",{
+		_inactiveActivatedContents:function(removeInPlaceholder){
+			var _ = this;
+			this.ContainerActiveKeys.each(function(activatedKey){
+				_._triggingInactiveEvents(_.ContainerPlaceholder[activatedKey],activatedKey);
+				ELSTYLE( _.ContainerPlaceholder[activatedKey],'display','none');
+			});
+			this.ContainerActiveKeys.clear();
+		},
+		callAsLoad:function(loadKey,loadArguments,after){
+			if(loadKey in this.Source){
+				var _             = this;
+				
+				//이전 컨테이너를 Inactive한다고 통보
+				this._inactiveActivatedContents(true);
+				
+				return this.loadHTML(loadKey,this.Source[loadKey],function(key,doms){
+					ELAPPEND(_.ContainerPlaceholder[key],doms);
+					ELSCRIPTSTART(_.ContainerPlaceholder[key]);
+					_._triggingActiveEvents(_.ContainerPlaceholder[key],key,"load",loadArguments);
+					CALL(after,this);
+				});	
+			} else {
+				console.warn("불러올 소스의 경로가 존재하지 않습니다. loadKey=> ",loadKey,'placeholder(all) => ',this.ContainerPlaceholder,'Source => ',this.Source);
+			}
+		},
+		//무조건 새로 불러옴
+		load:function(loadKey){
+			this.callAsLoad(loadKey,Array.prototype.slice.call(arguments,1));
+		},
+		active:function(loadKey){
+			//불러와있다면 아무것도 실행하지 않음
+			if( this.ContainerActiveKeys.has(loadKey) ) return false;
+			
+			//파라메터를 배열로 변환
+			var openArguments = Array.prototype.slice.call(arguments);
+			
+			//이전 컨테이너를 Inactive한다고 통보
+			this._inactiveActivatedContents(true);
+			
+			this.ContainerActiveKeys.push(loadKey);
+			ELSTYLE( this.ContainerPlaceholder[loadKey], 'display', 'block' );
+			
+			this._triggingActiveEvents(this.ContainerPlaceholder[loadKey],loadKey,"active",openArguments.slice(1));
+			return true;
+		},
+		addContainer:function(contents,name,noAppend){
+			var newContainer = MAKE('div',{style:'height:100%;display:none;','data-container-name':name},contents);
+			this._super(newContainer,name);
+			if(noAppend !== false) ELAPPEND(this.view,newContainer);
+			this.load(name);
+		},
+		needFormController:function(target){
+			if(!target || typeof target === 'object') {
+				if(!this._globalFormController) this._globalFormController = new NFFormController(this.view);
+				this._globalFormController.addStatus(target);
+				return this._globalFormController;
+			}
+			if(!(typeof target === 'string' || typeof target === 'number')) return console.error('문자열 타겟이 아니면 폼컨트롤러를 반환할수 없습니다.');
+			if(!this.ContainerPlaceholder[target]) return console.error('존재하지 않은 컨트롤러 키의 폼컨트롤러를 호출하였습니다',target);
+			if(!this._viewsFormController) this._viewsFormController = [];
+			if(!this._viewsFormController[target]) this._viewsFormController[target] = new NFFormController(this.ContainerPlaceholder[target]);
+			return this._viewsFormController[target];
+		}
+	},function(container,baseParam){
+		this.view = FIND(container,0), _ = this;
+		
+		if (this.view){
+			//베이스 파라메터가 존재하지 않으면 현재 컨테이너의 컨텐츠를 기본 파라메터로 봄
+			if(!baseParam) {
+				baseParam = {};
+				for(var i=0,l=_container.children.length;i<l;i++) baseParam[i] = _container.children[i];
+				
+				
+				this._super(baseParam,function(){
+					this.addContainer(undefined,"initial-contents");
+				});
+				
+				//다른컨테이너도 플레이스 홀더 설정을 합니다.
+				PROPEACH(this.Source,function(value,key){ _.addContainer(value,key,true); });
+			} else {
+				if( ISARRAY(baseParam) ) {
+					var newBaseParam = {};
+					DATAEACH(baseParam,function(v,i){ newBaseParam[i] = v; });
+					baseParam = newBaseParam;
+				}
+				this._super(baseParam,function(){
+					this.Source['initial-contents'] = TOARRAY(this.view.children);
+					this.addContainer(undefined,"initial-contents");
+				});
+				
+				//다른컨테이너도 플레이스 홀더 설정을 합니다.
+				PROPEACH(this.Source,function(value,key){ _.addContainer(undefined,key); });
+			}
+		} else {
+			console.error("NFTabContents::해당 컨테이너를 찾을수 없습니다. Navigation Controller의 작동을 완전히 중지합니다.=> ",container);
 		}
 	});
 	

@@ -126,7 +126,7 @@ CSS스타일올 MAKE("...") 함수를 호출하면 Node를 생성할수 있다.
 ### 셀렉트 #
 ```javascript
         FIND("div.target");  // array => [div.target,div.target,div.target]
-		ZFIND("div.target"); // node  => div.target
+		FIND("div.target",0); // node  => div.target
 		
 ```
 
@@ -626,7 +626,20 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ```
 <a name="version-info"/>
 ## Version info #
-#### 0.20.5 정보
+
+#### 0.20.7 정보
+- ZDATE 추가 (날짜를 빠르게 인식하기 위한 함수)
+- 함수를 배열로 인식하는 버그 수정
+- NFArray에 timesmap 추가
+- FLAGRANDOM추가 (true,false를 확률적으로 도출할 수 있음)
+- ELSTYLE 버그 픽스
+- NFTemplate :: setNodeValue => setNodeData
+- NFTemplate node-src 문이 제거되며 node-value로 사용가능
+- 이제부터 ELVALUE에서 img, script등의 value는 src로 link는 rel로 접근합니다.
+- NFTabContents 모듈 추가
+
+#### 0.20.6 까지
+- 추후 모든 Contents로더 모듈들은 NFFormController를 지원하도록 변경될 예정입니다.
 - FINDON,FINDPARENT 컨티뉴틸리티 규칙 변경
 - FINDOFFSET 추가
 - ELTRACE 클래스 인식 에러 수정
@@ -635,8 +648,6 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 - NFPresentor의 needActiveController를 노드 기준으로 가능하도록 지원
 - NFPresentor에서 렌더 결과에 데이터컨텍스트 정보 삽입
 - NFScrollBox에서 절대값 스크롤링 지원 추가
-
-#### 0.20 정보
 - 모든 기본 모듈은 'NF' Prefix가 붙도록 디자인이 바뀌었습니다.
 - ZFIND가 제거되었습니다. FIND('.some',0); 의 식으로 사용합니다.
 - NFForm, NFFormController의 데이터 I/O API가 setFormData, getFormData로 변경되었습니다.
