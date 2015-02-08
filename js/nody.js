@@ -7,7 +7,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.20.7",build = "1024";
+	var version = "0.20.7",build = "1027";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9", nodyCoreBuild = "74";
@@ -536,8 +536,10 @@
 			}
 		},
 		"IS":function(target,test,trueBlock,falseBlock){
-			var testResult;
+			
 			if(ISNOTHING(test)) return ISTRUE(target);
+			
+			var testResult;
 			
 			switch(typeof test){
 				case "string":
@@ -2694,6 +2696,8 @@
 (function(W,ENV){
 	
 	var ELUT_REGEX = new RegExp("("+ [
+		//pseudo
+		"\\:[^\\:]+",
 		//tag
 		"^[\\w\\-\TA\_]+",
 		//attr
@@ -2977,6 +2981,7 @@
 		//하나의 CSS테스트
 		"THE":function(node,selectText,extraData){
 			var tagInfo = SELECTINFO(selectText);
+			
 			for(var key in tagInfo){
 				switch(key){
 					case "tagName":
@@ -3015,13 +3020,9 @@
 					case ":":
 						for(var metaKey in tagInfo[key]){
 							switch(metaKey){
-								case "not":
-									if( NUT.THE(node,tagInfo[key][metaKey]) ) return false;
-									break;
-								case "focus":
-									if(!NUT.HASFOCUS(node)) return false;
-									break;
-								case "eq": case "nth-child":
+								case "not"  : if( NUT.THE(node,tagInfo[key][metaKey]) ) return false; break;
+								case "focus": if(!NUT.HASFOCUS(node)) return false; break;
+								case "eq"   : case "nth-child":
 									if(!node.parentElement) return false;
 									if(DATAINDEX(node.parentElement.children,node) !== node,tagInfo[key][metaKey]) return false;
 									break;
@@ -3082,7 +3083,7 @@
 				query.trim()
 				.replace(/[\n]|[\s]{2,}/g," ")
 				.replace(/\s*(\>|\+)\s*/g,function(s){ return s.replace(/\s/g,""); })
-				.replace(/(\[[\w\=\_\-]+\]|\:\w+\([^\)]+\)|[\w\-\_\.\#\:]+)(\s|\>|)/g,function(s){ 
+				.replace(/(\[[\w\=\_\-]+\]|\:\w+\([^\)]+\)|[\w\-\_\.\#\:]+\([^\)]+\)|[\w\-\_\.\#\:]+)(\s|\>|)/g,function(s){ 
 					querySplit.push(s);
 				});
 				
@@ -3097,7 +3098,7 @@
 			if(typeof value === "undefined") return true;
 			
 			var judgement, inspectData = StructureInit("QueryDataInfo",value);
-
+			
 			inspectData.each(function(querys,queryCase,index){
 				// querys,queryCase,index
 				// "[name]" => ["name"], "[name]"
@@ -3568,7 +3569,7 @@
 				return result;
 			}
 		},
-		//el의 중요값을 찾습니다.
+		//el의 중요값을 찾거나 변경합니다.
 		"VALUE":function(aNode,value){
 			var node,nodes = FIND(aNode);
 			if(nodes.length == 0){
@@ -3585,13 +3586,7 @@
 							if(findEl) findEl.checked = true;
 							return findEl;
 						} else {
-							var checkedEl  = ELFILTER(nodes,"[type=radio][name="+nodeZeroName+"]:checked");
-							var selectedEl = FIND(checkedEl,0);
-							if(selectedEl){
-								return selectedEl.value;
-							} else {
-								return "";
-							}
+							return FIND(ELFILTER(nodes,"[type=radio][name="+nodeZeroName+"]:checked"),0) || "";
 						}
 					}
 				}
@@ -3599,20 +3594,8 @@
 			node     = DATAZERO(nodes);
 			nodeName = node.tagName.toLowerCase();
 			switch(nodeName){
-				case "img": case "script":
-					//get
-					if(arguments.length < 2) return node.src;
-					//set
-					node.src = value;
-					return node;
-					break;
-				case "link":
-					//get
-					if(arguments.length < 2) return node.rel;
-					//set
-					node.rel = value;
-					return node;
-					break;
+				case "img" :case "script": if(arguments.length < 2) return node.src; node.src = value; return node; break;
+				case "link":if(arguments.length < 2) return node.rel; node.rel = value; return node; break;
 				case "input": case "option": case "textarea":
 					//get
 					if(nodeName == "option"){
@@ -4002,9 +3985,7 @@
 			if ("createEvent" in document) {
 			    var e = W.document.createEvent("HTMLEvents");
 			    e.initEvent(eventName, true, true);
-				PROPEACH(eventParam,function(v,k){
-					e[k] = v;
-				});
+				if(eventParam) PROPEACH(eventParam,function(v,k){ e[k] = v; });
 			    node.dispatchEvent(e);
 			} else {
 				node.fireEvent("on"+eventName);
@@ -4428,7 +4409,7 @@
 			dataFilter = dataFilter || this._persistantDataFilter;
 			
 			// 파셜 노드 수집 // 재사용 가능하도록 고려해야함
-			DATAEACH(['value','class','dataset','href','append','prepend','put','display'],function(name){
+			DATAEACH(['value','class','dataset','href','append','prepend','put','display','custom'],function(name){
 				_.partialAttr("node-"+name,function(attrValue,node){
 					if(!(name in dataPointer)) dataPointer[name] = {};
 					attrValue.replace(/\S+/g,function(s){
@@ -4441,7 +4422,11 @@
 			if(typeof dataFilter === 'object') {
 				PROPEACH(dataFilter,function(value,key){
 					if(typeof value === 'function') {
-						data[key] = value.call(data,data[key],key,data);
+						if( dataPointer.custom && (key in dataPointer.custom) ) {
+							data[key] = value;
+						} else {
+							data[key] = value.call(data,data[key],key,data);
+						}
 					} else {
 						data[key] = value;
 					}
@@ -4455,7 +4440,6 @@
 						DATAEACH(nodelist,function(node){
 							switch(partialCase){
 								case "value":ELVALUE(node,data[attrValue]);break;
-								//case "src"  :node.setAttribute("src",data[attrValue]);break;
 								case "href" :node.setAttribute("href",data[attrValue]);break;
 								case "class":ELADDCLASS(node,data[attrValue]);break;
 								case "put"    : ELEMPTY(node);
@@ -4463,6 +4447,7 @@
 								case "prepend": ELPREPEND(node,data[attrValue]);break;
 								case "display": if(!data[attrValue]){ELSTYLE(node,'display','none');}  break;
 								case "dataset": PROPEACH(data[attrValue],function(key,value){ node.dataset[value] = key; });break;
+								case "custom" : if(typeof data[attrValue] === 'function') data[attrValue].call(node,node,attrValue); break;
 							}
 						});
 					}
@@ -4808,7 +4793,11 @@
 		getContexts:function(){ 
 			return FIND(this.initCall[0]); 
 		},
-		getSelects:function(){ 
+		getSelects:function(ignorePool){
+			
+			if(ignorePool !== true && this._selectPoolCount > 0) { 
+				return CLONEARRAY(this._selectPoolList);
+			}
 			switch(typeof this.initCall[1]) {
 				case 'function':
 					return this.initCall[1]();
@@ -4823,6 +4812,17 @@
 					}
 					break;
 			}
+		},
+		"+_selectPoolCount":0,
+		selectPoolStart:function(){
+			if(this._selectPoolCount === 0) this._selectPoolList = this.getSelects(true);
+			this._selectPoolCount = this._selectPoolCount + 1;
+			//console.log('pool ++',this._selectPoolCount);
+		},
+		selectPoolEnd:function(){
+			this._selectPoolCount = this._selectPoolCount - 1;
+			if(this._selectPoolCount === 0) this._selectPoolList = null;
+			//console.log('pool --',this._selectPoolCount);
 		},
 		getGroups:function(){ 
 			var selectQuery = ISNOTHING(this.initCall[2]) ? "self" : this.initCall[2];
@@ -4843,20 +4843,26 @@
 		getTarget :function(eq){ return this.getTargets()[eq]; },
 		getGroup  :function(eq){ return this.getGroups()[eq]; },
 		onSelects  :function(event,func,otherFunc){
+			
+			
 			var _ = this;
 			// 이벤트와 번호가 들어오면
 			if(typeof event=="string" && typeof func === "number"){
+				this.selectPoolStart();
 				//캐쉬를 사용함 단 트리깅에서만
-				var selNode =  this.__cacheSelects ? this.__cacheSelects[func] : this.getSelect(func);
-				if(ISELNODE(selNode)){
-					ELTRIGGER(selNode,event);
+				var selNode = this.getSelect(func);
+				
+				if(ISELNODE(selNode)) {
+					ELTRIGGER(selNode,event, (arguments.length > 2)  ? {'arguments':Array.prototype.slice.call(arguments,2)} : undefined ); 
 				} else {
 					console.warn("Contexts::onSelects::트리깅할 대상이 없습니다.");
-				}
+				} 
+				this.selectPoolEnd();
 				return this;
 			}
 			if(typeof event=="string" && typeof func === "function"){
 				ELON(this.getContexts(),event,function(e){
+					
 					var curSel = new NFArray( _.getSelects() );
 					if(curSel.has(e.target)){
 						//버블이 잘 왔을때
@@ -4981,79 +4987,111 @@
 		shouldTrigging:function(index,wait){
 			var _ = this;
 			if(typeof index !== 'number') console.warn('index는 반드시 number이여야 합니다.');
-			wait = (typeof wait === 'number') ? wait : TONUMBER(wait);
 			
-			if(wait === 0) {
-				_.onSelects(_.ContextsEventName,index);
+			if((wait === 0) || (wait === false)) {
+				_.onSelects(_.ContextsEventName,index,wait);
 			} else {
 				var t = setTimeout(function(){
-					_.onSelects(_.ContextsEventName,index);
+					_.onSelects(_.ContextsEventName,index,wait);
 					clearTimeout(t);
-				},wait);
+				},(typeof wait === 'number') ? wait : TONUMBER(wait));
 			}
 			return this;
 		},
-		getActiveIndexes:function(){
-			var indexes = [];
-			var selects = this.__cacheSelects || this.getSelects();
-			DATAEACH(selects,function(node,i){ if(ELHASCLASS(node,'active')) indexes.push(i);  });
-			return indexes;
-		},
-		setActiveIndexes:function(indexes,withEvent){
-			var _ = this;
-			var indexesObject = new NFArray(indexes);
-			var selects       = this.__cacheSelects || this.getSelects();
+		
+		getActiveIndexes:function(lastIndex){
+			this.selectPoolStart();
 			
-			DATAEACH(selects,function(node,i){
-				if( indexesObject.has(i) ) {
-					//active 대상
-					if( !ELHASCLASS(node,'active') ){
-						if(withEvent === false) {
-							ELADDCLASS(node,'active');
-						} else {
-							_.shouldTrigging(i,withEvent);
-						}
-					}
-				} else {
-					//inactive 대상
-					if( ELHASCLASS(node,'active') ){
-						if(withEvent === false) {
-							ELREMOVECLASS(node,'active');
-						} else {
-							_.shouldTrigging(i,withEvent);
-						}
+			var indexes = [];
+			DATAEACH( this.getSelects() ,function(node,i){ 
+				if(ELHASCLASS(node,'active')) indexes.push(i); 
+			 });
+			 
+			this.selectPoolEnd();
+			
+			if(typeof lastIndex === 'number')
+				return indexes[lastIndex];
+			if(lastIndex === true)
+				return indexes[indexes.length - 1];
+				return indexes;
+		},
+		setActiveIndexes:function(indexes,withEvent){;
+			this.selectPoolStart();
+			
+			var indexesObject = new NFArray(indexes);
+			
+			if(withEvent === false) {
+				DATAEACH( this.getSelects() , function(node,i){
+					if( indexesObject.has(i) ) {
+						if( !ELHASCLASS(node,'active') ) ELADDCLASS(node,'active');
+					} else {
+						if( ELHASCLASS(node,'active') ) ELREMOVECLASS(node,'active');
+					} 
+				});
+			} else {
+				var _ = this;
+				DATAEACH( this.getSelects() , function(node,i){
+					if( indexesObject.has(i) ) {
+						if( !ELHASCLASS(node,'active') ) _.shouldTrigging(i,withEvent);
+					} else {
+						if( ELHASCLASS(node,'active') ) _.shouldTrigging(i,withEvent);
+					} 
+				});
+			}
+			this.selectPoolEnd();
+			return this;
+		},
+		shouldActive:function(index,withEvent,unique){
+			if(typeof index === 'number') {
+				this.selectPoolStart();
+				
+				var activeIndexes = this.getActiveIndexes();
+				if( !DATAHAS(activeIndexes,index) ) {
+					if(unique === true) {
+						this.setActiveIndexes([index],withEvent);
+					} else {
+						activeIndexes.push(index);
+						this.setActiveIndexes(activeIndexes,withEvent);
 					}
 				}
-			});
-		},
-		shouldActive:function(index,withEvent){
-			//! api change devel
-			this.__cacheSelects = this.getSelects();
-			if(typeof index === 'number') this.setActiveIndexes(new NFArray(this.getActiveIndexes()).add(index),withEvent);
-			delete this.__cacheSelects;
+				this.selectPoolEnd();
+			}
 			return this;
 		},
 		shouldInactive:function(index,withEvent){
-			//! api change devel
-			this.__cacheSelects = this.getSelects();
-			if(typeof index === 'number') this.setActiveIndexes(new NFArray(this.getActiveIndexes()).remove(index),withEvent);
-			delete  this.__cacheSelects;
+			if(typeof index === 'number') {
+				this.selectPoolStart();
+				var activeIndexes = new NFArray(this.getActiveIndexes()) ;
+				if( DATAHAS(activeIndexes,index) ) {
+					activeIndexes.remove(index);
+					this.setActiveIndexes(activeIndexes,withEvent);
+				}
+				this.selectPoolEnd();
+			}
 			return this;
 		},
 		getActiveSelects:function(){
-			return DATAFILTER(this.getSelects(),function(node){ return ELHASCLASS(node,'active'); });
+			this.selectPoolStart();
+			var r = DATAFILTER(this.getSelects(),function(node){ return ELHASCLASS(node,'active'); });
+			this.selectPoolEnd();
+			return r;
 		},
 		getInactiveSelects:function(){
-			return DATAFILTER(this.getSelects(),function(node){ return !ELHASCLASS(node,'active'); });
+			this.selectPoolStart();
+			var r = DATAFILTER(this.getSelects(),function(node){ return !ELHASCLASS(node,'active'); });
+			this.selectPoolEnd();
+			return r;
 		},
 		activeAll:function(withEvent){
-			this.setActiveIndexes(DATAMAP(this.getSelects(),function(n,i){
-				return i;
-			}),withEvent);
+			this.selectPoolStart();
+			this.setActiveIndexes(DATAMAP(this.getSelects(),function(n,i){ return i; }),withEvent);
+			this.selectPoolEnd();
 			return this;
 		},
 		inactiveAll:function(withEvent){
+			this.selectPoolStart();
 			this.setActiveIndexes([],withEvent);
+			this.selectPoolEnd();
 			return this;
 		},
 		resetActiveTargetWithContexts:function(con,sel,pool){	
@@ -5086,21 +5124,25 @@
 		//
 		var _ = this;
 		this.onSelects(this.ContextsEventName,function(e,i){
-			var currentSelects = _.__cacheSelects || _.getSelects();
+			var yesEvent = e.arguments ? !(e.arguments[0] === false) : true;
+			
+			var currentSelects = _.getSelects();
+			
 			if(_.preventDefault) e.preventDefault();
 			
 			//액티브가 실행될시
-			if( CALL(_.ContextsEvents.willActive,this,e,i) === false ) return false;
+			if(yesEvent) if( CALL(_.ContextsEvents.willActive,this,e,i) === false ) return false;
+			
 			//자동으로 액티브 실행
 			if(_.allowAutoActive) {
 				//이미 액티브 된 상태의 아이템의 경우 
 				if(ELHASCLASS(this,"active")) {
 					if(_.allowInactive) {
 						//인액티브가 가능한 경우
-						CALL(_.ContextsEvents.willChange,this,i);
+						if(yesEvent) CALL(_.ContextsEvents.willChange,this,i);
 						ELREMOVECLASS(this,"active");
-						CALL(_.ContextsEvents.didChange,this,i);
-						if( FIND(".active",currentSelects).length == 0 ) CALL(_.ContextsEvents.activeEnd,this,i);
+						if(yesEvent) CALL(_.ContextsEvents.didChange,this,i);
+						if(yesEvent) if( FIND(".active",currentSelects).length == 0 ) CALL(_.ContextsEvents.activeEnd,this,i);
 						return false;
 					} else {
 						//인액티브가 불가능한 경우
@@ -5113,27 +5155,34 @@
 				
 				if(_.allowMultiActive) {
 					//다중 Active를 허용하는 경우
+					if(yesEvent) CALL(_.ContextsEvents.willChange,this,i);
 					ELADDCLASS(this,"active");
-					if(activeItems.length === 0) CALL(_.ContextsEvents.activeStart,this,i);
-					CALL(_.ContextsEvents.willChange,this,i);
-					CALL(_.ContextsEvents.didActive,this,i);
-					CALL(_.ContextsEvents.didChange,this,i);
+					if(yesEvent) if(activeItems.length === 0) CALL(_.ContextsEvents.activeStart,this,i);
+					if(yesEvent) CALL(_.ContextsEvents.didActive,this,i);
+					if(yesEvent) CALL(_.ContextsEvents.didChange,this,i);
 					//deactive를 실행하지 않음
 					return false;
 				} else {
 					//다중 Active를 허용하지 않는 경우
+					//인액티브 대상을 찾아 인액티브 시킵니다.
+					(new NFArray(currentSelects)).remove(this).each(function(node){
+						if(_.allowAutoActive) {
+							ELREMOVECLASS(node,"active");
+							if(yesEvent) CALL(_.ContextsEvents.didInactive,node);
+						}
+					});
+					
+					//액티브를 시작합니다.
+					if(yesEvent) CALL(_.ContextsEvents.willChange,this,i);
 					ELADDCLASS(this,"active");
-					if(activeItems.length === 0) CALL(_.ContextsEvents.activeStart,this,i);
-					CALL(_.ContextsEvents.willChange,this,i);
-					CALL(_.ContextsEvents.didActive,this,i);
-					CALL(_.ContextsEvents.didChange,this,i);
-					return true;
+					if(yesEvent) if(activeItems.length === 0) CALL(_.ContextsEvents.activeStart,this,i);
+					if(yesEvent) CALL(_.ContextsEvents.didActive,this,i);
+					if(yesEvent) CALL(_.ContextsEvents.didChange,this,i);
+					return false;
 				}
 			} 
-		},function(){
-			if(_.allowAutoActive) ELREMOVECLASS(this,"active");
-			CALL(_.ContextsEvents.didInactive,this);
 		});
+		
 		//whenWillActiveSet
 		if(willActive) this.whenWillActive(willActive);
 		//shouldActiveSet
@@ -5148,86 +5197,92 @@
 			if(selectSource) return selectSource.getActiveIndexes();return [];
 		},
 		setActiveIndexes:function(indexes,withEvent,sender){
-			_NFArray(this.Source).remove(sender).each(function(ac){ ac.setActiveIndexes( indexes, withEvent || false ); });
+			_NFArray(this.Source).remove(sender).each(function(ac, i){ 
+				ac.setActiveIndexes( indexes, (i === 0) ? (withEvent && true) : false ); });
 			return this;
 		},
 		shouldInactive:function(index,withEvent,sender){
-			_NFArray(this.Source).remove(sender).each(function(ac){ ac.shouldInactive( index, withEvent || false ); });
+			_NFArray(this.Source).remove(sender).each(function(ac, i){
+				//첫번째만 무조건 이벤트 발생
+				ac.shouldInactive( index, (i === 0) ? (withEvent && true) : false ); 
+			});
 			return this;
 		},
-		shouldActive:function(index,withEvent,sender){
-			_NFArray(this.Source).remove(sender).each(function(ac){ ac.shouldActive( index, withEvent || false ); });
+		shouldActive:function(index,withEvent,unique){
+			_NFArray(this.Source).remove(sender).each(function(ac, i){ 
+				//첫번째만 무조건 이벤트 발생
+				ac.shouldActive( index, (i === 0) ? (withEvent && true) : false, unique); 
+			});
 			return this;
 		},
 		activeAll:function(withEvent, sourceIndex){
 			var lastSource = this.Source[ sourceIndex || (this.Source.length - 1) ];
 			if(lastSource) this.setActiveIndexes(DATAMAP(lastSource.getSelects(),function(n,i){
 				return i;
-			}),withEvent || true);
-			
+			}),withEvent && true);	
 			return this;
 		},
 		inactiveAll:function(withEvent){
-			this.setActiveIndexes([],withEvent || true);
+			this.setActiveIndexes([],withEvent && true);
 		},
 		getActiveSelects:function(sourceIndex){
 			var selectSource = this.Source[sourceIndex || (this.Source.length - 1)];
 			return selectSource.getActiveSelects();
 		},
-		syncActiveController:function(activeController,syncPrevIndexes){
-			this.Source.push(activeController);
-			var _ = this;
-			activeController.whenWillActive(
+		syncActiveController:function(sender,syncPrevIndexes){
+			this.Source.push(sender);
+			var rootManager = this;
+			sender.whenWillActive(
 				function(i){ 
 					var who=this; 
-					return CALL(_.ContextsEvents.willActive,who,i); 
+					return CALL(rootManager.ContextsEvents.willActive,who,i); 
 				}
 			);
-			activeController.whenDidActive(
+			sender.whenDidActive(
 				function(i){ 
 					var who=this;
-					_.setActiveIndexes(activeController.getActiveIndexes(),false,activeController);
-					return CALL(_.ContextsEvents.didActive,who,i);
+					rootManager.setActiveIndexes(sender.getActiveIndexes(),false,sender);
+					return CALL(rootManager.ContextsEvents.didActive,who,i);
 				}
 			);
-			activeController.whenDidInactive(
+			sender.whenDidInactive(
 				function(i){
-					_.setActiveIndexes(activeController.getActiveIndexes(),false,activeController);
+					rootManager.setActiveIndexes(sender.getActiveIndexes(),false,sender);
 					var who=this; 
-					return CALL(_.ContextsEvents.didInactive,who,i);
+					return CALL(rootManager.ContextsEvents.didInactive,who,i);
 				}
 			);
-			activeController.whenWillChange(
+			sender.whenWillChange(
 				function(){ 
 					var who=this; 
-					return CALL(_.ContextsEvents.willChange,who);
+					return CALL(rootManager.ContextsEvents.willChange,who);
 				}
 			);
-			activeController.whenDidChange(
+			sender.whenDidChange(
 				function(i){ 
 					var who=this; 
-					_.setActiveIndexes(activeController.getActiveIndexes(),false,activeController);
-					return CALL(_.ContextsEvents.didChange,who,i);
+					rootManager.setActiveIndexes(sender.getActiveIndexes(),false,sender);
+					return CALL(rootManager.ContextsEvents.didChange,who,i);
 				}
 			);
-			activeController.whenActiveStart(
+			sender.whenActiveStart(
 				function(i){ 
 					var who=this;
-					return CALL(_.ContextsEvents.activeStart,who,i);
+					return CALL(rootManager.ContextsEvents.activeStart,who,i);
 				}
 			);
-			activeController.whenActiveEnd(
+			sender.whenActiveEnd(
 				function(i){ 
 					var who=this;
-					return CALL(_.ContextsEvents.activeEnd,who,i);
+					return CALL(rootManager.ContextsEvents.activeEnd,who,i);
 				}
 			);
 			
 			if(syncPrevIndexes === true) {
 				var lastSource = this.Source[this.Source.length - 1];
-				if(lastSource) activeController.setActiveIndexes(lastSource.getActiveIndexes(),false);
+				if(lastSource) sender.setActiveIndexes(lastSource.getActiveIndexes(),false);
 			}
-			return activeController;
+			return sender;
 		},
 		makeActiveController:function(){
 			return this.syncActiveController(_NFActiveController.apply(NFActiveController,Array.prototype.slice.call(arguments)));
@@ -6177,9 +6232,9 @@
 			var re = ra ? "]" : "}";
 			var prop = [];
 			for(var key in mdata.Source) prop.push( '\"' + key + '\":\"' + mdata.Source[key] + '\"' );
-			if(mdata.Childrens.length > 0) prop.push( 
+			if(mdata.Child.length > 0) prop.push( 
 				(ra ? '' : '\"'+this.SourceChildrenKey + '\":[' ) + 
-				mdata.Childrens.getMap( function(managedData){ return owner.trace(managedData); } ).join(", ") + 
+				mdata.Child.getMap( function(managedData){ return owner.trace(managedData); } ).join(", ") + 
 				(ra ? "" : "]")
 			);
 			return rs + prop.join(", ") + re;
@@ -6201,12 +6256,12 @@
 				if(thisID == path) {
 					selectedManagedData = thisRoot;
 				} else {
-					selectedManagedData = selectedManagedData.Childrens[parseInt(path)];
+					selectedManagedData = selectedManagedData.Child[parseInt(path)];
 				}
 			});
 			return selectedManagedData;
 		},
-		getManagedDatas:function(path){
+		querySelectData:function(path){
 			var resultData = [this.RootManagedData];
 			if(path == '/' || path == '') return resultData;
 			var pathes = [];
@@ -6219,7 +6274,7 @@
 				if(path == '') return false;
 				if(path == '*'){
 					DATAEACH(searchTarget,function(managedData){
-						searchResult = searchResult.concat(managedData.Childrens.toArray());
+						searchResult = searchResult.concat(managedData.Child.toArray());
 					});
 				} else if(path == '**') {
 					DATAEACH(searchTarget,function(managedData){
@@ -6258,7 +6313,7 @@
 					} else {
 						DATAEACH(searchTarget,function(managedData){
 							var passData = [];
-							DATAEACH(managedData.Childrens,function(managedData){
+							DATAEACH(managedData.Child,function(managedData){
 								var pass = true;
 								PROPEACH(wantedProps,function(v,k){
 									return pass = (v === null || v === '') ? managedData.hasValue(k) : (managedData.value(k) == v);
@@ -6269,7 +6324,7 @@
 					}
 				} else if(ISNUMBERTEXT(path)){
 					DATAEACH(searchTarget,function(managedData){
-						var ch = managedData.Childrens[parseInt(path)];
+						var ch = managedData.Child[parseInt(path)];
 						if(ch){ searchResult.push(ch); }
 					});
 				} else {
@@ -6338,21 +6393,21 @@
 		appendChild:function(childrens){
 			var parent = this;
 			DATAEACH(childrens,function(child){
-				parent.Childrens.push(child);
+				parent.Child.push(child);
 				child.Parent = parent;
 			});
 		},
 		removeFromParent:function(){
 			if(this.Parent){
-				this.Parent.Childrens.remove(this);
+				this.Parent.Child.remove(this);
 				this.Parent = undefined;
 			}
 		},
 		removeChildren:function(childrens){
 			var owner = this;
 			DATAEACH(childrens,function(child){
-				var index = owner.Childrens.indexOf(child);
-				var select = owner.Childrens[index];
+				var index = owner.Child.indexOf(child);
+				var select = owner.Child[index];
 				if (select) {
 					select.removeFromParent();
 				}
@@ -6362,7 +6417,7 @@
 			var newParam = method.call(this,param);
 			
 			if(newParam !== false) {
-				DATAEACH(this.Childrens,function(child){ 
+				DATAEACH(this.Child,function(child){ 
 					return child.breakableFeedDownManagedData(method,newParam); 
 				});
 			}
@@ -6372,14 +6427,14 @@
 		//현재부터 자식으로 
 		feedDownManagedData:function(method,param){
 			var newParam = method.call(this,param);
-			DATAEACH(this.Childrens,function(child){ child.feedDownManagedData(method,newParam); });
+			DATAEACH(this.Child,function(child){ child.feedDownManagedData(method,newParam); });
 			return this;
 		},
 		feedUpManageData:function(method,depth){
 			// 돌리는 depth
 			var depth = depth ? depth : 0;
 			//데이타 얻기
-			var mangedDatas = this.Childrens;
+			var mangedDatas = this.Child;
 			
 			depth++;
 			DATAEACH(mangedDatas,function(child){ child.feedUpManageData(method,depth); });
@@ -6482,12 +6537,12 @@
 		},
 		getPath:function(){
 			var path = new NFArray();
-			this.chainUpMangedData(function(){ path.push( this.Parent ? this.Parent.Childrens.indexOf(this) : this.context.ID); });
+			this.chainUpMangedData(function(){ path.push( this.Parent ? this.Parent.Child.indexOf(this) : this.context.ID); });
 			return path.reverse().join("/");
 		},
-		getManagedDatasWithPath:function(path){
+		querySelectData:function(path){
 			if(path == '' || path == '/') return [this];
-			return this.context.getManagedDatas( this.getPath() + '/' + path );
+			return this.context.querySelectData( this.getPath() + '/' + path );
 		},
 		getManagedDataWithID:function(findid){
 			if(typeof findid == 'string') {
@@ -6501,6 +6556,10 @@
 				return result;
 			}
 		},
+		getParentManagedData : function(){ return this.Parent; },
+		getChildManagedData  : function(){ return this.Child; },
+		hasParentManagedData : function(){ return !!this.Parent; },
+		hasChildManagedData  : function(){ return !!this.Child.length; },
 		getDepth:function(){
 			var depth = 0;
 			this.feedUpManageData(function(m,d){ if (depth < (d + 1)) depth = (d + 1); });
@@ -6512,7 +6571,7 @@
 			return level;
 		},
 		getIndex:function(){
-			return this.Parent.Childrens.indexOf(this);
+			return this.Parent.Child.indexOf(this);
 		},
 		getContextID:function(){
 			return this.context.ID;
@@ -6522,7 +6581,7 @@
 				return this;
 			} else {
 				var findID;
-				this.Childrens.each(function(child){
+				this.Child.each(function(child){
 					findID = child.findById(id);
 					if(findID) return false;
 				});
@@ -6541,7 +6600,7 @@
 				var bindId2= changeTarget.BindID;
 				var index1 = this.getIndex();
 				var index2 = changeTarget.getIndex();
-				this.Parent.Childrens.changeIndex(index1,index2);
+				this.Parent.Child.changeIndex(index1,index2);
 				NFDataContextNotificationCenter.managedDataChangePosition(bindId1,bindId2);
 				return true;
 			}
@@ -6549,27 +6608,33 @@
 		},
 		//상위 인덱스로
 		managedDataIncrease:function(){
-			var nextManagedData = this.Parent.Childrens[this.Parent.Childrens.indexOf(this)+1];
+			var nextManagedData = this.Parent.Child[this.Parent.Child.indexOf(this)+1];
 			if (nextManagedData) return this.managedDataIndexExchange(nextManagedData);
 			return false;
 		},
 		//하위 인덱스로
 		managedDataDecrease:function(){
-			var prevManagedData = this.Parent.Childrens[this.Parent.Childrens.indexOf(this)-1];
+			var prevManagedData = this.Parent.Child[this.Parent.Child.indexOf(this)-1];
 			if (prevManagedData) return this.managedDataIndexExchange(prevManagedData);
 			return false;
 		},
 		//현재 데이터를 제거함
-		removeManagedData:function(){
-			this.removeFromParent();
-			NFDataContextNotificationCenter.removeManagedData(this.BindID);
+		removeManagedData:function(onlyThis){
+			if(onlyThis === true) {
+				this.removeFromParent();
+				NFDataContextNotificationCenter.removeManagedData(this.BindID);
+			} else {
+				this.feedUpManageData(function(md){ 
+					md.removeManagedData(true);
+				});
+			}
 		},
 		//하위 데이터를 추가함
 		addChildData:function(data){
 			if(typeof data === "function") data = data();
 			if(typeof data === "object") {
 				this.context.feedDownManagedDataMake(data||{},this);
-				var makedData = this.Childrens.getLast();
+				var makedData = this.Child.getLast();
 				NFDataContextNotificationCenter.addChildData(this.BindID,makedData);
 				return makedData;
 			} else {
@@ -6585,7 +6650,7 @@
 		this.Source     = initData;
 		this.SourceType = dataType || "object";
 		//노드구조
-		this.Childrens  = new NFArray();
+		this.Child  = new NFArray();
 		this.Parent     = undefined;        
 		//현재 컨트롤중인 뷰컨트롤입니다.
 		this.scope      = undefined;
@@ -6642,17 +6707,22 @@
 				var owner = this;
 				//바인드값 삭제
 				var removeBindNodeTarget = new NFArray();
+				
 				DATAEACH(this.bindValueNodes,function(bindNode){
 					var hasNode = FIND(bindNode[2],owner.structureNodes[bindID],0);
 					if(hasNode) removeBindNodeTarget.push(bindNode);
 				});
+				
 				removeBindNodeTarget.each(function(bindNode){
 					owner.bindValueNodes.remove(bindNode);
 				});
+				
 				//스트럭쳐 노드 삭제
 				ELREMOVE(this.structureNodes[bindID])
+				
 				delete this.structureNodes[bindID];
 				//
+				
 				CALL(this.dataDidChange,this);
 			}
 			//
@@ -6660,12 +6730,15 @@
 		},
 		nManagedDataNeedRerender:function(rerenderManagedData){
 			//부모의 placehoder를 찾음
-			var parentManData   = rerenderManagedData.Parent;
+			var parentManData   = rerenderManagedData.getParentManagedData();
 			if(parentManData) {
 				//부모의 placeholder가 존재해야 작동함
 				var parentPlaceHolder = this.placeholderNodes[parentManData.BindID];
 				var beforeElement     = this.structureNodes[rerenderManagedData.BindID];
 				var beforePlaceHolder = this.placeholderNodes[rerenderManagedData.BindID];
+				
+				console.log('parentPlaceHolder')
+				
 				if(parentPlaceHolder && beforePlaceHolder) {
 					//바꿔치기 하기
 					this.needDisplay(rerenderManagedData,parentPlaceHolder,true);
@@ -6879,7 +6952,7 @@
 				var _  = this, __ = this.managedData;
 				selectPath = (typeof selectPath == 'string') ? selectPath : '/*';
 				return new NFActiveController(this.view,function(){
-					return DATAMAP(__.getManagedDatasWithPath(selectPath),function(managedData){ return _.structureNodes[managedData.BindID]; },DATAFILTER);
+					return DATAMAP(__.querySelectData(selectPath),function(managedData){ return _.structureNodes[managedData.BindID]; },DATAFILTER);
 				},'click',function(e){
 					return CALL(allowSelect,this,e,_.getManagedDataWithNode(this));
 				},firstSelect,allowMultiSelect,allowInactive);
@@ -7071,7 +7144,6 @@
 	});
 	
 	makeModule("NFScrollBox",{
-		
 		needScrollingOffsetX:function(offset){
 			if(!this.allowScrollX || offset == 0 || (typeof offset !== 'number') ) return false;
 			var needTo = this.Source.scrollLeft + (-offset);

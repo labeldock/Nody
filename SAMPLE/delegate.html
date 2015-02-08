@@ -17,19 +17,57 @@
   </style>
 </head>
 <body>
-	<div class='btn-group'>
-		<a class='btn btn-default'>
-			이것도
-		</a>
-		<a class='btn btn-default'>
-			<div>저것도</div>
-		</a>
-		<a class='btn btn-default'>
-			<label>요것도</label>
-		</a>
-		<a class='btn btn-default'>
-			<img src='resources/images/Gabon.png'>
-		</a>
+	
+	<div class='row-1'>
+		<div class='btn-group'>
+			<a class='btn btn-default'>
+				이것도
+			</a>
+			<a class='btn btn-default'>
+				<div>저것도</div>
+			</a>
+			<a class='btn btn-default'>
+				<label>요것도</label>
+			</a>
+			<a class='btn btn-default'>
+				<img src='resources/images/Gabon.png'>
+			</a>
+		</div>
+	</div>
+	<div class='row-2'>
+		<div class='btn-group g1'>
+			<a class='btn btn-default'>
+				다같이
+			</a>
+			<a class='btn btn-default'>
+				돌자
+			</a>
+			<a class='btn btn-default'>
+				동네한바퀴
+			</a>
+		</div>
+		<div class='btn-group g2'>
+			<a class='btn btn-default'>
+				다같이
+			</a>
+			<a class='btn btn-default'>
+				돌자
+			</a>
+			<a class='btn btn-default'>
+				동네한바퀴
+			</a>
+		</div>
+		<div class='btn-group g3'>
+			<a class='btn btn-default'>
+				다같이
+			</a>
+			<a class='btn btn-default'>
+				돌자
+			</a>
+			<a class='btn btn-default'>
+				동네한바퀴
+			</a>
+		</div>
 	</div>
 	
 	<script src="../js/nody.js"></script>
@@ -38,7 +76,14 @@
 	<script src="resources/js/bootstrap.min.js"></script>
 	<script src="resources/js/bootstrap-slider.js"></script>
 	<script>
-		new ActiveController('.btn-group','.btn','click',true);
+		new NFActiveController('.row-1 .btn-group','.btn','click',true);
+		
+		
+		var manager = new NFActiveControllerManager();
+		manager.makeActiveController('.row-2 .g1','.btn','click',true);
+		manager.makeActiveController('.row-2 .g2','.btn','click',true);
+		manager.makeActiveController('.row-2 .g3','.btn','click',true);
+		
 	</script>	
 </body>
 </html>

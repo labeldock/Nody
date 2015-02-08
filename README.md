@@ -59,19 +59,17 @@ Nody는...
 
 ### Compatibility #
 #### Recommend #
-  - IE10+
+  - IE9+
   - chrome4+
-  - firefoe 16+
   - safari4+
-  - opera 15+
-
-#### Minimum #
-  - 일반적으로 IE9에서 동작되는것으로 확인되나 IE8까지 지원하도록 작업중이다.
+  
+#### Incomplete Support #
+  - IE8+
+  - firefox
+  - opera
 
 <a name="simple-showcase"/>
 ## Simple showcase #
-대략적인 이해를 위한 코드이다.
-
 
 
 <a name="showcase-tag-generator"/>
