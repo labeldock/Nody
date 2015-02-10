@@ -7,7 +7,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.20.7",build = "1027";
+	var version = "0.20.7",build = "1030";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9", nodyCoreBuild = "74";
@@ -877,14 +877,16 @@
 (function(W){
 	if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
 	W.makeSingleton("SpecialFoundation",{
-		"RATIO100":function(){
+		
+		"ZRATIO":function(ratioTotal){
 			var total = 0;
-			return DATAMAP(arguments,function(v){
+			ratioTotal = TONUMBER(ratioTotal) || 100;
+			return DATAMAP(Array.prototype.slice.call(arguments,1),function(v){
 				var num = TONUMBER(v);
 				total  += num;
 				return num;
 			},DATAMAP,function(num){
-				return Math.round(num / total * 100);
+				return Math.round(num / total * ratioTotal);
 			});
 		},
 		"TOPX":function(v){ if( /(\%|px)$/.test(v) ) return v; return TONUMBER(v)+"px"; },
@@ -2906,9 +2908,15 @@
 			return [stakes,stakee]; 
 		},
 		"HTMLTOEL":function(html){
-			var makeWrapper = document.createElement("div");
-			makeWrapper.innerHTML = html;
-			return CLONEARRAY(makeWrapper.children);
+			var cache = FUT.CACHEGET("HTMLTOEL",html);
+			if( cache ) {
+				return CLONENODES(cache);
+			} else {
+				var makeWrapper = document.createElement("div");
+				makeWrapper.innerHTML = html;
+				FUT.CACHESET("HTMLTOEL",html,CLONENODES(makeWrapper.children));
+				return CLONEARRAY(makeWrapper.children);
+			}
 		},
 		"PRINT":function(a){ return CREATE("div",a,W.document); }
 	});
@@ -2980,16 +2988,20 @@
 		"HASFOCUS":function(node){ return document.activeElement == node; },
 		//하나의 CSS테스트
 		"THE":function(node,selectText,extraData){
+			if(node.matches) return node.matches(selectText);
 			var tagInfo = SELECTINFO(selectText);
-			
 			for(var key in tagInfo){
 				switch(key){
-					case "tagName":
-						if(node.tagName.toLowerCase() !== tagInfo.tagName) return false;
-						break;
+					case "tagName": if(node.tagName.toLowerCase() !== tagInfo.tagName) return false; break;
 					case "class":
-						var nodeClass = ELATTR(node,key);
 						var infoClass = tagInfo[key];
+						var nodeClass = ELATTR(node,key);
+						
+						if( (infoClass === null) ) {
+							if(nodeClass === null) { return false; }
+							continue;
+						}
+						
 						if(typeof nodeClass === "string"){
 							var hasNotClass = false;
 							
@@ -3076,6 +3088,7 @@
 			}
 			return true;
 		},
+		//레퍼런스부터 호출합니다.
 		"Structure#QueryDataInfo":function(querys){
 			this.keymap(OUTERSPLIT(querys,",",["()"]),function(query){
 				var querySplit = [];
@@ -4391,33 +4404,58 @@
 			);
 		},
 		// 키를 지우면서
-		partialAttr:function(attrKey,method){
+		partialAttr:function(attrKey,callback){
 			this.find("["+attrKey+"]").each(function(node){
 				//attrValue, node
-				method(node.getAttribute(attrKey),node,attrKey);
+				callback(node.getAttribute(attrKey),node,attrKey);
 				node.removeAttribute(attrKey);
 			});
 			return this;
+		},
+		partialNodeProps:function(propKeys,callback){
+			var keys  = new NFArray(propKeys);
+			var sKeys = keys.getMap(function(key){ return '[node-'+ key +']';  });
+			this.find(sKeys.join(',')).each(function(node){
+				sKeys.each(function(sKey,i){
+					if(NUT.THE(node,sKey)) {
+						callback(node.getAttribute('node-'+keys[i]),node,keys[i]);
+						node.removeAttribute('node-'+keys[i]);
+					}
+				})
+			});
 		},
 		//
 		setNodeData:function(refData,dataFilter){
 			if(!this.TemplatePartials) this.TemplatePartials = {};
 			
-			
 			if(typeof refData !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다",refData); }
 			var _ = this,data = CLONEOBJECT(refData),dataPointer = this.TemplatePartials;
 			dataFilter = dataFilter || this._persistantDataFilter;
 			
+			//MARK('partial test');
+			
 			// 파셜 노드 수집 // 재사용 가능하도록 고려해야함
-			DATAEACH(['value','class','dataset','href','append','prepend','put','display','custom'],function(name){
-				_.partialAttr("node-"+name,function(attrValue,node){
-					if(!(name in dataPointer)) dataPointer[name] = {};
-					attrValue.replace(/\S+/g,function(s){
-						if(!dataPointer[name][s]) dataPointer[name][s] = [];
-						dataPointer[name][s].push(node);
+			this.partialNodeProps(['value','class','dataset','href','append','prepend','put','display','custom'],
+				function(name,node,nodeAlias){
+					if(!(nodeAlias in dataPointer)) dataPointer[nodeAlias] = {};
+					name.replace(/\S+/g,function(s){
+						if(!dataPointer[nodeAlias][s]) dataPointer[nodeAlias][s] = [];
+						dataPointer[nodeAlias][s].push(node);
 					});
-				});
-			});
+				}
+			);
+			
+			//DATAEACH(['value','class','dataset','href','append','prepend','put','display','custom'],function(name){
+			//	_.partialAttr("node-"+name,function(attrValue,node){
+			//		if(!(name in dataPointer)) dataPointer[name] = {};
+			//		attrValue.replace(/\S+/g,function(s){
+			//			if(!dataPointer[name][s]) dataPointer[name][s] = [];
+			//			dataPointer[name][s].push(node);
+			//		});
+			//	});
+			//});
+			
+			
 			
 			if(typeof dataFilter === 'object') {
 				PROPEACH(dataFilter,function(value,key){
@@ -4933,9 +4971,15 @@
 		},
 		needFilterController:function(fm,fwc){
 			return new NFFilterController(this.initCall[0],this.initCall[1],fm,fwc);
+		},
+		injectSelects:function(method){
+			if(typeof method !== "function") return {};
+			return INJECT(this.getSelects(),function(inject,node,index){
+				method(inject,node,index);
+			});
 		}
 	},function(cSel,sSel,tSel){
-		if(ISNOTHING(FIND(cSel))) console.warn("Contexts::init::error 첫번째 파라메터의 값을 현재 찾을 수 없습니다. 들어온값", cSel);
+		if(ISNOTHING(FIND(cSel))) console.warn("Contexts::init::error 첫번째 파라메터의 값을 현재 찾을 수 없습니다. 들어온값", cSel,sSel,tSel);
 		this.initCall = [cSel,sSel,tSel];
 	});
 	
@@ -5106,12 +5150,6 @@
 		},
 		resetActiveTargetWithPool:function(sel,pool){
 			this.resetActiveTargetWithContexts(undefined,sel,pool);
-		},
-		makeAccessProperty:function(method){
-			if(typeof method !== "function") return {};
-			return INJECT(this.getSelects(),function(inject,node,index){
-				method(inject,node,index);
-			});
 		}
 	},function(cSel,sSel,selectEvent,willActive,shouldActiveIndex,allowMultiActive,allowInactive){
 		this._super(cSel,sSel);
@@ -5209,7 +5247,7 @@
 			return this;
 		},
 		shouldActive:function(index,withEvent,unique){
-			_NFArray(this.Source).remove(sender).each(function(ac, i){ 
+			DATAEACH(this.Source,function(ac,i){
 				//첫번째만 무조건 이벤트 발생
 				ac.shouldActive( index, (i === 0) ? (withEvent && true) : false, unique); 
 			});
@@ -5721,9 +5759,10 @@
 						}
 					});
 					break;
-				case "object":
+				case "object":	
 					//엘리먼트 배열로 들어올경우
 					var doms = FIND(loadPath);
+					
 					//loadPath가 빈 배열이라면 정상적인 처리로 간주합니다.
 					if( doms.length < 1 && !ISARRAY(loadPath) ){
 						console.error("NFContentLoaderBase::불러올 엘리먼트가 존재하지 않습니다."+loadPath);
@@ -5959,11 +5998,7 @@
 		},
 		callAsLoad:function(loadKey,loadArguments,after){
 			if(loadKey in this.Source){
-				var _             = this;
-				
-				//이전 컨테이너를 Inactive한다고 통보
-				this._inactiveActivatedContents(true);
-				
+				var _ = this;
 				return this.loadHTML(loadKey,this.Source[loadKey],function(key,doms){
 					ELAPPEND(_.ContainerPlaceholder[key],doms);
 					ELSCRIPTSTART(_.ContainerPlaceholder[key]);
@@ -5998,7 +6033,7 @@
 			var newContainer = MAKE('div',{style:'height:100%;display:none;','data-container-name':name},contents);
 			this._super(newContainer,name);
 			if(noAppend !== false) ELAPPEND(this.view,newContainer);
-			this.load(name);
+			this.callAsLoad(name);
 		},
 		needFormController:function(target){
 			if(!target || typeof target === 'object') {
@@ -6017,31 +6052,24 @@
 		
 		if (this.view){
 			//베이스 파라메터가 존재하지 않으면 현재 컨테이너의 컨텐츠를 기본 파라메터로 봄
-			if(!baseParam) {
-				baseParam = {};
-				for(var i=0,l=_container.children.length;i<l;i++) baseParam[i] = _container.children[i];
-				
-				
-				this._super(baseParam,function(){
-					this.addContainer(undefined,"initial-contents");
-				});
-				
-				//다른컨테이너도 플레이스 홀더 설정을 합니다.
-				PROPEACH(this.Source,function(value,key){ _.addContainer(value,key,true); });
-			} else {
-				if( ISARRAY(baseParam) ) {
-					var newBaseParam = {};
-					DATAEACH(baseParam,function(v,i){ newBaseParam[i] = v; });
-					baseParam = newBaseParam;
+			var noConfigMode = false;
+			
+			var _ = this;
+			var initialContents = this.view.children;
+			this._super(function(){
+				if(typeof baseParam === 'function') {
+					var result = baseParam.call(_,_);
+					return (!result) ? INJECT(initialContents,function(inj,node,i){ inj[i] = node; }) : result;
 				}
-				this._super(baseParam,function(){
-					this.Source['initial-contents'] = TOARRAY(this.view.children);
-					this.addContainer(undefined,"initial-contents");
-				});
-				
-				//다른컨테이너도 플레이스 홀더 설정을 합니다.
-				PROPEACH(this.Source,function(value,key){ _.addContainer(undefined,key); });
-			}
+				return baseParam;
+			},function(){
+				this.addContainer(initialContents,"initial-contents");
+			});
+			
+			//다른컨테이너도 플레이스 홀더 설정을 합니다.
+			PROPEACH(this.Source,function(value,key){ 
+				_.addContainer( noConfigMode ? value : undefined,key); 
+			});
 		} else {
 			console.error("NFTabContents::해당 컨테이너를 찾을수 없습니다. Navigation Controller의 작동을 완전히 중지합니다.=> ",container);
 		}
@@ -6518,18 +6546,36 @@
 			if(templateNode.isEmpty()) {
 				console.error("template :: 렌더링할 template를 찾을수 없습니다",templateNode);
 				return false;
-			} 
-			templateNode.partialAttr("node-bind",function(dataKey,node){
-				_.bind(dataKey,node)
-			});
-			templateNode.partialAttr("node-action",function(dataKey,node){
-				var dataParam = node.getAttribute("data-param");
-				_.action(dataKey,node,TOOBJECT(dataParam,"value"));
-				if("node-param" in node.attributes) node.removeAttribute("node-param");;	
-			});
-			templateNode.partialAttr("node-placeholder",function(dataKey,node){
-				_.placeholder(node);
-			});
+			}
+			
+			templateNode.partialNodeProps(['bind','action','placeholder'],
+				function(name,node,nodeAlias){
+					switch(nodeAlias){
+						case 'bind':
+							_.bind(name,node);
+							break;
+						case 'action':
+							var nodeParam = node.getAttribute("node-param");
+							if("node-param" in node.attributes) node.removeAttribute("node-param");
+							_.action(nodeAlias,node,nodeParam ? nodeParam : TOOBJECT(nodeParam,"value"));
+							break;
+						case 'placeholder':
+							_.placeholder(node);
+							break;
+					}
+				}
+			);
+			//templateNode.partialAttr("node-bind",function(dataKey,node){
+			//	_.bind(dataKey,node)
+			//});
+			//templateNode.partialAttr("node-action",function(dataKey,node){
+			//	var dataParam = node.getAttribute("data-param");
+			//	_.action(dataKey,node,TOOBJECT(dataParam,"value"));
+			//	if("node-param" in node.attributes) node.removeAttribute("node-param");;	
+			//});
+			//templateNode.partialAttr("node-placeholder",function(dataKey,node){
+			//	_.placeholder(node);
+			//});
 			return templateNode;
 		},
 		revertData:function(){
@@ -6560,22 +6606,11 @@
 		getChildManagedData  : function(){ return this.Child; },
 		hasParentManagedData : function(){ return !!this.Parent; },
 		hasChildManagedData  : function(){ return !!this.Child.length; },
-		getDepth:function(){
-			var depth = 0;
-			this.feedUpManageData(function(m,d){ if (depth < (d + 1)) depth = (d + 1); });
-			return depth;
-		},
-		getLevel:function(){
-			var level = 0;
-			this.chainUpMangedData(function(){ this.Parent ? level++ : undefined; });
-			return level;
-		},
-		getIndex:function(){
-			return this.Parent.Child.indexOf(this);
-		},
-		getContextID:function(){
-			return this.context.ID;
-		},
+		getDepth:function(){ var depth = 0; this.feedUpManageData(function(m,d){ if (depth < (d + 1)) depth = (d + 1); }); return depth; },
+		getLevel:function(){ var level = 0; this.chainUpMangedData(function(){ this.Parent ? level++ : undefined; }); return level; },
+		getIndex:function(){ return this.Parent.Child.indexOf(this); },
+		getBindID:function(){ return this.BindID; },
+		getContextID:function(){ return this.context.ID; },
 		findById:function(id){
 			if(this.BindID == id){
 				return this;
@@ -6736,8 +6771,6 @@
 				var parentPlaceHolder = this.placeholderNodes[parentManData.BindID];
 				var beforeElement     = this.structureNodes[rerenderManagedData.BindID];
 				var beforePlaceHolder = this.placeholderNodes[rerenderManagedData.BindID];
-				
-				console.log('parentPlaceHolder')
 				
 				if(parentPlaceHolder && beforePlaceHolder) {
 					//바꿔치기 하기
@@ -6943,6 +6976,9 @@
 				var parentNode = FINDPARENT(node,'[data-managed-id]');
 				if(parentNode) return this.getManagedDataWithNode(parentNode,true);
 			}
+		},
+		findWithManagedData:function(){
+			
 		},
 		findWithBindID:function(bindID){
 			return this.structureNodes[bindID];
@@ -7215,6 +7251,18 @@
 				this.axisYNegativeLength = negative;
 			}
 			this.needPositiveDrawItem();
+		},
+		focusTo:function(s){
+			var select = FIND(s,this.Source,0);
+			if(select) {
+				var offset = FINDOFFSET(select,this.ClipView);
+				if(offset) {
+					this.needScrollingToX(offset.x + (offset.width / 2) - (this.Source.offsetWidth / 2) );
+					this.needScrollingToY(offset.y + (offset.height / 2) - (this.Source.offsetHeight / 2) );
+					return select;
+				}
+			}
+			return false;
 		},
 		needPositiveDrawItem:function(){
 			if(typeof this._drawAxisYItem === "function"){

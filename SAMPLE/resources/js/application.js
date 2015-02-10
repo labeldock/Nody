@@ -4,7 +4,7 @@ var GNBNFContentLoader = new NFContentLoader("main",function(){
 	return this.needActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
 		return GNBNFContentLoader.active((this.textContent || this.innerText).toLowerCase());
-	},2).makeAccessProperty(function(accessData,node){
+	},2).injectSelects(function(accessData,node){
 		//navigation data
 		var name = (node.textContent || node.innerText).toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;

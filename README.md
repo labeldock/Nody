@@ -626,6 +626,7 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 ## Version info #
 
 #### 0.20.7 정보
+- 노드의 작업성능 향상 (NFTemplate가 8배 정도 빨라짐)
 - ZDATE 추가 (날짜를 빠르게 인식하기 위한 함수)
 - 함수를 배열로 인식하는 버그 수정
 - NFArray에 timesmap 추가
