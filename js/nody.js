@@ -1,4 +1,4 @@
-// Nody (Node Friendly(not node js))
+// Nody (Node Friendly (it's not nodejs) )
 // GIT         // https://github.com/labeldock/Nody
 // tested in   // IE9 + (on 4.0) & webkit2 & air13
 // lincense    // MIT lincense
@@ -7,7 +7,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.20.8",build = "1031";
+	var version = "0.20.8",build = "1032";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9", nodyCoreBuild = "74";
@@ -111,6 +111,17 @@
 		//getUserMedia
 		info.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 		info.supportGetUserMedia = !!info.getUserMedia;
+		
+		//matches
+		var matchesSelectorName = 
+			('matches' in tester)               ? 'matches' :
+			('webkitMatchesSelector' in tester) ? 'webkitMatchesSelector' :
+			('msMatchesSelector'     in tester) ? 'msMatchesSelector' :
+			('mozMatchesSelector'    in tester) ? 'mozMatchesSelector' :
+			('oMatchesSelector'      in tester) ? 'oMatchesSelector' : false;
+			
+		info.supportMatches  = !!matchesSelectorName;
+		info.matchesSelector = info.supportMatches && function(node,selector){ return node[matchesSelectorName](selector); };
 		
 		return info;
 	})();
@@ -2234,6 +2245,8 @@
 			
 			return randomKey;
 		},
+		base62Random:function(length) { return this.base64Random(length,0,62); },
+		base62UniqueRandom:function(length) { return this.base64UniqueRandom(length || 6,0,62); },
 		random:function(length) { return parseInt(this.base64Random(length,52,10)); },
 		numberRandom:function(length) { return this.base64Random(length,52,10); },
 		base36Random:function(length) { return this.base64Random(length,26,36); },
@@ -2988,7 +3001,8 @@
 		"HASFOCUS":function(node){ return document.activeElement == node; },
 		//하나의 CSS테스트
 		"THE":function(node,selectText,extraData){
-			if(node.matches) return node.matches(selectText);
+			if(NODYENV.matchesSelector) return NODYENV.matchesSelector(node,selectText);
+			
 			var tagInfo = SELECTINFO(selectText);
 			for(var key in tagInfo){
 				switch(key){
@@ -4198,8 +4212,8 @@
 	});
 	EL.eachGetterWithPrefix();
 	
-	extendModule("NFArray","Nody",{
-		find:function(selector){ return _Nody(selector,this); },
+	extendModule("NFArray","NFQuery",{
+		find:function(selector,i){ return new NFQuery(selector,this,i); },
 		hasFocus:function(){ return EL.HASFOCUS(this); },
 		caretPossible:function(){ return EL.CARETPOSSIBLE(this); },
 		attr:function(name){ 
@@ -4282,15 +4296,15 @@
 		},
 		disabled:function(){ FLATTENCALL(EL.DISABLED,EL,this,arguments); return this; },
 		readonly:function(){ FLATTENCALL(EL.READONLY,EL,this,arguments); return this; },
-	},function(select,parent){
-		this.setSource(FIND(select,parent));
+	},function(select,parent,i){
+		this.setSource(FIND(select,parent,i));
 	});
 	
-	extendModule("Nody","NFMake",{},function(node,attr,parent){
+	extendModule("NFQuery","NFMake",{},function(node,attr,parent){
 		this.setSource(GUT.CREATE(node,attr,parent));
 	});
 	
-	extendModule("Nody","NFContext2D",{
+	extendModule("NFQuery","NFContext2D",{
 		setCanvasSize:function(width,height){
 			this._drawTarget.setAttribute("width",width);
 			this._drawTarget.setAttribute("height",height);
@@ -4392,9 +4406,11 @@
 		}
 	});
 	
+	makeGetter('N$',function(s,p,i){ return new NFQuery(s,p,i);   });
+	makeGetter('M$',function(n,a,p){ return new NFMake(n,a,p);    });
+	makeGetter('C$',function(w,h  ){ return new NFContext2D(w,h); });
 	
-	
-	extendModule("Nody","NFTemplate",{
+	extendModule("NFQuery","NFTemplate",{
 		clone    : function(nodeData,dataFilter){ return new NFTemplate(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter)); },
 		generate : function(nodeData,dataFilter){ return (new NFTemplate(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter))).get(); },
 		generateWithData : function(){ 
@@ -5998,7 +6014,7 @@
 					CALL(after,this);
 				});	
 			} else {
-				console.warn("불러올 소스의 경로가 존재하지 않습니다. loadKey=> ",loadKey,'placeholder(all) => ',this.ContainerPlaceholder,'Source => ',this.Source);
+				console.warn("불러올 소스의 경로가 존재하지 않습니다. [loadKey : ",loadKey,'] [placeholder(all) => ',this.ContainerPlaceholder,'] [Source => ',this.Source,']');
 			}
 		},
 		//무조건 새로 불러옴
@@ -6025,7 +6041,7 @@
 			var newContainer = MAKE('div',{style:'height:100%;display:none;','data-container-name':name},contents);
 			this._super(newContainer,name);
 			if(noAppend !== false) ELAPPEND(this.view,newContainer);
-			this.callAsLoad(name);
+			if(name !== "initial-contents") this.callAsLoad(name);
 		},
 		needFormController:function(target){
 			if(!target || typeof target === 'object') {
@@ -6527,47 +6543,30 @@
 				if(typeof v === 'function') return function(){ return v.apply(_,Array.prototype.slice.call(arguments)); };
 				return v;
 			});
-			if(typeof _template === 'object') {
-				templateNode = _template.clone(this.value(),dataFilter);
-			} else if(typeof _template === 'string') {
-				templateNode = new NFTemplate(_template,this.value(),dataFilter);
-			} else {
-				console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template);
-				return false;
-			}
-			if(templateNode.isEmpty()) {
-				console.error("template :: 렌더링할 template를 찾을수 없습니다",templateNode);
-				return false;
-			}
+			
+			if(typeof _template === 'object')        { templateNode = _template.clone(this.value(),dataFilter);
+			} else if(typeof _template === 'string') { templateNode = new NFTemplate(_template,this.value(),dataFilter);
+			} else                                   { console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template); return false; }
+			
+			if(templateNode.isEmpty()) { console.error("template :: 렌더링할 template를 찾을수 없습니다",templateNode); return false; }
 			
 			templateNode.partialNodeProps(['bind','action','placeholder'],
 				function(name,node,nodeAlias){
 					switch(nodeAlias){
-						case 'bind':
-							_.bind(name,node);
-							break;
+						case 'bind': _.bind(name,node); break;
 						case 'action':
-							var nodeParam = node.getAttribute("node-param");
-							if("node-param" in node.attributes) node.removeAttribute("node-param");
-							_.action(nodeAlias,node,nodeParam ? nodeParam : TOOBJECT(nodeParam,"value"));
+							if(("node-param" in node.attributes)) {
+								_.action(name,node,TOOBJECT(node.getAttribute("node-param")));
+								node.removeAttribute("node-param");
+							} else {
+								_.action(name,node);
+							}
 							break;
-						case 'placeholder':
-							_.placeholder(node);
-							break;
+						case 'placeholder': _.placeholder(node); break;
 					}
 				}
 			);
-			//templateNode.partialAttr("node-bind",function(dataKey,node){
-			//	_.bind(dataKey,node)
-			//});
-			//templateNode.partialAttr("node-action",function(dataKey,node){
-			//	var dataParam = node.getAttribute("data-param");
-			//	_.action(dataKey,node,TOOBJECT(dataParam,"value"));
-			//	if("node-param" in node.attributes) node.removeAttribute("node-param");;	
-			//});
-			//templateNode.partialAttr("node-placeholder",function(dataKey,node){
-			//	_.placeholder(node);
-			//});
+			
 			return templateNode;
 		},
 		revertData:function(){
@@ -6672,7 +6671,7 @@
 			if(this.Parent) return this.Parent.addChildData(data);
 		}
 	},function(context,initData,dataType){
-		this.BindID     = 'ma'+NFUtil.base64UniqueRandom(8);
+		this.BindID     = 'ma'+NFUtil.base62UniqueRandom(8);
 		this.context    = context;
 		this.Source     = initData;
 		this.SourceType = dataType || "object";
@@ -6757,12 +6756,13 @@
 		},
 		nManagedDataNeedRerender:function(rerenderManagedData){
 			//부모의 placehoder를 찾음
-			var parentManData   = rerenderManagedData.getParentManagedData();
+			var parentManData = rerenderManagedData.getParentManagedData();
 			if(parentManData) {
 				//부모의 placeholder가 존재해야 작동함
-				var parentPlaceHolder = this.placeholderNodes[parentManData.BindID];
-				var beforeElement     = this.structureNodes[rerenderManagedData.BindID];
-				var beforePlaceHolder = this.placeholderNodes[rerenderManagedData.BindID];
+				var parentPlaceHolder = this.placeholderNodes[parentManData.getBindID()];
+				var beforeElement     = this.structureNodes[rerenderManagedData.getBindID()];
+				var beforePlaceHolder = this.placeholderNodes[rerenderManagedData.getBindID()];
+				//console.log('parentPlaceHolder,beforeElement,beforePlaceHolder',parentPlaceHolder,beforeElement,beforePlaceHolder)
 				
 				if(parentPlaceHolder && beforePlaceHolder) {
 					//바꿔치기 하기
@@ -6895,7 +6895,7 @@
 				managedData.scope = viewController;
 				//slngleRenderMode의 관리는 매우 중요함 else문의 블럭과 동일하게 동작하도록 주의할것
 				var renderResult = viewController.viewModel.needRenderView(startDepth-topLevel,managedData,[],viewController);
-				renderPostpress(renderResult,managedData,startDepth-topLevel);
+				renderPostpress(renderResult,managedData,startDepth - topLevel);
 				// 루트에 추가함
 				rootElement.appendChild(renderResult);
 				// 그린내역을 기록함
@@ -6915,7 +6915,7 @@
 					if (depth == startDepth) {
 						// 최상위 렌더링
 						renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[depth+1],viewController);
-						renderPostpress(renderResult,managedData,startDepth-topLevel);
+						renderPostpress(renderResult,managedData,depth);
 						//루트에 추가
 						rootElement.appendChild(renderResult);
 						//컨테이너에 추가
@@ -6924,7 +6924,7 @@
 					} else if (depth < lastFeed) {
 						// 렌더 피드가 올라감
 						var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[lastFeed],viewController);
-						renderPostpress(renderResult,managedData,startDepth-topLevel);
+						renderPostpress(renderResult,managedData,depth);
 						//컨테이너에 추가
 						if( viewController.placeholderNodes[managedData.BindID] ){ 
 							ELAPPEND(viewController.placeholderNodes[managedData.BindID],feedCollection[lastFeed])
@@ -6936,7 +6936,7 @@
 						// 최하위 피드모음
 						// 렌더 피드가 내려감
 						var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,[],viewController);
-						renderPostpress(renderResult,managedData,startDepth-topLevel);
+						renderPostpress(renderResult,managedData,depth);
 						feedCollection[depth].push(renderResult);
 					}
 					// 마지막 피드 depth를 기록함
