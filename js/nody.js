@@ -7,7 +7,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.20.7",build = "1030";
+	var version = "0.20.8",build = "1031";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9", nodyCoreBuild = "74";
@@ -4412,18 +4412,24 @@
 			});
 			return this;
 		},
-		partialNodeProps:function(propKeys,callback){
-			var keys  = new NFArray(propKeys);
-			var sKeys = keys.getMap(function(key){ return '[node-'+ key +']';  });
-			this.find(sKeys.join(',')).each(function(node){
-				sKeys.each(function(sKey,i){
-					if(NUT.THE(node,sKey)) {
-						callback(node.getAttribute('node-'+keys[i]),node,keys[i]);
-						node.removeAttribute('node-'+keys[i]);
+		partialNodeProps:function(propKeys,callback,presets){
+			var keys  = propKeys;
+			var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new NFArray(keys)).getMap(function(key){ return 'node-'+key; });
+			var sKeys = (presets && presets.sKeys) ? presets.sKeys : (new NFArray(pKeys)).getMap(function(pkey){ return '['+ pkey +']'; });
+			var pNodes = this.find(sKeys.join(','));
+			for(var i=0,l=pNodes.length;i<l;i++){
+				for(var si=0,sl=sKeys.length;si<sl;si++){
+					if(NUT.THE(pNodes[i],sKeys[si])) {
+						callback(pNodes[i].getAttribute(pKeys[si]),pNodes[i],keys[si]);
+						pNodes[i].removeAttribute(pKeys[si]);
 					}
-				})
-			});
+				}
+			}
 		},
+		//성능의 가속을 위해 존재하는 값들입니다. 이것을 건드리면 엄청난 문제를 초례할 가능성이 있습니다.
+		__nodeDataDefaultKeys:['value','class','dataset','href','append','prepend','put','display','custom'],
+		__nodeDataAttrKeys:["node-value", "node-class", "node-dataset", "node-href", "node-append", "node-prepend", "node-put", "node-display", "node-custom"],
+		__nodeDataSelectKeys:["[node-value]", "[node-class]", "[node-dataset]", "[node-href]", "[node-append]", "[node-prepend]", "[node-put]", "[node-display]", "[node-custom]"],	
 		//
 		setNodeData:function(refData,dataFilter){
 			if(!this.TemplatePartials) this.TemplatePartials = {};
@@ -4432,30 +4438,16 @@
 			var _ = this,data = CLONEOBJECT(refData),dataPointer = this.TemplatePartials;
 			dataFilter = dataFilter || this._persistantDataFilter;
 			
-			//MARK('partial test');
-			
 			// 파셜 노드 수집 // 재사용 가능하도록 고려해야함
-			this.partialNodeProps(['value','class','dataset','href','append','prepend','put','display','custom'],
+			this.partialNodeProps(this.__nodeDataDefaultKeys,
 				function(name,node,nodeAlias){
 					if(!(nodeAlias in dataPointer)) dataPointer[nodeAlias] = {};
 					name.replace(/\S+/g,function(s){
 						if(!dataPointer[nodeAlias][s]) dataPointer[nodeAlias][s] = [];
 						dataPointer[nodeAlias][s].push(node);
 					});
-				}
+				},{pKeys:this.__nodeDataAttrKeys,sKeys:this.__nodeDataSelectKeys}
 			);
-			
-			//DATAEACH(['value','class','dataset','href','append','prepend','put','display','custom'],function(name){
-			//	_.partialAttr("node-"+name,function(attrValue,node){
-			//		if(!(name in dataPointer)) dataPointer[name] = {};
-			//		attrValue.replace(/\S+/g,function(s){
-			//			if(!dataPointer[name][s]) dataPointer[name][s] = [];
-			//			dataPointer[name][s].push(node);
-			//		});
-			//	});
-			//});
-			
-			
 			
 			if(typeof dataFilter === 'object') {
 				PROPEACH(dataFilter,function(value,key){
