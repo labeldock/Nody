@@ -625,7 +625,21 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 <a name="version-info"/>
 ## Version info #
 
-#### 0.20.7 정보
+#### 0.20.9 정보
+- NFArray에서 getSortFirst getSortLast 추가
+- Base64UniqueRandom 키 생성시 기본적으로 고정적인 prefix를 지정할 수 있게 하였습니다.
+- FINDIN, FINDPARENT, FINDPARENTS등에서 다양한 파라메터를 대응할 수 있도록 향상
+- ELPUT의 심각한 오류 수정
+- NFQuery에 putTo 함수 추가
+- NFResize 모듈추가 (엘리먼트가 resize될 경우 이벤트가 발생됩니다.)
+- NFScrollTrack 모듈추가
+
+0.21 예정
+- NFContext2D는 지워질것 입니다. 기본적으로 이 모듈이 탑재된 이유는 canvas와 img가 상호간 리소스를 쉽게 교환하기 위해서였습니다. API가 따로 제작될것입니다.
+- 웹 컴포넌트 모듈들은 되도록이면 기본 Nody에서 떨어질 것입니다. (NFScrollBox, NFZoomBox, NFScrollTrack)
+
+
+#### 0.20.8 까지
 - 노드의 작업성능 향상 (NFTemplate가 8배 정도 빨라짐)
 - ZDATE 추가 (날짜를 빠르게 인식하기 위한 함수)
 - 함수를 배열로 인식하는 버그 수정
@@ -636,8 +650,6 @@ Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 �
 - NFTemplate node-src 문이 제거되며 node-value로 사용가능
 - 이제부터 ELVALUE에서 img, script등의 value는 src로 link는 rel로 접근합니다.
 - NFTabContents 모듈 추가
-
-#### 0.20.6 까지
 - 추후 모든 Contents로더 모듈들은 NFFormController를 지원하도록 변경될 예정입니다.
 - FINDON,FINDPARENT 컨티뉴틸리티 규칙 변경
 - FINDOFFSET 추가

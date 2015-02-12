@@ -7,7 +7,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.20.8",build = "1032";
+	var version = "0.20.9",build = "1035";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9", nodyCoreBuild = "74";
@@ -1303,7 +1303,15 @@
 		//
 		getFirst:function(){ return DATAZERO(this); },
 		getLast :function(){ return DATALAST(this); },
-		
+		//
+		//정렬합니다.
+		getSortBy:function(sortInspector){},
+		getSort:function(positive){
+			positive=typeof positive=="undefined"?true:false;var clone=this.clone();
+			return positive?clone.sort():clone.sort().reverse();
+		},
+		getSortFirst:function(){ return this.getSort().getFirst(); },
+		getSortLast:function(){ return this.getSort().getLast(); },
 		//뒤로부터 원하는 위치에 대상을 삽입합니다.
 		behind: function(v,a){ return this.insert(v, this.length - (isNaN(a) ? 0 : parseInt(a)) ); },
 		//원하는 위치에 대상을 덮어씁니다.
@@ -1460,9 +1468,7 @@
 		// undefined를 제외한 가장 처음의 
 		useFirst : function(){ return this.firstMatch(function(matchValue){ if(typeof matchValue !== "undefined") return true; }); },
 		useLast  : function(){ return this.lastMatch (function(matchValue){ if(typeof matchValue !== "undefined") return true; }); },
-		//정렬합니다.
-		getSortBy:function(sortInspector){},
-		getSort:function(positive){positive=typeof positive=="undefined"?true:false;var clone=this.getRefactory();return positive?clone.sort():clone.sort().reverse();},
+		
 		//사용성 증가를 위한 코드
 		isNothing:function(){ if(this.length == 0) return true; return false; },
 		isEnough:function(){ if(this.length > 0) return true; return false;   },
@@ -2221,12 +2227,13 @@
 			for(var i=0,l=length;i<l;i++) result = result + this.base64Token.charAt( codeAt + parseInt(Math.random() * codeLength) );
 			return result;
 		},
-		base64UniqueRandom:function(length,codeAt,codeLength){
+		base64UniqueRandom:function(length,prefixKey,codeAt,codeLength){
 			var randomKey;
 			var process = 0;
+			prefixKey = (typeof prefixKey === 'string') ? prefixKey : '';
 			do {
 				var needContinue = false;
-				randomKey        = this.base64Random(length,codeAt,codeLength);
+				randomKey        = prefixKey + this.base64Random(length,codeAt,codeLength);
 				DATAEACH(util_unique_random_key,function(recentKey){
 					if(recentKey == randomKey) needContinue = true;
 					return false;
@@ -2246,13 +2253,13 @@
 			return randomKey;
 		},
 		base62Random:function(length) { return this.base64Random(length,0,62); },
-		base62UniqueRandom:function(length) { return this.base64UniqueRandom(length || 6,0,62); },
+		base62UniqueRandom:function(length,prefix) { return this.base64UniqueRandom(length || 6,prefix,0,62); },
 		random:function(length) { return parseInt(this.base64Random(length,52,10)); },
 		numberRandom:function(length) { return this.base64Random(length,52,10); },
 		base36Random:function(length) { return this.base64Random(length,26,36); },
-		base36UniqueRandom:function(length) { return this.base64UniqueRandom(length || 6,26,36); },
+		base36UniqueRandom:function(length,prefix) { return this.base64UniqueRandom(length || 6,prefix,26,36); },
 		base26Random:function(length) { return this.base64Random(length,0,52); },
-		base26UniqueRandom:function(length) { return this.base64UniqueRandom(length || 6,0,52); }
+		base26UniqueRandom:function(length,prefix) { return this.base64UniqueRandom(length || 6,prefix,0,52); }
 	});
 	
 	
@@ -3267,10 +3274,12 @@
 			return FINDCORE(find,root);
 		}),
 		// 하위루트의 모든 노드를 검색함 (Continutiltiy에서 중요함)
-		"FINDIN" : FUT.CONTINUTILITY(function(root,find){
+		"FINDIN" : FUT.CONTINUTILITY(function(root,find,index){
 			if( !ISNOTHING(find) ) {
 				//두번째 파라메터는 자식들을 반환
-				return FINDCORE(find,DATAMAP(FINDCORE(root),function(node){ return node.children },DATAFLATTEN));
+				return (typeof index === 'number') ?
+				FINDCORE(find,DATAMAP(FINDCORE(root),function(node){ return node.children },DATAFLATTEN))[index] :
+				FINDCORE(find,DATAMAP(FINDCORE(root),function(node){ return node.children },DATAFLATTEN)) ;
 			}
 		},2),
 		// 자식루트의 노드를 검색함
@@ -3282,17 +3291,29 @@
 				default      : return finds; break;
 			}
 		},1),
-		"FINDPARENTS":FUT.CONTINUTILITY(function(el){ return NUT.PARENTS(FINDCORE(el)[0]); }),
-		"FINDPARENT" :FUT.CONTINUTILITY(function(el,require){
-			var node = FINDCORE(el)[0];
-			if(!ISELNODE(node)) return ;
-			if(typeof require === "string"){
-				var parents = NUT.PARENTS(node);
-				for(var i in parents) if( NUT.IS(parents[i],require) ) return parents[i];
-				return undefined;
+		"FINDPARENTS":FUT.CONTINUTILITY(function(el,require,index){ 
+			if(typeof require === 'string') {
+				return (typeof index === 'number') ?
+				DATAFILTER(NUT.PARENTS(FINDCORE(el)[0]),function(el){ return ELIS(el,require); })[index]:
+				DATAFILTER(NUT.PARENTS(FINDCORE(el)[0]),function(el){ return ELIS(el,require); });
+			} else if(typeof require === 'number') {
+				return NUT.PARENTS(FINDCORE(el)[0])[require];
 			} else {
-				return node.parentElement;
+				return NUT.PARENTS(FINDCORE(el)[0]);
 			}
+		},1),
+		"FINDPARENT" :FUT.CONTINUTILITY(function(el,require,index){
+			if( (typeof require === 'number') || ((typeof require === 'string') && (typeof index === 'number')) ) return DATAZERO(FINDPARENTS(el,require,index));
+			var node = FIND(el,0);
+			if(node) {
+				if(typeof require === "string"){
+					var parents = NUT.PARENTS(node);
+					for(var i in parents) if( NUT.IS(parents[i],require) ) return parents[i];
+				} else {
+					return node.parentElement;
+				}
+			}
+			return undefined;
 		},1),
 		"IFRAMEDOCUMENT":function(iframe){
 			var iframe = FIND(iframe,0);
@@ -3675,7 +3696,7 @@
 		},
 		"UNIQUE":function(sel){
 			var node = FIND(sel,0);
-			if(node) { if(!ELHASATTR(node,"id")) node.setAttribute("id",NFUtil.base26UniqueRandom(8)) }
+			if(node) { if(!ELHASATTR(node,"id")) node.setAttribute("id",NFUtil.base26UniqueRandom(8,'uq')) }
 			return node;
 		},
 		"UNIQUEID":function(sel){
@@ -3816,18 +3837,18 @@
 			params.shift();
 			DATAEACH( DATAFLATTEN(params) ,function(content){
 				if(ISELNODE(content)){
-					newContents.push(content)
+					newContents.push(content);
 				} else {
 					content = TOSTRING(content);
 					switch(node.tagName){
 						case "UL":case "MENU":
-							newContents.push(_LI("::"+content))
+							newContents.push(MAKE("li",content));
 							break;
 						case "DL":
-							newContents.push(_DD("::"+content))
+							newContents.push(MAKE("dd",content));
 							break;
 						default:
-							newContents.push(_SPAN("::"+content))
+							newContents.push(MAKE("span",content));
 							break;	
 					}
 				}
@@ -4248,6 +4269,7 @@
 		appendTo :function(target){ CALL(EL.APPENDTO,EL,this,target); return this; },
 		prependTo:function(target){ CALL(EL.PREPENDTO,EL,this,target);return this; },
 		put      :function(){ FLATTENCALL(EL.PUT,EL,this,arguments); return this;},
+		putTo    :function(target){ CALL(EL.PUT,EL,target,this);; return this;},
 		before   :function(){
 			if(arguments.length > 0){
 				FLATTENCALL(EL.BEFORE,EL,this,arguments);
@@ -4331,7 +4353,7 @@
 			});
 			return this;
 		},
-		drawCrossLine:function(top,right,bottom,left,lineColor,offsetX,offsetY){
+		addCrossLine:function(top,right,bottom,left,lineColor,offsetX,offsetY){
 			top = TONUMBER(top);
 			right = TONUMBER(right);
 			bottom = TONUMBER(bottom);
@@ -6389,7 +6411,7 @@
 			return this.RootManagedData;
 		}
 	},function(source,childrenKey){
-		this.ID                = 'co'+NFUtil.base36UniqueRandom(5);
+		this.ID                = NFUtil.base36UniqueRandom(5,'co');
 		this.Source            = TOOBJECT(source,"value");
 		this.SourceChildrenKey = childrenKey || "data";
 		// 데이터 안의 모든 Managed data를 생성하여 메타안에 집어넣음
@@ -6671,7 +6693,7 @@
 			if(this.Parent) return this.Parent.addChildData(data);
 		}
 	},function(context,initData,dataType){
-		this.BindID     = 'ma'+NFUtil.base62UniqueRandom(8);
+		this.BindID     = NFUtil.base62UniqueRandom(8,'ma');
 		this.context    = context;
 		this.Source     = initData;
 		this.SourceType = dataType || "object";
@@ -7011,6 +7033,104 @@
 		//needDisplay
 		if(typeof needDisplay === "function") needDisplay = CALL(needDisplay,this);
 		if(needDisplay === true) this.needDisplay();
+	});
+	
+	makeModule("NFTimeCounter",{
+		timeoutHandler:function(){
+			if(this._timeout)clearTimeout(this._timeout);
+			if( this._moveEnd > (+(new Date())) ) {
+				CALL(this._whenMoving,this,100 - ( this._moveEnd - (+new Date())) / this.duration * 100);
+				var _ = this;
+				this._timeout = setTimeout(function(){ _.timeoutHandler.call(_) },this.rate);
+			} else {
+				this.moveStart = null;
+				this.moveEnd   = null;
+				CALL(this._whenMoving,this,100);
+				CALL(this._whenMoveFinish,this,100);
+			}
+		},
+		start:function(){
+			var _ = this;
+			this._moveStart = (+(new Date()));
+			this._moveEnd   = this._moveStart + this.duration;
+			this.timeoutHandler();
+		},
+		whenCounting   :function(m){ this._whenMoving = m; },
+		whenCountFinish:function(m){ this._whenMoveFinish = m; }
+	},function(counting,finish,ms,rate,now){
+		if(counting)this.whenCounting(counting);
+		if(finish)this.whenCountFinish(finish);
+		this.duration = typeof ms   === 'number' ? ms   : 300;
+		this.rate     = typeof rate === 'number' ? rate : 20;
+		if(finish === true || ms === true || rate === true || now === true) { this.start() }
+	});
+	
+	makeGetter('ATOB',function(a,b,p){
+		a = TONUMBER(a);
+		b = TONUMBER(b);	
+		p = TONUMBER(p);
+		return (((b-a)/100)*p)+a;
+	});
+	
+	makeModule("NFResize",{
+		width:function(){
+			return this.Source.offsetWidth;
+		},
+		height:function(){
+			return this.Source.offsetHeight;
+		},
+		trigger:function(data){
+			this.Handler(data);
+		},
+		destroy:function(){ ELOFF(window,'resize',this.Handler); }
+	},function(target,triggingMethod,firstTrigging,delay){
+		this.Source = FIND(target,0);
+		this.TriggingMethod = triggingMethod;
+		this.Delay          = TONUMBER(delay);
+		
+		if(this.Source && this.TriggingMethod) {
+			//if(setWidth) ELSTYLE(this.Source,'width',TOPX(setWidth));
+			//if(setHeight) ELSTYLE(this.Source,'height',TOPX(setHeight));
+			
+			if(firstTrigging !== true) {
+				this.lastWidth  = this.Source.offsetWidth;
+				this.lastHeight = this.Source.offsetHeight;
+			}
+			
+			var _ = this;
+			this.Handler = function(e){
+				
+				
+				if( _.Delay ) {
+					var t = setTimeout(function(){
+						
+						//오프셋이 올바르지 않은 엘리먼트가 도큐먼트에 종속되지 않은 상태라면
+						if( _.Source.offsetWidth == 0 || _.Source.offsetHeight == 0) 
+							if( FINDPARENTS(_.Source,DATALAST).tagName !== 'HTML' ) return;
+						
+						if( (_.lastWidth !== _.Source.offsetWidth) || (_.lastHeight !== _.Source.offsetHeight) ){
+							_.lastWidth  = _.Source.offsetWidth;
+							_.lastHeight = _.Source.offsetHeight;
+							_.TriggingMethod.call(_.Source,e,_);
+						}
+						clearTimeout(t);
+					},_.Delay);
+				} else {
+					if( _.Source.offsetWidth == 0 && _.Source.offsetHeight == 0) return;
+					if( (_.lastWidth !== _.Source.offsetWidth) || (_.lastHeight !== _.Source.offsetHeight) ){
+						_.lastWidth  = _.Source.offsetWidth;
+						_.lastHeight = _.Source.offsetHeight;
+						_.TriggingMethod.call(_.Source,e,_);
+					}
+					
+				}
+			};
+			if(firstTrigging === true) {
+				this.Handler({});
+			}
+			
+			ELON(window,'resize',this.Handler);
+		}
 	});
 	
 	makeModule("NFFinger",{
@@ -7366,7 +7486,7 @@
 				}
 			}
 		}
-	},function(node,fixHeight){
+	},function(node,direction,virtureFinger){
 		this.Source = FIND(node,0);
 		this.isMoving = false;
 		if(this.Source){
@@ -7376,7 +7496,7 @@
 			this.axisYPositiveItems = [];
 			this.axisYNegativeItems = [];
 			
-			this.ClipView = MAKE("div.nody-scroll-box-clip-view");
+			this.ClipView = MAKE("div.nody-scroll-box-clip-view[style=min-height:100%]");
 			ELSTYLE(this.ClipView,"transform","matrix(1,0,0,1,0,0)");
 			ELSTYLE(this.ClipView,"position","relative");
 			
@@ -7388,8 +7508,23 @@
 			
 			this.Finger = new NFFinger(this.Source);
 			
-			this.allowScrollX = true;
-			this.allowScrollY = true;
+			switch(direction) {
+				case 'horizontal':
+					this.allowScrollX = true;
+					this.allowScrollY = false;
+					break;
+				case 'vertical':
+					this.allowScrollX = false;
+					this.allowScrollY = true;
+					break;
+				default :
+					if(direction !== undefined) console.warn('NFScrollBox :: direction 파라메터 영역에 알수없는 커멘드가 들어왔습니다.',direction)
+					this.allowScrollX = true;
+					this.allowScrollY = true;
+					break;
+			}
+			
+			
 			
 			ELSTYLE(this.Source,"overflow","hidden");
 			ELSTYLE(this.Source,"position","relative");
@@ -7410,6 +7545,8 @@
 				},10);
 			});
 			this.applyScrollEvent(true);
+			
+			if(virtureFinger === true) this.setAllowVirtureFinger(true);
 		} else {
 			console.warn("ScrollBox제대로 불러오지 못했습니다.",node);
 		}
@@ -7487,40 +7624,79 @@
 		if(typeof initZoom == "number") this.needZoom(initZoom);
 	});
 	
-	makeModule("NFTimeCounter",{
-		timeoutHandler:function(){
-			if(this._timeout)clearTimeout(this._timeout);
-			if( this._moveEnd > (+(new Date())) ) {
-				CALL(this._whenMoving,this,100 - ( this._moveEnd - (+new Date())) / this.duration * 100);
-				var _ = this;
-				this._timeout = setTimeout(function(){ _.timeoutHandler.call(_) },this.rate);
-			} else {
-				this.moveStart = null;
-				this.moveEnd   = null;
-				CALL(this._whenMoving,this,100);
-				CALL(this._whenMoveFinish,this,100);
+	makeModule("NFScrollTrack",{		
+		resizeFix:function(){
+			if(this._autoScrollTrackHeight && this._autoScrollBoxSync){
+				var scrollBox = this._autoScrollBoxSync;
+				var lengthPer = ((100 / scrollBox.Source.scrollHeight) * scrollBox.Source.offsetHeight)/100;
+				ELSTYLE(this.ScrollHanlde,'height',TOPX(this.ScrollTrack.offsetHeight * lengthPer));
+				
 			}
+			this.scrollLength = this.ScrollTrack.offsetHeight - this.ScrollHanlde.offsetHeight;
+			if( (typeof this.scrollPoint) !== 'number') this.scrollPoint = 0;
 		},
-		start:function(){
+		needScrollOffset:function(y){
+			var needTo = this.scrollPoint + y;
+	
+			if(needTo < 0) {
+				this.scrollPoint = 0;
+			} else if(needTo > this.scrollLength) {
+				this.scrollPoint = this.scrollLength;
+			} else {
+				this.scrollPoint = needTo;
+			}
+			ELSTYLE(this.ScrollHanlde,'top',TOPX(this.scrollPoint));
+			CALL(this._whenScroll);
+		},
+		needScrollPercent:function(per){
+			ELSTYLE(this.ScrollHanlde,'top',TOPX((this.scrollLength / 100) * per));
+		},
+		whenScroll:function(m){
 			var _ = this;
-			this._moveStart = (+(new Date()));
-			this._moveEnd   = this._moveStart + this.duration;
-			this.timeoutHandler();
+			if(typeof m === 'function') this._whenScroll = function(){ m.call(_,(100 / _.scrollLength ) * _.scrollPoint)};
 		},
-		whenCounting   :function(m){ this._whenMoving = m; },
-		whenCountFinish:function(m){ this._whenMoveFinish = m; }
-	},function(counting,finish,ms,rate,now){
-		if(counting)this.whenCounting(counting);
-		if(finish)this.whenCountFinish(finish);
-		this.duration = typeof ms   === 'number' ? ms   : 300;
-		this.rate     = typeof rate === 'number' ? rate : 20;
-		if(finish === true || ms === true || rate === true || now === true) { this.start() }
+		syncWithScrollBox:function(scrollBox){
+			if(typeof scrollBox === 'object' && 'needScrollingPercentY' in scrollBox) {
+				var _ = this;
+				this.whenScroll(function(per){
+					scrollBox.needScrollingPercentY(per);
+				});
+			
+				scrollBox.whenScroll(function(a,b,c){
+					_.needScrollPercent( (100 / (scrollBox.Source.scrollHeight - scrollBox.Source.offsetHeight)) * scrollBox.Source.scrollTop );
+				});
+				this._autoScrollBoxSync = scrollBox;
+				this.resizeFix();
+			}
+		}
+	},function(scrollContainer,direction,autoResizeFix,autoScrollTrackHeight){
+		this.Source      = FIND(scrollContainer,0);
+		
+		if(!this.Source) {
+			return console.warn('스크롤바 초기화 실패하였습니다.');
+		}
+
+		this.ScrollHanlde = MAKE('div.nody-scroll-handle',{style:'position:relative;'});
+		this.ScrollTrack   = MAKE('div.nody-scroll-track',{style:'position:absolute;'},this.ScrollHanlde);
+
+		ELPUT(this.Source,this.ScrollTrack);
+
+		this.Finger = new NFFinger(this.ScrollHanlde,true);
+		this.Finger.setAllowVirtureFinger(true);
+		var _ = this;
+		this.Finger.whenTouchMove(function(x,y){
+			if( _.ScrollTrack.offsetHeight - _.ScrollHanlde.offsetHeight > 0) _.needScrollOffset(y);
+		});
+		
+		if(autoResizeFix !== false) {
+			ELON(window,'resize',function(){
+				_.resizeFix();
+			});
+		}
+		this._autoScrollTrackHeight = autoScrollTrackHeight;
+		
+		this.resizeFix();
 	});
 	
-	makeGetter('ATOB',function(a,b,p){
-		a = TONUMBER(a);
-		b = TONUMBER(b);	
-		p = TONUMBER(p);
-		return (((b-a)/100)*p)+a;
-	});
+	
 })(window,NODYENV);
