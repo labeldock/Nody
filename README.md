@@ -1,19 +1,15 @@
 Nody.js
 =======
-Node + Friendly => Nody
-
-# Sample #
-<a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a>
-
 # introduce #
 Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리이다.
 
 ## Feature #
-Nody는...
-  1. 노드를 손쉽게 구성
-  2. 데이터와 노드를 긴밀하게 구현
-  3. 다양한 Enumerate
-  4. 인라인 코딩을 지향
+  1. Easy make node
+  2. Easy find node
+  3. Easy bind node
+
+# Sample #
+<a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a>
 
 ## Compatibility #
 ### Recommend #
