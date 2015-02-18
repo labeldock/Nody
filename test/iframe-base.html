@@ -59,17 +59,19 @@
 	document.setJSResult = function(codes,type){
 		document.body.innerHTML = '';
 		DATAEACH(codes,function(code){
-			var pre = HTMLTOEL(ZSTRING("<pre class='language-\\{$0}'><code class='language-\\{$0}'>\\{$1}</code></pre>",type || 'javascript',code))[0];
+			var pre = HTMLTOEL(ZSTRING("<pre class='language-\\{$0}'><code class='language-\\{$0}'>\\{$1}</code></pre>",type || 'javascript',code+''))[0];
 			ELAPPEND(document.body,pre);
 			Prism.highlightElement(pre.children[0]);
 		});
 	}
-	document.setHTMLResult = function(htmls){
+	document.setHTMLResult = function(htmls,code){
+		var codeTag = (typeof code == 'string') ? 'code.language-'+code : 'code.language-markup';
+		
 		document.body.innerHTML = '';
 		DATAEACH(htmls,function(html){
 			var pre = ISELNODE(html) ? 
-			MAKE('pre',MAKE('code.language-markup',_NFString(html.outerHTML).getHTMLSafe())) :
-			MAKE('pre',MAKE('code.language-markup',_NFString(html).getHTMLSafe()));
+			MAKE('pre',MAKE(codeTag,_NFString(html.outerHTML).getHTMLSafe())) :
+			MAKE('pre',MAKE(codeTag,_NFString(html).getHTMLSafe()));
 			ELAPPEND(document.body,pre);
 			Prism.highlightElement(pre.children[0]);
 		});
@@ -82,6 +84,7 @@
 	<!--[if lt IE 9]>
 		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 	<![endif]-->
+	<style>body{padding:0px 10px;}</style>
 </head>
 <body>
 </body>

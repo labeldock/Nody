@@ -2291,7 +2291,7 @@
 			
 			dPoint = DATAMAP(dPoint,function(v){ return ZONEVALUE(ZONEINFO("\\!"+v)); });
 			ePoint = DATAMAP(ePoint,function(v){ 
-				return eval(v.replace(/\$\i+/g,function(s){
+				var evt = v.replace(/\$i/g,function(s){
 					return seed;
 				}).replace(/\$\d+/g,function(s){
 					var paramResult = zoneParamsInfo[parseInt(s.substr(1))];
@@ -2299,7 +2299,8 @@
 						paramResult = ZONEVALUE(paramResult);
 						return ISNUMBERTEXT(paramResult) ? paramResult : '"'+paramResult+'"' ;
 					}
-				}));
+				});
+				return eval(evt);
 			});
 			
 			result = result.replace(/\@\{\$\d+\}/g,function(s){

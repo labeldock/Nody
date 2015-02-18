@@ -58,8 +58,8 @@
 	<main class='master-main'>
 		<div class='container'>
 			<div class='row'>
-				<section class='col-sm-8'>
-					<article id='getter-make'>
+				<section class='col-sm-8 code-section'>
+					<article>
 						<header>
 							MAKE
 						</header>
@@ -240,7 +240,7 @@ dataContext.getJSONObject();
 							<pre class='language-markup'><code class='language-markup'>
 &lt;div id="placeholder">&lt;/div>
 &lt;template id="table">
-    &lt;table>
+    &lt;table class="table table-bordered">
         &lt;thead>
             &lt;tr>
                 &lt;th>index&lt;/th>
@@ -435,13 +435,54 @@ _NFNumber("hello world").number();
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
 					</article>
+
+					<article>
+						<header>NFActiveController</header>
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;div class='row-1'>
+	&lt;div class='btn-group'>
+		&lt;a class='btn btn-default'> 이것도 &lt;/a>
+		&lt;a class='btn btn-default'> &lt;div>저것도&lt;/div> &lt;/a>
+		&lt;a class='btn btn-default'> &lt;label>요것도&lt;/label> &lt;/a>
+		&lt;a class='btn btn-default'> &lt;img src='resources/images/Gabon.png'> &lt;/a>
+	&lt;/div>
+&lt;/div>
+&lt;div class='row-2'>
+	&lt;div class='btn-group g1'>
+		&lt;a class='btn btn-default'> 다같이 &lt;/a>
+		&lt;a class='btn btn-default'> 돌자 &lt;/a>
+		&lt;a class='btn btn-default'> 동네한바퀴 &lt;/a>
+	&lt;/div>
+	&lt;div class='btn-group g2'>
+		&lt;a class='btn btn-default'> 다같이 &lt;/a>
+		&lt;a class='btn btn-default'> 돌자 &lt;/a>
+		&lt;a class='btn btn-default'> 동네한바퀴 &lt;/a>
+	&lt;/div>
+	&lt;div class='btn-group g3'>
+		&lt;a class='btn btn-default'> 다같이 &lt;/a>
+		&lt;a class='btn btn-default'> 돌자 &lt;/a>
+		&lt;a class='btn btn-default'> 동네한바퀴 &lt;/a>
+	&lt;/div>
+&lt;/div>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>								
+new NFActiveController('.row-1 .btn-group','.btn','click',true);
+
+var manager = new NFActiveControllerManager();
+manager.makeActiveController('.row-2 .g1','.btn','click',true);
+manager.makeActiveController('.row-2 .g2','.btn','click',true);
+manager.makeActiveController('.row-2 .g3','.btn','click',true);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
 					
 				</section><!-- 좌측 끝 -->
 				<aside class='col-sm-3 col-sm-push-1'>
-					<div class='box-module'>
+					<div class='box-module table-of-contents'>
 						<h4>About</h4>
-						<menu>
-							<a href='#make-getter'>Getter::MAKE</a>
+						<menu class='text-primary'>
 						</menu>
 					</div>
 				</aside>
@@ -454,31 +495,38 @@ _NFNumber("hello world").number();
 				<nav class='tabs'>
 					<ul class='nav nav-pills'>
 						<li><a>Code Result</a></li>
-						<li><a>View</a></li>
 						<li><a>VIEW Code</a></li>
 					</ul>
+					<div class='run-modal-escape'>
+						<a>esc &times;</a>
+					</div>
 				</nav>
 				<div class='tab-contents'>
-					<div>
-						<div>
-							<label class='label label-default'>HTML result</label>
-							<iframe class='html-result' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+					<div class='code-set'>
+						<div class='code-set-javascript'>
+							<div class='code-result'>
+								<label class='label label-primary'>Javascript result</label>
+								<iframe class='javascript-result' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+							</div>
+							<div class='code-origin'>
+								<label class='label label-danger'>Javascript code</label>
+								<iframe class='javascript-code' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+							</div>
 						</div>
-						<div>
-							<label class='label label-default'>Javascript result</label>
-							<iframe class='javascript-result' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+						<div class='code-set-view'>
+							<label class='label label-default'>View result</label>
+							<iframe class='view-result' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
 						</div>
-						
-					</div>
-					<div>
-						<label class='label label-default'>View result</label>
-						<iframe class='view-result' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
-					</div>
-					<div>
-						<label class='label label-default'>HTML code</label>
-						<iframe class='html-code' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
-						<label class='label label-default'>Javascript code</label>
-						<iframe class='javascript-code' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+						<div class='code-set-html'>
+							<div class='code-result'>
+								<label class='label label-primary'>HTML result</label>
+								<iframe class='html-result' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+							</div>
+							<div class='code-origin'>
+								<label class='label label-danger'>HTML code</label>
+								<iframe class='html-code' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -488,71 +536,8 @@ _NFNumber("hello world").number();
 	<script src="js/nody.js"></script>
 	<script src="test/resources/js/jquery-1.11.1.min.js"></script>
 	<script src="test/resources/js/bootstrap.min.js"></script>	
-	<script>
-		FIND('pre>code',DATAEACH,function(node){
-			$(node).text( $(node).text().trim() );
-		});
-		
-		
-		$('.code-wrapper').on('click','a.live-run-action',function(e){
-			
-			$('.run-modal').addClass('run-modal-show');
-			
-			//
-			var javascriptCode = $(e.delegateTarget).find('code.language-javascript').text();
-			var htmlCode       = $(e.delegateTarget).find('code.language-markup').text();
-			
-			var viewDoc  = IFRAMEDOCUMENT('.view-result');
-			var htmlDoc  = IFRAMEDOCUMENT('.html-result');
-			var jsDoc    = IFRAMEDOCUMENT('.javascript-result') ;
-			var htmlCodeDoc = IFRAMEDOCUMENT('.html-code') ;
-			var jsCodeDoc   = IFRAMEDOCUMENT('.javascript-code') ;
-			//
-			
-			switch($(this).data('require')) {
-				case 'javascript-to-html':
-					//javascript run
-					var runResult = viewDoc.runCode(javascriptCode);
-					
-					viewDoc.setHTML(runResult);
-					jsDoc.setJSResult(runResult);
-					htmlDoc.setHTMLResult(runResult);
-					htmlCodeDoc.setHTMLResult(htmlCode);
-					jsCodeDoc.setHTMLResult(javascriptCode);
-					break;
-				case 'default': default :
-					
-					//html set
-					viewDoc.setHTML(htmlCode);
-					
-					//javascript run
-					var runResult = viewDoc.runCode(javascriptCode);
-					
-					htmlDoc.setHTMLResult(viewDoc.body.innerHTML);
-					jsDoc.setJSResult(runResult);
-					htmlCodeDoc.setHTMLResult(htmlCode);
-					jsCodeDoc.setHTMLResult(javascriptCode);
-					
-					
-					break;
-			}
-			
-			
-		});
-		
-		$('.run-modal').on('click',function(e){
-			if(e.target == this) $(this).removeClass('run-modal-show');
-		});
-		
-		var runTabContents = new NFTabContents('.run-content .tab-contents',function(){
-			var ac = this.needActiveController('.run-content .tabs','li','click',function(e,i){
-				return runTabContents.active(i);
-			});
-			ac.shouldActive(0);
-		});
-	</script>
+	<script src="test/resources/js/livecode.js"></script>	
 	<script src="test/resources/js/prism.js"></script>
-	
 </body>
 </html>
 

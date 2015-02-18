@@ -259,9 +259,24 @@ $placeholder-variant: '&::-webkit-input-placeholder,&:-moz-placeholder,&::-moz-p
 	overflow: visible;
 	word-wrap:normal !important;
 }
-@mixin no-select() {
-	-webkit-touch-callout: none;
-	@include css3f(user-select, none);
+@mixin no-select($flag:true) {
+	@if $flag == false {
+		-webkit-touch-callout: auto;
+		@include css3f(user-select, auto);
+	} @else {
+		-webkit-touch-callout: none;
+		@include css3f(user-select, none);
+	}
+	
+}
+@mixin no-event($flag:true){
+	@include no-select($flag);
+	@if $flag == false {
+		pointer-events: none;
+	} @else {
+		pointer-events: auto;
+	}
+	
 }
 @mixin transform ($value){
 	@include css3f(transform, $value);
