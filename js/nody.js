@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.1",build = "1042";
+	var version = "0.21.1",build = "1043";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -3303,7 +3303,7 @@
 			}
 			return undefined;
 		},1),
-		"IFRAMEDOCUMENT":function(iframeNode){
+		"FINDDOCUMENT":function(iframeNode){
 			var iframe = FIND(iframeNode,0);
 			if(iframe) {
 				if(iframe.tagName == "IFRAME") return iframe.contentDocument || iframe.contentWindow.document;
@@ -3588,6 +3588,37 @@
 		}
 	})
 	GUT.eachGetter();
+	
+	// addEventListener polyfill by https://gist.github.com/jonathantneal/3748027
+	!window.addEventListener && (function (WindowPrototype, DocumentPrototype, ElementPrototype, addEventListener, removeEventListener, dispatchEvent, registry) {
+		WindowPrototype[addEventListener] = DocumentPrototype[addEventListener] = ElementPrototype[addEventListener] = function (type, listener) {
+			var target = this;
+ 
+			registry.unshift([target, type, listener, function (event) {
+				event.currentTarget = target;
+				event.preventDefault = function () { event.returnValue = false };
+				event.stopPropagation = function () { event.cancelBubble = true };
+				event.target = event.srcElement || target;
+ 
+				listener.call(target, event);
+			}]);
+ 
+			this.attachEvent("on" + type, registry[0][3]);
+		};
+ 
+		WindowPrototype[removeEventListener] = DocumentPrototype[removeEventListener] = ElementPrototype[removeEventListener] = function (type, listener) {
+			for (var index = 0, register; register = registry[index]; ++index) {
+				if (register[0] == this && register[1] == type && register[2] == listener) {
+					return this.detachEvent("on" + type, registry.splice(index, 1)[0][3]);
+				}
+			}
+		};
+ 
+		WindowPrototype[dispatchEvent] = DocumentPrototype[dispatchEvent] = ElementPrototype[dispatchEvent] = function (eventObject) {
+			return this.fireEvent("on" + eventObject.type, eventObject);
+		};
+	})(Window.prototype, HTMLDocument.prototype, Element.prototype, "addEventListener", "removeEventListener", "dispatchEvent", []);
+	
 	
 	makeSingleton("EL",{
 		//포커스 상태인지 검사합니다.
@@ -4022,14 +4053,15 @@
 				node = FIND(node,0);
 				if(ISNOTHING(node)) throw new Error("ELTRIGGER는 element를 찾을수 없습니다. => 들어온값" + TOS(node));
 			}
+			var e;
 			if ("createEvent" in document) {
-			    var e = W.document.createEvent("HTMLEvents");
+			    e = W.document.createEvent("HTMLEvents");
 			    e.initEvent(eventName, true, true);
-				if(eventParam) PROPEACH(eventParam,function(v,k){ e[k] = v; });
-			    node.dispatchEvent(e);
 			} else {
-				node.fireEvent("on"+eventName);
+				e = {};
 			}
+			if(eventParam) PROPEACH(eventParam,function(v,k){ e[k] = v; });
+		    node.dispatchEvent(e);
 			return node;
 		},
 		//이벤트 등록이 가능한 타겟을 찾아냅니다.
@@ -4042,11 +4074,7 @@
 			
 			DATAEACH(nodes,function(eventNode){
 				DATAEACH(events,function(event){
-					if (eventNode.addEventListener){
-						eventNode.addEventListener(event, eventHandler, useCapture==true ? true : false); 
-					} else if (node.attachEvent){
-						eventNode.attachEvent('on'+event, eventHandler);
-					}
+					eventNode.addEventListener(event, eventHandler, useCapture==true ? true : false); 
 				});
 			});
 			return nodes;
@@ -4057,11 +4085,7 @@
 			var events = eventName.split(" ");
 			DATAEACH(nodes,function(eventNode){
 				DATAEACH(events,function(event){
-					if (eventNode.removeEventListener){
-						eventNode.removeEventListener(event, eventHandler, useCapture==true ? true : false); 
-					} else if (node.detachEvent){
-						eventNode.detachEvent('on'+event, eventHandler);
-					}
+					eventNode.removeEventListener(event, eventHandler, useCapture==true ? true : false); 
 				});
 			});
 			return nodes;
@@ -4073,11 +4097,7 @@
 			var events = eventName.split(" ");
 			
 			for(var i=0,l=events.length;i<l;i++){
-				if (node.removeEventListener){
-					node.removeEventListener(events[i], eventHandler, useCapture==true ? true : false); 
-				} else if (node.detachEvent){
-					node.detachEvent('on'+events[i], eventHandler);
-				}
+				node.removeEventListener(events[i], eventHandler, useCapture==true ? true : false);
 			}
 			return node;
 		},

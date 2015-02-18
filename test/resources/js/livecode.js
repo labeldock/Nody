@@ -33,11 +33,11 @@ $('.code-wrapper').on('click','a.live-run-action',function(e){
 	var javascriptCode = $(e.delegateTarget).find('code.language-javascript').text();
 	var htmlCode       = $(e.delegateTarget).find('code.language-markup').text();
 	
-	var viewDoc  = IFRAMEDOCUMENT('.view-result');
-	var htmlDoc  = IFRAMEDOCUMENT('.html-result');
-	var jsDoc    = IFRAMEDOCUMENT('.javascript-result') ;
-	var htmlCodeDoc = IFRAMEDOCUMENT('.html-code') ;
-	var jsCodeDoc   = IFRAMEDOCUMENT('.javascript-code') ;
+	var viewDoc  = FINDDOCUMENT('.view-result');
+	var htmlDoc  = FINDDOCUMENT('.html-result');
+	var jsDoc    = FINDDOCUMENT('.javascript-result') ;
+	var htmlCodeDoc = FINDDOCUMENT('.html-code') ;
+	var jsCodeDoc   = FINDDOCUMENT('.javascript-code') ;
 	//
 	
 	switch($(this).data('require')) {

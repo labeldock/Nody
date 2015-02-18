@@ -94,7 +94,7 @@ MAKE('ul',
 					</article>
 					<article>
 						<header>FIND</header>
-						<q>select는 css스타일로 노드를 찾습니다.</q>
+						<p>select는 css스타일로 노드를 찾습니다. FIND는 루트도 선택될 수 있습니다. 이 부분은 querySelector랑 조금 다른점입니다.</p>
 						<div class='code-wrapper'>
 							<pre class='language-markup'><code class='language-markup'>
 &lt;ul class='list'>
@@ -112,6 +112,17 @@ FIND('li',2);
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
+						<b>또 다른 FIND 메소드</b>
+						<ul>
+							<li>FINDMEMBER : 같은 래벨상의 노드를 찾습니다.</li>
+							<li>FINDIN : 모든 자식의 노드를 찾습니다.</li>
+							<li>FINDON : 바로 아래 자식 노드만 찾습니다.</li>
+							<li>FINDPARENTS : 모든 부모를 찾습니다.</li>
+							<li>FINDPARENT : 바로 상위 부모나 트리의 부모 중 하나를 얻어낼 수 있습니다.</li>
+							<li>FINDBEFORE : 선택된 노드의 전 맴버들만 찾습니다.</li>
+							<li>FINDAFTER : 선택된 노드의 다음 맴버의  맴버들만 찾습니다.</li>
+							<li>FINDDOCUMENT : 선택된 노드(IFRAME)의 도큐먼트를 찾습니다.</li>
+						</ul>
 					</article>
 					<article>
 						<header>Template</header>
