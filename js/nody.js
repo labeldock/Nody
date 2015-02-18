@@ -4,10 +4,14 @@
 // lincense    // MIT lincense
 // Author      // hojung ahn
 
+// INCLUDE
+// querySelectorAll & matchesSelector base polyfill by termi CSS_selector_engine 
+// http://github.com/termi/CSS_selector_engine
+
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21",build = "1039";
+	var version = "0.21.1",build = "1042";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -111,6 +115,17 @@
 		//getUserMedia
 		info.getUserMedia = (navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
 		info.supportGetUserMedia = !!info.getUserMedia;
+		
+		//matches
+		var querySelectorAllName = 
+			('matches' in tester)               ? 'querySelectorAll' :
+			('webkitQuerySelectorAll' in tester) ? 'webkitQuerySelectorAll' :
+			('msQuerySelectorAll'     in tester) ? 'msQuerySelectorAll' :
+			('mozQuerySelectorAll'    in tester) ? 'mozQuerySelectorAll' :
+			('oQuerySelectorAll'      in tester) ? 'oQuerySelectorAll' : false;
+		
+		info.supportQuerySelectorAll  = !!matchesSelectorName;
+		info.querySelectorAll         = info.supportQuerySelectorAll && function(node,selector){ return node[matchesSelectorName](selector); };
 		
 		//matches
 		var matchesSelectorName = 
@@ -2550,11 +2565,6 @@
 		    }
 		    return cursor;
 		},
-		isMobile:function(){
-			// http://detectmobilebrowser.com/mobile
-			var a = this.agent();
-			return /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4));
-		},
 		getWindowsVersion:function(){
 			return ( navigator.appVersion.indexOf("MSIE") === -1 ) ? -1 : parseInt( /MSIE\s([0-9]+)/.exec(navigator.appVersion)[1] );
 		},
@@ -2729,6 +2739,11 @@
 })(window);
 //Nody Node Foundation 
 (function(W,ENV){
+	
+	/* qS[A]/matches polyfill | @version 1.0 | MIT License | github.com/termi */
+	!function(e){function t(){throw new Error("SYNTAX_ERR")}function n(e){var t=e&&(e.ownerDocument||e).documentElement;return t?"HTML"!==t.nodeName:!1}function l(e,l,r,c,o,i,u,s,d){var h=r||[],m=!!o,p=!m&&l&&"number"==typeof l.length&&void 0===l.nodeType,f=m&&(l={})||(l?p?l[0]:l:document),g,y=0,w,A,N,S=P[(e[1]||"").replace(I,"")]||0,k=S>2,T=e[2],x=!!T,L=e[3],M=!!L,B=e[4],U=!!B,V="*"===T,X,z,F,W,et,nt,lt,rt,ot,st,dt,ht,mt,pt,ft,gt,yt,bt,wt,vt,Et;if(x&&(T=V?null:T.replace("|",":"),T?(wt=f&&n(f),wt||(T=T.toUpperCase())):x=!1),U&&(B=B.replace(_," "),ct&&1===S||(mt=new RegExp(B.replace(v,E)))),nt=e[5]){for(nt=tt.call(nt,"]["),X=-1;rt=nt[++X];)nt[X]=rt=rt.match(q),rt||t(),rt[0]=rt.input=rt.index=null,rt[2]=Y[rt[2]],vt=rt[3],vt&&" i"==vt.substr(vt.length-2)&&(rt[3]=vt.substr(0,vt.length-2),rt[4]=!0);vt=null}if(lt=e[6]){for(lt=tt.call(lt,":"),X=-1;ot=lt[++X];)lt[X]=ot=ot.match(D),ot||t(),ot[0]=ot.input=ot.index=null,vt=ot[1]=j[ot[1]],2>vt&&ot[2]?(R.test(ot[2])?"even"===ot[2]?ot[2]=[null,2]:"odd"===ot[2]?ot[2]=[null,2,"%",1]:(ot[2]=ot[2].match(O),ot[2][0]=null,ot[2][3]||(lt.splice(X,1),--X)):ot[2]=[null,0,"%",ot[2]],ot[3]=vt?"nodeIndexLast":"nodeIndex",ot[4]=vt?"lastChild":"firstChild",ot[5]=vt?"previousSibling":"nextSibling"):17===vt?(d||t(),m=!0,o=p?l:[l],lt.splice(X,1),--X):12==vt&&(wt=ot[2])&&H.test(wt.charAt(0))&&H.test(wt.charAt(wt.length-1))&&(ot[2]=wt.substr(1,wt.length-2));lt.length||(lt=null)}if(m&&(S=0),e=null,1==S)if(M){if(bt=9===f.nodeType?f:f.ownerDocument,G)for(o=bt.getElementsByName(L),pt=[],X=-1;w=o[++X];)w.id==L&&pt.push(w);else{for(pt=[],o=[];w=bt.getElementById(L);)o.push(w),wt="id"in w?w.id:w.getAttribute("id"),wt==L&&pt.push(w),w.setAttribute("id",L+" _");for(X=-1;w=o[++X];)w.setAttribute("id",L)}o=null,M=!1}else U=U&&!ct,x=x&&ct&&!!B;et=!(p&&1!==l.length||u||c||nt||lt||x||U||M||s);do{switch(S){case 0:w=o[0];break;case 1:if(L){if(o=[],!pt.length)return h;if(pt.length>1)for(X=-1;w=pt[++X];)(9===f.nodeType||f.contains(w))&&(o.push(w),pt.splice(X--,1));else o=pt}else"BODY"===T&&9===f.nodeType?(o=[f.body],U=!!B,et=et&&!U):o=B&&ct?"getElementsByClassName"in f?f.getElementsByClassName(B):ct.call(f,B):f.getElementsByTagName(T||"*");w=o[0];break;case 2:o=f.children,w=o[0];break;case 3:g=l[y+1];case 4:if(!(w=Z(f)))continue}if(et)return o;if(z=0,w)do if(!(V&&1!==w.nodeType||(a||K?c&&(F=w[a?"sourceIndex":J])in r:u&&((F=w[J])?F in u:!(F=w[J]=++Q))))){if(W=!(x&&(A=w.nodeName.toUpperCase())!==T||M&&w.id!==L||U&&(!w.className||!mt.test(w.className)))){if(nt)for(X=-1;W&&(rt=nt[++X]);)if(wt=rt[2],dt=it(w,rt[1]),null!==dt)switch(rt[4]&&(dt=dt.toUpperCase()),ht=rt[3],wt){case 1:W=!!dt||""===dt;break;case 2:W=dt===ht;break;case 3:case 8:W=new RegExp("(^| +)"+ht+"($| +)").test(dt),8===wt&&(W=!W);break;case 4:case 5:case 6:vt=dt.indexOf(ht),W=6===wt?!!~vt:5===wt?vt==dt.length-ht.length:!vt;break;case 7:W=dt===ht||!!~dt.indexOf(ht+"-");break;case 9:W=!!~(" "+dt.replace(C," ")+" ").indexOf(" "+ht+" ")}else W=8===wt;if(W&&lt)for(X=-1;W&&(ot=lt[++X]);)switch(st=ot[1]){case 0:case 1:if(ft=ot[3],gt=ot[4],yt=ot[5],ot=ot[2],!st&&!ot[3])break;if(Et=w[ft]||0,wt=ot[3]?("%"===ot[2]?-1:1)*ot[3]:0,vt=ot[1],Et)W=vt?!((Et+wt)%vt):!(Et+wt);else{W=!1,N=w.parentNode[gt];do 1!=N.nodeType||!(N[ft]=++Et)||w!==N||(vt?(Et+wt)%vt:Et+wt)||(W=!0);while(!W&&(N=N[yt]))}break;case 2:case 3:for(N=w;(N=N.previousSibling)&&1!==N.nodeType;);if(W=!N,!W||3==st){for(;(N=k?4===S?null:w===g?null:Z(w):o[++z])&&N.parentNode==w.parentNode;);k||4===S||--z;break}case 4:W=!Z(w);break;case 5:W="HTML"==(A||w.nodeName.toUpperCase());break;case 6:W=!w.firstChild;break;case 7:W=!!w.checked;break;case 8:W=w.lang==ot||w.ownerDocument.documentElement.lang==ot;break;case 9:case 10:W="disabled"in w&&"form"in w&&(10==st?w.disabled===!0&&"hidden"!==w.type:w.disabled===!1);break;case 11:W=w.parentNode.selectedIndex&&!!w.selected;break;case 12:W=!!~(w.textContent||w.data||w.innerText||w.nodeValue||w.value||"").indexOf(ot[2]);break;case 13:case 14:W=at.call(w,ot[2]),13==st&&(W=!W);break;case 15:case 16:A||(A=w.nodeName.toUpperCase()),W=("INPUT"==A||"TEXTAREA"==A||null!==ut.call(b&&w.__getAttribute__||w.getAttribute,w,"contenteditable"))&&!w.readonly,16==st&&(W=!W);break;case 18:W=w==f.ownerDocument.activeElement;break;default:t()}}if(W){if(i)return[w];if(s){h[y]=w;break}c?h[F]=w:(u&&(u[F]=!0),h.push(w))}A=null}while(w=k?4===S?null:w===g?null:Z(w):o[++z]);w=null}while(f=l[++y]);return h}function r(e,n,r){var o=!!r&&9===this.nodeType,i=[],u,s,d,h;if(r=o?r:this,mt)try{if(o&&pt)return W(mt.call(this,e,r));s="number"==typeof r.length&&void 0===r.nodeType,d=s?r[0]:r,h=0;do{if(n)return[(9===d.nodeType?ht:st).call(d,e)];u=(9===d.nodeType?mt:dt).call(d,e),u.length&&(i=s?i.concat(nt.call(u)):u)}while(s&&(d=r[++h]));return W(i)}catch(m){i=[]}e=et.call(e.replace(S,"$1"));var p,f,g,y,b=!0,w=!1,v,E,A=!!document.querySelector.__noorder__||!!document.querySelectorAll.__noorder__,N=e.replace(k,"@=").replace(L,M).match(T),_,C,q,D,O;for(u=r;p=N.shift();){if(g=N[0],y=!g||","===g.charAt(0),!a&&!K&&g&&g.length>1&&!f&&(f={}),!w)if(b&&"nodeType"in r&&9===r.nodeType&&"BODY"===p.toUpperCase())u=[r.body],y?i=u:i.concat(u);else if(b&&":root"===p)u=[(9===r.nodeType?r:r.ownerDocument).documentElement],y&&(i=u);else if(!u||(r=u)&&0!==u.length){if(E=y&&(E||!!g||r.length>1),v=!A&&(a||K)&&E,_=p.match(x),u=_?l(_,r,y&&!C?i:[],v,null,n&&y&&!C,!a&&!K&&(y&&f||!b&&r.length>1&&{}),C,b):[],C){for(O=q.length;O-->0;)u[O]||(u.splice(O,1),q.splice(O,1));if(y&&q.length){if(n)return q[0];i=i.concat(q)}}if(_&&void 0!==_[7]&&u.length&&!y)for(C&&t(),C=!0,q=[],D=-1,O=u.length;++D<O;)q.push(u[D]);","!==e&&_||t()}else u=null,w=!0;if(n&&y&&u.length)return u[0];if((b=y)&&(!i.length&&u&&(E=!1,i=W(u)),u=null,r=this,w=!1,C&&(q=C=void 0)),!g||","===g)break}return a||K||!E||i.sort(c),E?W(i,!0):i}function c(e,t){return e===t?0:4&e.compareDocumentPosition(t)?-1:1}var o=!1,a=!1,i=!1,u=!1,s=!0,d=!1,h=!1,m=!1,p=!0,f="termiSelectorAll",g="termiSelector",y="termiMatches",b=!0;e.Element||((e.Element=i?ActiveXObject:u?document.createTextNode(""):{}).prototype.ie=!0),e.HTMLElement||(e.HTMLElement=e.Element),e.Node||(e.Node=e.Element);var w=e.Element.prototype,v=/\s*(\S+)\s*/g,E="(?=(^|.*\\s)$1(\\s|$))",A=".$1",N=/^([\w\-\|]+)?((?:\.(?:[\w-]+))+)?$|^#([\w-]+$)/,S=/\s*([,>+~\s])\s*/g,k=/~=/g,T=/(^|,|>|\+|~|\s).*?(?=[,>+~\s]|$)/g,_=/\./g,C=/\s/g,x=/^([,>+~\s])?([\w\-\|\*]*)#?([\w-]*)((?:\.?[\w-])*)(\[.+\])?(?::([^!]+))?(!)?$/,q=/^\[?['"]?(.*?)['"]?(?:([\*~&\^\$@!]?=)['"]?(.*?)['"]?)?\]?$/,D=/^([^(]+)(?:\((.+)\))?$/,L=/\-child\((\dn)\+(\d)\)/g,M="-child\\($1%$2\\)",O=/(?:([-]?\d*)n)?(?:(%|-)(\d*))?/,B=/([,>+~\s])/,U=/^\s+/,I=/\s/,R=/\D/,H=/['"]/,P={"":1,",":1,">":2,"~":3,"+":4},Y={"":1,"=":2,"&=":3,"^=":4,"$=":5,"*=":6,"|=":7,"!=":8,"@=":9},j={"nth-child":0,"nth-last-child":1,"only-child":2,"first-child":3,"last-child":4,root:5,empty:6,checked:7,lang:8,enabled:9,disabled:10,selected:11,contains:12,not:13,matches:14,"read-only":15,"read-write":16,scope:17,focus:18,"nth-match":19,column:20,"nth-column":21},V={checked:null,disabled:null,ismap:null,multiple:null,readonly:null,selected:null},X={value:"defaultValue",checked:"defaultChecked",selected:"defaultSelected"},z=a&&{action:null,cite:null,codebase:null,data:null,href:null,longdesc:null,lowsrc:null,src:null,usemap:null},F=document.documentElement,W=function(e,t){var n=e.length>>>0,l=new ot,r;if(!a&&!t){try{r=nt.call(e),r.splice(0,0,l.length,0),l.splice.apply(l,r)}catch(c){}if(l&&l.length===n)return l}for(var o=0;n>o;++o)o in e&&l.push(e[o]);return l},G=a?!0:function(){var e=!1,t="_"+Math.random(),n=document.createElement("br");F.appendChild(n).id=t;try{e=document.getElementsByName(t)[0].id===t}catch(l){e=!1}return F.removeChild(n),e}(),J="sourceIndex",K=a?!0:J in F&&!("opera"in e),Q=1,Z="nextElementSibling"in F?function(e){return e.nextElementSibling}:function(e){for(;(e=e.nextSibling)&&1!=e.nodeType;);return e},et=String.prototype.trim||function(){for(var e=this.replace(U,""),t=e.length;I.test(e.charAt(--t)););return e.slice(0,t+1)},tt=String.prototype.split,nt=Array.prototype.slice,lt,rt,ct=a?null:(rt=F.getElementsByClassName)&&(rt+"").length<80&&rt,ot,at,it,ut=Function.prototype.call,st=!o&&F.querySelector,dt=!o&&F.querySelectorAll,ht=!o&&document.querySelector,mt=!o&&document.querySelectorAll,pt=!1,ft=function(){var e=document.createElement("input");return e.setAttribute("value",5),5!=e.defaultValue}();!a&&ht&&(rt=document.createElement("b"),rt.uuid="_"+ +new Date,rt.innerHTML="<i id='"+rt.uuid+"'>t</i>",(pt=ht.call(document,"#"+rt.uuid,rt))&&(pt="t"==pt.innerHTML)||(pt=!1)),s?(ot=function(){},ot.prototype=new Array,rt=new ot,rt.push(1),rt.length||"NodeList"in e||(rt=document.createElement("iframe"),rt.style.display="none",document.body.appendChild(rt),rt.contentWindow.document.write("<script>parent.NodeList=Array;</script>"),ot=e.NodeList)):ot=Array,a||K||(J="uniqueId"),!ct&&p&&(lt=function(e){if(e+="",!a&&this.querySelectorAll)try{return W(this.querySelectorAll(e.replace(v,A)))}catch(t){}var n,l=[],r=this.all,c,o=-1;if(r.length)for(n=new RegExp(e.replace(v,E));c=r[++o];)c.className&&n.test(c.className)&&l.push(c);return l}),it=ft?b?function(e,t){return t=t.toLowerCase(),void 0!==X[t]?e[X[t]]||"":void 0!==z[t]?e.getAttribute(t,2)||"":void 0!==V[t]?e.getAttribute(t)?t:"":(e=e.getAttributeNode(t))&&e.value||""}:function(e,t){return t=t.toLowerCase(),void 0!==X[t]?e[X[t]]||"":void 0!==z[t]?e.__getAttribute__(t,2)||"":void 0!==V[t]?e.__getAttribute__(t)?t:"":(e=e.getAttributeNode(t))&&e.value||""}:function(e,t){return e.getAttribute(t)},at=F.matches||F.webkitMatchesSelector||F.mozMatchesSelector||F.msMatchesSelector||F.oMatchesSelector||!a&&"querySelector"in document?function(e){if(!e)return!1;if("*"===e)return!0;if(":root"===e&&this===F)return!0;if("body"===e&&this===document.body)return!0;var t=this,n,l,r,c=!1;if(!B.test(e)&&(n=t.parentNode)&&"querySelector"in n&&(c=n.querySelector(e),null!==c&&(c=c===t)),!c&&null!==c&&(n=t.ownerDocument)){r=n.querySelectorAll(e);for(l in r)if(Object.prototype.hasOwnProperty.call(r,l)&&(c=r[l]===t))return!0}return!!c}:function(e){if(!e)return!1;if("*"===e)return!0;if(this===F&&":root"===e)return!0;if(this===document.body&&"BODY"===e.toUpperCase())return!0;var t=this,n,c,o=!1,a;if(e=et.call(e),!(n=e.match(N))){if(B.test(e)){c=r.call(t.ownerDocument,e);for(a in c)if(Object.prototype.hasOwnProperty.call(c,a)&&(o=c[a]===t))return!0;return!1}return c=l(e.match(x),null,null,!1,t,!0),c[0]===t}switch(e.charAt(0)){case"#":return t.id===e.slice(1);break;default:return o=!(c=n[2])||t.className&&new RegExp(c.replace(_," ").replace(v,E)).test(t.className),!!(o&&!(c=n[1])||t.tagName&&t.tagName.toUpperCase()===c.toUpperCase())}},d&&(rt="matchesSelector",F[rt]||(w.matches=F.matches=w[rt]=F[rt]=at),rt="matches",rt in w||(w[rt]=document.documentElement[rt]=w.matchesSelector)),h&&(rt="querySelectorAll",w[rt]=F[rt]=document[rt]=function(e,t){return r.call(this,e,!1,t)}),m&&(rt="querySelector",w[rt]=F[rt]=document[rt]=function(e,t){return r.call(this,e,!0,t)||null}),p&&(rt="getElementsByClassName",document[rt]||(w[rt]=F[rt]=document[rt]=lt)),g&&(window[g]=function(e,t){return r.call(t||F,e,!0)}),f&&(window[f]=function(e,t){return r.call(t||F,e)}),y&&(window[y]=function(e,t){return F.matches.call(t||F,e)}),w=rt=null}(window);
+	
+	
 	
 	var ELUT_REGEX = new RegExp("("+ [
 		//pseudo
@@ -3020,107 +3035,9 @@
 		//포커스 상태인지 검사합니다.
 		"HASFOCUS":function(node){ return document.activeElement == node; },
 		//하나의 CSS테스트
-		"THE":function(node,selectText,extraData){
-			if(NODYENV.matchesSelector) return NODYENV.matchesSelector(node,selectText);
-			
-			var tagInfo = SELECTINFO(selectText);
-			for(var key in tagInfo){
-				switch(key){
-					case "tagName": if(node.tagName.toLowerCase() !== tagInfo.tagName) return false; break;
-					case "class":
-						var infoClass = tagInfo[key];
-						var nodeClass = ELATTR(node,key);
-						
-						if( (infoClass === null) ) {
-							if(nodeClass === null) { return false; }
-							continue;
-						}
-						
-						if(typeof nodeClass === "string"){
-							var hasNotClass = false;
-							
-							nodeClass = nodeClass.split(" ");
-							infoClass = infoClass.split(" ");
-						
-							for(var i=0,l=infoClass.length;i<l;i++){
-								var findFlag = false;
-								for(var i2=0,l2=nodeClass.length;i2<l2;i2++){
-									if(nodeClass[i2] == infoClass[i]) {
-										findFlag = true;
-										break;
-									}
-								}
-								if(findFlag == false){
-									hasNotClass = true;
-									break;
-								}
-							}
-							if(hasNotClass == true) return false;
-						} else {
-							return false;
-						}
-						break;
-					case "::":
-						if(ELVALUE(node) !== tagInfo[key]) return false;
-						break;
-					case ":":
-						for(var metaKey in tagInfo[key]){
-							switch(metaKey){
-								case "not"  : if( NUT.THE(node,tagInfo[key][metaKey]) ) return false; break;
-								case "focus": if(!NUT.HASFOCUS(node)) return false; break;
-								case "eq"   : case "nth-child":
-									if(!node.parentElement) return false;
-									if(DATAINDEX(node.parentElement.children,node) !== node,tagInfo[key][metaKey]) return false;
-									break;
-								case "even":
-									if(!node.parentElement) return false;
-									if( (DATAINDEX(node.parentElement.children,node)%2) ) return false;
-									break;
-								case "odd":
-									if(!node.parentElement) return false;
-									if( !(DATAINDEX(node.parentElement.children,node)%2) ) return false;
-									break;
-								case "first-child":
-									if(!node.parentElement) return false;
-									if( DATAINDEX(node.parentElement.children,node) !== 0 ) return false;
-									break;
-								case "last-child":
-									if( DATAINDEX(node.parentElement.children,node) !== (node.parentElement.children.length - 1) ) return false;
-									break;
-							}
-						}
-						break;
-					default :
-						var nodeValue = ELATTR(node,key);
-						var infoValue = tagInfo[key];
-						
-						if ( nodeValue == null ) {
-							return false;
-						} else if (infoValue == null) {
-							switch(key.toLowerCase()){
-								case "disabled": 
-									if("disabled" in node){
-										if(node.disabled == false) return false;
-									}
-								case "readonly":
-									if("readonly" in node){
-										if(node.readOnly == false) return false;
-									}
-								case "checked":
-									if("checked" in node){
-										if(node.checked == false) return false;
-									}
-								default:
-									//true
-								break;	
-							}
-						} else if (infoValue !== nodeValue){
-							return false;
-						}
-						break;
-				}
-			}
-			return true;
+		"THE":function(node,selectText){			
+			return NODYENV.matchesSelector ? NODYENV.matchesSelector(node,selectText) : termiMatches(selectText,node);
+			// original code in nody.migration.js
 		},
 		//레퍼런스부터 호출합니다.
 		"Structure#QueryDataInfo":function(querys){
@@ -3206,6 +3123,20 @@
 		},
 		//쿼리셀렉터와 약간 다른점은 부모도 쿼리 셀렉터에 포함된다는 점
 		"QUERY":(function(){
+			var envQuerySelectorAll = NODYENV.querySelectorAll; 
+			return function(query,root){
+				if(typeof query !== "string" || (query.trim().length == 0)) return [];
+				root = ((typeof root === "undefined")?document:ISELNODE(root)?root:document);
+				if(envQuerySelectorAll) {
+					if(root == document) return envQuerySelectorAll.call(root,query);
+					if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(envQuerySelectorAll.call(root,query)));
+					return envQuerySelectorAll.call(root,query);
+				} else {
+					if(root == document) return termiSelectorAll(query,document.body.parentElement);
+					if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(termiSelectorAll(query,root)));
+					return termiSelectorAll(query,root);
+				}
+			};
 			if( ISUNDERBROWSER(9) || !document.querySelectorAll ){
 				console.warn("Nody의 노드셀렉터 관용모드 시작");
 				return function(query,root){
@@ -3314,6 +3245,50 @@
 			} else {
 				return NUT.PARENTS(FINDCORE(el)[0]);
 			}
+		},1),
+		"FINDBEFORE":FUT.CONTINUTILITY(function(node,filter){ 
+			node = FIND(node,0);
+			var index = ELINDEX(node); 
+			var result = []; 
+			if(typeof index === "number") {
+				switch(typeof filter) {
+					case 'string':
+						for(var i=0,l=index;i<l;i++){
+							var fnode = node.parentNode.children[i];
+							ELIS(fnode,filter) && result.push(fnode);
+						} 
+						break;
+					case 'number':
+						result.push(node.parentNode.children[index - (filter+1)]);
+						break;
+					default :
+						for(var i=0,l=index;i<l;i++) result.push(node.parentNode.children[i]); 	
+						break;
+				}
+			}
+			return result; 
+		},1),
+		"FINDAFTER":FUT.CONTINUTILITY(function(node,filter){ 
+			node = FIND(node,0);
+			var index = ELINDEX(node); 
+			var result = []; 
+			if(typeof index === "number") {
+				switch(typeof filter) {
+					case 'string':
+						for(var i=index+1,l=node.parentNode.children.length;i<l;i++){
+							var fnode = node.parentNode.children[i];
+							ELIS(fnode,filter) && result.push(fnode);
+						}
+						break;
+					case 'number':
+						result.push(node.parentNode.children[index + (filter+1)]);
+						break;
+					default :
+						for(var i=index+1,l=node.parentNode.children.length;i<l;i++) result.push(node.parentNode.children[i]); 
+						break;
+				}
+			}
+			return result; 
 		},1),
 		"FINDPARENT" :FUT.CONTINUTILITY(function(el,require,index){
 			if( (typeof require === 'number') || ((typeof require === 'string') && (typeof index === 'number')) ) return DATAZERO(FINDPARENTS(el,require,index));
@@ -3875,7 +3850,7 @@
 			return node;
 		},
 		//이전 엘리먼트를 찾습니다.
-		"BEFORE":function(node,appendNodes){ 
+		"BEFORE":FUT.CONTINUTILITY(function(node,appendNodes){ 
 			var target = FIND(node,0);
 			if(!ISELNODE(target)) return node;
 			if(arguments.length < 2) return FINDMEMBER(target,-1);
@@ -3884,9 +3859,10 @@
 				for(var i=0,l=appendTarget.length;i<l;i++) target.parentNode.insertBefore(appendTarget[i],target); 
 			}
 			return target; 
-		},
+		},1),
+		
 		//이후 엘리먼트를 찾습니다.
-		"AFTER" : function(target,appendNodes){ 
+		"AFTER" :FUT.CONTINUTILITY(function(target,appendNodes){ 
 			target = FIND(target,0);
 			if(!ISELNODE(target))    return target; 
 			if(arguments.length < 2) return FINDMEMBER(target,1);
@@ -3900,8 +3876,8 @@
 				}
 			}
 			return target;
-		},
-		"CHANGE":function(left,right){
+		},1),
+		"CHANGE":FUT.CONTINUTILITY(function(left,right){
 			left  = FIND(left,0);
 			right = FIND(right,0);
 			if(left && right ){
@@ -3924,9 +3900,7 @@
 				console.warn("not found",left,right);
 			}
 			return [left,right];
-		},
-		"BEFOREALL":function(node){ node = FIND(node,0); var index = ELINDEX(node); var result = []; if(typeof index === "number") for(var i=0,l=index;i<l;i++) result.push(node.parentNode.children[i]); return result; },
-		"AFTERALL":function(node){ node = FIND(node,0); var index = ELINDEX(node); var result = []; if(typeof index === "number") for(var i=index+1,l=node.parentNode.children.length;i<l;i++) result.push(node.parentNode.children[i]); return result; },
+		},1),
 		"REPLACE":function(target,replaceNode){
 			var replaceTarget = FIND(replaceNode,0);
 			ELAFTER(target,replaceTarget);
@@ -6452,6 +6426,11 @@
 				console.error("오류::NFViewModel의 렌더값이 올바르지 않습니다. 대체 렌더링이 실시됩니다.=>",renderResult, this.Source[depth]);
 			}
 			return MAKE("div",{html:TOSTRING(managedData.value()),style:'padding-left:10px;'},managedData.placeholder("div"));
+		},
+		clone:function(){
+			var init = this.Source.clone();
+			for(var i=0,l=arguments.length;i<l;i++) if( arguments[i] ) init[i] = arguments[i];
+			return _NFViewModel.apply(undefined,init.toArray());
 		}
 	},function(renderDepth){
 		//tempate 타겟을 설정
@@ -6527,7 +6506,13 @@
 		value:function(key,value,sender){
 			// Read
 			if( arguments.length == 0) return CLONE(this.Source);
-			if( arguments.length == 1) return this.Source[key];
+			if( arguments.length == 1) {
+				if(typeof key === 'object'){
+					for(var k in key){ this.value(k,key[k],sender); }
+					return this;
+				}
+				return this.Source[key];
+			}
 			// Write
 			this.Source[key] = value;
 			NFDataContextNotificationCenter.managedDataBindEvent(this.BindID,key,value,sender);
@@ -6787,8 +6772,7 @@
 				ELREMOVE(this.structureNodes[bindID])
 				
 				delete this.structureNodes[bindID];
-				//
-				
+				//	
 				CALL(this.dataDidChange,this);
 			}
 			//
@@ -6804,12 +6788,13 @@
 				var beforePlaceHolder = this.placeholderNodes[rerenderManagedData.getBindID()];
 				//console.log('parentPlaceHolder,beforeElement,beforePlaceHolder',parentPlaceHolder,beforeElement,beforePlaceHolder)
 				
-				if(parentPlaceHolder && beforePlaceHolder) {
+				if(!beforeElement) console.error('rerender 대상의 데이터를 찾을 수 없습니다.') ;
+				if(parentPlaceHolder) {
 					//바꿔치기 하기
 					this.needDisplay(rerenderManagedData,parentPlaceHolder,true);
 					ELBEFORE(beforeElement,this.structureNodes[rerenderManagedData.BindID]);
 					ELAPPEND(this.placeholderNodes[rerenderManagedData.BindID],beforePlaceHolder.children);
-					ELREMOVE(beforeElement);
+					ELREMOVE(beforeElement)
 					CALL(this.dataDidChange,this);
 				} else {
 					console.error("부모의 placeholder가 존재해야 rerender가 작동할수 있습니다.");
@@ -7039,7 +7024,7 @@
 		this.view = FIND(view,0);
 		if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
 		if(managedData)this.setManagedData(managedData);
-		this.viewModel     = viewModel || new NFViewModel();
+		this.viewModel     = viewModel ? ISARRAY(viewModel) ? _NFViewModel.apply(undefined,TOARRAY(viewModel)) : viewModel : new NFViewModel();
 		
 		//바인딩 관련 인자
 		this.bindValueNodes = [];
