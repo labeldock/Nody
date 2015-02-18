@@ -7,10 +7,10 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21",build = "1037";
+	var version = "0.21",build = "1039";
 	
 	// Core verison
-	var nodyCoreVersion = "1.9", nodyCoreBuild = "74";
+	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
 	
 	// Pollyfill : console object
 	if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(TOSTRING(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
@@ -323,7 +323,18 @@
 		}
 	};
 	//Getter:Core
-	W.makeGetter    = function(n,m){ var name=n.toUpperCase(); W[name]=m; NGetters.push(name); };
+	W.makeGetter = function(n,m,bind){ 
+		var name=n.toUpperCase(); 
+		W[name]=m; NGetters.push(name); 
+		if(typeof bind === 'object') for(var key in bind) if(typeof bind[key] === 'function') {
+			m[key] = function(){
+				var binder = (new (function(){})());
+				bind[key].apply(binder,Array.prototype.slice.call(arguments));
+				return function(){ return m.apply(binder,Array.prototype.slice.call(arguments)) };
+			}
+		}
+		return m;
+	};
 	structruePrototype = {
 		"get":function(key){ if(key) return this.Source[key]; return this.Source; },
 		"empty":function(){ for(var k in this.Source) delete this.Source[k]; return this.Source; },
@@ -559,7 +570,7 @@
 				
 					for (var i=0,l=model.length;i<l;i++) {
 						try {
-							var param = /^(\!|)(\w*)([\>\<\=\:]{0,2})([\S]*)/.exec(model[i]);
+							var param = /^(\!|)(\w*)([\>\<\=\:]{0,3})([\S]*)/.exec(model[i]);
 						} catch(e) {
 							console.warn("포멧이 올바르지 않은 키워드 입니다.",model[i]);
 						}
@@ -571,13 +582,28 @@
 							if(param[1] == "!") testResult = !testResult;
 							if(!testResult) break;
 							//길이 확인
-							if(param[3] != "" && ISNUMBERTEXT(param[4])){
-								switch(param[3]){
-									case ">": testResult = TOSIZE(target,param[2]) > parseInt(param[4]); break;
-									case "<": testResult = TOSIZE(target,param[2]) < parseInt(param[4]); break;
-									case "<=": case "=<": testResult = TOSIZE(target,param[2]) <= parseInt(param[4]); break;
-									case ">=": case "=>": testResult = TOSIZE(target,param[2]) >= parseInt(param[4]); break;
-									case "=" : case "==": testResult = TOSIZE(target,param[2]) == parseInt(param[4]); break;
+							if(param[3] != "" && param[4] != ""){
+								if( ISNUMBERTEXT(param[4]) ) {
+									switch(param[3]){
+										case ">": testResult = TOSIZE(target,param[2]) > parseFloat(param[4]); break;
+										case "<": testResult = TOSIZE(target,param[2]) < parseFloat(param[4]); break;
+										case "<=": case "=<": case "<==": case "==<": testResult = TOSIZE(target,param[2]) <= parseFloat(param[4]); break;
+										case ">=": case "=>": case ">==": case "==>": testResult = TOSIZE(target,param[2]) >= parseFloat(param[4]); break;
+										case "==" : case "===": testResult = TOSIZE(target,param[2]) == parseFloat(param[4]); break;
+										case "!=" : case "!==": testResult = TOSIZE(target,param[2]) != parseFloat(param[4]); break;
+									}
+								} else if(param[3] === ":" && /\d+\~\d+/.test(param[4])) {
+									var rangeNumbers = /(\d+)\~(\d+)/.exec(param[4]);
+									if(rangeNumbers[1] == rangeNumbers[2]){
+										testResult = ( TOSIZE(target,param[2]) == parseFloat(param[4]) );
+									} else {
+										var lv=(rangeNumbers[1]*1),rv=(rangeNumbers[2]*1),cv=TOSIZE(target,param[2]);
+										if( lv > rv ) {
+											testResult = ( (cv <= lv) && (cv >= rv) );
+										} else {
+											testResult = ( (cv <= rv) && (cv >= lv) );
+										}
+									}
 								}
 								if(!testResult) break;
 							}
@@ -2268,50 +2294,54 @@
 	});
 	
 	
-	extendModule("NFString","ZString",{
-		setZoneParams:function(params){
-			if( IS(params,"array !nothing") ) this.ZoneParamsInfo = DATAMAP(params,function(command){ return ZONEINFO(command); });
-		},
-		getZContent:function(seed){
-			// d:Dynamic, e: Evaluation
-			seed = (typeof seed === "number")?seed:0;
-			var dPoint=[],ePoint=[];
-			var result = this.Source,zoneParamsInfo = this.ZoneParamsInfo;
-			
-			
-			result = result.replace(/\\\([^\)]*\)/g,function(s){
-				dPoint.push(s.substring(2,s.length-1));
-				return "@{$"+(dPoint.length-1)+"}" ;
-			});
-			
-			result = result.replace(/\\\{[^\}]*\}/g,function(s){
-				ePoint.push(s.substring(2,s.length-1));
-				return "@{#"+(ePoint.length-1)+"}" ;
-			});
-			
-			dPoint = DATAMAP(dPoint,function(v){ return ZONEVALUE(ZONEINFO("\\!"+v)); });
-			ePoint = DATAMAP(ePoint,function(v){ 
-				var evt = v.replace(/\$i/g,function(s){
+	makeGetter("ZSTRING",function(source){
+		seed = (typeof seed === "number")?this.seed:0;
+		var aPoint=[],params = DATAMAP(Array.prototype.slice.call(arguments,1),function(t){ return ZONEINFO(t); });
+		return source.replace(/(\\\([^\)]*\)|\\\{[^\}]*\})/g,function(s){
+			if(s[s.length-1] == ')') {
+				var dv = ZONEVALUE(ZONEINFO("\\!"+s.substring(2,s.length-1)));
+				aPoint.push(dv);
+				return dv;
+			} else {
+				var v = eval(s.substring(2,s.length-1).replace(/\$i/g,function(s){
 					return seed;
+				}).replace(/\&\d+/g,function(s){
+					return aPoint[parseInt(s.substr(1))];
 				}).replace(/\$\d+/g,function(s){
-					var paramResult = zoneParamsInfo[parseInt(s.substr(1))];
+					var paramResult = params[parseInt(s.substr(1))];
 					if(paramResult){
 						paramResult = ZONEVALUE(paramResult);
 						return ISNUMBERTEXT(paramResult) ? paramResult : '"'+paramResult+'"' ;
 					}
-				});
-				return eval(evt);
-			});
-			
-			result = result.replace(/\@\{\$\d+\}/g,function(s){
-				return dPoint[parseInt(s.substring(3,s.length-1))];
-			});
-			
-			result = result.replace(/\@\{\#\d+\}/g,function(s){
-				return ePoint[parseInt(s.substring(3,s.length-1))];
-			});
-			
-			return result;
+				}));
+				aPoint.push(v);
+				return v;
+			}
+		});
+		
+	},{
+		withSeed:function(seed){ this.seed = TONUMBER(seed); }
+	});
+	
+	makeGetter("ZNUMBER",function(source){
+		if(arguments.length === 1){
+			//console.log("single mode")
+			var sn = "\\("+source+")";
+			return TONUMBER(ZSTRING.call(undefined,sn));
+		} else {
+			//console.log("dual mode");
+			var args = Array.prototype.slice.call(arguments);
+			args[0] = "\\{"+args[0]+"}";
+			return TONUMBER(ZSTRING.apply(undefined,args));
+		}
+	},{
+		withSeed:function(seed){ this.seed = TONUMBER(seed); }
+	});
+	
+	
+	extendModule("NFString","ZString",{
+		getZContent:function(seed){
+			return ZSTRING.withSeed(seed).apply(undefined,[this.Source].concat(this.ZoneParams));
 		},
 		toArray:function(length,startAt){
 			length  = (typeof length === "number")  ? length : 1;
@@ -2323,33 +2353,10 @@
 	},function(param){
 		this.ZoneParams = Array.prototype.slice.call(arguments);
 		this._super(this.ZoneParams.shift());
-		this.setZoneParams(this.ZoneParams);
-		//this.ZoneParamsInfo = [];
 	},function(seed){
 		return this.getZContent(seed);
 	});
 	
-	makeGetter("ZSTRING",function(params){
-		return _ZString.apply(ZString,Array.prototype.slice.call(arguments)).get();
-	});
-	
-	makeGetter("ZNUMBER",function(params){
-		if(arguments.length === 1){
-			//console.log("single mode")
-			var sn = "\\(";
-				sn+= params;
-				sn+= ")";
-			return TONUMBER(_ZString.call(ZString,sn).get());
-		} else {
-			//console.log("dual mode");
-			var args = Array.prototype.slice.call(arguments);
-			var sn = "\\{";
-				sn+= args[0];
-				sn+= "}";
-			args[0] = sn;
-			return TONUMBER(_ZString.apply(ZString,args).get());
-		}
-	});
 	
 	
 	//******************
