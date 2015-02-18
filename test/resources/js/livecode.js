@@ -8,6 +8,7 @@ $('.run-modal').on('click',function(e){
 .on('click','.run-modal-escape',function(e){
 	$(e.delegateTarget).removeClass('run-modal-show');
 });
+
 $(document).on('keyup',function(e){
 	if(e.keyCode == 27) {
 		if($('.run-modal').hasClass('run-modal-show')){
@@ -68,7 +69,7 @@ $('.code-wrapper').on('click','a.live-run-action',function(e){
 	runTabContentsActiveController.shouldActive(0);
 });
 
-var d = FIND('.code-section > article > header',DATAMAP,function(header){
+FIND('.code-section > article > header',DATAMAP,function(header){
 	//with position hack
 	var ankor = MAKE('a');
 	ELBEFORE(header,ankor);
@@ -79,3 +80,5 @@ var d = FIND('.code-section > article > header',DATAMAP,function(header){
 	}));
 	
 },ELAPPENDTO,'.table-of-contents menu');
+
+
