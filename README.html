@@ -6,89 +6,11 @@
 
 <p><a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a></p>
 
-<h1>Table of Contents</h1>
-
-<ul>
-<li><a href="#introduce">Introduce</a></li>
-<li><a href="#feature">Featrue</a></li>
-<li><a href="#simple-showcase">Simple showcase</a>
-
-<ul>
-<li><a href="#showcase-tag-generator">Tag Generator</a></li>
-<li><a href="#showcase-select">셀렉트</a></li>
-<li><a href="#showcase-template">Template &amp; Partial</a>
-
-<ul>
-<li><a href="#showcase-template-01">Import template node</a></li>
-<li><a href="#showcase-template-02">Partial template node</a></li>
-<li><a href="#showcase-template-03">&hellip;</a></li>
-<li><a href="#showcase-template-04">템플릿 안에 노드를 파셜하기</a></li>
-</ul>
-</li>
-<li><a href="#showcase-mvvm">MVVM</a>
-
-<ul>
-<li><a href="#showcase-template-01">Basic</a></li>
-<li><a href="#showcase-template-02">With template</a></li>
-</ul>
-</li>
-<li><a href="#showcase-enumerate">Enumerate</a>
-
-<ul>
-<li><a href="#showcase-enumerate-each">Each</a></li>
-<li><a href="#showcase-enumerate-map">Map</a></li>
-<li><a href="#showcase-enumerate-inject">Inject</a></li>
-<li><a href="#showcase-enumerate-eachback">Each back</a></li>
-<li><a href="#showcase-enumerate-object-each">Object each</a></li>
-</ul>
-</li>
-<li><a href="#showcase-parsing">Parsing</a></li>
-<li><a href="#showcase-type-inspect">Type Inspect</a>
-
-<ul>
-<li><a href="#showcase-type-inspect-is">Type::IS</a></li>
-<li><a href="#showcase-type-inspect-as">Type::AS</a></li>
-</ul>
-</li>
-<li><a href="#showcase-string">String</a>
-
-<ul>
-<li><a href="#showcase-string-01">ByteSize</a></li>
-<li><a href="#showcase-string-02">String Model</a></li>
-</ul>
-</li>
-<li><a href="#showcase-zstring">ZString</a>
-
-<ul>
-<li><a href="#showcase-zstring-01">Basic</a></li>
-<li><a href="#showcase-zstring-02">With Param</a></li>
-<li><a href="#showcase-zstring-03">Random Param</a></li>
-<li><a href="#showcase-zstring-05">To many array</a></li>
-</ul>
-</li>
-<li><a href="#showcase-number">Number</a></li>
-<li><a href="#showcase-module">Module</a>
-
-<ul>
-<li><a href="#showcase-module-new">Module::new</a></li>
-<li><a href="#showcase-module-super">Module::super</a></li>
-<li><a href="#showcase-module-inheritance">Module::Inheritance</a></li>
-<li><a href="#showcase-module-veriable">Module::Default Veriable</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#version-info">Version</a></li>
-</ul>
-
-
-<p><a name="introduce"/></p>
-
 <h1>introduce</h1>
 
 <p>Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리이다.</p>
 
-<h3>Feature</h3>
+<h2>Feature</h2>
 
 <p>Nody는&hellip;
   1. 노드를 손쉽게 구성
@@ -96,9 +18,9 @@
   3. 다양한 Enumerate
   4. 인라인 코딩을 지향</p>
 
-<h3>Compatibility</h3>
+<h2>Compatibility</h2>
 
-<h4>Recommend</h4>
+<h3>Recommend</h3>
 
 <ul>
 <li>IE9+</li>
@@ -107,7 +29,7 @@
 </ul>
 
 
-<h4>Incomplete Support</h4>
+<h3>Incomplete Support</h3>
 
 <ul>
 <li>IE8+</li>
@@ -116,664 +38,16 @@
 </ul>
 
 
-<p><a name="simple-showcase"/></p>
-
-<h2>Simple showcase</h2>
-
-<p><a name="showcase-tag-generator"/></p>
-
-<h3>Tag Generator</h3>
-
-<p>CSS스타일올 MAKE(&ldquo;&hellip;&rdquo;) 함수를 호출하면 Node를 생성할수 있다.</p>
-
-<p><code>
-아래 html결과물은 실질적으로 개행이 되지 않으나 이해를 돕기위해 개행과 들여쓰기를 집어넣었다.
-</code></p>
-
-<p><code>javascript
-    MAKE('div#foo');
-</code>
-<code>html
-    &lt;div id="foo"&gt;&lt;/div&gt;
-</code></p>
-
-<p><code>javascript
-    MAKE('div#foo.bar');
-    MAKE('div.foo.bar');
-    MAKE('div[role=foo][role2=foo]');
-    MAKE('button:disabled');
-    MAKE('button','Button');
-    MAKE('input','foo');
-    MAKE('input?radio!group1');
-</code>
-<code>html
-    &lt;div id="foo" class="bar"&gt;&lt;/div&gt;
-    &lt;div class="foo bar"&gt;&lt;/div&gt;
-    &lt;div role="foo" role2="foo"&gt;&lt;/div&gt;
-    &lt;button disabled&gt;&lt;/button&gt;
-    &lt;button&gt;Button&lt;/button&gt;
-    &lt;input value="foo"&gt;
-    &lt;input type="radio" name="group1" value&gt;
-</code></p>
-
-<p>파라메터를 중첩하여 생성가능
-<code>javascript
-        MAKE('ul',
-          MAKE('li.item','list1'),
-          MAKE('li.item','list2')
-        );
-</code>
-<code>html
-        &lt;ul&gt;
-           &lt;li class="item"&gt;list1&lt;/li&gt;
-           &lt;li class="item"&gt;list2&lt;/li&gt;
-        &lt;/ul&gt;
-</code></p>
-
-<p><a name="showcase-select"/></p>
-
-<h3>셀렉트</h3>
-
-<p>```javascript
-        FIND(&ldquo;div.target&rdquo;);  // array => [div.target,div.target,div.target]
-        FIND(&ldquo;div.target&rdquo;,0); // node  => div.target</p>
-
-<p>```</p>
-
-<p><a name="showcase-template"/></p>
-
-<h3>Template &amp; Partial</h3>
-
-<p><a name="showcase-template-01"/></p>
-
-<h4>Import template node</h4>
-
-<p>Tag
-```html
-        <!-- Container -->
-        <ul id="container"></ul></p>
-
-<pre><code>    &lt;!-- Template --&gt;
-    &lt;template id="li-temp"&gt;
-        &lt;li class="foo"&gt;bar&lt;/li&gt;
-    &lt;/template&gt;
-</code></pre>
-
-<p><code>
-Script
-</code>javascript
-        <em>NFTemplate(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
-        </em>NFTemplate(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
-        _NFTemplate(&ldquo;#li-temp&rdquo;).appendTo(&ldquo;ul#container&rdquo;);
-<code>
-Result
-</code>html
-        <ul id="container">
-            <li class="foo">bar</li>
-            <li class="foo">bar</li>
-            <li class="foo">bar</li>
-        </ul>
-```</p>
-
-<p><a name="showcase-template-02"/></p>
-
-<h4>Partial template node</h4>
-
-<p>Tag
-Script
-<code>javascript
-        var temp = _NFTemplate(
-            '&lt;figure&gt;\
-                &lt;img node-src="image"&gt;\
-                &lt;figcaption&gt;\
-                    &lt;a node-href="link" node-value="title"&gt;&lt;/a&gt;\
-                    &lt;input type="text" node-value="index"&gt;\
-                &lt;/figcaption&gt;\
-            &lt;/figure&gt;',false
-        );
-        //1
-        temp.generate("#figure-group",{
-            "image":"somewhere.png",
-            "link" :"#someplace",
-            "title":"awesome",
-            "index":"100"
-        });
-        //2
-        temp.generate("#figure-group",{
-            "image":"somewhere2.png",
-            "link" :"#someplace2",
-            "title":"great",
-            "index":"101"
-        });
-</code>
-Result
-<code>html
-    &lt;!-- 1 --&gt;
-    &lt;figure&gt;
-        &lt;img src="somewhere.png"&gt;
-        &lt;figcaption&gt;
-            &lt;a href="#someplace"&gt;awesome&lt;/a&gt;
-            &lt;input type="text" value="100"&gt;
-        &lt;/figcaption&gt;
-    &lt;/figure&gt;
-    &lt;!-- 2 --&gt;
-    &lt;figure&gt;
-        &lt;img src="somewhere2.png"&gt;
-        &lt;figcaption&gt;
-            &lt;a href="#someplace2"&gt;great&lt;/a&gt;
-            &lt;input type="text" value="101"&gt;
-        &lt;/figcaption&gt;
-    &lt;/figure&gt;
-</code></p>
-
-<p><a name="showcase-template-04"/></p>
-
-<h4>템플릿 안에 노드를 파셜하기</h4>
-
-<p><code>javascript
-    //1
-    _NFTemplate('&lt;ul node-append="list"&gt;&lt;li&gt;hello&lt;/li&gt;&lt;/ul&gt;',{
-        "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
-    });
-    //2
-    _NFTemplate('&lt;ul node-prepend="list"&gt;&lt;li&gt;hello&lt;/li&gt;&lt;/ul&gt;',{
-        "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
-    });
-    //3
-    _NFTemplate('&lt;ul node-put="list"&gt;&lt;li&gt;hello&lt;/li&gt;&lt;/ul&gt;',{
-        "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
-    });
-</code>
-Result
-<code>html
-    &lt;!-- 1 --&gt;
-    &lt;ul&gt;
-        &lt;li&gt;hello&lt;/li&gt;
-        &lt;li class="item"&gt;item1&lt;/li&gt;
-        &lt;li class="item"&gt;item2&lt;/li&gt;
-    &lt;/ul&gt;
-    &lt;!-- 2 --&gt;
-    &lt;ul&gt;
-        &lt;li class="item"&gt;item1&lt;/li&gt;
-        &lt;li class="item"&gt;item2&lt;/li&gt;
-        &lt;li&gt;hello&lt;/li&gt;
-    &lt;/ul&gt;
-    &lt;!-- 3 --&gt;
-    &lt;ul&gt;
-        &lt;li class="item"&gt;item1&lt;/li&gt;
-        &lt;li class="item"&gt;item2&lt;/li&gt;
-    &lt;/ul&gt;
-</code></p>
-
-<p><a name="showcase-mvvm"/></p>
-
-<h3>MVVM</h3>
-
-<p>특징
-  - 다중의 뎁스구조 지원
-  - 데이터 모델의 구조를 미리 정의하지 않음
-  - 일부만 따로 렌더링 할 수 있음
-  - 실시간 바인드 지원</p>
-
-<p><a name="showcase-mvvm-01"/></p>
-
-<h4>Basic</h4>
-
-<p>```javascript
-    // Original data
-    var data = [
-        {index:&ldquo;1&rdquo;,value:&ldquo;one&rdquo;},
-        {index:&ldquo;2&rdquo;,value:&ldquo;two&rdquo;},
-        {index:&ldquo;3&rdquo;,value:&ldquo;three&rdquo;}
-    ];</p>
-
-<pre><code>// Presentation object
-var dataContext = _NFDataContext(data);
-
-// Draw model
-var viewModel = _NFViewModel(
-//depth1
-function(){
-    return this.placeholder("ul.top");
-},
-//depth2
-function(){
-    return MAKE("li",MAKE("span",{href:this.data("index")}),this.bind("value","input?text"));
-});
-
-// View controller
-var viewController = _NFDataContextViewController("#container",dataContext,viewModel);
-viewController.needDisplay(); // draw view start
-
-//Get data
-dataContext.getJSONObject(); =&gt; [{index:"1",value:"one"},{index:"2",value:"two"},{index:"3",value:"three"}]
-</code></pre>
-
-<p><code>
-Result
-</code>html
-        <section id="container">
-            <ul class="top">
-                <li><span>1</span><input type="text" value="one"></li>
-                <li><span>2</span><input type="text" value="two"></li>
-                <li><span>3</span><input type="text" value="three"></li>
-            </ul>
-        </section>
-```</p>
-
-<p><a name="showcase-mvvm-02"/></p>
-
-<h4>With template</h4>
-
-<p><code>html
-    &lt;template id="table" hidden&gt;
-        &lt;table&gt;
-            &lt;thead&gt;
-                &lt;tr&gt;
-                    &lt;th&gt;index&lt;/th&gt;
-                    &lt;th&gt;value&lt;/th&gt;
-                &lt;/tr&gt;
-            &lt;/thead&gt;
-            &lt;tbody node-placeholder&gt;&lt;/tbody&gt;
-        &lt;/table&gt;
-    &lt;/template&gt;
-    &lt;template id="tbody-item"&gt;
-        &lt;tr&gt;
-            &lt;td node-value="index"&gt;&lt;/td&gt;
-            &lt;td node-value="value"&gt;&lt;/td&gt;
-        &lt;/tr&gt;
-    &lt;/template&gt;
-</code>
-<code>javascript
-        var dataContext = _NFDataContext(data);
-        var viewModel = _NFViewModel("template#table","template#tbody-item");
-        var viewController = _NFDataContextViewController("#container",dataContext,viewModel);
-        viewController.needDisplay();
-</code>
-Result
-<code>html
-    &lt;section id="container"&gt;
-        &lt;table&gt;
-            &lt;thead&gt;
-                &lt;tr&gt;
-                    &lt;th&gt;index&lt;/th&gt;
-                    &lt;th&gt;value&lt;/th&gt;
-                &lt;/tr&gt;
-            &lt;/thead&gt;
-            &lt;tbody&gt;
-                &lt;tr&gt;
-                    &lt;td&gt;1&lt;/td&gt;
-                    &lt;td&gt;one&lt;/td&gt;
-                &lt;/tr&gt;
-                &lt;tr&gt;
-                    &lt;td&gt;2&lt;/td&gt;
-                    &lt;td&gt;two&lt;/td&gt;
-                &lt;/tr&gt;
-                &lt;tr&gt;
-                    &lt;td&gt;3&lt;/td&gt;
-                    &lt;td&gt;three&lt;/td&gt;
-                &lt;/tr&gt;
-            &lt;/tbody&gt;
-        &lt;/table&gt;
-    &lt;/section&gt;
-</code></p>
-
-<p><a name="showcase-enumerate"/></p>
-
-<h3>enumerate</h3>
-
-<p>참고 : 대문자로 호출하는 함수는 <em>Array,</em>Object 와 같은 모듈보다 훨씬 빠르다.</p>
-
-<p><a name="showcase-enumerate-each"/></p>
-
-<h4>Each</h4>
-
-<p>```javascript
-        DATAEACH([1,2,3],function(value,index){
-            console.log(value,index)
-        });</p>
-
-<pre><code>    //log =&gt; 1,0
-    //log =&gt; 2,1
-    //log =&gt; 3,2
-</code></pre>
-
-<p>```</p>
-
-<p><a name="showcase-enumerate-map"/></p>
-
-<h4>Map</h4>
-
-<p>```javascript
-        DATAMAP([1,3,5],function(v){
-            return v+1;
-        });</p>
-
-<pre><code>    // =&gt; [2,4,6]
-</code></pre>
-
-<p>```</p>
-
-<p><a name="showcase-enumerate-inject"/></p>
-
-<h4>Inject</h4>
-
-<p>```javascript
-        INJECTOBJECT([2,4,6],function(injectObject,value,index){
-            injectObject[index] = value;
-        });</p>
-
-<pre><code>    //=&gt;{0:2,1:4,2:6}
-</code></pre>
-
-<p>```</p>
-
-<p><a name="showcase-enumerate-eachback"/></p>
-
-<h4>Eachback</h4>
-
-<p>```javascript
-        DATAEACHBACK([1,2,3],function(){
-            console.log(value,index)
-        });</p>
-
-<pre><code>    //log =&gt; 3,2
-    //log =&gt; 2,1
-    //log =&gt; 1,0
-</code></pre>
-
-<p>```</p>
-
-<p><a name="showcase-enumerate-object-each"/></p>
-
-<h4>Object each</h4>
-
-<p>```javascript
-        PROPEACH({1:2,2:3,4:5},function(value,key){
-            console.log(key+value);
-        });</p>
-
-<pre><code>    //=&gt;["12", "23", "45"]
-</code></pre>
-
-<p>```</p>
-
-<p><a name="showcase-parsing"/></p>
-
-<h3>Parsing</h3>
-
-<p>TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브젝트로  파싱 가능하다.
-<code>javascript
-        TOOBJECT("{'hello':'world','foo':'bar','1':2}");
-        TOOBJECT("{hello:world,foo:bar,1:2}");
-        TOOBJECT("hello:world,foo:bar,1:2");
-        /*
-        =&gt; {"hello":"world","foo":"bar","1",2}
-        */
-</code></p>
-
-<p><a name="showcase-type-inspect"/></p>
-
-<h3>TypeInsepct</h3>
-
-<p><a name="showcase-type-inspect-is"/></p>
-
-<h4>type::is</h4>
-
-<p>```javascript</p>
-
-<pre><code>    IS("123","string"); //=&gt; true
-    IS("123","number"); //=&gt; false
-    IS("123","nothing"); //=&gt; false
-    IS("123","meaning"); //=&gt; true
-    IS("0","meaning"); //=&gt; true
-    IS(0,"meaning"); //=&gt; false
-    IS("123","string&gt;5"); //=&gt; false
-    IS("123456","string&gt;5"); //=&gt; true
-    IS(123456,"text&gt;5"); //=&gt; true
-    IS(123456,"number&lt;100"); //=&gt; false
-    IS({},"object"); //=&gt; true
-    IS([],"array"); //=&gt; true
-    //multi test
-    IS([],"nothing array"); //=&gt; true
-    IS({},"nothing object"); //=&gt; true
-    IS(12,"nothing number"); //=&gt; false
-    IS(0,"nothing number"); //=&gt; true
-    IS(0,"nothing text"); //=&gt; true
-    IS(0,"nothing string"); //=&gt; false
-</code></pre>
-
-<p>```</p>
-
-<p><a name="showcase-type-inspect-as"/></p>
-
-<h4>type::as</h4>
-
-<p>as 는 스트링 값만을 위한 api이다
-<code>javascript
-        AS("123     ","string&gt;4"); //=&gt; false
-        AS("        ","string==1"); //=&gt; false
-        AS("        ","string==0"); //=&gt; true
-</code></p>
-
-<p><a name="showcase-string"/></p>
-
-<h3>String</h3>
-
-<p><a name="showcase-string-01"/></p>
-
-<h4>byteSize</h4>
-
-<p>바이트사이즈를 출력할수 있다.
-<code>javascript
-        _NFString("McDonald's").getByteSize(); //=&gt; 10
-        _NFString("맥도널드").getByteSize(); //=&gt;8
-        _NFString("マクドナルド").getByteSize(); //=&gt;12
-</code></p>
-
-<p><a name="showcase-string-02"/></p>
-
-<h4>String model</h4>
-
-<p>class attribute 같은 string의 추가제거에 사용가능하다.
-<code>javascript
-        _NFString("McDonald's").addModel("good").get(); //=&gt;"McDonald's good"
-        _NFString("McDonald's").removeModel("Mc").get(); //=&gt;"McDonald's"
-        _NFString("McDonald's").removeModel("McDonald's").get(); //=&gt;""
-</code></p>
-
-<p><a name="showcase-zstring"/></p>
-
-<h3>ZString</h3>
-
-<p>ZString은 렌덤 택스트 생성을 위해 만들어졌다. 첫번째 파라메터는 메인텍스트 그외 파라메터는 서브텍스트 이다.
-메인 파라메터는 \(), \{} 규칙이 존재하고 서브파라메터는 \! \? 규칙이 존재한다.</p>
-
-<p><a name="showcase-zstring-01"/></p>
-
-<h4>Basic</h4>
-
-<p>\() 구문은 곧바로 값을 환산하여 뽑아준다.
-<code>javascript
-    //range param
-    ZSTRING("Total \\(10~20)%"); //=&gt; "Total 17%"
-    ZSTRING("Total \\(10~20)%"); //=&gt; "Total 12%"
-    ZSTRING("Total \\(10~20)%"); //=&gt; "Total 15%"
-    //choice param
-    ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=&gt; "Boy say hello"
-    ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=&gt; "Girl say hi"
-    ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=&gt; "Boy say bye"
-</code></p>
-
-<p><a name="showcase-zstring-02"/></p>
-
-<h4>With Param</h4>
-
-<p>\{} 구문은 내부에서 연산후 값을 뽑는다
-<code>javascript
-    //range string
-    ZSTRING("Result : \\{$0+$1}","2","3"); //=&gt; "Result : 5"
-    ZSTRING("Result : \\{$0-$1}","2","3"); //=&gt; "Result : -1"
-    ZSTRING("Result : \\{$0*$1}","2","3"); //=&gt; "Result : 6"
-    ZSTRING("Result : \\{$0/$1}","2","3"); //=&gt; "Result : 0.6666666666666666"
-    ZSTRING("Result : \\{$0+' '+$1}","not","enough"); //=&gt; "Result : not enough"
-</code></p>
-
-<p><a name="showcase-zstring-03"/></p>
-
-<h4>Random Param</h4>
-
-<p>파라메터 또한 랜덤값을 주어줄수 있다.
-<code>javascript
-    //range string
-    ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=&gt; "16 - 21"
-    ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=&gt; "17 - 23"
-    ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=&gt; "12 - 28"
-</code></p>
-
-<p><a name="showcase-zstring-03"/></p>
-
-<h4>To many array</h4>
-
-<p>ZSTRING을 실제로 <em>ZString모듈을 호출하여 값을 반환한다. 직접적으로 </em>ZString모듈을 호출하여 많은 값의 생성 가능하다.
-<code>javascript
-    //range string
-    _ZString("Result[\\{$i+1}] : \\{10*$i+$0}","\\?1~9").toArray(5);
-    //=&gt; ["Result[1] : 7", "Result[2] : 15", "Result[3] : 29", "Result[4] : 38", "Result[5] : 44"]
-</code></p>
-
-<h3>ZNumber</h3>
-
-<p>```javascript
-    ZNUMBER(&ldquo;20~30&rdquo;); //=> 21
-    ZNUMBER(&ldquo;20~30&rdquo;); //=> 28
-    ZNUMBER(&ldquo;$0 + $1&rdquo;,&ldquo;\?10~20&rdquo;,&ldquo;10&rdquo;); //=> 22
-    ZNUMBER(&ldquo;$0 + $1&rdquo;,&ldquo;\?10~20&rdquo;,&ldquo;10&rdquo;); //=> 30</p>
-
-<p>```
-<a name="showcase-number"/></p>
-
-<h3>숫자</h3>
-
-<p>Nody는 글자사이의 숫자를 인식한다. 내부적으로 숫자를 글자로 취급한다.
-```javascript
-        <em>NFNumber(3000).getNumber(); //=> &ldquo;3000&rdquo;
-        </em>NFNumber(3000).getDecimal(); //=> &ldquo;3,000&rdquo;
-        <em>NFNumber(&ldquo;halfby $3000 dance&rdquo;).number(); //=> 3000
-        </em>NFNumber(&ldquo;halfby $3000 dance&rdquo;).getNumber(); //=> &ldquo;3000&rdquo;
-        <em>NFNumber(&ldquo;halfby $3000 dance&rdquo;).getDecimal(); //=> &ldquo;3,000&rdquo;
-        </em>NFNumber(&ldquo;halfby $3000 dance&rdquo;).getPrefix(); //=> &ldquo;halfby $&rdquo;
-        <em>NFNumber(&ldquo;halfby $3000 dance&rdquo;).getSuffix(); //=> &ldquo; dance&rdquo;
-        </em>NFNumber(&ldquo;hello world&rdquo;).number(); // => 0</p>
-
-<p>```</p>
-
-<p><a name="showcase-module"/></p>
-
-<h3>Module (Like Class)</h3>
-
-<p>Nody의 모듈은 Nody의 코어 라이브러리이다. 객체지향 개발을 흉내내기 위한 api이다.</p>
-
-<p><a name="showcase-module-new"/></p>
-
-<h4>new 호출</h4>
-
-<p>```javascript
-    makeModule(&ldquo;Cat&rdquo;,{},function(name){ console.log(name+&ldquo; : &lsquo;Meow&rsquo;&rdquo;); });</p>
-
-<pre><code>// General way
-var pinkCat = new Cat("PinkCat"); // console.log =&gt; PinkCat : 'Meow'
-
-// Lazy way
-var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
-</code></pre>
-
-<p>```</p>
-
-<p><a name="showcase-module-super"/></p>
-
-<h4>super 호출</h4>
-
-<p>```javascript
-        makeModule(&ldquo;Dog&rdquo;,{
-            bark:function(){
-                return &ldquo;bark&rdquo;;
-            }
-        },function(type){
-            console.log(type+&ldquo;Dog are born&rdquo;);
-        });</p>
-
-<pre><code>    extendModule("ShockDog",{
-        bark:function(){
-            return this._super()+"!!";
-        }
-    },function(){
-        this._super("Shock");
-    });
-
-    var shockDog = new ShockDog(); // console.log =&gt; "ShockDog are born"
-    shockDog.bark(); // =&gt; "bark!!"
-</code></pre>
-
-<p>```</p>
-
-<p><a name="showcase-module-veriable"/></p>
-
-<h4>default instance veriable 호출</h4>
-
-<p>```javascript
-        makeModule(&ldquo;Dog&rdquo;,{
-            &ldquo;+name&rdquo;:&ldquo;Dog name&rdquo;
-        },function(){});</p>
-
-<pre><code>    var dog = new Dog();
-    dog.name; // =&gt; "Dog name"
-</code></pre>
-
-<p>```</p>
-
-<p><a name="showcase-module-inheritance"/></p>
-
-<h4>Inheritance</h4>
-
-<p>```javascript
-        extendModule(&ldquo;Zombie&rdquo;,&ldquo;ZombieDog&rdquo;,{
-          bark:function(){
-            this.energy = this.energy - 2;
-          }
-        },function(energyPoint){
-          this._super(energyPoint - 5);
-        });</p>
-
-<pre><code>    var zombieDog = new ZombieDog(10);
-    zombieDog.walk();
-    zombieDog.bark();
-    zombieDog.getEnergy(); // =&gt; 2
-</code></pre>
-
-<p>```
-<a name="version-info"/></p>
-
 <h2>Version info</h2>
 
-<h4>0.20.9 정보</h4>
+<h3>0.20.10 정보</h3>
 
 <ul>
-<li>NFArray에서 getSortFirst getSortLast 추가</li>
-<li>Base64UniqueRandom 키 생성시 기본적으로 고정적인 prefix를 지정할 수 있게 하였습니다.</li>
-<li>FINDIN, FINDPARENT, FINDPARENTS등에서 다양한 파라메터를 대응할 수 있도록 향상</li>
-<li>ELPUT의 심각한 오류 수정</li>
-<li>NFQuery에 putTo 함수 추가</li>
-<li>NFResize 모듈추가 (엘리먼트가 resize될 경우 이벤트가 발생됩니다.)</li>
-<li>NFScrollTrack 모듈추가</li>
+<li>nf-[&hellip;] 문이 nf-[&hellip;] 문으로 변경됩니다.</li>
 </ul>
 
 
-<p>0.21 예정
-- NFContext2D는 지워질것 입니다. 기본적으로 이 모듈이 탑재된 이유는 canvas와 img가 상호간 리소스를 쉽게 교환하기 위해서였습니다. API가 따로 제작될것입니다.
-- 웹 컴포넌트 모듈들은 되도록이면 기본 Nody에서 떨어질 것입니다. (NFScrollBox, NFZoomBox, NFScrollTrack)</p>
-
-<h4>0.20.8 까지</h4>
+<h3>0.20.9 까지</h3>
 
 <ul>
 <li>노드의 작업성능 향상 (NFTemplate가 8배 정도 빨라짐)</li>
@@ -783,7 +57,7 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 <li>FLAGRANDOM추가 (true,false를 확률적으로 도출할 수 있음)</li>
 <li>ELSTYLE 버그 픽스</li>
 <li>NFTemplate :: setNodeValue => setNodeData</li>
-<li>NFTemplate node-src 문이 제거되며 node-value로 사용가능</li>
+<li>NFTemplate nf-src 문이 제거되며 nf-value로 사용가능</li>
 <li>이제부터 ELVALUE에서 img, script등의 value는 src로 link는 rel로 접근합니다.</li>
 <li>NFTabContents 모듈 추가</li>
 <li>추후 모든 Contents로더 모듈들은 NFFormController를 지원하도록 변경될 예정입니다.</li>
@@ -800,5 +74,44 @@ var blueCat = _Cat("blueCat");    // console.log =&gt; BlueCat : 'Meow'
 <li>NFForm, NFFormController의 데이터 I/O API가 setFormData, getFormData로 변경되었습니다.</li>
 <li>NFNumber 업데이트</li>
 <li>ELVALUE에서 img값은 src속성을 참조하게 됩니다.</li>
+<li>NFArray에서 getSortFirst getSortLast 추가</li>
+<li>Base64UniqueRandom 키 생성시 기본적으로 고정적인 prefix를 지정할 수 있게 하였습니다.</li>
+<li>FINDIN, FINDPARENT, FINDPARENTS등에서 다양한 파라메터를 대응할 수 있도록 향상</li>
+<li>ELPUT의 심각한 오류 수정</li>
+<li>NFQuery에 putTo 함수 추가</li>
+<li>NFResize 모듈추가 (엘리먼트가 resize될 경우 이벤트가 발생됩니다.)</li>
+<li>NFScrollTrack 모듈추가</li>
+</ul>
+
+
+<h2>예정된 계획</h2>
+
+<h4>0.21 예정</h4>
+
+<ul>
+<li>호환성 및 안정성 검토</li>
+</ul>
+
+
+<h4>0.22 예정</h4>
+
+<ul>
+<li>NFContext2D는 지워질것 입니다. 기본적으로 이 모듈이 탑재된 이유는 canvas와 img가 상호간 리소스를 쉽게 교환하기 위해서였습니다. API가 따로 제작될것입니다.</li>
+<li>웹 컴포넌트 모듈들은 되도록이면 기본 Nody에서 떨어질 것입니다. (NFScrollBox, NFZoomBox, NFScrollTrack)</li>
+</ul>
+
+
+<h4>0.30 예정</h4>
+
+<ul>
+<li>Rails의 기본 패턴에 최적화된 MVVM + Remote 컨트롤 제작</li>
+<li>NFArray, NFObject API가 좀 더 정리될 예정입니다.</li>
+</ul>
+
+
+<h4>0.31 예정</h4>
+
+<ul>
+<li>1.0 배포를 위한 전체적인 호환성 및 퍼포먼스 검토가 이루어질 것입니다.</li>
 </ul>
 

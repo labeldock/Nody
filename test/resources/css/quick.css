@@ -1,0 +1,54 @@
+/* include Nody SASS Kit : version 2.4 Build (alpha 126) */
+@import url(bootstrap.min.css);
+@import url(nody.css);
+@import url(jquery-ui.min.css);
+/* zoom and response */
+.ui-draggable-dragging {
+  opacity: 0.5;
+  filter: alpha(opacity=50); }
+
+.zoom-sample {
+  width: 100%;
+  height: 300px;
+  border: 1px solid gray;
+  overflow: hidden; }
+  .zoom-sample .response-area {
+    position: relative;
+    text-indent: -99999px;
+    background: url("../images/zoom/floor.png") no-repeat;
+    width: 800;
+    height: 330; }
+    .zoom-sample .response-area .create-object {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      line-height: 30px;
+      text-align: center;
+      color: #27d0f9;
+      border: 2px solid #27d0f9;
+      background: #232132;
+      font-size: 10px; }
+  .zoom-sample.zoom-sample-2 .response-area {
+    z-index: 1; }
+  .zoom-sample.zoom-sample-2 table {
+    display: table;
+    table-layout: auto;
+    border-spacing: 0px;
+    border-collapse: collapse; }
+    .zoom-sample.zoom-sample-2 table td {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #eee; }
+      .zoom-sample.zoom-sample-2 table td.over {
+        background: red; }
+
+body {
+  padding-bottom: 100px; }
+  body > aside {
+    position: fixed;
+    right: 60px;
+    top: 120px;
+    height: 40%;
+    padding: 20px;
+    border: 1px solid #eee;
+    background: #fafafa; }

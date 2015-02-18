@@ -1,18 +1,558 @@
-<!doctype html>
-<html>
-	<head>
-		<charset="utf-8">
-	</head>
-	<body>
-		<h1>nody.js index</h1>
-		<h2>documentation</h2>
-		<ol>
-			<li><a href="README.html">README</a></li>
-		</ol>
-		<h2>unit-test</h2>
-		<ol>			
-			<li><a href="SAMPLE/navigation.html">Navigation</a></li>
-			<li><a href="SAMPLE/zoom.html">Zoom</a></li>
-		</ol>
-	</body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>Nody js</title>
+	
+	<!-- Custom styles for this template -->
+	<link href="test/resources/css/nody.css" rel="stylesheet">
+	
+	<!-- Bootstrap core CSS -->
+	<link href="test/resources/css/bootstrap.min.css" rel="stylesheet">
+	<link href="test/resources/css/bootstrap-theme.min.css" rel="stylesheet">
+	
+	<!-- prism -->
+	<link href="test/resources/css/prism.css" rel="stylesheet">
+	
+	<!-- Custom styles for this template -->
+	<link href="test/resources/css/index.css" rel="stylesheet">
+	
+	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->	
+	<script src="test/resources/js/modernizr.js"></script>
+	
+	<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+</head>
+<body>
+	<header class='master-header master-header-brand'>
+		<div class='container'>
+			<div class='brand'>
+				Nody.js <small>0.21</small>
+			</div>
+		</div>
+	</header>
+	<header class='master-header master-header-menu'>
+		<div class='container'>
+			<nav>
+				<menu>
+					<a class="active" href="#">Live demo</a>
+					<a href="#">Perfomance</a>
+					<a href="#">About</a>
+				</menu>
+			</nav>
+		</div>
+	</header>
+	<header class='master-header master-header-fork'>
+		<a href="https://github.com/labeldock">
+			<img src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" 
+			alt="Fork me on GitHub" 
+			data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png">
+		</a>
+	</header>
+	<main class='master-main'>
+		<div class='container'>
+			<div class='row'>
+				<section class='col-sm-8'>
+					<article id='getter-make'>
+						<header>
+							MAKE
+						</header>
+						<q>
+							MAKE는 CSS스타일로 노드를 만들때 사용되는 함수입니다.
+						</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>
+MAKE('div#foo','hello world');
+MAKE('div#foo.bar');
+MAKE('div.foo.bar');
+MAKE('div[role=foo][role2=foo]');
+MAKE('button:disabled');
+MAKE('button','Button');
+MAKE('input','foo');
+MAKE('input?radio!group1');
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
+						</div>
+						<q>
+							중첩하여 사용가능합니다.
+						</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>
+MAKE('ul',
+	MAKE('li.item','list1'),
+	MAKE('li.item','list2')
+);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
+						</div>
+					</article>
+					<article>
+						<header>FIND</header>
+						<q>select는 css스타일로 노드를 찾습니다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;ul class='list'>
+	&lt;li class='first'>first&lt;/li>
+	&lt;li class='second'>seconde&lt;/li>
+	&lt;li class='third'>third&lt;/li>
+&lt;/ul>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>
+FIND('ul.list li:first-child');
+FIND('ul.list li:nth-child(2)');
+FIND('li');
+FIND('li',0);
+FIND('li',2);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					<article>
+						<header>Template</header>
+						<q>select는 css스타일로 노드를 찾습니다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;!-- Container -->
+&lt;ul id="container">&lt;/ul>
+
+&lt;!-- Template -->
+&lt;template id="foo-temp">
+    &lt;li class="foo">foo&lt;/li>
+&lt;/template>
+&lt;template id="bar-temp">
+    &lt;li class="bar">bar&lt;/li>
+&lt;/template>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>
+_NFTemplate('#foo-temp');
+_NFTemplate('#bar-temp').appendTo('ul#container');
+_NFTemplate('#foo-temp').appendTo('ul#container');
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					<article>
+						<header>Partial template (value, href)</header>
+						<q>데이터를 넣을수 있습니다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>
+var temp = _NFTemplate(
+    '&lt;figure class="figure-node">\
+        &lt;img nf-value="image" alt="nf-Image">\
+        &lt;figcaption>\
+            &lt;a nf-href="link" nf-value="title">Image Ankor&lt;/a>\
+            &lt;input type="text" nf-value="index">\
+        &lt;/figcaption>\
+    &lt;/figure>',false
+);
+//1
+temp.generate({
+    "image":"somewhere.png",
+    "link" :"#someplace",
+    "title":"awesome",
+    "index":"100"
+});
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>Partial template (append,prepend,put)</header>
+						<q>데이터를 넣을수 있습니다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>
+_NFTemplate(
+	'&lt;ul nf-append="list">\
+		&lt;li>hello&lt;/li>\
+	&lt;/ul>',
+	{
+	    "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
+	}
+)[0];
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>MVVM (Basic)</header>
+						<ul>
+							<li>다중의 뎁스구조 지원</li>
+							<li>데이터 모델의 구조를 미리 정의하지 않음</li>
+							<li>일부만 따로 렌더링 할 수 있음</li>
+							<li>실시간 바인드 지원</li>
+						</ul>
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;!-- Container -->
+&lt;div id="placeholder">&lt;/div>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>
+/* Original data */ 
+var data = [
+    {index:"1",value:"one"},
+    {index:"2",value:"two"},
+    {index:"3",value:"three"}
+];
+
+/* Presentation object */ 
+var dataContext = _NFDataContext(data);
+
+/* Draw model */
+var viewModel = _NFViewModel(
+	/* depth1 */
+	function(){
+	    return this.placeholder("ul.top")
+	},
+	/* depth2 */
+	function(){
+	    return MAKE("li",MAKE("span",{href:this.value("index")}),this.bind("value","input?text"))
+	}
+);
+
+/* View controller */ 
+var viewController = _NFPresentor("#placeholder",dataContext,viewModel);
+viewController.needDisplay();
+
+/* Get data */
+dataContext.getJSONObject();
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+
+					<article>
+						<header>MVVM (With template)</header>
+						<ul>
+							<li>다중의 뎁스구조 지원</li>
+							<li>데이터 모델의 구조를 미리 정의하지 않음</li>
+							<li>일부만 따로 렌더링 할 수 있음</li>
+							<li>실시간 바인드 지원</li>
+						</ul>
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;div id="placeholder">&lt;/div>
+&lt;template id="table">
+    &lt;table>
+        &lt;thead>
+            &lt;tr>
+                &lt;th>index&lt;/th>
+                &lt;th>value&lt;/th>
+            &lt;/tr>
+        &lt;/thead>
+        &lt;tbody nf-placeholder>&lt;/tbody>
+    &lt;/table>
+&lt;/template>
+&lt;template id="tbody-item">
+    &lt;tr>
+        &lt;td nf-value="index">&lt;/td>
+        &lt;td nf-value="value">&lt;/td>
+    &lt;/tr>
+&lt;/template>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>								
+var data = [
+    {index:"1",value:"one"},
+    {index:"2",value:"two"},
+    {index:"3",value:"three"}
+];
+
+var dataContext    = _NFDataContext(data);
+var viewModel      = _NFViewModel("template#table","template#tbody-item");
+var viewController = _NFPresentor("#placeholder",dataContext,viewModel);
+viewController.needDisplay();
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>Parsing</header>
+						<q>TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브젝트로 파싱 가능하다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+TOOBJECT("{'hello':'world','foo':'bar','1':2}");
+TOOBJECT("{hello:world,foo:bar,1:2}");
+TOOBJECT("hello:world,foo:bar,1:2");
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>Type Inspect (IS)</header>
+						<q>TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브젝트로 파싱 가능하다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+IS("123","string"); //=> true
+IS("123","number"); //=> false
+IS("123","nothing"); //=> false
+IS("123","meaning"); //=> true
+IS("0","meaning"); //=> true
+IS(0,"meaning"); //=> false
+IS("123","string>5"); //=> false
+IS("123456","string>5"); //=> true
+IS(123456,"text>5"); //=> true
+IS(123456,"number&lt;100"); //=> false
+IS({},"object"); //=> true
+IS([],"array"); //=> true
+//multi test
+IS([],"nothing array"); //=> true
+IS({},"nothing object"); //=> true
+IS(12,"nothing number"); //=> false
+IS(0,"nothing number"); //=> true
+IS(0,"nothing text"); //=> true
+IS(0,"nothing string"); //=> false
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>Type Inspect (AS)</header>
+						<q>as 는 스트링 값만을 위한 api이다</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+AS("123     ","string>4"); //=> false
+AS("        ","string==1"); //=> false
+AS("        ","string==0"); //=> true
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+
+					<article>
+						<header>NFString</header>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+_NFString("McDonald's").getByteSize(); //=> 10
+_NFString("맥도널드").getByteSize(); //=>8
+_NFString("マクドナルド").getByteSize(); //=>12
+_NFString("McDonald's").addModel("good").get(); //=>"McDonald's good"
+_NFString("McDonald's").removeModel("Mc").get(); //=>"McDonald's"
+_NFString("McDonald's").removeModel("McDonald's").get(); //=>""
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>ZString (Basic)</header>
+						<q>\() 구문은 곧바로 값을 환산하여 뽑아준다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+//range param
+ZSTRING("Total \\(10~20)%"); //=> "Total 17%"
+ZSTRING("Total \\(10~20)%"); //=> "Total 12%"
+ZSTRING("Total \\(10~20)%"); //=> "Total 15%"
+//choice param
+ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say hello"
+ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Girl say hi"
+ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say bye"
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>ZString (With param)</header>
+						<q>\() 구문은 곧바로 값을 환산하여 뽑아준다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+//range string
+ZSTRING("Result : \\{$0+$1}","2","3"); //=> "Result : 5"
+ZSTRING("Result : \\{$0-$1}","2","3"); //=> "Result : -1"
+ZSTRING("Result : \\{$0*$1}","2","3"); //=> "Result : 6"
+ZSTRING("Result : \\{$0/$1}","2","3"); //=> "Result : 0.6666666666666666"
+ZSTRING("Result : \\{$0+' '+$1}","not","enough"); //=> "Result : not enough"
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>ZString (Random param)</header>
+						<q>파라메터 또한 랜덤값을 줄 수 있다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+//range string
+ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=> "16 - 21"
+ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=> "17 - 23"
+ZSTRING("\\(10~20) - \\{$0}","\\?20~30"); //=> "12 - 28"
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>ZString (To many array)</header>
+						<q>ZSTRING을 실제로 _ZString모듈을 호출하여 값을 반환한다. 직접적으로 _ZString모듈을 호출하여 많은 값의 생성 가능하다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+_ZString("Result[\\{$i+1}] : \\{10*$i+$0}","\\?1~9").toArray(5);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>ZNumber</header>
+						<q>Absolutely return a type of number</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+ZNUMBER("20~30");
+ZNUMBER("$0 + $1","\\?10~20","10");
+
+//As ZSTRING
+ZSTRING("\\(20~30)");
+ZSTRING("\\{$0 + $1}","\\?10~20","10");
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					
+					<article>
+						<header>ZNumber</header>
+						<q>Absolutely return a type of number</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+_NFNumber(3000).getNumber();
+_NFNumber(3000).getDecimal();
+_NFNumber("halfby $3000 dance").number();
+_NFNumber("halfby $3000 dance").getNumber();
+_NFNumber("halfby $3000 dance").getDecimal();
+_NFNumber("halfby $3000 dance").getPrefix();
+_NFNumber("halfby $3000 dance").getSuffix();
+_NFNumber("hello world").number();
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+					
+				</section><!-- 좌측 끝 -->
+				<aside class='col-sm-3 col-sm-push-1'>
+					<div class='box-module'>
+						<h4>About</h4>
+						<menu>
+							<a href='#make-getter'>Getter::MAKE</a>
+						</menu>
+					</div>
+				</aside>
+			</div>
+		</div>
+	</main>
+	<div class='run-modal'>
+		<div class='run-dialog'>
+			<div class='run-content'>
+				<nav class='tabs'>
+					<ul class='nav nav-pills'>
+						<li><a>Code Result</a></li>
+						<li><a>View</a></li>
+						<li><a>VIEW Code</a></li>
+					</ul>
+				</nav>
+				<div class='tab-contents'>
+					<div>
+						<div>
+							<label class='label label-default'>HTML result</label>
+							<iframe class='html-result' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+						</div>
+						<div>
+							<label class='label label-default'>Javascript result</label>
+							<iframe class='javascript-result' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+						</div>
+						
+					</div>
+					<div>
+						<label class='label label-default'>View result</label>
+						<iframe class='view-result' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+					</div>
+					<div>
+						<label class='label label-default'>HTML code</label>
+						<iframe class='html-code' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+						<label class='label label-default'>Javascript code</label>
+						<iframe class='javascript-code' sandbox='allow-scripts allow-same-origin' src='test/iframe-base.html'></iframe>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- Placed at the end of the document so the pages load faster -->
+	<script src="js/nody.js"></script>
+	<script src="test/resources/js/jquery-1.11.1.min.js"></script>
+	<script src="test/resources/js/bootstrap.min.js"></script>	
+	<script>
+		FIND('pre>code',DATAEACH,function(node){
+			$(node).text( $(node).text().trim() );
+		});
+		
+		
+		$('.code-wrapper').on('click','a.live-run-action',function(e){
+			
+			$('.run-modal').addClass('run-modal-show');
+			
+			//
+			var javascriptCode = $(e.delegateTarget).find('code.language-javascript').text();
+			var htmlCode       = $(e.delegateTarget).find('code.language-markup').text();
+			
+			var viewDoc  = IFRAMEDOCUMENT('.view-result');
+			var htmlDoc  = IFRAMEDOCUMENT('.html-result');
+			var jsDoc    = IFRAMEDOCUMENT('.javascript-result') ;
+			var htmlCodeDoc = IFRAMEDOCUMENT('.html-code') ;
+			var jsCodeDoc   = IFRAMEDOCUMENT('.javascript-code') ;
+			//
+			
+			switch($(this).data('require')) {
+				case 'javascript-to-html':
+					//javascript run
+					var runResult = viewDoc.runCode(javascriptCode);
+					
+					viewDoc.setHTML(runResult);
+					jsDoc.setJSResult(runResult);
+					htmlDoc.setHTMLResult(runResult);
+					htmlCodeDoc.setHTMLResult(htmlCode);
+					jsCodeDoc.setHTMLResult(javascriptCode);
+					break;
+				case 'default': default :
+					
+					//html set
+					viewDoc.setHTML(htmlCode);
+					
+					//javascript run
+					var runResult = viewDoc.runCode(javascriptCode);
+					
+					htmlDoc.setHTMLResult(viewDoc.body.innerHTML);
+					jsDoc.setJSResult(runResult);
+					htmlCodeDoc.setHTMLResult(htmlCode);
+					jsCodeDoc.setHTMLResult(javascriptCode);
+					
+					
+					break;
+			}
+			
+			
+		});
+		
+		$('.run-modal').on('click',function(e){
+			if(e.target == this) $(this).removeClass('run-modal-show');
+		});
+		
+		var runTabContents = new NFTabContents('.run-content .tab-contents',function(){
+			var ac = this.needActiveController('.run-content .tabs','li','click',function(e,i){
+				return runTabContents.active(i);
+			});
+			ac.shouldActive(0);
+		});
+	</script>
+	<script src="test/resources/js/prism.js"></script>
+	
+</body>
 </html>
+

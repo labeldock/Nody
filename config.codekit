@@ -584,26 +584,6 @@
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/mixed-module\/mixed\/ol.css": {
-		"fileType": 16,
-		"ignore": 0,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/mixed\/ol.css",
-		"outputAbbreviatedPath": "No Output Path",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 0
-		},
-	"\/mixed-module\/mixed\/ol.js": {
-		"fileType": 64,
-		"ignore": 0,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/mixed-module\/mixed\/ol.js",
-		"outputAbbreviatedPath": "\/mixed-module\/mixed\/min\/ol-min.js",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 0,
-		"outputStyle": 1,
-		"syntaxCheckerStyle": 1
-		},
 	"\/mixed-module\/nody.comp\/nody.component.js": {
 		"fileType": 64,
 		"ignore": 0,
@@ -691,292 +671,866 @@
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/delegate.html": {
+	"\/test\/delegate.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/delegate.html",
+		"inputAbbreviatedPath": "\/test\/delegate.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/map.html": {
+	"\/test\/fabric.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/map.html",
+		"inputAbbreviatedPath": "\/test\/fabric.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/navigation.html": {
+	"\/test\/map.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/navigation.html",
+		"inputAbbreviatedPath": "\/test\/map.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/pagenation.html": {
+	"\/test\/navigation.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/pagenation.html",
+		"inputAbbreviatedPath": "\/test\/navigation.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/resources\/css\/application.css": {
+	"\/test\/nody-main.html": {
+		"fileType": 8192,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/nody-main.html",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/pagenation.html": {
+		"fileType": 8192,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/pagenation.html",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/application.css": {
 		"fileType": 16,
 		"ignore": 1,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/css\/application.css",
+		"inputAbbreviatedPath": "\/test\/resources\/css\/application.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/resources\/css\/bootstrap-slider.css": {
+	"\/test\/resources\/css\/bootstrap-slider.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/css\/bootstrap-slider.css",
+		"inputAbbreviatedPath": "\/test\/resources\/css\/bootstrap-slider.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/resources\/css\/bootstrap.min.css": {
+	"\/test\/resources\/css\/bootstrap-theme.min.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/css\/bootstrap.min.css",
+		"inputAbbreviatedPath": "\/test\/resources\/css\/bootstrap-theme.min.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/resources\/css\/jquery-ui.min.css": {
+	"\/test\/resources\/css\/bootstrap.min.css": {
 		"fileType": 16,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/css\/jquery-ui.min.css",
+		"inputAbbreviatedPath": "\/test\/resources\/css\/bootstrap.min.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/resources\/css\/nody.css": {
+	"\/test\/resources\/css\/highlight\/arta.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/arta.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/ascetic.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/ascetic.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/atelier-dune.dark.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/atelier-dune.dark.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/atelier-dune.light.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/atelier-dune.light.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/atelier-forest.dark.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/atelier-forest.dark.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/atelier-forest.light.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/atelier-forest.light.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/atelier-heath.dark.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/atelier-heath.dark.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/atelier-heath.light.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/atelier-heath.light.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/atelier-lakeside.dark.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/atelier-lakeside.dark.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/atelier-lakeside.light.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/atelier-lakeside.light.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/atelier-seaside.dark.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/atelier-seaside.dark.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/atelier-seaside.light.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/atelier-seaside.light.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/brown_paper.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/brown_paper.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/brown_papersq.png": {
+		"fileType": 32768,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"initialSize": 18198,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/brown_papersq.png",
+		"outputAbbreviatedPath": "\/test\/resources\/css\/highlight\/brown_papersq.png",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"processed": 0
+		},
+	"\/test\/resources\/css\/highlight\/codepen-embed.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/codepen-embed.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/color-brewer.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/color-brewer.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/dark.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/dark.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/default.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/default.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/docco.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/docco.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/far.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/far.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/foundation.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/foundation.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/github.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/github.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/googlecode.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/googlecode.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/hybrid.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/hybrid.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/idea.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/idea.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/ir_black.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/ir_black.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/kimbie.dark.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/kimbie.dark.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/kimbie.light.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/kimbie.light.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/magula.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/magula.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/mono-blue.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/mono-blue.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/monokai.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/monokai.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/monokai_sublime.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/monokai_sublime.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/obsidian.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/obsidian.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/paraiso.dark.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/paraiso.dark.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/paraiso.light.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/paraiso.light.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/pojoaque.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/pojoaque.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/pojoaque.jpg": {
+		"fileType": 16384,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"initialSize": 1186,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/pojoaque.jpg",
+		"outputAbbreviatedPath": "\/test\/resources\/css\/highlight\/pojoaque.jpg",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"processed": 0
+		},
+	"\/test\/resources\/css\/highlight\/railscasts.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/railscasts.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/rainbow.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/rainbow.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/school_book.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/school_book.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/school_book.png": {
+		"fileType": 32768,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"initialSize": 486,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/school_book.png",
+		"outputAbbreviatedPath": "\/test\/resources\/css\/highlight\/school_book.png",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"processed": 0
+		},
+	"\/test\/resources\/css\/highlight\/solarized_dark.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/solarized_dark.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/solarized_light.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/solarized_light.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/sunburst.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/sunburst.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/tomorrow-night-blue.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/tomorrow-night-blue.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/tomorrow-night-bright.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/tomorrow-night-bright.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/tomorrow-night-eighties.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/tomorrow-night-eighties.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/tomorrow-night.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/tomorrow-night.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/tomorrow.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/tomorrow.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/vs.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/vs.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/xcode.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/xcode.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/highlight\/zenburn.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/highlight\/zenburn.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/index.css": {
 		"fileType": 16,
 		"ignore": 1,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/css\/nody.css",
+		"inputAbbreviatedPath": "\/test\/resources\/css\/index.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/resources\/css\/quick.css": {
+	"\/test\/resources\/css\/jquery-ui.min.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/jquery-ui.min.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/nody.css": {
 		"fileType": 16,
 		"ignore": 1,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/css\/quick.css",
+		"inputAbbreviatedPath": "\/test\/resources\/css\/nody.css",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/resources\/images\/Gabon.png": {
+	"\/test\/resources\/css\/prism.css": {
+		"fileType": 16,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/prism.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/css\/quick.css": {
+		"fileType": 16,
+		"ignore": 1,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/css\/quick.css",
+		"outputAbbreviatedPath": "No Output Path",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0
+		},
+	"\/test\/resources\/images\/Gabon.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 134,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Gabon.png",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Gabon.png",
+		"inputAbbreviatedPath": "\/test\/resources\/images\/Gabon.png",
+		"outputAbbreviatedPath": "\/test\/resources\/images\/Gabon.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/SAMPLE\/resources\/images\/gage-line.png": {
+	"\/test\/resources\/images\/gage-line.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 1289,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/images\/gage-line.png",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/images\/gage-line.png",
+		"inputAbbreviatedPath": "\/test\/resources\/images\/gage-line.png",
+		"outputAbbreviatedPath": "\/test\/resources\/images\/gage-line.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/SAMPLE\/resources\/images\/gage.png": {
+	"\/test\/resources\/images\/gage.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 33464,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/images\/gage.png",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/images\/gage.png",
+		"inputAbbreviatedPath": "\/test\/resources\/images\/gage.png",
+		"outputAbbreviatedPath": "\/test\/resources\/images\/gage.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/SAMPLE\/resources\/images\/Gambia.png": {
+	"\/test\/resources\/images\/Gambia.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 129,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Gambia.png",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Gambia.png",
+		"inputAbbreviatedPath": "\/test\/resources\/images\/Gambia.png",
+		"outputAbbreviatedPath": "\/test\/resources\/images\/Gambia.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/SAMPLE\/resources\/images\/Ghana.png": {
+	"\/test\/resources\/images\/Ghana.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 222,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Ghana.png",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Ghana.png",
+		"inputAbbreviatedPath": "\/test\/resources\/images\/Ghana.png",
+		"outputAbbreviatedPath": "\/test\/resources\/images\/Ghana.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/SAMPLE\/resources\/images\/Greece.png": {
+	"\/test\/resources\/images\/Greece.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 229,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Greece.png",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Greece.png",
+		"inputAbbreviatedPath": "\/test\/resources\/images\/Greece.png",
+		"outputAbbreviatedPath": "\/test\/resources\/images\/Greece.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/SAMPLE\/resources\/images\/Guatemala.png": {
+	"\/test\/resources\/images\/Guatemala.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 250,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Guatemala.png",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Guatemala.png",
+		"inputAbbreviatedPath": "\/test\/resources\/images\/Guatemala.png",
+		"outputAbbreviatedPath": "\/test\/resources\/images\/Guatemala.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/SAMPLE\/resources\/images\/Guyana.png": {
+	"\/test\/resources\/images\/Guyana.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 450,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Guyana.png",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/images\/Guyana.png",
+		"inputAbbreviatedPath": "\/test\/resources\/images\/Guyana.png",
+		"outputAbbreviatedPath": "\/test\/resources\/images\/Guyana.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/SAMPLE\/resources\/images\/zoom\/floor.png": {
+	"\/test\/resources\/images\/zoom\/floor.png": {
 		"fileType": 32768,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
 		"initialSize": 72203,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/images\/zoom\/floor.png",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/images\/zoom\/floor.png",
+		"inputAbbreviatedPath": "\/test\/resources\/images\/zoom\/floor.png",
+		"outputAbbreviatedPath": "\/test\/resources\/images\/zoom\/floor.png",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"processed": 0
 		},
-	"\/SAMPLE\/resources\/js\/application.js": {
+	"\/test\/resources\/js\/application.js": {
 		"fileType": 64,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/application.js",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/application-min.js",
+		"inputAbbreviatedPath": "\/test\/resources\/js\/application.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/application-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 0
 		},
-	"\/SAMPLE\/resources\/js\/bootstrap-slider.js": {
+	"\/test\/resources\/js\/bootstrap-slider.js": {
 		"fileType": 64,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/bootstrap-slider.js",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/bootstrap-slider-min.js",
+		"inputAbbreviatedPath": "\/test\/resources\/js\/bootstrap-slider.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/bootstrap-slider-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/SAMPLE\/resources\/js\/bootstrap.min.js": {
+	"\/test\/resources\/js\/fabric.js": {
 		"fileType": 64,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/bootstrap.min.js",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/bootstrap.min-min.js",
+		"inputAbbreviatedPath": "\/test\/resources\/js\/fabric.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/fabric-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/SAMPLE\/resources\/js\/jquery-1.11.1.min.js": {
+	"\/test\/resources\/js\/highlight.pack.js": {
 		"fileType": 64,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/jquery-1.11.1.min.js",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/jquery-1.11.1.min-min.js",
+		"inputAbbreviatedPath": "\/test\/resources\/js\/highlight.pack.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/highlight.pack-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
+	"\/test\/resources\/js\/jquery-1.11.1.min.js": {
+		"fileType": 64,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/js\/jquery-1.11.1.min.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/jquery-1.11.1.min-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 0
 		},
-	"\/SAMPLE\/resources\/js\/jquery-ui.min.js": {
+	"\/test\/resources\/js\/jquery-ui.min.js": {
 		"fileType": 64,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/jquery-ui.min.js",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/jquery-ui.min-min.js",
+		"inputAbbreviatedPath": "\/test\/resources\/js\/jquery-ui.min.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/jquery-ui.min-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/SAMPLE\/resources\/js\/jquery-ui.touch-punch.min.js": {
+	"\/test\/resources\/js\/jquery-ui.touch-punch.min.js": {
 		"fileType": 64,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/jquery-ui.touch-punch.min.js",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/jquery-ui.touch-punch.min-min.js",
+		"inputAbbreviatedPath": "\/test\/resources\/js\/jquery-ui.touch-punch.min.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/jquery-ui.touch-punch.min-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/SAMPLE\/resources\/js\/min\/application-min.js": {
+	"\/test\/resources\/js\/min\/application-min.js": {
 		"fileType": 64,
 		"ignore": 1,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/application-min.js",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/min\/application-min-min.js",
+		"inputAbbreviatedPath": "\/test\/resources\/js\/min\/application-min.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/min\/application-min-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/SAMPLE\/resources\/js\/paging.js": {
+	"\/test\/resources\/js\/min\/modernizr-min.js": {
+		"fileType": 64,
+		"ignore": 1,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/js\/min\/modernizr-min.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/min\/modernizr-min-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
+	"\/test\/resources\/js\/min\/prism-min.js": {
+		"fileType": 64,
+		"ignore": 1,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/js\/min\/prism-min.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/min\/prism-min-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
+	"\/test\/resources\/js\/modernizr.js": {
 		"fileType": 64,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/js\/paging.js",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/js\/min\/paging-min.js",
+		"inputAbbreviatedPath": "\/test\/resources\/js\/modernizr.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/modernizr-min.js",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 1,
 		"syntaxCheckerStyle": 1
 		},
-	"\/SAMPLE\/resources\/source\/_nody-kit.scss": {
+	"\/test\/resources\/js\/paging.js": {
+		"fileType": 64,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/js\/paging.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/paging-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
+	"\/test\/resources\/js\/prism.js": {
+		"fileType": 64,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/js\/prism.js",
+		"outputAbbreviatedPath": "\/test\/resources\/js\/min\/prism-min.js",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 1,
+		"syntaxCheckerStyle": 1
+		},
+	"\/test\/resources\/source\/_nody-kit.scss": {
 		"createSourceMap": 0,
 		"debugStyle": 0,
 		"decimalPrecision": 5,
 		"fileType": 4,
 		"ignore": 1,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/source\/_nody-kit.scss",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/css\/_nody-kit.css",
+		"inputAbbreviatedPath": "\/test\/resources\/source\/_nody-kit.scss",
+		"outputAbbreviatedPath": "\/test\/resources\/css\/_nody-kit.css",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 0,
@@ -984,15 +1538,15 @@
 		"shouldRunBless": 0,
 		"useLibsass": 0
 		},
-	"\/SAMPLE\/resources\/source\/application.scss": {
+	"\/test\/resources\/source\/application.scss": {
 		"createSourceMap": 0,
 		"debugStyle": 0,
 		"decimalPrecision": 5,
 		"fileType": 4,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/source\/application.scss",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/css\/application.css",
+		"inputAbbreviatedPath": "\/test\/resources\/source\/application.scss",
+		"outputAbbreviatedPath": "\/test\/resources\/css\/application.css",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 2,
@@ -1000,31 +1554,15 @@
 		"shouldRunBless": 0,
 		"useLibsass": 0
 		},
-	"\/SAMPLE\/resources\/source\/nody.scss": {
+	"\/test\/resources\/source\/index.scss": {
 		"createSourceMap": 0,
 		"debugStyle": 0,
 		"decimalPrecision": 5,
 		"fileType": 4,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/source\/nody.scss",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/css\/nody.css",
-		"outputPathIsOutsideProject": 0,
-		"outputPathIsSetByUser": 0,
-		"outputStyle": 2,
-		"shouldRunAutoprefixer": 0,
-		"shouldRunBless": 0,
-		"useLibsass": 0
-		},
-	"\/SAMPLE\/resources\/source\/quick.scss": {
-		"createSourceMap": 0,
-		"debugStyle": 0,
-		"decimalPrecision": 5,
-		"fileType": 4,
-		"ignore": 0,
-		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/resources\/source\/quick.scss",
-		"outputAbbreviatedPath": "\/SAMPLE\/resources\/css\/quick.css",
+		"inputAbbreviatedPath": "\/test\/resources\/source\/index.scss",
+		"outputAbbreviatedPath": "\/test\/resources\/css\/index.css",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0,
 		"outputStyle": 0,
@@ -1032,110 +1570,142 @@
 		"shouldRunBless": 0,
 		"useLibsass": 0
 		},
-	"\/SAMPLE\/subview\/appear.html": {
+	"\/test\/resources\/source\/nody.scss": {
+		"createSourceMap": 0,
+		"debugStyle": 0,
+		"decimalPrecision": 5,
+		"fileType": 4,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/source\/nody.scss",
+		"outputAbbreviatedPath": "\/test\/resources\/css\/nody.css",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 2,
+		"shouldRunAutoprefixer": 0,
+		"shouldRunBless": 0,
+		"useLibsass": 0
+		},
+	"\/test\/resources\/source\/quick.scss": {
+		"createSourceMap": 0,
+		"debugStyle": 0,
+		"decimalPrecision": 5,
+		"fileType": 4,
+		"ignore": 0,
+		"ignoreWasSetByUser": 0,
+		"inputAbbreviatedPath": "\/test\/resources\/source\/quick.scss",
+		"outputAbbreviatedPath": "\/test\/resources\/css\/quick.css",
+		"outputPathIsOutsideProject": 0,
+		"outputPathIsSetByUser": 0,
+		"outputStyle": 0,
+		"shouldRunAutoprefixer": 0,
+		"shouldRunBless": 0,
+		"useLibsass": 0
+		},
+	"\/test\/subview\/appear.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/subview\/appear.html",
+		"inputAbbreviatedPath": "\/test\/subview\/appear.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/subview\/canvas2d.html": {
+	"\/test\/subview\/canvas2d.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/subview\/canvas2d.html",
+		"inputAbbreviatedPath": "\/test\/subview\/canvas2d.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/subview\/formcontroller.html": {
+	"\/test\/subview\/formcontroller.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/subview\/formcontroller.html",
+		"inputAbbreviatedPath": "\/test\/subview\/formcontroller.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/subview\/multiselect.html": {
+	"\/test\/subview\/multiselect.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/subview\/multiselect.html",
+		"inputAbbreviatedPath": "\/test\/subview\/multiselect.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/subview\/mvvm.html": {
+	"\/test\/subview\/mvvm.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/subview\/mvvm.html",
+		"inputAbbreviatedPath": "\/test\/subview\/mvvm.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/subview\/scroll.html": {
+	"\/test\/subview\/scroll.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/subview\/scroll.html",
+		"inputAbbreviatedPath": "\/test\/subview\/scroll.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/subview\/selectbind.html": {
+	"\/test\/subview\/selectbind.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/subview\/selectbind.html",
+		"inputAbbreviatedPath": "\/test\/subview\/selectbind.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/subview\/speedtest.html": {
+	"\/test\/subview\/speedtest.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/subview\/speedtest.html",
+		"inputAbbreviatedPath": "\/test\/subview\/speedtest.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/subview\/speedtest2.html": {
+	"\/test\/subview\/speedtest2.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/subview\/speedtest2.html",
+		"inputAbbreviatedPath": "\/test\/subview\/speedtest2.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/subview\/viewmodel.html": {
+	"\/test\/subview\/viewmodel.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/subview\/viewmodel.html",
+		"inputAbbreviatedPath": "\/test\/subview\/viewmodel.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/zoom.html": {
+	"\/test\/zoom.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/zoom.html",
+		"inputAbbreviatedPath": "\/test\/zoom.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0
 		},
-	"\/SAMPLE\/zoomAndResponse.html": {
+	"\/test\/zoomAndResponse.html": {
 		"fileType": 8192,
 		"ignore": 0,
 		"ignoreWasSetByUser": 0,
-		"inputAbbreviatedPath": "\/SAMPLE\/zoomAndResponse.html",
+		"inputAbbreviatedPath": "\/test\/zoomAndResponse.html",
 		"outputAbbreviatedPath": "No Output Path",
 		"outputPathIsOutsideProject": 0,
 		"outputPathIsSetByUser": 0

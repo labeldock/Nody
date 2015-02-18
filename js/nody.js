@@ -1,4 +1,4 @@
-// Nody (Node Friendly (it's not nodejs) )
+// Nody js
 // GIT         // https://github.com/labeldock/Nody
 // tested in   // IE9 + (on 4.0) & webkit2 & air13
 // lincense    // MIT lincense
@@ -7,7 +7,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.20.9",build = "1035";
+	var version = "0.20.10",build = "1037";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9", nodyCoreBuild = "74";
@@ -1705,13 +1705,18 @@
 		}		
 	});
 	
+	
 	//******************
 	//String
+	var htmlSafeMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': '&quot;', "'": '&#39;', "/": '&#x2F;' };
 	makeModule("NFString",{
 		getEncode:function(){ return encodeURI(this.Source); },
 		getDecode:function(){ return decodeURI(this.Source); },
 		encode:function(){this.Source = this.getEncode();return this;},
 		decode:function(){this.Source = this.getDecode();return this;},
+		getHTMLSafe:function(){
+			return String(this.Source).replace(/[&<>"'\/]/g, function (s) { return htmlSafeMap[s]; });
+		},
 		getByteSize:function(){ return unescape(escape(this.Source).replace(/%u..../g,function(s){ return "uu"; })).length; },
 		getLines:function(){ return _Split(this.Source,"\n").toArray(); },
 		eachLine:function(f,j){ if(typeof f === "function") return new NFArray(this.getLines()).map(function(s,i){ return f(s,i); }).compact().join( (j?j:"\n") ); },
@@ -3315,10 +3320,14 @@
 			}
 			return undefined;
 		},1),
-		"IFRAMEDOCUMENT":function(iframe){
-			var iframe = FIND(iframe,0);
-			if(iframe.tagName == "IFRAME") return iframe.contentDocument || iframe.contentWindow.document;
-			if(ISDOCUMENT(iframe)) return iframe;
+		"IFRAMEDOCUMENT":function(iframeNode){
+			var iframe = FIND(iframeNode,0);
+			if(iframe) {
+				if(iframe.tagName == "IFRAME") return iframe.contentDocument || iframe.contentWindow.document;
+				if(ISDOCUMENT(iframe)) return iframe;
+			} else {
+				console.warn('iframe을 찾을 수 없습니다.',iframeNode);
+			}
 		},
 		"FINDOFFSET" :function(node,target,debug){
 			var node = FIND(node,0);
@@ -3401,7 +3410,6 @@
 			//랜더링 시작
 			if(!skipRender){
 				if(name.indexOf("<") !== 0) name = TAG(name,attrValue);
-
 				switch(name.substr(0,3)){
 					case "<tr" :
 						var sWrap = TAGSTACKS("table","tbody");
@@ -3429,6 +3437,8 @@
 						} else if (name.substr(0,4) == "<col" ) {
 							var sWrap = TAGSTACKS("table","colgroup");
 							element = FIND("col",HTMLTOEL(sWrap[0] + name + sWrap[1]),0);
+						} else {
+							element = HTMLTOEL(name)[0];
 						}
 						break;
 					default:
@@ -4452,7 +4462,7 @@
 		},
 		partialNodeProps:function(propKeys,callback,presets){
 			var keys  = propKeys;
-			var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new NFArray(keys)).getMap(function(key){ return 'node-'+key; });
+			var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new NFArray(keys)).getMap(function(key){ return 'nf-'+key; });
 			var sKeys = (presets && presets.sKeys) ? presets.sKeys : (new NFArray(pKeys)).getMap(function(pkey){ return '['+ pkey +']'; });
 			var pNodes = this.find(sKeys.join(','));
 			for(var i=0,l=pNodes.length;i<l;i++){
@@ -4466,8 +4476,8 @@
 		},
 		//성능의 가속을 위해 존재하는 값들입니다. 이것을 건드리면 엄청난 문제를 초례할 가능성이 있습니다.
 		__nodeDataDefaultKeys:['value','class','dataset','href','append','prepend','put','display','custom'],
-		__nodeDataAttrKeys:["node-value", "node-class", "node-dataset", "node-href", "node-append", "node-prepend", "node-put", "node-display", "node-custom"],
-		__nodeDataSelectKeys:["[node-value]", "[node-class]", "[node-dataset]", "[node-href]", "[node-append]", "[node-prepend]", "[node-put]", "[node-display]", "[node-custom]"],	
+		__nodeDataAttrKeys:["nf-value", "nf-class", "nf-dataset", "nf-href", "nf-append", "nf-prepend", "nf-put", "nf-display", "nf-custom"],
+		__nodeDataSelectKeys:["[nf-value]", "[nf-class]", "[nf-dataset]", "[nf-href]", "[nf-append]", "[nf-prepend]", "[nf-put]", "[nf-display]", "[nf-custom]"],	
 		//
 		setNodeData:function(refData,dataFilter){
 			if(!this.TemplatePartials) this.TemplatePartials = {};
@@ -6577,9 +6587,9 @@
 					switch(nodeAlias){
 						case 'bind': _.bind(name,node); break;
 						case 'action':
-							if(("node-param" in node.attributes)) {
-								_.action(name,node,TOOBJECT(node.getAttribute("node-param")));
-								node.removeAttribute("node-param");
+							if(("nf-param" in node.attributes)) {
+								_.action(name,node,TOOBJECT(node.getAttribute("nf-param")));
+								node.removeAttribute("nf-param");
 							} else {
 								_.action(name,node);
 							}
@@ -7677,7 +7687,7 @@
 		}
 
 		this.ScrollHanlde = MAKE('div.nody-scroll-handle',{style:'position:relative;'});
-		this.ScrollTrack   = MAKE('div.nody-scroll-track',{style:'position:absolute;'},this.ScrollHanlde);
+		this.ScrollTrack  = MAKE('div.nody-scroll-track',{style:'position:absolute;'},this.ScrollHanlde);
 
 		ELPUT(this.Source,this.ScrollTrack);
 
