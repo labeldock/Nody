@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.1",build = "1043";
+	var version = "0.21.2",build = "1045";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -406,27 +406,37 @@
 	W.makeSingleton("FUT",{
 		//함수를 연속적으로 사용 가능하도록 함
 		"CONTINUTILITY":function(func,over,owner){
-			over = over||1;
+			over = (over || 1);
 			return function(){
-				var args = Array.prototype.slice.apply(arguments);
-				if(args.length >= over){	
-					for(var i=over,l=args.length;i<l;i++) if(typeof args[i] === "function"){
-						return args[i].apply(owner,[func.apply(owner,args.slice(0,i))].concat(args.slice(i+1,l))); 
-						break;
+				if(arguments.length >= over){					
+					for(var i=over,l=arguments.length;i<l;i++) if(typeof arguments[i] === "function"){
+						return arguments[i].apply(
+							owner,[func.apply(owner,Array.prototype.slice.call(arguments,0,i))].concat(Array.prototype.slice.call(arguments,i+1,l))
+						); 
 					}
 				}
-				return func.apply(owner,args);
+				return func.apply(owner,Array.prototype.slice.call(arguments));
 			};
 		},
+		//trycatch high perfomance
+		"TRYCATCH":function(t,c,s){try{return t.call(s);}catch(e){return c.call(s,e);}},
 		//URL Info
 		"PAGEURLINFO":function(url){
 			if(typeof url === "object") return ( url["ConstructorMark"] === ("ClientURLInfo" + W.nody)) ? url : null;
-			try {
-				var info = /([\w]+)(\:[\/]+)([^/]*\@|)([\w\d\.\-\_\+]+)(\:[\d]+|)(\/|)([\w\d\.\/\-\_]+|)(\?[\d\w\=\&\%]+|)(\#[\d\w]*|)/.exec(url?url:window.document.URL.toString());
-			} catch(e) {
+			var info;
+			FUT.TRYCATCH(
+				function(){
+					info = /([\w]+)(\:[\/]+)([^/]*\@|)([\w\d\.\-\_\+]+)(\:[\d]+|)(\/|)([\w\d\.\/\-\_]+|)(\?[\d\w\=\&\%]+|)(\#[\d\w]*|)/.exec(url?url:window.document.URL.toString());
+				},
+				function(){
+					info = null;
+				}
+			)
+			if(info === null) {
 				console.error("PAGEURLINFO faild get url info",e);
 				return null;
 			}
+			
 			return {
 				"ConstructorMark" : "ClientURLInfo" + W.nody,
 				"url"      : window.document.URL.toString(),
@@ -584,9 +594,9 @@
 					test.trim().replace(/\S+/g,function(s){ model.push(s); });
 				
 					for (var i=0,l=model.length;i<l;i++) {
-						try {
+						if(/^(\!|)(\w*)([\>\<\=\:]{0,3})([\S]*)/.test(model[i])) {
 							var param = /^(\!|)(\w*)([\>\<\=\:]{0,3})([\S]*)/.exec(model[i]);
-						} catch(e) {
+						} else {
 							console.warn("포멧이 올바르지 않은 키워드 입니다.",model[i]);
 						}
 					
@@ -904,10 +914,10 @@
 		},
 		//inspect type
 		"ISTYPE":function(t,v) {
-			//real
-			try {
-				if(t instanceof v) return true;
-			} catch(e){
+			return FUT.TRYCATCH(function(){
+				//javascript instance
+				if(t instanceof v) return true; return false;
+			},function(){
 				//tName
 				var vn = ((typeof v === "function") ? v["__NatvieContstructorName__"] : v);
 				//inspect
@@ -918,8 +928,8 @@
 						if(his[i] == vn) return true;
 					}
 				}
-			}
-			return false;
+				return false;
+			});
 		}
 	});
 	NodyBase.eachGetter();
@@ -1822,13 +1832,12 @@
 			original = this.Source;
 			if(autoTrim) original = this.Source.trim();
 			var trim_s = trimParam?trimParam:" ";
-			trim_s = trim_s.replace(" ","\\s")
-			try {
+			trim_s = trim_s.replace(" ","\\s");
+			return FUT.TRYCATCH(function(){
 				this.Source = new RegExp("^(["+trim_s+"]*)(.*[^"+trim_s.split("|").join("^")+"])(["+trim_s+"]*)$").exec(original)[2];
-				return this;
-			} catch(error) {
+			},function(){
 				return this.Source;
-			}
+			},this);
 		},
 		//content
 		abilityFunction  : function(fs,is,js){ var origin = (js==true) ? OUTERSPLIT(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs); if(origin[origin.length-1].trim()=="") origin.length = origin.length-1;  return new NFArray(origin).passAll(function(s,i){ return s.indexOf(is) > 0; }) ? origin.length : 0; },
@@ -3213,9 +3222,9 @@
 			return target.parentNode.children[currentIndex+offset];
 		},
 		"FIND" : FUT.CONTINUTILITY(function(find,root,eq){
-			if(typeof root === "number") return FINDCORE(find)[root];
-			if(typeof eq === "number")   return FINDCORE(find,root)[eq];
-			return FINDCORE(find,root);
+			return (typeof root === "number") ? FINDCORE(find)[root] :
+				   (typeof eq === "number")   ? FINDCORE(find,root)[eq] :
+				   FINDCORE(find,root);
 		}),
 		// 하위루트의 모든 노드를 검색함 (Continutiltiy에서 중요함)
 		"FINDIN" : FUT.CONTINUTILITY(function(root,find,index){
@@ -3535,17 +3544,20 @@
 			if(typeof param=="object") return param;
 			if(kv == true && ( typeof param === "string" || typeof es === "string")){ var r = {}; r[es] = param; return r; }
 			if(typeof param=="string" || typeof param=="boolean") {
-				try {
+				var c = FUT.TRYCATCH(function(){
 					if(JSON == aJSON) throw new Error("not json supported browser");
 					var jp = JSON.parse(param);
 					if(typeof jp !== "object") throw new Error("pass");
-				} catch(e) {
-					if(_NFString(param).isDataContent()=="plain"){var esv=(typeof es === "string" ? es : "value");
-					var reo={};reo[esv]=param;return reo;}
-					return _NFString(param).getDataContent();
-				}
+				},function(e){
+					if( (new NFString(param)).isDataContent()=="plain" ){
+						var esv = (typeof es === "string" ? es : "value");
+						var reo={};reo[esv]=param;
+						return reo;
+					}
+					return (new NFString(param)).getDataContent();
+				});
 			}
-			return{};
+			return c || {};
 		},
 		//노드 배열을 복사함
 		"CLONENODES":function(node){
@@ -5555,12 +5567,12 @@
 							var response;
 							switch(this.option.dataType){
 								case "json": case "object":
-									try {
+									FUT.TRYCATCH(function(){
 										response = JSON.parse(requestObject.responseText);
-									} catch(e){
+									},function(e){
 										console.error("json 포멧이 올바르지 않습니다. =>",requestObject.status,"::",requestObject.responseText);
 										throw e;
-									}
+									});
 									break;
 								case "dom": case "node":
 									var wrapper = document.createElement("div");
@@ -5633,28 +5645,28 @@
 			
 			// request params (기록용)
 			_NFMeta(newRequest).setProp("requestParam",requestData.get());
-			try {
+			FUT.TRYCATCH(function(){
 				if( this.option.method.toLowerCase() == "post" ){
 					newRequest.open("POST", this.url, true );
-					try {
+					FUT.TRYCATCH(function(){
 						newRequest.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 						newRequest.setRequestHeader('Content-type'    , 'application/x-www-form-urlencoded');
-					} catch(e) {
+					},function(){
 						console.warn("XMLHttpRequest:: setRequestHeader를 지원하지 않는 브라우져입니다");
 						throw e;
-					}
+					},this);
 					newRequest.send( requestString );
 				} else {
 					newRequest.open("GET", this.url + (ISNOTHING(requestString) == true ? "" : "?"+requestString), true );
 					newRequest.send();
 				}
-			}catch(e){
+			},function(){
 				if(e.message.indexOf("denied") > 0){
 					throw new Error("Cross Domain Error (if current browser is IE)");
 				} else {
 					throw e;
 				}
-			}
+			},this);
 		}
 	},function(url,requestOption,moduleOption){
 		//리퀘스트 디폴트
@@ -5880,12 +5892,12 @@
 	makeGetter("ELSCRIPTSTART",function(container){
 		FIND("script",container,DATAEACH,function(scriptNode){
 			var script = scriptNode.innerHTML;
-			try {
+			FUT.TRYCATCH(function(){
 				eval.call(script);
-			} catch(e) {
+			},function(e){
 				console.error("다음의 스크립트 구문 오류로 스크립트 실행이 정지되었습니다. => ",MAX(script,200));
 				throw e;
-			}
+			});
 		});
 	});
 	
