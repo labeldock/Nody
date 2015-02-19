@@ -729,7 +729,7 @@
 				return r;
 		},
 		//1:길이와 같이 2: 함수호출
-		"TIMES":function(l,f,s){ l=TONUMBER(l); for(var i=(typeof s === 'number')?s:0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },
+		"TIMES":FUT.CONTINUTILITY(function(l,f,s){ l=TONUMBER(l); for(var i=(typeof s === 'number')?s:0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },2),
 		"TIMESMAP":FUT.CONTINUTILITY(function(l,f,s){ l=TONUMBER(l); var r = []; for(var i=(typeof s === 'number')?s:0;i<l;i++) r.push(f(i)); return r; },2),
 		//배열의 하나추출
 		"DATAZERO"   :function(t){ return typeof t === "object" ? typeof t[0] === "undefined" ? undefined : t[0] : t; },
@@ -2330,12 +2330,13 @@
 				var v = eval(s.substring(2,s.length-1).replace(/\$i/g,function(s){
 					return seed;
 				}).replace(/\&\d+/g,function(s){
-					return aPoint[parseInt(s.substr(1))];
+					var av = aPoint[parseInt(s.substr(1))];
+					return ISNUMBERTEXT(av) ? av*1 : '\"'+av+'\"';
 				}).replace(/\$\d+/g,function(s){
 					var paramResult = params[parseInt(s.substr(1))];
 					if(paramResult){
 						paramResult = ZONEVALUE(paramResult);
-						return ISNUMBERTEXT(paramResult) ? paramResult : '"'+paramResult+'"' ;
+						return ISNUMBERTEXT(paramResult) ? paramResult : '\"'+paramResult+'\"' ;
 					}
 				}));
 				aPoint.push(v);
@@ -3216,7 +3217,7 @@
 		"FINDMEMBER":function(sel,offset){
 			var target = FIND(sel,0);
 			if(!ISELNODE(target)) return;
-			if(typeof offset !== "number") return TOARRAY(node.parentElement.children);
+			if(typeof offset !== "number") return TOARRAY(target.parentElement.children);
 			var currentIndex = -1;
 			DATAEACH(target.parentNode.children,function(node,i){ if(target == node) { currentIndex = i; return false; } });
 			return target.parentNode.children[currentIndex+offset];
@@ -3228,12 +3229,9 @@
 		}),
 		// 하위루트의 모든 노드를 검색함 (Continutiltiy에서 중요함)
 		"FINDIN" : FUT.CONTINUTILITY(function(root,find,index){
-			if( !ISNOTHING(find) ) {
-				//두번째 파라메터는 자식들을 반환
-				return (typeof index === 'number') ?
-				FINDCORE(find,DATAMAP(FINDCORE(root),function(node){ return node.children },DATAFLATTEN))[index] :
-				FINDCORE(find,DATAMAP(FINDCORE(root),function(node){ return node.children },DATAFLATTEN)) ;
-			}
+			return (typeof index === 'number') ?
+			FINDCORE(find || '*',DATAMAP(FINDCORE(root),function(node){ return node.children },DATAFLATTEN))[index] :
+			FINDCORE(find || '*',DATAMAP(FINDCORE(root),function(node){ return node.children },DATAFLATTEN))  ;
 		},2),
 		// 자식루트의 노드를 검색함
 		"FINDON": FUT.CONTINUTILITY(function(root,find){
