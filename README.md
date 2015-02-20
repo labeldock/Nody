@@ -4,11 +4,52 @@ Nody.js
 Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리이다.
 
 ## Feature #
-  1. Easy make node
-  2. Easy find node
-  3. Easy bind node
 
-# Sample #
+  1. You can make node as CSS Style
+```javascript
+MAKE('div');
+MAKE('button.btn.btn-default#btn-action');
+MAKE('input[type=checkbox][checked]');
+MAKE('span','this is value');
+```
+
+  2. You can find node and mix function
+```javascript
+FIND('div','#wrapper');
+FIND('ul li',0); //=> nth-child 0
+FIND('ul li',jQuery).css('color','red');
+```
+
+  3. Easy make node of template with data
+```javascript
+
+ELAPPEND('body',MAKE('ul#ul'));
+
+var itemTemp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
+	itemTemp.generateFromData(
+		[
+			{'index':'index1','item-value':'A'},
+			{'index':'index1','item-value':'B'},
+			{'index':'index1','item-value':'C'},
+			{'index':'index1','item-value':'D'}
+		]
+	).appendTo('#ul');
+	
+```
+  
+  4. Easy bind node
+
+```javascript
+
+ELAPPEND('body',[MAKE('div#placeholder-1'),MAKE('div#placeholder-2')])
+
+var dataContext = new NFDataContext({name:'hello world'});
+
+new NFPresentor('#placeholder-1',dataContext,['<input type="text" nf-bind="name">'],true);
+new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name">'],true);
+```
+
+# Live demo #
 <a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a>
 
 ## Compatibility #

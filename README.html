@@ -7,13 +7,54 @@
 <h2>Feature</h2>
 
 <ol>
-<li> Easy make node</li>
-<li> Easy find node</li>
+<li><p> You can make node as CSS Style
+<code>javascript
+MAKE('div');
+MAKE('button.btn.btn-default#btn-action');
+MAKE('input[type=checkbox][checked]');
+MAKE('span','this is value');
+</code></p></li>
+<li><p> You can find node and mix function
+<code>javascript
+FIND('div','#wrapper');
+FIND('ul li',0); //=&gt; nth-child 0
+FIND('ul li',jQuery).css('color','red');
+</code></p></li>
+<li><p> Easy make node of template with data
+```javascript</p></li>
+</ol>
+
+
+<p>ELAPPEND(&lsquo;body&rsquo;,MAKE(&lsquo;ul#ul&rsquo;));</p>
+
+<p>var itemTemp = new NFTemplate(&lsquo;<li nf-class="index" nf-value="item-value"></li>&rsquo;);
+    itemTemp.generateFromData(
+        [
+            {&lsquo;index&rsquo;:&lsquo;index1&rsquo;,&lsquo;item-value&rsquo;:&lsquo;A&rsquo;},
+            {&lsquo;index&rsquo;:&lsquo;index1&rsquo;,&lsquo;item-value&rsquo;:&lsquo;B&rsquo;},
+            {&lsquo;index&rsquo;:&lsquo;index1&rsquo;,&lsquo;item-value&rsquo;:&lsquo;C&rsquo;},
+            {&lsquo;index&rsquo;:&lsquo;index1&rsquo;,&lsquo;item-value&rsquo;:&rsquo;D'}
+        ]
+    ).appendTo(&lsquo;#ul&rsquo;);</p>
+
+<p>```</p>
+
+<ol>
 <li> Easy bind node</li>
 </ol>
 
 
-<h1>Sample</h1>
+<p>```javascript</p>
+
+<p>ELAPPEND(&lsquo;body&rsquo;,[MAKE(&lsquo;div#placeholder-1&rsquo;),MAKE(&lsquo;div#placeholder-2&rsquo;)])</p>
+
+<p>var dataContext = new NFDataContext({name:&lsquo;hello world&rsquo;});</p>
+
+<p>new NFPresentor(&lsquo;#placeholder-1&rsquo;,dataContext,[&lsquo;<input type="text" nf-bind="name">&rsquo;],true);
+new NFPresentor(&lsquo;#placeholder-2&rsquo;,dataContext,[&lsquo;<input type="text" nf-bind="name">&rsquo;],true);
+```</p>
+
+<h1>Live demo</h1>
 
 <p><a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a></p>
 

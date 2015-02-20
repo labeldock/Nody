@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.2",build = "1047";
+	var version = "0.21.2",build = "1049";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -911,10 +911,7 @@
 		},
 		//inspect type
 		"ISTYPE":function(t,v) {
-			return FUT.TRYCATCH(function(){
-				//javascript instance
-				if(t instanceof v) return true; return false;
-			},function(){
+			if(typeof v === 'string'){
 				//tName
 				var vn = ((typeof v === "function") ? v["__NatvieContstructorName__"] : v);
 				//inspect
@@ -926,7 +923,10 @@
 					}
 				}
 				return false;
-			});
+			} else if(typeof v === 'function') {
+				//javascript instance
+				if(t instanceof v) return true; return false;
+			}
 		}
 	});
 	NodyBase.eachGetter();
@@ -1565,7 +1565,8 @@
 		ratio:function(joinText){
 			var ratioValue    = this.getRatio(joinText);
 			return this.setSource((typeof ratioValue === "string")?[ratioValue]:ratioValue);
-		}
+		},
+		continueTo:function(f){ return f.apply(undefined,[this.toArray()].concat(Array.prototype.slice.call(arguments,1))); }
 	});
 	
 	//******************
@@ -4442,12 +4443,15 @@
 	
 	extendModule("NFQuery","NFTemplate",{
 		clone    : function(nodeData,dataFilter){ return new NFTemplate(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter)); },
-		generate : function(nodeData,dataFilter){ return (new NFTemplate(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter))).get(); },
+		generate : function(nodeData,dataFilter){ return this.clone(nodeData,dataFilter).get(); },
 		generateWithData : function(){ 
 			var _ = this;
 			return DATAMAP(DATAFLATTEN(Array.prototype.slice.call(arguments)),function(nodeData){ 
 				return (new NFTemplate(_.TemplateNode,nodeData,_._persistantDataFilter)).get(); }
 			);
+		},
+		generateFromData : function(){
+			return new NFQuery(this.generateWithData.apply(this,Array.prototype.slice.call(arguments)));
 		},
 		// 키를 지우면서
 		partialAttr:function(attrKey,callback){
@@ -6452,8 +6456,7 @@
 		//tempate 타겟을 설정
 		this.Source = new NFArray(Array.prototype.slice.call(arguments)).getMap(function(a){ 
 			if(typeof a === "string"){
-				var findTemplate = FIND(a,0);
-				return new NFTemplate(findTemplate,undefined,false);
+				return new NFTemplate(a,undefined,false);
 			}
 			return a; 
 		});
