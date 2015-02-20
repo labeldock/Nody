@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.2",build = "1045";
+	var version = "0.21.2",build = "1047";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -70,9 +70,6 @@
 		//support ComputedStyle
 		info.supportComputedStyle  =  window ? ('getComputedStyle' in window) ? true : false : false;
 		
-		//support Query
-		info.supportQuerySelectAll = document ? ('querySelectorAll' in document) ? true : false : false;
-		
 		var lab3Prefix = function(s){
 			if( s.match(/^Webkit/) ) return "-webkit-";
 			if( s.match(/^Moz/) )    return "-moz-";
@@ -118,14 +115,14 @@
 		
 		//matches
 		var querySelectorAllName = 
-			('matches' in tester)               ? 'querySelectorAll' :
-			('webkitQuerySelectorAll' in tester) ? 'webkitQuerySelectorAll' :
-			('msQuerySelectorAll'     in tester) ? 'msQuerySelectorAll' :
-			('mozQuerySelectorAll'    in tester) ? 'mozQuerySelectorAll' :
-			('oQuerySelectorAll'      in tester) ? 'oQuerySelectorAll' : false;
+			('querySelectorAll'       in document) ? 'querySelectorAll' :
+			('webkitQuerySelectorAll' in document) ? 'webkitQuerySelectorAll' :
+			('msQuerySelectorAll'     in document) ? 'msQuerySelectorAll' :
+			('mozQuerySelectorAll'    in document) ? 'mozQuerySelectorAll' :
+			('oQuerySelectorAll'      in document) ? 'oQuerySelectorAll' : false;
 		
-		info.supportQuerySelectorAll  = !!matchesSelectorName;
-		info.querySelectorAll         = info.supportQuerySelectorAll && function(node,selector){ return node[matchesSelectorName](selector); };
+		info.supportQuerySelectorAll  = !!querySelectorAllName;
+		info.querySelectorAll         = info.supportQuerySelectorAll && function(node,selector){ return (node||document)[querySelectorAllName](selector); };
 		
 		//matches
 		var matchesSelectorName = 
@@ -2982,7 +2979,11 @@
 	makeSingleton("NUT",{
 		"ATTR":function(node,v1,v2){
 			if(!ISELNODE(node)) { console.error("NUT.ATTR은 element만 가능합니다. => 들어온값" + TOS(node)); return null; }
-			if(typeof v1 === "object") {
+			if(arguments.length === 1) {
+				return INJECT(node.attributes,function(inj,attr){
+					inj[attr.name] = node.getAttribute(attr.name);
+				});				
+			} else if(typeof v1 === "object") {
 				for(var k in v1) node.setAttribute(k,k1[v]);
 			} else if(typeof v1 === "string"){
 				var readMode   = typeof v2 === "undefined";
@@ -3138,34 +3139,17 @@
 				if(typeof query !== "string" || (query.trim().length == 0)) return [];
 				root = ((typeof root === "undefined")?document:ISELNODE(root)?root:document);
 				if(envQuerySelectorAll) {
-					if(root == document) return envQuerySelectorAll.call(root,query);
-					if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(envQuerySelectorAll.call(root,query)));
-					return envQuerySelectorAll.call(root,query);
+					if(root == document) {
+						return envQuerySelectorAll(root,query);
+					} 
+					if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(envQuerySelectorAll(root,query)));
+					return envQuerySelectorAll(root,query);
 				} else {
 					if(root == document) return termiSelectorAll(query,document.body.parentElement);
 					if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(termiSelectorAll(query,root)));
 					return termiSelectorAll(query,root);
 				}
 			};
-			if( ISUNDERBROWSER(9) || !document.querySelectorAll ){
-				console.warn("Nody의 노드셀렉터 관용모드 시작");
-				return function(query,root){
-					if(typeof query !== "string" || (query.trim().length == 0)) return [];
-					var root      = ISDOCUMENT(root)?document.body.parentElement:ISELNODE(root)?root:document.body.parentElement;			
-					var queryData = StructureInit("QueryDataInfo",query);
-					var result = [];
-					NUT.FEEDERDOWN(root,function(node){ if( NUT.IS(this,queryData) ) result.push(this); },"children");
-					return result;
-				}
-			}
-			return function(query,root){
-				//upper browser
-				if(typeof query !== "string" || (query.trim().length == 0)) return [];
-				root = ((typeof root === "undefined")?document:ISELNODE(root)?root:document);
-				if(root == document)   return root.querySelectorAll(query);
-				if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(root.querySelectorAll(query)));
-				return root.querySelectorAll(query);
-			}
 		})(),
 		"FEEDERDOWN_WHILE":function(feeder,stopFilter,findChild){
 			if( stopFilter.call(feeder,feeder) !== false ){
@@ -3636,7 +3620,7 @@
 		//케럿을 움직일수 있는 상태인지 검새합니다.
 		"CARETPOSSIBLE":function(sel){ var node = FIND(sel,0); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
 		//어트리뷰트값을 읽거나 변경합니다.
-		"ATTR":function(sel,v1,v2){ var node = FIND(sel,0); if(node)return NUT.ATTR(node,v1,v2);  },
+		"ATTR":function(sel,v1,v2){ var node = FIND(sel,0); if(node) return NUT.ATTR.apply(undefined,Array.prototype.slice.call(arguments)); },
 		//css스타일로 el의 상태를 확인합니다.
 		"IS":function(sel,value){ var node = FIND(sel,0); if(node)return NUT.IS(node,value); },
 		//선택한 element중 대상만 남깁니다.
@@ -3738,27 +3722,29 @@
 			if(result) { return result.getAttribute("id") }
 		},
 		//get css style tag info
-		"TRACE"   :function(target,sign,withValue){
+		"TRACE"   :function(target,detail){
 			var t = FIND(target,0);
-			if( ISELNODE(t) ){
-				switch(sign){
-				case "tag"   : return t.tagName.toLowerCase(); break;
-				case "id"    : return ELATTR(t,"id");          break;
-				case "class" : return ELATTR(t,"class");       break;
-				case "name"  : return ELATTR(t,"name");        break;
-				case "value" : return ELVALUE(t);              break;
-				default :
-					var r = t.tagName.toLowerCase();
-					var b;
-					b = ELATTR(t,"id");    if(b) r = r + "#"+b;
-					b = ELATTR(t,"class"); if(b) r = r + "."+b.trim().split(" ").join(".");
-					b = ELATTR(t,"name");  if(b) r = r + "[name="+b+"]"
-					if( ((typeof sign === "undefined") && (withValue == true)) || ((sign == true) && (typeof withValue === "undefined")) ){
-						b = ELVALUE(t); if(!ISNOTHING(b)) r = r + ":" + b;
+			if( t ){
+				var tag = t.tagName.toLowerCase();
+				var tid = tclass = tname = tattr = tvalue = '';
+				PROPEACH(NUT.ATTR(t),function(value,sign){
+					switch(sign){
+						case "id"   : tid    = '#'+t.getAttribute(sign); break;
+						case "class": tclass = '.' + t.getAttribute(sign).trim().split(' ').join('.'); break;
+						case "name" : tname  = "[name="+t.getAttribute(sign)+"]"; break;
+						case "value": break;
+						default     : tattr  += ("["+sign+"="+t.getAttribute(sign)+"]"); break; 
 					}
-					return r;
-					break;
+				});
+				if(detail == true) {
+					if(!/table|tbody|thead|tfoot|ul|ol/.test(tag)) {
+						var tv = ELVALUE(t);
+						if(typeof tv !== undefined || tv !== null ) if(typeof tv === 'string' && tv.length !== 0) tvalue = '::'+tv;
+						if(typeof tvalue === 'string') tvalue = tvalue.trim();
+					}
+					
 				}
+				return tag+tid+tclass+tname+tattr+tvalue;
 			} else {
 				console.warn("ELTRACE::target is not element or selector // target =>",target);
 			}

@@ -58,7 +58,6 @@ $('.code-wrapper').on('click','a.live-run-action',function(e){
 			
 			//javascript run
 			var runResult = viewDoc.runCode(javascriptCode);
-			
 			htmlDoc.setHTMLResult(viewDoc.body.innerHTML);
 			jsDoc.setJSResult(runResult);
 			htmlCodeDoc.setHTMLResult(htmlCode);

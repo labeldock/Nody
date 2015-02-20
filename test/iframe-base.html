@@ -49,16 +49,15 @@
 			var code = codes[i].replace(/\*\//g,'^').replace(/\/\*[^\^]+\^/g,'').trim();
 			var thisVariant = /^var\s/.test(code);
 			console.log('runCode','\n'+code,thisVariant);
-			
 			thisVariant ? eval(code) : result.push( eval(code) );
-			
 		} 
 		return result;
 	};
 	
 	document.setJSResult = function(codes,type){
 		document.body.innerHTML = '';
-		DATAEACH(codes,function(code){
+		DATAEACH(codes,function(codeData){
+			var code = ISELNODE(codeData) ? ELTRACE(codeData,true) : TOS(codeData);
 			var pre = HTMLTOEL(ZSTRING("<pre class='language-\\{$0}'><code class='language-\\{$0}'>\\{$1}</code></pre>",type || 'javascript',code+''))[0];
 			ELAPPEND(document.body,pre);
 			Prism.highlightElement(pre.children[0]);
