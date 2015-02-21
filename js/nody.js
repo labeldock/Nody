@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.2",build = "1049";
+	var version = "0.21.2",build = "1052";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -122,7 +122,10 @@
 			('oQuerySelectorAll'      in document) ? 'oQuerySelectorAll' : false;
 		
 		info.supportQuerySelectorAll  = !!querySelectorAllName;
-		info.querySelectorAll         = info.supportQuerySelectorAll && function(node,selector){ return (node||document)[querySelectorAllName](selector); };
+		info.querySelectorAll         = info.supportQuerySelectorAll && function(node,selector){ 
+			//selectText fix
+			return (node||document)[querySelectorAllName](selector.replace(/\=[\d]+\]/g,function(s){ return '=\"' + s.substr(1,s.length-2) + '\"]'; })); 
+		};
 		
 		//matches
 		var matchesSelectorName = 
@@ -133,7 +136,10 @@
 			('oMatchesSelector'      in tester) ? 'oMatchesSelector' : false;
 			
 		info.supportMatches  = !!matchesSelectorName;
-		info.matchesSelector = info.supportMatches && function(node,selector){ return node[matchesSelectorName](selector); };
+		info.matchesSelector = info.supportMatches && function(node,selector){ 
+			//selectText fix
+			return node[matchesSelectorName](selector.replace(/\=[\d]+\]/g,function(s){ return '=\"' + s.substr(1,s.length-2) + '\"]';  })); 
+		};
 		
 		return info;
 	})();
@@ -497,7 +503,7 @@
 	});
 	FUT.CACHECLEAR();
 	
-	var TypeBaseMap = { "string" : "ISSTRING", "number" : "ISNUMBER", "numberText": "ISNUMBERTEXT", "text" : "ISTEXT", "array" : "ISARRAY", "object" : "ISOBJECT", "email" : "ISEMAIL", "ascii" : "ISASCII", "true" : "ISTRUE", "false" : "ISFALSE", "nothing" : "ISNOTHING", "meaning" : "ISMEANING", "enough" : "ISENOUGH" };
+	var TypeBaseMap = { "string" : "ISSTRING", "number" : "ISNUMBER", "numberText": "ISNUMBERTEXT", "text" : "ISTEXT", "array" : "ISARRAY", "object" : "ISOBJECT", "email" : "ISEMAIL", "ascii" : "ISASCII", "true" : "ISTRUE", "false" : "ISFALSE", "nothing" : "ISNOTHING", "ok" : "ISOK", "nok" : "ISNOK" };
 	
 	makeSingleton("TypeBase",{
 		// // 데이터 타입 검사
@@ -556,8 +562,8 @@
 			console.warn("ISNOTHING::이 타입에 대해 알아내지 못했습니다. nothing으로 간주합니다.",o);
 	        return true;
 		},
-		"ISMEANING":function(o){ return !ISNOTHING(o); },
-		"ISENOUGH" :function(o){ return !ISNOTHING(o); },
+		"ISOK":function(o){ return !ISNOTHING(o); },
+		"ISNOK":function(o){ return ISNOTHING(o); },
 		// 무엇이든 길이 유형 검사
 		"TOLENGTH":function(v,d){
 			switch(typeof v){ 
@@ -3047,7 +3053,7 @@
 		//포커스 상태인지 검사합니다.
 		"HASFOCUS":function(node){ return document.activeElement == node; },
 		//하나의 CSS테스트
-		"THE":function(node,selectText){			
+		"THE":function(node,selectText){
 			return NODYENV.matchesSelector ? NODYENV.matchesSelector(node,selectText) : termiMatches(selectText,node);
 			// original code in nody.migration.js
 		},
@@ -3141,14 +3147,19 @@
 				root = ((typeof root === "undefined")?document:ISELNODE(root)?root:document);
 				if(envQuerySelectorAll) {
 					if(root == document) {
-						return envQuerySelectorAll(root,query);
-					} 
-					if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(envQuerySelectorAll(root,query)));
-					return envQuerySelectorAll(root,query);
+						return Array.prototype.slice.call(envQuerySelectorAll(root,query));
+					} else {
+						if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(envQuerySelectorAll(root,query)));
+						
+						return Array.prototype.slice.call(envQuerySelectorAll(root,query));
+					}
 				} else {
-					if(root == document) return termiSelectorAll(query,document.body.parentElement);
-					if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(termiSelectorAll(query,root)));
-					return termiSelectorAll(query,root);
+					if(root == document) {
+						return Array.prototype.slice.call(termiSelectorAll(query,document.body.parentElement));
+					} else {
+						if(NUT.IS(root,query)) return [root].concat(Array.prototype.slice.call(termiSelectorAll(query,root)));
+						return Array.prototype.slice.call(termiSelectorAll(query,root));
+					}
 				}
 			};
 		})(),
@@ -3176,28 +3187,64 @@
 	
 	
 	makeSingleton("FINDEL",{
-		"FINDCORE":function(find,root){
-			if (typeof root !== "undefined"){
-				if( ISELNODE(root) && ISELNODE(find) ){
-					var finded = NUT.QUERY(ELTRACE(find),root);
-					for(var i=0,l=finded.length;i<l;i++) {
-						if(finded[i] == find) return [find];
+		//배열이든 뭐든 노드로만 반환
+		"FINDSIN":function(find){
+			if( ISARRAY(find) ){
+				// [array]
+				var fc = [];
+				for(var i=0,l=find.length;i<l;i++) { 
+					if( typeof find[i] === 'string' ) {
+						// [array][string]
+						var fs = NUT.QUERY(find[i]);
+						if(fs.length) fc = fc.concat( fs );
+					} else if(ISELNODE(find[i])) {
+						// [array][node]
+						fc.push(find[i]);
+					} else if(ISARRAY(find[i])){
+						var fa = FINDSIN(find[i]);
+						if(fa.length) fc = fc.concat( fa );
 					}
 				}
-				var findCollection = [];
-				var roots = FINDCORE(root);
-				for(var i=0,l=roots.length;i<l;i++){ findCollection.push(NUT.QUERY(find,roots[i])); }
-				return DATAUNIQUE.apply(undefined,findCollection);
-			} else if( ISARRAY(find) ){
-				var findCollection = [];
-				for(var i=0,l=find.length;i<l;i++) { findCollection.push(FINDCORE(find[i])); }
-				return DATAUNIQUE.apply(undefined,findCollection);
+				return DATAUNIQUE(fc);
 			} else if( ISELNODE(find) ){
+				// [node]
 				return [find];
-			}  else {
-				return NUT.QUERY(find,W.document);
+			}  else if(typeof find === 'string') {
+				// [string,null]
+				return NUT.QUERY(find);
 			}
 			return [];
+		},
+		"FINDDUB":function(findse,rootNode){
+			if(typeof findse === 'string') return NUT.QUERY(findse,rootNode);
+			if( ISELNODE(findse) ) {
+				var fs = NUT.QUERY(ELTRACE(findse),rootNode);
+				for(var i=0,l=fs.length;i<l;i++) if(findse === fs[i]) return [findse];
+			}
+			if( ISARRAY(findse) ) {
+				var result = [];
+				for(var i=0,l=findse.length;i<l;i++) {
+					var fd = FINDDUB(findse[i],rootNode);
+					if( fd.length ) result = result.concat(fd);
+				}				
+				return DATAUNIQUE(result);
+			}
+			return [];
+		},
+		"FINDCORE":function(find,root){
+			if(!find)return[];
+			if(arguments.length === 1) return FINDSIN(find);
+			var targetRoots = FINDSIN(root);
+			if(!targetRoots.length) return FINDSIN(find);;
+			var findes = TOARRAY(find);
+			var result = [];
+			for(var i=0,l=targetRoots.length;i<l;i++) {
+				for(var fi=0,fl=findes.length;fi<fl;fi++) {
+					var fdr = FINDDUB(findes[fi],targetRoots[i]);
+					if( fdr.length ) result = result.concat(fdr);
+				}
+			}
+			return DATAUNIQUE(result);
 		},
 		"FINDMEMBER":function(sel,offset){
 			var target = FIND(sel,0);
@@ -3838,7 +3885,7 @@
 		"PREPEND":function(parentIn,childs){
 			var parent = FIND(parentIn,0);
 			var appendTarget = FIND(childs);
-			if(ISMEANING(parent),ISMEANING(appendTarget)){
+			if(ISOK(parent),ISOK(appendTarget)){
 				ELAPPEND(parent,appendTarget);
 				var newParent = FINDPARENT(appendTarget[0]);
 				if(newParent) {
@@ -4437,10 +4484,6 @@
 		}
 	});
 	
-	makeGetter('N$',function(s,p,i){ return new NFQuery(s,p,i);   });
-	makeGetter('M$',function(n,a,p){ return new NFMake(n,a,p);    });
-	makeGetter('C$',function(w,h  ){ return new NFContext2D(w,h); });
-	
 	extendModule("NFQuery","NFTemplate",{
 		clone    : function(nodeData,dataFilter){ return new NFTemplate(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter)); },
 		generate : function(nodeData,dataFilter){ return this.clone(nodeData,dataFilter).get(); },
@@ -4564,6 +4607,12 @@
 		//get 함수입니다. Template모듈은 기본적으로 노드를 반환합니다.
 		return FIND(this,0);
 	});
+	
+	makeGetter('$Q',function(s,p,i)  { return new NFQuery(s,p,i);});
+	makeGetter('$M',function(n,a,p)  { return new NFMake(n,a,p); });
+	makeGetter('$T',function(n,d,f,c){ return new NFTemplate(n,d,f,c); });
+	makeGetter('$C',function(w,h)    { return new NFContext2D(w,h); });
+	
 })(window,NODYENV);
 
 //Nody Component Foundation
@@ -4579,7 +4628,7 @@
 		},
 		disabled:function(status,filter){ return this.statusFunction(ELDISABLED,(status !== false ? true : false),filter); },
 		readonly:function(status,filter){ return this.statusFunction(ELREADONLY,(status !== false ? true : false),filter); },
-		empty   :function(filter)       { filter = filter?filter+",:not(button,select)":":not(button,select)"; return this.statusFunction(ELVALUE   ,"",filter); },
+		empty   :function(filter)       { filter = filter?filter+",:not(button):not(select)":":not(button):not(select)"; return this.statusFunction(ELVALUE   ,"",filter); },
 		map     :function(mapf,filter)  { return this.statusFunction(function(node){ var r = mapf(node); if(ISTEXT(r)){ ELVALUE(node,r); } },"",filter); },
 		controls:function(eachf,filter) { return this.statusFunction(function(node){ var r = eachf.call(node,node); },"",filter); },
 		removePartClass:function(rmClass,filter,req){
