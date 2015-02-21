@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.2",build = "1052";
+	var version = "0.21.2",build = "1056";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -3188,7 +3188,7 @@
 	
 	makeSingleton("FINDEL",{
 		//배열이든 뭐든 노드로만 반환
-		"FINDSIN":function(find){
+		"FSINGLE":function(find){
 			if( ISARRAY(find) ){
 				// [array]
 				var fc = [];
@@ -3201,7 +3201,7 @@
 						// [array][node]
 						fc.push(find[i]);
 					} else if(ISARRAY(find[i])){
-						var fa = FINDSIN(find[i]);
+						var fa = FSINGLE(find[i]);
 						if(fa.length) fc = fc.concat( fa );
 					}
 				}
@@ -3215,7 +3215,8 @@
 			}
 			return [];
 		},
-		"FINDDUB":function(findse,rootNode){
+		//하나의 루트노드만 허용
+		"FDOUBLE":function(findse,rootNode){
 			if(typeof findse === 'string') return NUT.QUERY(findse,rootNode);
 			if( ISELNODE(findse) ) {
 				var fs = NUT.QUERY(ELTRACE(findse),rootNode);
@@ -3224,23 +3225,23 @@
 			if( ISARRAY(findse) ) {
 				var result = [];
 				for(var i=0,l=findse.length;i<l;i++) {
-					var fd = FINDDUB(findse[i],rootNode);
+					var fd = FDOUBLE(findse[i],rootNode);
 					if( fd.length ) result = result.concat(fd);
 				}				
 				return DATAUNIQUE(result);
 			}
 			return [];
 		},
-		"FINDCORE":function(find,root){
-			if(!find)return[];
-			if(arguments.length === 1) return FINDSIN(find);
-			var targetRoots = FINDSIN(root);
-			if(!targetRoots.length) return FINDSIN(find);;
+		//다수의 노드들을 받고 출력
+		"FADVENCE":function(find,root){
+			if(arguments.length === 1) return FSINGLE(find);
+			var targetRoots = FSINGLE(root);
+			if(!targetRoots.length) return FSINGLE(find);;
 			var findes = TOARRAY(find);
 			var result = [];
 			for(var i=0,l=targetRoots.length;i<l;i++) {
 				for(var fi=0,fl=findes.length;fi<fl;fi++) {
-					var fdr = FINDDUB(findes[fi],targetRoots[i]);
+					var fdr = FDOUBLE(findes[fi],targetRoots[i]);
 					if( fdr.length ) result = result.concat(fdr);
 				}
 			}
@@ -3255,19 +3256,19 @@
 			return target.parentNode.children[currentIndex+offset];
 		},
 		"FIND" : FUT.CONTINUTILITY(function(find,root,eq){
-			return (typeof root === "number") ? FINDCORE(find)[root] :
-				   (typeof eq === "number")   ? FINDCORE(find,root)[eq] :
-				   FINDCORE(find,root);
+			return (typeof root === "number") ? FSINGLE(find)[root] :
+				   (typeof eq === "number")   ? FADVENCE(find,root)[eq] :
+				   FADVENCE(find,root);
 		}),
 		// 하위루트의 모든 노드를 검색함 (Continutiltiy에서 중요함)
 		"FINDIN" : FUT.CONTINUTILITY(function(root,find,index){
 			return (typeof index === 'number') ?
-			FINDCORE(find || '*',DATAMAP(FINDCORE(root),function(node){ return node.children },DATAFLATTEN))[index] :
-			FINDCORE(find || '*',DATAMAP(FINDCORE(root),function(node){ return node.children },DATAFLATTEN))  ;
+			FADVENCE(find || '*',DATAMAP(FADVENCE(root),function(node){ return node.children },DATAFLATTEN))[index] :
+			FADVENCE(find || '*',DATAMAP(FADVENCE(root),function(node){ return node.children },DATAFLATTEN))  ;
 		},2),
 		// 자식루트의 노드를 검색함
 		"FINDON": FUT.CONTINUTILITY(function(root,find){
-			var finds = DATAMAP(FINDCORE(root),function(node){ return node.children; },DATAFLATTEN);
+			var finds = DATAMAP(FADVENCE(root),function(node){ return node.children; },DATAFLATTEN);
 			switch(typeof find){
 				case "number": return [finds[find]]; break;
 				case "string": return DATAFILTER(finds,function(node){ return NUT.IS(node,find); }); break;
@@ -3277,12 +3278,12 @@
 		"FINDPARENTS":FUT.CONTINUTILITY(function(el,require,index){ 
 			if(typeof require === 'string') {
 				return (typeof index === 'number') ?
-				DATAFILTER(NUT.PARENTS(FINDCORE(el)[0]),function(el){ return ELIS(el,require); })[index]:
-				DATAFILTER(NUT.PARENTS(FINDCORE(el)[0]),function(el){ return ELIS(el,require); });
+				DATAFILTER(NUT.PARENTS(FADVENCE(el)[0]),function(el){ return ELIS(el,require); })[index]:
+				DATAFILTER(NUT.PARENTS(FADVENCE(el)[0]),function(el){ return ELIS(el,require); });
 			} else if(typeof require === 'number') {
-				return NUT.PARENTS(FINDCORE(el)[0])[require];
+				return NUT.PARENTS(FADVENCE(el)[0])[require];
 			} else {
-				return NUT.PARENTS(FINDCORE(el)[0]);
+				return NUT.PARENTS(FADVENCE(el)[0]);
 			}
 		},1),
 		"FINDBEFORE":FUT.CONTINUTILITY(function(node,filter){ 
@@ -3342,7 +3343,7 @@
 			}
 			return undefined;
 		},1),
-		"FINDDOCUMENT":function(iframeNode){
+		"FINDDOCUMENT":FUT.CONTINUTILITY(function(iframeNode){
 			var iframe = FIND(iframeNode,0);
 			if(iframe) {
 				if(iframe.tagName == "IFRAME") return iframe.contentDocument || iframe.contentWindow.document;
@@ -3350,7 +3351,16 @@
 			} else {
 				console.warn('iframe을 찾을 수 없습니다.',iframeNode);
 			}
-		},
+		},1),
+		"FINDTREE":FUT.CONTINUTILITY(function(node,stringify){
+			var treeNode = FIND(node,0);
+			if(!treeNode) return [];
+			
+			var tree = FINDPARENTS(treeNode,DATAMAP,function(){ return (stringify === true ? ELTRACE(this) : this ); });
+			tree.reverse();
+			tree.push( (stringify === true ? ELTRACE(treeNode) : treeNode ) );
+			return tree;
+		},1),
 		"FINDOFFSET" :function(node,target,debug){
 			var node = FIND(node,0);
 			if(node) {
@@ -3777,11 +3787,14 @@
 				var tid = tclass = tname = tattr = tvalue = '';
 				PROPEACH(NUT.ATTR(t),function(value,sign){
 					switch(sign){
-						case "id"   : tid    = '#'+t.getAttribute(sign); break;
-						case "class": tclass = '.' + t.getAttribute(sign).trim().split(' ').join('.'); break;
+						case "id"   : var id = t.getAttribute(sign); id.length && (tid='#'+id) ; break;
+						case "class": tclass = '.' + t.getAttribute(sign).trim().replace(/\s\s/g,' ').split(' ').join('.'); break;
 						case "name" : tname  = "[name="+t.getAttribute(sign)+"]"; break;
 						case "value": break;
-						default     : tattr  += ("["+sign+"="+t.getAttribute(sign)+"]"); break; 
+						default     : 
+							attrValue = t.getAttribute(sign);
+							tattr += ( (attrValue == '' || attrValue == null) ? ("["+sign+"]") : ("["+sign+"="+attrValue+"]") );
+						break; 
 					}
 				});
 				if(detail == true) {
@@ -4762,27 +4775,28 @@
 		},
 		setActiveStatus:function(status,param,owner){
 			var _ = this;
+			param = TOARRAY(param);
 			if( !this.ActiveKeys.has(status) ){
 				if( this.AllowMultiStatus || (this.ActiveKeys.length === 0) ) {
-					if( CALL(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
-						CALL(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
+					if( APPLY(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
+						APPLY(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
 					{
 						this.ActiveKeys.push(status);
-						CALL(this.StatusEvents.AnyDidActive           ,owner,param);
-						CALL(this.StatusEvents.StatusDidActive[status],owner,param);
+						APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
+						APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
 						if( this.ActiveKeys.length === PROPLENGTH(this.Source) ) 
-							CALL(this.AllActive,owner,param);
+							APPLY(this.AllActive,owner,param);
 					}
 				} else  {
-					if( CALL(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
-						CALL(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
+					if( APPLY(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
+						APPLY(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
 					{
 						this.ActiveKeys.each(function(key){ _.setInactiveStatus(key,param,owner); })
 						this.ActiveKeys.push(status);
-						CALL(this.StatusEvents.AnyDidActive           ,owner,param);
-						CALL(this.StatusEvents.StatusDidActive[status],owner,param);
+						APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
+						APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
 						if( this.ActiveKeys.length === PROPLENGTH(this.Source) ) 
-							CALL(this.AllActive,owner,param);
+							APPLY(this.AllActive,owner,param);
 					}
 				}
 			}
@@ -4816,12 +4830,12 @@
 		statusReset:function(status){
 			if(typeof name === 'string'){
 				this.ActiveKeys.remove(name);
-				this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this.FormHelper);
+				this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
 			}
 		},
 		statusTo:function(status){
 			if(typeof name === 'string') 
-				this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this.FormHelper);
+				this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
 		},
 		addStatus:function(key,val){
 			if(!key)return;
@@ -4829,17 +4843,39 @@
 			else this.whenDidActive(key,val);
 		},
 		setFormData:function(data,v2){
-			return this.FormHelper.checkin(data,v2);
+			return this.FormControl.checkin(data,v2);
 		},
 		getFormData:function(){
-			return this.FormHelper.checkout();
+			return this.FormControl.checkout();
+		},
+		find:function(){
+			return this.FormControl.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
 		}
-	},function(context,statusProp){
+	},function(context,statusProp,helper){
 		this.view = FIND(context,0);
 		if(this.view){
-			this.FormHelper = _NFForm(this.view);
+			this.FormControl = _NFForm(this.view);
 			this._super(false,true);
 			if(statusProp) this.addStatus(statusProp);
+			
+			if(typeof helper === 'function') helper = {init:helper};
+			var _ = this;
+			PROPEACH(helper,function(fn,key){
+				if(!(key in _.constructor.prototype)) {
+					if(key === 'init') {
+						if(typeof fn === 'function') {
+							fn.apply(_,Array.prototype.slice.call(arguments));
+						}
+					} else {
+						if(typeof fn === 'function') {
+							_[key] = function(){fn.apply(_,Array.prototype.slice.call(arguments));};
+						} else {
+							_[key] = fn;
+						}
+					}
+					
+				}
+			});
 		} else {
 			console.warn('FormController에 view를 정상적으로 로드할수 없었습니다.',context,this.view);
 		}
@@ -6570,6 +6606,11 @@
 				if( this.Parent ) this.Parent.chainUpMangedData(method);
 			}
 		},
+		replaceValue:function(data,rerender){
+			if( ISTYPE(data,'NFManagedData') ) data = data.value();
+			if( typeof data === 'object' ) this.Source = CLONE(data);
+			if( rerender === true ) this.rerender();
+		},
 		hasValue:function(key){ return (key in this.Source); },
 		value:function(key,value,sender){
 			// Read
@@ -6585,10 +6626,6 @@
 			this.Source[key] = value;
 			NFDataContextNotificationCenter.managedDataBindEvent(this.BindID,key,value,sender);
 			return this;
-		},
-		data:function(a,b,c){
-			console.warn("deprecated MangedObject::data => value");
-			return this.value(a,b,c);
 		},
 		removeValue:function(key,sender){
 			if(key in this.Source){
@@ -6861,7 +6898,8 @@
 					//바꿔치기 하기
 					this.needDisplay(rerenderManagedData,parentPlaceHolder,true);
 					ELBEFORE(beforeElement,this.structureNodes[rerenderManagedData.BindID]);
-					ELAPPEND(this.placeholderNodes[rerenderManagedData.BindID],beforePlaceHolder.children);
+					//placeHolder를 가지고 있었을 경우에만 호출됨
+					if(beforePlaceHolder) ELAPPEND(this.placeholderNodes[rerenderManagedData.BindID],beforePlaceHolder.children);
 					ELREMOVE(beforeElement)
 					CALL(this.dataDidChange,this);
 				} else {
@@ -7252,10 +7290,11 @@
 				}
 			}
 		},
-		applyTouchEvent:function(flag,allowOuterMove){
+		applyTouchEvent:function(flag){
 			if(typeof flag !== "boolean") return;
 			if(typeof this._applyTouchEvent === "undefined") {
 				var _ = this;
+				//touch start
 				this._currentTouchStartEvent = function(e){
 					
 					if (_.GestureListener["pinch"] && (e.touches.length === 2)) {
@@ -7270,8 +7309,8 @@
 					}
 					if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
 						e.stopPropagation();
-						_.StartTouchMoveX = e.touches[0].pageX;
-						_.StartTouchMoveY = e.touches[0].pageY;
+						_.StartTouchMoveX = _.TouchMoveX = e.touches[0].pageX;
+						_.StartTouchMoveY = _.TouchMoveY = e.touches[0].pageY;
 					}
 					if (_.GestureListener["touchStart"] && (e.touches.length === 1)) {
 						e.stopPropagation();
@@ -7279,6 +7318,7 @@
 					}
 					
 				};
+				//touch move
 				this._currentTouchMoveEvent = function(e){
 					//2 _
 					if(_.GestureListener["pinch"] && _.StartPinchValue && (e.touches.length === 2)){
@@ -7292,22 +7332,23 @@
 							 e.touches[1].pageY
 						);
 						CALL(_.GestureListener["pinch"],_.Source,-((_.StartPinchValue / currentDistance) - 1))
-						
-						
 					}
 					//핀치시에는 이벤트를 초기화함
 					if(_.StartPinchValue) {
-						_.StartTouchMoveX = undefined;
-						_.StartTouchMoveY = undefined;
+						_.StartTouchMoveX = _.TouchMoveX = undefined;
+						_.StartTouchMoveY = _.TouchMoveY = undefined;
 						return;
 					}
 					
 					//1 _
 					if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
-						var moveX = e.touches[0].pageX - _.StartTouchMoveX;
-						var moveY = e.touches[0].pageY - _.StartTouchMoveY;
-						_.StartTouchMoveX = e.touches[0].pageX;
-						_.StartTouchMoveY = e.touches[0].pageY;
+						//시작한 터치무브가 존재하지 않을경우에는 작동되지 않음 (바깥쪽 이벤트가 Finger끼리 서로 섞이지 않게 하기 위함)
+						if(_.StartTouchMoveX === undefined) return;
+						
+						var moveX = e.touches[0].pageX - _.TouchMoveX;
+						var moveY = e.touches[0].pageY - _.TouchMoveY;
+						_.TouchMoveX = e.touches[0].pageX;
+						_.TouchMoveY = e.touches[0].pageY;
 						
 						//CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e);
 						if(CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e) !== false){
@@ -7318,10 +7359,11 @@
 						}
 					}
 				};
+				//touch end
 				this._currentTouchEndEvent = function(e){
 					e.stopPropagation();
-					_.StartTouchMoveX = undefined;
-					_.StartTouchMoveY = undefined;
+					_.StartTouchMoveX = _.TouchMoveX = undefined;
+					_.StartTouchMoveY = _.TouchMoveY = undefined;
 					_.StartPinchValue = undefined;
 					CALL(_.GestureListener["touchEnd"],e);
 				};
@@ -7343,23 +7385,29 @@
 				this._applyTouchEvent = flag;
 			}
 		},
+		getGestureX:function(){ return this.TouchMoveX - this.StartTouchMoveX; },
+		getGestureY:function(){ return this.TouchMoveY - this.StartTouchMoveY; },
 		whenPinchStart:function(method){ this.GestureListener["pinchStart"] = method; },
 		whenPinch:function(method){ this.GestureListener["pinch"] = method; },
 		whenTouchStart:function(method){ this.GestureListener["touchStart"] = method; },
 		whenTouchBegin:function(method){ this.GestureListener["touchBegin"] = method; },
 		whenTouchMove:function(method){ this.GestureListener["touchMove"] = method; },
-		whenTouchEnd:function(method){ this.GestureListener["touchEnd"] = method; }
-	},function(gestureView,allowOuterMove){
+		whenTouchEnd:function(method){ this.GestureListener["touchEnd"] = method; },
+		destroy:function(){ this.applyTouchEvent(false); }
+	},function(gestureView,allowOuterMove,allowVitureFinger){
 		this.Source = FIND(gestureView,0);
 		this.GestureListener = {};
 		this.StartPinchValue;
 		this.StartTouchMoveX;
 		this.StartTouchMoveY;
+		this.TouchMoveX;
+		this.TouchMoveY;
 		this.AllowOuterEvent = !!(allowOuterMove === true);
 		this.AllowPinch = true;
 		var finger = this;
 		
-		if(this.Source) this.applyTouchEvent(true,allowOuterMove);
+		if(this.Source) this.applyTouchEvent(true);
+		if(allowVitureFinger === true) this.setAllowVirtureFinger(true);
 	});
 	
 	makeModule("NFScrollBox",{
