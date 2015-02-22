@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.3",build = "1057";
+	var version = "0.21.3",build = "1058";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -734,6 +734,8 @@
 		//1:길이와 같이 2: 함수호출
 		"TIMES":FUT.CONTINUTILITY(function(l,f,s){ l=TONUMBER(l); for(var i=(typeof s === 'number')?s:0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },2),
 		"TIMESMAP":FUT.CONTINUTILITY(function(l,f,s){ l=TONUMBER(l); var r = []; for(var i=(typeof s === 'number')?s:0;i<l;i++) r.push(f(i)); return r; },2),
+		"DATACALL":FUT.CONTINUTILITY(function(d,alt){ return (typeof d === 'undefined') ? CLONEARRAY(alt) : ((alt === true) ? CLONEARRAY(d) : TOARRAY(d)); },1),
+		"DATAHAS" :function(d,v){ d=TOARRAY(d); for(var i=0,l=d.length;i<l;i++) if(d[i] === v) return true; return false; },
 		//배열의 하나추출
 		"DATAZERO"   :function(t){ return typeof t === "object" ? typeof t[0] === "undefined" ? undefined : t[0] : t; },
 		//배열의 뒤
@@ -859,21 +861,27 @@
 			return EXTEND.apply(undefined,[CLONE(data,true)].concat(Array.prototype.slice.call(arguments,1)));
 		},
 		//첫번째 소스에 두번째 부터 시작하는 소스를 반영
-		"EXTENDFILL":function(data){
-			if(typeof data !== "object") return data;
-			for(var i=1,l=arguments.length;i<l;i++)
-				if( typeof arguments[i] == "object" ) 
-					for(var key in arguments[i]) 
-						if( !(key in data) ) data[key] = arguments[i][key];
-			return data;
-		},
-		//완전히 새로운 포인터 오브젝트에 다른 소스를 반영
-		"MARGEFILL":function(data){
+		"EXTENDFILL":function(data,fillData,forceFill){
 			if(typeof data !== "object") {
 				if(data === undefined) data = {};
 				else data = {data:data};
 			}
-			return EXTENDFILL.apply(undefined,[CLONE(data,true)].concat(Array.prototype.slice.call(arguments,1)));
+			
+			if(forceFill !== true) forceFill = TOARRAY(forceFill);
+			
+			if (forceFill.length || forceFill === true) {
+				for(var key in fillData)  {
+					if( !(key in data) ) data[key] = fillData[key];
+					else if(forceFill === true || DATAHAS(forceFill,key) ) data[key] = fillData[key];
+				} 
+			} else {
+				for(var key in fillData)  if( !(key in data) ) data[key] = fillData[key];
+			}
+			return data;
+		},
+		//완전히 새로운 포인터 오브젝트에 다른 소스를 반영
+		"MARGEFILL":function(data,fillData,forceFill){
+			return EXTENDFILL(CLONE(data,true),fillData,forceFill);
 		},
 		//무엇이든 문자열로 넘김
 		"TOSTRING":function(tosv,depth,jsonfy){

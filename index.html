@@ -416,6 +416,35 @@ new NFPresentor("#placeholder",data,["#table","#tbody-item"],true);
 						</div>
 					</article>
 					
+					<article>
+						<header>Object Extend</header>
+						<p>키값에 매칭하여 값을 대입합니다. EXTEND는 첫번째 오브젝트에 덮어씌우고 MARGE는 새로운 오브젝트를 이용해 반영합니다.</p>
+						<p>
+							...FILL은 존재하지 않는 키값에 대해서만 대입하지만 예외를 두고싶을 경우 세번째 파라메터에 강제로 대입하고자 하는 키값을 넣어주면 됩니다.
+						</p>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+var a = {a:1,b:2,c:3};
+var b = {b:20,c:30,d:40};
+
+EXTEND(a,b);
+EXTEND(a,b) === a;
+
+MARGE(a,b);
+MARGE(a,b) === a;
+
+var c = {a:1,b:2,c:3,d:4};
+var d = {b:20,c:30,d:40,e:50};
+
+MARGEFILL(c,d);
+MARGEFILL(c,d,'b');
+MARGEFILL(c,d,['b','c']);
+//(EXTENDFILL same)
+
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
 					
 					<article>
 						<header>Parsing</header>
