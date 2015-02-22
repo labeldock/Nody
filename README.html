@@ -6,23 +6,31 @@
 
 <h2>Feature</h2>
 
-<ol>
-<li><p> You can make node as CSS Style
-<code>javascript
-MAKE('div');
-MAKE('button.btn.btn-default#btn-action');
-MAKE('input[type=checkbox][checked]');
-MAKE('span','this is value');
-</code></p></li>
-<li><p> You can find node and mix function
+<ul>
+<li>You can make node as CSS Style
+```javascript
+MAKE(&lsquo;div&rsquo;);
+MAKE(&lsquo;button.btn.btn-default#btn-action&rsquo;);
+MAKE(&lsquo;input[type=checkbox][checked]&rsquo;);
+MAKE(&lsquo;div&rsquo;,
+MAKE(&lsquo;a&rsquo;,MAKE(&lsquo;span&rsquo;,&lsquo;first value&rsquo;)),
+MAKE(&lsquo;a&rsquo;,MAKE(&lsquo;span&rsquo;,&lsquo;second value&rsquo;))
+);</li>
+</ul>
+
+
+<p>```</p>
+
+<ul>
+<li><p>You can find node and mix function
 <code>javascript
 FIND('div','#wrapper');
 FIND('ul li',0); //=&gt; nth-child 0
 FIND('ul li',jQuery).css('color','red');
 </code></p></li>
-<li><p> Easy make node of template with data
+<li><p>Easy make node of template with data
 ```javascript</p></li>
-</ol>
+</ul>
 
 
 <p>ELAPPEND(&lsquo;body&rsquo;,MAKE(&lsquo;ul#ul&rsquo;));</p>
@@ -39,9 +47,9 @@ FIND('ul li',jQuery).css('color','red');
 
 <p>```</p>
 
-<ol>
-<li> Easy bind node</li>
-</ol>
+<ul>
+<li>Easy bind node</li>
+</ul>
 
 
 <p>```javascript</p>
@@ -53,6 +61,10 @@ FIND('ul li',jQuery).css('color','red');
 <p>new NFPresentor(&lsquo;#placeholder-1&rsquo;,dataContext,[&lsquo;<input type="text" nf-bind="name">&rsquo;],true);
 new NFPresentor(&lsquo;#placeholder-2&rsquo;,dataContext,[&lsquo;<input type="text" nf-bind="name">&rsquo;],true);
 ```</p>
+
+<p><code>
+    Just do it in console before include the Nody.js
+</code></p>
 
 <h1>Live demo</h1>
 

@@ -5,22 +5,26 @@ Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브�
 
 ## Feature #
 
-  1. You can make node as CSS Style
+  - You can make node as CSS Style
 ```javascript
 MAKE('div');
 MAKE('button.btn.btn-default#btn-action');
 MAKE('input[type=checkbox][checked]');
-MAKE('span','this is value');
+MAKE('div',
+	MAKE('a',MAKE('span','first value')),
+	MAKE('a',MAKE('span','second value'))
+);
+
 ```
 
-  2. You can find node and mix function
+  - You can find node and mix function
 ```javascript
 FIND('div','#wrapper');
 FIND('ul li',0); //=> nth-child 0
 FIND('ul li',jQuery).css('color','red');
 ```
 
-  3. Easy make node of template with data
+  - Easy make node of template with data
 ```javascript
 
 ELAPPEND('body',MAKE('ul#ul'));
@@ -37,7 +41,7 @@ var itemTemp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>'
 	
 ```
   
-  4. Easy bind node
+  - Easy bind node
 
 ```javascript
 
@@ -47,6 +51,10 @@ var dataContext = new NFDataContext({name:'hello world'});
 
 new NFPresentor('#placeholder-1',dataContext,['<input type="text" nf-bind="name">'],true);
 new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name">'],true);
+```
+
+```
+	Just do it in console before include the Nody.js
 ```
 
 # Live demo #
