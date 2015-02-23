@@ -339,6 +339,7 @@ new NFTemplate(
 	"<div id='one' class='two three' node-put='items'></div>",
 	{items:data},
 	{items:function(data){ return DATAMAP(data,function(itemData){ return MAKE('li',itemData); }); }}
+	,true
 )
 },
 function(){

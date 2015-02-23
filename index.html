@@ -189,6 +189,7 @@ MAKE('table.table.table-bordered',
 						<header>NFTemplate</header>
 						<p>NFTemplate는 template태그를 활용하거나 직접 태그를 입력하여 데이터와 동기화된 노드를 만들 수 있습니다.</p>
 						
+						<b class='text-info'>템플릿 생성과 렌더 예제</b>
 						<div class='code-wrapper'>
 							<pre class='language-markup'><code class='language-markup'>
 &lt;!-- Container -->
@@ -217,10 +218,10 @@ strTemp.renderTo('#container');
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
-					</article>
-					<article>
-						<header>Partial template (value, href)</header>
-						<q>데이터를 넣을수 있습니다.</q>
+						
+						
+						<b class='text-info'>템플릿 파셜(Template Partial) 예제</b>
+						<p>하나의 템플릿과 다수의 데이터를 가지고 간단하게 노드를 만들어 낼 수 있습니다.</p>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>
 var t = new NFTemplate(
@@ -257,24 +258,24 @@ renderResult[2];
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
 						</div>
-					</article>
-					
-					<article>
-						<header>Partial template (append,prepend,put)</header>
-						<q>데이터를 넣을수 있습니다.</q>
+						
+						<b class='text-info'>템플릿 파셜(Template Partial) append, prepend, put 예제</b>
+						<p>파셜 데이터에 노드를 삽입 후 append, prepend, put등의 명령어로 노드를 집어넣을수 있습니다.</p>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>
 var temp = new NFTemplate(
-	'&lt;ul nf-append="list">\
+	'&lt;ul nf-append="nodeList tempList">\
 		&lt;li>hello&lt;/li>\
 	&lt;/ul>'
 );
 temp.render({
-    "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
+    "nodeList":[MAKE("li.item::MAKE item1"),MAKE("li.item::MAKE item2")],
+	"tempList":_NFTemplate('&lt;li class="item" nf-value="t">&lt;/li>').renderMap([{t:'Temp item1'},{t:'Temp item2'}])
 });
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
 						</div>
+						
 					</article>
 					
 					<article>
@@ -293,6 +294,33 @@ TIMESMAP(10,function(index){ return MAKE('li',index) },DATAEACH,function(){ ELAP
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
+						<p>컨티뉴틸리티는 다음 함수에서 사용할수 있습니다.</p>
+						<ul>
+							<li>TIMES</li>
+							<li>TIMESMAP</li>
+							<li>DATACALL</li>
+							<li>DATAEACH</li>
+							<li>DATAEACHBACK</li>
+							<li>DATAMAP</li>
+							<li>DATAFILTER</li>
+							<li>PROPEACH</li>
+							<li>PROPMAP</li>
+							<li>PROPDATA</li>
+							<li>FIND</li>
+							<li>FINDIN</li>
+							<li>FINDON</li>
+							<li>FINDPARENTS</li>
+							<li>FINDBEFORE</li>
+							<li>FINDAFTER</li>
+							<li>FINDPARENT</li>
+							<li>FINDDOCUMENT</li>
+							<li>FINDTREE</li>
+							<li>MAKETEXT</li>
+							<li>MAKE</li>
+							<li>ELBEFORE</li>
+							<li>ELAFTER</li>
+							<li>ELCHANGE</li>
+						</ul>
 					</article>
 					
 					
@@ -304,6 +332,10 @@ TIMESMAP(10,function(index){ return MAKE('li',index) },DATAEACH,function(){ ELAP
 							<li>일부만 따로 렌더링 할 수 있음</li>
 							<li>실시간 바인드 지원</li>
 						</ul>
+						
+						<b class='text-info'>기본 생성 예제</b>
+						<p>Nody의 MVVM은 기본적으로 DataContext, ViewModel, Presentor로 구성되어 생성됩니다.</p>
+						
 						<div class='code-wrapper'>
 							<pre class='language-markup'><code class='language-markup'>
 &lt;!-- Container -->
@@ -347,11 +379,9 @@ new NFPresentor("#placeholder-bind3",dataContext,labelViewModel,true);
 						<p>
 							바인딩된 데이터를 얻고자 할 시에는 dataContext.getJSONObject(); 와 같이 호출하면 됩니다.
 						</p>
-					</article>
-
-					<article>
-						<header>MVVM (With template)</header>
-						<p>HTML5의 Template를 활용하여 렌더링 할 수 있다.</p>
+						
+						<b class='text-info'>템플릿과 함깨 사용하기</b>
+						<p>탬플릿과 함께 사용하면 자바스크립트를 좀 더 간결하게 사용할 수 있습니다.</p>
 						<div class='code-wrapper'>
 							<pre class='language-markup'><code class='language-markup'>
 &lt;div id="placeholder">&lt;/div>
@@ -386,11 +416,10 @@ var viewController = new NFPresentor("#placeholder",dataContext,viewModel,true);
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
-					</article>
-					
-					<article>
-						<header>MVVM (lazy way)</header>
-						<p>DataContext와 ViewModel을 생략하여 호출 가능합니다. 하지만 <span class='text-danger'>이 방법은 DataContext에 접근하기가 어려워</span> 다이나믹 웹 개발시 사용하지 않는것이 좋습니다.</p>
+						
+						<b class='text-info'>Only Presentor</b>
+						<p>DataContext와 ViewModel을 생성하지 않고 호출시 내부적으로 자동 생성되어 관리됩니다. 주의할 점은 <span class='text-danger'>이 방법은 DataContext에 접근하기가 어려워</span> 바인딩을 구현할 경우 사용하지 않는것이 좋습니다. </p>
+						
 						<div class='code-wrapper'>
 							<pre class='language-markup hidden'><code class='language-markup'>
 &lt;div id="placeholder">&lt;/div>
@@ -422,7 +451,9 @@ new NFPresentor("#placeholder",data,["#table","#tbody-item"],true);
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
+						
 					</article>
+
 					
 					<article>
 						<header>Object Extend</header>
@@ -678,7 +709,7 @@ manager.makeActiveController('.row-2 .g3','.btn','click',true);
 					
 				</section><!-- 좌측 끝 -->
 				<aside class='col-sm-3 col-sm-push-1'>
-					<div class='box-module table-of-contents'>
+					<div class='box-module table-of-contents hidden-xs'>
 						<h4>About</h4>
 						<menu class='text-primary'>
 						</menu>

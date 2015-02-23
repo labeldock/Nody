@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.4",build = "1062";
+	var version = "0.21.4",build = "1063";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -2388,7 +2388,6 @@
                         return ISNUMBERTEXT(paramResult) ? paramResult : '\"' + paramResult + '\"' ;
                     }
                 });
-				console.log('evs',evs);
 				var v = eval(evs);
 				aPoint.push(v);
 				return v;
@@ -4551,7 +4550,9 @@
 	});
 	
 	extendModule("NFQuery","NFTemplate",{
-		clone    : function(nodeData,dataFilter){ return new NFTemplate(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter),true); },
+		clone    : function(nodeData,dataFilter){ 
+			return new NFTemplate(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter),true); 
+		},
 		cloneMap:function(nodeDatas,dataFilter){
 			nodeDatas  = TOARRAY(nodeDatas);
 			var result = [];
