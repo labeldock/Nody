@@ -26,7 +26,7 @@ FIND('ul li',jQuery).css('color','red');
 
   - Easy make node of template with data
 ```javascript
-ELAPPEND('body',MAKE('ul#ul'));
+MAKETO('ul#ul','body');
 
 var temp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
 	temp.renderTo('#ul',
@@ -42,8 +42,7 @@ var temp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
   - Easy bind node
 
 ```javascript
-
-ELAPPEND('body',[MAKE('div#placeholder-1'),MAKE('div#placeholder-2')])
+MAKETO('div#placeholder-1, div#placeholder-2','body');
 
 var dataContext = new NFDataContext({name:'hello world'});
 

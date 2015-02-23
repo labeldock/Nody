@@ -506,9 +506,10 @@ TOOBJECT("hello:world,foo:bar,1:2");
 IS("123","string"); //=> true
 IS("123","number"); //=> false
 IS("123","nothing"); //=> false
-IS("123","meaning"); //=> true
-IS("0","meaning"); //=> true
-IS(0,"meaning"); //=> false
+IS("123","ok"); //=> true
+IS("0","ok"); //=> true
+IS(0,"ok"); //=> false
+IS(0,"nok"); //=> true
 IS("123","string>5"); //=> false
 IS("123456","string>5"); //=> true
 IS(123456,"text>5"); //=> true

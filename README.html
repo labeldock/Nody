@@ -30,7 +30,7 @@ FIND('ul li',jQuery).css('color','red');
 </code></p></li>
 <li><p>Easy make node of template with data
 ```javascript
-ELAPPEND(&lsquo;body&rsquo;,MAKE(&lsquo;ul#ul&rsquo;));</p></li>
+MAKETO(&lsquo;ul#ul&rsquo;,&lsquo;body&rsquo;);</p></li>
 </ul>
 
 
@@ -50,9 +50,8 @@ ELAPPEND(&lsquo;body&rsquo;,MAKE(&lsquo;ul#ul&rsquo;));</p></li>
 </ul>
 
 
-<p>```javascript</p>
-
-<p>ELAPPEND(&lsquo;body&rsquo;,[MAKE(&lsquo;div#placeholder-1&rsquo;),MAKE(&lsquo;div#placeholder-2&rsquo;)])</p>
+<p>```javascript
+MAKETO(&lsquo;div#placeholder-1, div#placeholder-2&rsquo;,&lsquo;body&rsquo;);</p>
 
 <p>var dataContext = new NFDataContext({name:&lsquo;hello world&rsquo;});</p>
 

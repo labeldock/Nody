@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.4",build = "1063";
+	var version = "0.21.4",build = "1064";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -3565,6 +3565,18 @@
 				return CREATE(name, attr);
 			}	
 		},1),
+		"MAKETO":FUT.CONTINUTILITY(function(nodes,attr,parent){
+			if(typeof attr === 'string') attr = FSINGLE(attr)[0];
+			if( ISELNODE(attr) ) parent = attr ,attr = undefined;
+			var makes = DATAMAP(nodes,function(node){
+				if( typeof node === 'string' ) return DATAMAP(node.split(','),function(eachNode){ if(eachNode.trim().length !== 0) return CREATE(eachNode,attr) });
+				if( ISELNODE(node) ) return node;
+			},DATAFLATTEN);
+			
+			ELAPPEND(parent,makes);
+			
+			return makes.length === 0 ? undefined : makes.length === 1 ? makes[0] : makes;
+		},2),
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 		"MAKECOLS":function(){ 
 			return MAKE('colgroup', DATAMAP(arguments,function(arg){
