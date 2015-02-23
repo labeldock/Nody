@@ -26,19 +26,17 @@ FIND('ul li',jQuery).css('color','red');
 
   - Easy make node of template with data
 ```javascript
-
 ELAPPEND('body',MAKE('ul#ul'));
 
-var itemTemp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
-	itemTemp.generateFromData(
+var temp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
+	temp.renderTo('#ul',
 		[
 			{'index':'index1','item-value':'A'},
 			{'index':'index1','item-value':'B'},
 			{'index':'index1','item-value':'C'},
 			{'index':'index1','item-value':'D'}
 		]
-	).appendTo('#ul');
-	
+	);
 ```
   
   - Easy bind node

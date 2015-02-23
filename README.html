@@ -29,23 +29,21 @@ FIND('ul li',0); //=&gt; nth-child 0
 FIND('ul li',jQuery).css('color','red');
 </code></p></li>
 <li><p>Easy make node of template with data
-```javascript</p></li>
+```javascript
+ELAPPEND(&lsquo;body&rsquo;,MAKE(&lsquo;ul#ul&rsquo;));</p></li>
 </ul>
 
 
-<p>ELAPPEND(&lsquo;body&rsquo;,MAKE(&lsquo;ul#ul&rsquo;));</p>
-
-<p>var itemTemp = new NFTemplate(&lsquo;<li nf-class="index" nf-value="item-value"></li>&rsquo;);
-    itemTemp.generateFromData(
+<p>var temp = new NFTemplate(&lsquo;<li nf-class="index" nf-value="item-value"></li>&rsquo;);
+    temp.renderTo(&lsquo;#ul&rsquo;,
         [
             {&lsquo;index&rsquo;:&lsquo;index1&rsquo;,&lsquo;item-value&rsquo;:&lsquo;A&rsquo;},
             {&lsquo;index&rsquo;:&lsquo;index1&rsquo;,&lsquo;item-value&rsquo;:&lsquo;B&rsquo;},
             {&lsquo;index&rsquo;:&lsquo;index1&rsquo;,&lsquo;item-value&rsquo;:&lsquo;C&rsquo;},
             {&lsquo;index&rsquo;:&lsquo;index1&rsquo;,&lsquo;item-value&rsquo;:&rsquo;D'}
         ]
-    ).appendTo(&lsquo;#ul&rsquo;);</p>
-
-<p>```</p>
+    );
+```</p>
 
 <ul>
 <li>Easy bind node</li>

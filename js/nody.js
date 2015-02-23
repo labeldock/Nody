@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.3",build = "1058";
+	var version = "0.21.4",build = "1062";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -124,7 +124,13 @@
 		info.supportQuerySelectorAll  = !!querySelectorAllName;
 		info.querySelectorAll         = info.supportQuerySelectorAll && function(node,selector){ 
 			//selectText fix
-			return (node||document)[querySelectorAllName](selector.replace(/\=[\d]+\]/g,function(s){ return '=\"' + s.substr(1,s.length-2) + '\"]'; })); 
+			return (node||document)[querySelectorAllName](
+				selector.replace(/\[[\w\-\_]+\=[^\'\"][^\]]+\]/g, function(s){ 
+					return s.replace(/\=.+\]$/,function(s){ 
+						return '=\"' + s.substr(1,s.length-2) + '\"]'; 
+					}) 
+				})
+			); 
 		};
 		
 		//matches
@@ -138,7 +144,13 @@
 		info.supportMatches  = !!matchesSelectorName;
 		info.matchesSelector = info.supportMatches && function(node,selector){ 
 			//selectText fix
-			return node[matchesSelectorName](selector.replace(/\=[\d]+\]/g,function(s){ return '=\"' + s.substr(1,s.length-2) + '\"]';  })); 
+			return node[matchesSelectorName](
+				selector.replace(/\[[\w\-\_]+\=[^\'\"][^\]]+\]/g, function(s){ 
+					return s.replace(/\=.+\]$/,function(s){ 
+						return '=\"' + s.substr(1,s.length-2) + '\"]'; 
+					}) 
+				})
+			); 
 		};
 		
 		return info;
@@ -1799,8 +1811,11 @@
 		getDecode:function(){ return decodeURI(this.Source); },
 		encode:function(){this.Source = this.getEncode();return this;},
 		decode:function(){this.Source = this.getDecode();return this;},
+		getRaw:function(){
+			(new String(this.Source))
+		},
 		getHTMLSafe:function(){
-			return String(this.Source).replace(/[&<>"'\/]/g, function (s) { return htmlSafeMap[s]; });
+			return (new String(this.Source)).replace(/[&<>"'\/]/g, function (s) { return htmlSafeMap[s]; });
 		},
 		getByteSize:function(){ return unescape(escape(this.Source).replace(/%u..../g,function(s){ return "uu"; })).length; },
 		getLines:function(){ return _Split(this.Source,"\n").toArray(); },
@@ -2361,18 +2376,20 @@
 				aPoint.push(dv);
 				return dv;
 			} else {
-				var v = eval(s.substring(2,s.length-1).replace(/\$i/g,function(s){
-					return seed;
-				}).replace(/\&\d+/g,function(s){
-					var av = aPoint[parseInt(s.substr(1))];
-					return ISNUMBERTEXT(av) ? av*1 : '\"'+av+'\"';
-				}).replace(/\$\d+/g,function(s){
-					var paramResult = params[parseInt(s.substr(1))];
-					if(paramResult){
-						paramResult = ZONEVALUE(paramResult);
-						return ISNUMBERTEXT(paramResult) ? paramResult : '\"'+paramResult+'\"' ;
-					}
-				}));
+				var evs = s.substring(2, s.length - 1).replace(/\$i/g, function(s) {
+                    return seed;
+                }).replace(/\&\d+/g, function(s) {
+                    var av = aPoint[parseInt(s.substr(1))];
+                    return ISNUMBERTEXT(av) ? av * 1 : '\"' + av + '\"';
+                }).replace(/\$\d+/g, function(s) {
+                    var paramResult = params[parseInt(s.substr(1))];
+                    if (paramResult) {
+                        paramResult = ZONEVALUE(paramResult);
+                        return ISNUMBERTEXT(paramResult) ? paramResult : '\"' + paramResult + '\"' ;
+                    }
+                });
+				console.log('evs',evs);
+				var v = eval(evs);
 				aPoint.push(v);
 				return v;
 			}
@@ -3219,7 +3236,13 @@
 	makeSingleton("FINDEL",{
 		//배열이든 뭐든 노드로만 반환
 		"FSINGLE":function(find){
-			if( ISARRAY(find) ){
+			if( typeof find === 'string' ){
+				// [string,null]
+				return NUT.QUERY(find);
+			} else if( ISELNODE(find) ){
+				// [node]
+				return [find];
+			}  else if(ISARRAY(find)) {
 				// [array]
 				var fc = [];
 				for(var i=0,l=find.length;i<l;i++) { 
@@ -3236,12 +3259,6 @@
 					}
 				}
 				return DATAUNIQUE(fc);
-			} else if( ISELNODE(find) ){
-				// [node]
-				return [find];
-			}  else if(typeof find === 'string') {
-				// [string,null]
-				return NUT.QUERY(find);
 			}
 			return [];
 		},
@@ -3278,7 +3295,7 @@
 			return DATAUNIQUE(result);
 		},
 		"FINDMEMBER":function(sel,offset){
-			var target = FIND(sel,0);
+			var target = FSINGLE(sel)[0];
 			if(!ISELNODE(target)) return;
 			if(typeof offset !== "number") return TOARRAY(target.parentElement.children);
 			var currentIndex = -1;
@@ -3317,7 +3334,7 @@
 			}
 		},1),
 		"FINDBEFORE":FUT.CONTINUTILITY(function(node,filter){ 
-			node = FIND(node,0);
+			node = FSINGLE(node)[0];
 			var index = ELINDEX(node); 
 			var result = []; 
 			if(typeof index === "number") {
@@ -3339,7 +3356,7 @@
 			return result; 
 		},1),
 		"FINDAFTER":FUT.CONTINUTILITY(function(node,filter){ 
-			node = FIND(node,0);
+			node = FSINGLE(node)[0];
 			var index = ELINDEX(node); 
 			var result = []; 
 			if(typeof index === "number") {
@@ -3362,7 +3379,7 @@
 		},1),
 		"FINDPARENT" :FUT.CONTINUTILITY(function(el,require,index){
 			if( (typeof require === 'number') || ((typeof require === 'string') && (typeof index === 'number')) ) return DATAZERO(FINDPARENTS(el,require,index));
-			var node = FIND(el,0);
+			var node = FSINGLE(el)[0];
 			if(node) {
 				if(typeof require === "string"){
 					var parents = NUT.PARENTS(node);
@@ -3374,7 +3391,7 @@
 			return undefined;
 		},1),
 		"FINDDOCUMENT":FUT.CONTINUTILITY(function(iframeNode){
-			var iframe = FIND(iframeNode,0);
+			var iframe = FSINGLE(iframeNode)[0];
 			if(iframe) {
 				if(iframe.tagName == "IFRAME") return iframe.contentDocument || iframe.contentWindow.document;
 				if(ISDOCUMENT(iframe)) return iframe;
@@ -3383,7 +3400,7 @@
 			}
 		},1),
 		"FINDTREE":FUT.CONTINUTILITY(function(node,stringify){
-			var treeNode = FIND(node,0);
+			var treeNode = FSINGLE(node)[0];
 			if(!treeNode) return [];
 			
 			var tree = FINDPARENTS(treeNode,DATAMAP,function(){ return (stringify === true ? ELTRACE(this) : this ); });
@@ -3392,10 +3409,10 @@
 			return tree;
 		},1),
 		"FINDOFFSET" :function(node,target,debug){
-			var node = FIND(node,0);
+			var node = FSINGLE(node)[0];
 			if(node) {
 				var l=t=0,w=node.offsetWidth,h=node.offsetHeight;
-				target = FIND(target,0) || document.body;
+				target = FSINGLE(target)[0] || document.body;
 				do {
 					l += node.offsetLeft;
 					t += node.offsetTop;
@@ -3526,7 +3543,7 @@
 			}			
 			
 			//부모에게 어팬딩함
-			parent = FIND(parent,0);
+			parent = FSINGLE(parent)[0];
 			if(parent){
 				if(parent==W.document) parent = W.document.getElementsByTagName("body")[0];
 				parent.appendChild(element);
@@ -3631,11 +3648,11 @@
 		},
 		//노드 배열을 복사함
 		"CLONENODES":function(node){
-			return DATAMAP(FIND(node),function(findNode){ return findNode.cloneNode(findNode,true); });
+			return DATAMAP(FSINGLE(node),function(findNode){ return findNode.cloneNode(findNode,true); });
 		},
 		//하위의 노드를 모두 복사함
 		"IMPORTNODE":function(node,parent){
-			node = FIND(node);
+			node = FSINGLE(node);
 			if( node.length === 0) return undefined;
 			if( node.length !== 1 ) console.warn("IMPORTNODE:: 한개의 노드만 복사할수 있습니다.",node);
 			node = DATAZERO(node);
@@ -3648,7 +3665,7 @@
 			}
 			
 			if(parent){
-				parent = FIND(parent,0);
+				parent = FSINGLE(parent)[0];
 				if(parent) ELAPPEND(parent,result);
 			}
 			
@@ -3658,10 +3675,10 @@
 		"CLONEOBJECT":function(inv){ if(typeof inv === "object"){ var result = {}; for(var k in inv) result[k] = inv[k]; return result; } return TOOBJECT(inv); },
 		//오브젝트 혹은 element를 반환합니다.
 		"DATACONTEXT":function(target){
-			if ( typeof target === "string" ) target = FIND(target,0);
+			if ( typeof target === "string" ) target = FSINGLE(target)[0];
 			if ( typeof target === "object" ) {
 				if( this.ISARRAY(target) ){
-					var findElement = FIND(target,0);
+					var findElement = FSINGLE(target)[0];
 					if(findElement) return findElement;
 				}
 				return target;
@@ -3704,16 +3721,16 @@
 	
 	makeSingleton("EL",{
 		//포커스 상태인지 검사합니다.
-		"HASFOCUS":function(sel){ return document.activeElement == FIND(sel,0); },
+		"HASFOCUS":function(sel){ return document.activeElement == FSINGLE(sel)[0]; },
 		//케럿을 움직일수 있는 상태인지 검새합니다.
-		"CARETPOSSIBLE":function(sel){ var node = FIND(sel,0); if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
+		"CARETPOSSIBLE":function(sel){ var node = FSINGLE(sel)[0]; if( ELHASFOCUS(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
 		//어트리뷰트값을 읽거나 변경합니다.
-		"ATTR":function(sel,v1,v2){ var node = FIND(sel,0); if(node) return NUT.ATTR.apply(undefined,Array.prototype.slice.call(arguments)); },
+		"ATTR":function(sel,v1,v2){ var node = FSINGLE(sel)[0]; if(node) return NUT.ATTR.apply(undefined,Array.prototype.slice.call(arguments)); },
 		//css스타일로 el의 상태를 확인합니다.
-		"IS":function(sel,value){ var node = FIND(sel,0); if(node)return NUT.IS(node,value); },
+		"IS":function(sel,value){ var node = FSINGLE(sel)[0]; if(node)return NUT.IS(node,value); },
 		//선택한 element중 대상만 남깁니다.
 		"FILTER":function(sel,filter){
-			var targets = FIND(sel);
+			var targets = FSINGLE(sel);
 			if(typeof filter !== "string") {
 				console.warn("ELFILTER는 string filter만 대응합니다.");
 				return targets;
@@ -3723,9 +3740,19 @@
 				return result;
 			}
 		},
+		"CONTENT":function(node,setValue){
+			var node = FSINGLE(node)[0];
+			if(node) {
+				if(typeof setValue === 'undefined') return node.textContent || node.innerText;
+				//set
+				if('textContent' in node) node.textContent = setValue + '';
+				else node.innerText = setValue + '';
+			}
+			return node;
+		},
 		//el의 중요값을 찾거나 변경합니다.
 		"VALUE":function(aNode,value){
-			var node,nodes = FIND(aNode);
+			var node,nodes = FSINGLE(aNode);
 			if(nodes.length == 0){
 				return;
 			} else if(nodes.length > 1){
@@ -3767,11 +3794,9 @@
 						var cur = ELCARET(node);
 						node.value = value;
 						ELCARET(node,cur-gap)
-						ELTRIGGER(node,"value_change");
 						return node;
 					} else {
 						node.value = value;
-						ELTRIGGER(node,"value_change");
 						return node;
 					}
 					break;
@@ -3781,27 +3806,25 @@
 					if(valEl.length > 0) {
 						var selEl = DATAZERO(valEl);
 						selEl.selected = true;
-						ELTRIGGER(node,"value_change");
 						return selEl;
 					}
 					return false;
 					break;
 				default :
-					
-					if(typeof value === "undefined") return (node.textContent || node.innerText);
-					node[('textContent' in node)?'textContent':'innerText'] = value;
+					//elcontent에서 자동을 getset을 실행함
+					return ELCONTENT(node,value);
 				break;
 			}
 			return node;
 		},
 		"HASATTR":function(sel,name,hideConsole){
-			var node = FIND(sel,0);
+			var node = FSINGLE(sel)[0];
 			if(node) { return ELATTR(sel,name) == null ? false : true; }
 			if(hideConsole !== true) console.error("ELHASATTR:: 알수없는 node값 입니다. => " + TOS(node) );
 			return false;
 		},
 		"UNIQUE":function(sel){
-			var node = FIND(sel,0);
+			var node = FSINGLE(sel)[0];
 			if(node) { if(!ELHASATTR(node,"id")) node.setAttribute("id",NFUtil.base26UniqueRandom(8,'uq')) }
 			return node;
 		},
@@ -3811,7 +3834,7 @@
 		},
 		//get css style tag info
 		"TRACE"   :function(target,detail){
-			var t = FIND(target,0);
+			var t = FSINGLE(target)[0];
 			if( t ){
 				var tag = t.tagName.toLowerCase();
 				var tid = tclass = tname = tattr = tvalue = '';
@@ -3842,7 +3865,7 @@
 		},
 		"CALL":function(node,f){
 			if(typeof f === "function"){
-				var nodes = FIND(node);
+				var nodes = FSINGLE(node);
 				DATAEACH(nodes,function(n,i){
 					f.call(n,n,i);
 				});
@@ -3851,14 +3874,14 @@
 			return [];
 		},
 		"INDEX":function(el){
-			var node = FIND(el,0);
+			var node = FSINGLE(el)[0];
 			var parent = FINDPARENT(node);
 			if(parent) return DATAINDEX(parent.children,node);
 		},
 		"APPEND":function(parentIn,childs){
-			var parent = FIND(parentIn,0);
+			var parent = FSINGLE(parentIn)[0];
 			if(!ISELNODE(parent)) return parentIn;
-			var appendTarget  = FIND(childs);
+			var appendTarget  = FSINGLE(childs);
 			var parentTagName = parent.tagName.toLowerCase();
 			for(var i=0,l=appendTarget.length;i<l;i++)
 				if (ISELNODE(appendTarget[i])) {
@@ -3926,8 +3949,8 @@
 			return parent;
 		},
 		"PREPEND":function(parentIn,childs){
-			var parent = FIND(parentIn,0);
-			var appendTarget = FIND(childs);
+			var parent = FSINGLE(parentIn)[0];
+			var appendTarget = FSINGLE(childs);
 			if(ISOK(parent),ISOK(appendTarget)){
 				ELAPPEND(parent,appendTarget);
 				var newParent = FINDPARENT(appendTarget[0]);
@@ -3938,9 +3961,9 @@
 				}
 			}
 		},
-		"APPENDTO":function(targets,parentEL){ return ELAPPEND(FIND(parentEL,0),targets); },
+		"APPENDTO":function(targets,parentEL){ return ELAPPEND(FSINGLE(parentEL)[0],targets); },
 		"PUT":function(sel){
-			var node = FIND(sel,0);
+			var node = FSINGLE(sel)[0];
 			if(!ISELNODE(node)) return console.warn("ELPUT:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
 			ELEMPTY(node);
 			var newContents = [];
@@ -3969,10 +3992,10 @@
 		},
 		//이전 엘리먼트를 찾습니다.
 		"BEFORE":FUT.CONTINUTILITY(function(node,appendNodes){ 
-			var target = FIND(node,0);
+			var target = FSINGLE(node)[0];
 			if(!ISELNODE(target)) return node;
 			if(arguments.length < 2) return FINDMEMBER(target,-1);
-			var appendTarget = FIND(appendNodes);
+			var appendTarget = FSINGLE(appendNodes);
 			if(appendTarget.length > 0){
 				for(var i=0,l=appendTarget.length;i<l;i++) target.parentNode.insertBefore(appendTarget[i],target); 
 			}
@@ -3981,10 +4004,10 @@
 		
 		//이후 엘리먼트를 찾습니다.
 		"AFTER" :FUT.CONTINUTILITY(function(target,appendNodes){ 
-			target = FIND(target,0);
+			target = FSINGLE(target)[0];
 			if(!ISELNODE(target))    return target; 
 			if(arguments.length < 2) return FINDMEMBER(target,1);
-			var appendTarget = FIND(appendNodes);
+			var appendTarget = FSINGLE(appendNodes);
 			if(appendTarget.length > 0){
 				var afterElement = FINDMEMBER(target,1);
 				if( ISELNODE(afterElement) ){
@@ -3996,8 +4019,8 @@
 			return target;
 		},1),
 		"CHANGE":FUT.CONTINUTILITY(function(left,right){
-			left  = FIND(left,0);
-			right = FIND(right,0);
+			left  = FSINGLE(left)[0];
+			right = FSINGLE(right)[0];
 			if(left && right ){
 				var lp = left.parentNode;
 				var rp = right.parentNode;
@@ -4020,7 +4043,7 @@
 			return [left,right];
 		},1),
 		"REPLACE":function(target,replaceNode){
-			var replaceTarget = FIND(replaceNode,0);
+			var replaceTarget = FSINGLE(replaceNode)[0];
 			ELAFTER(target,replaceTarget);
 			ELREMOVE(target);
 			return replaceTarget;
@@ -4031,7 +4054,7 @@
 		"DOWN" : function(target){if(!ISELNODE(target))return target;var parent=target.parentNode;if(!ISELNODE(parent))return target;var next=target.nextSibling;if(!ISELNODE(next))return target;ELAFTER(next,target);},
 		//스타일을 얻어냅니다.
 		"STYLE": function(target,styleName,value){
-			var target = FIND(target,0);
+			var target = FSINGLE(target)[0];
 			if(ISELNODE(target)){
 				if(typeof styleName === "undefined") return ENV.supportComputedStyle ? window.getComputedStyle(target,null) : target.currentStyle;
 				if(typeof styleName === "string"){
@@ -4059,11 +4082,11 @@
 		//내무의 내용을 지웁니다.
 		"EMPTY"  : function(target){ return FIND(target,DATAMAP,function(node){ if("innerHTML" in node) node.innerHTML = ""; return node; }); },
 		//대상 객체를 제거합니다.
-		"REMOVE" : function(node,childs){ var target = FIND(node,0); if(!ISELNODE(target)) return target; if(!ISELNODE(target.parentNode)) return target; target.parentNode.removeChild(target); return target; },
+		"REMOVE" : function(node,childs){ var target = FSINGLE(node)[0]; if(!ISELNODE(target)) return target; if(!ISELNODE(target.parentNode)) return target; target.parentNode.removeChild(target); return target; },
 		//케럿의 위치를 찾습니다.
 		"CARET":function(select,pos){
 			//
-			var node = FIND(select,0);
+			var node = FSINGLE(select)[0];
 			var editable = node.contentEditable === 'true';
 			var r1,r2,ran;
 			//get
@@ -4137,7 +4160,7 @@
 			if(ISWINDOW(node)){
 				node = W;
 			} else {
-				node = FIND(node,0);
+				node = FSINGLE(node)[0];
 				if(ISNOTHING(node)) throw new Error("ELTRIGGER는 element를 찾을수 없습니다. => 들어온값" + TOS(node));
 			}
 			var e;
@@ -4152,7 +4175,7 @@
 			return node;
 		},
 		//이벤트 등록이 가능한 타겟을 찾아냅니다.
-		"ONTARGET":function(node){ return (ISWINDOW(node) || ISDOCUMENT(node)) ? node : FIND(node); },
+		"ONTARGET":function(node){ return (ISWINDOW(node) || ISDOCUMENT(node)) ? node : FSINGLE(node); },
 		//중복이벤트 등록 가능
 		"ON":function(node, eventName, eventHandler, useCapture){
 			if((typeof eventName !== "string") || (typeof eventHandler !== "function")) return console.erro("ELON 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요",node, eventName, eventHandler);
@@ -4209,7 +4232,7 @@
 			return node;
 		},
 		"DATA":function(node,key,value){
-			var nodes = FIND(node);
+			var nodes = FSINGLE(node);
 			if(nodes.length == 0) return;
 			if(arguments.length == 1) return CLONE(DATAZERO(nodes).dataset);
 			if(arguments.length == 2) return DATAZERO(nodes).dataset[key];
@@ -4217,7 +4240,7 @@
 		},
 		//Disabled
 		"DISABLED":function(node,status){
-			var elf = new NFArray(FIND(node));
+			var elf = new NFArray(FSINGLE(node));
 			if( elf.isNothing() ){
 				console.error("ELDISABLED:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
 			} else {
@@ -4238,7 +4261,7 @@
 		},
 		//Readonly
 		"READONLY":function(node,status){
-			var elf = FIND(node,new NFArray);
+			var elf = new NFArray(FSINGLE(node));
 			if( elf.isNothing() ){
 				console.error("ELREADONLY:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
 			} else {
@@ -4259,13 +4282,13 @@
 		},
 		"CommonNFString":new NFString(),
 		"ADDCLASS":function(node,addClass){	
-			var findNodes = FIND(node);
+			var findNodes = FSINGLE(node);
 			if(typeof addClass !== "string") return findNodes;
 			for(var i=0,l=findNodes.length;i<l;i++) findNodes[i].setAttribute("class",EL.CommonNFString.set(findNodes[i].getAttribute("class")).getAddModel(addClass));
 			return findNodes;
 		},
 		"HASCLASS":function(node,hasClass){
-			var findNodes = FIND(node);
+			var findNodes = FSINGLE(node);
 			if(typeof hasClass !== "string") return false;
 			for(var i=0,l=findNodes.length;i<l;i++) if( !EL.CommonNFString.set(findNodes[i].getAttribute("class")).hasModel(hasClass) ) {
 				return false;
@@ -4273,7 +4296,7 @@
 			return true;
 		},
 		"REMOVECLASS":function(node,removeClass){
-			var findNodes = FIND(node);
+			var findNodes = FSINGLE(node);
 			if(typeof removeClass !== "string") return findNodes;
 			for(var i=0,l=findNodes.length;i<l;i++) {
 				var didRemoveClassText = EL.CommonNFString.set(findNodes[i].getAttribute("class")).getRemoveModel(removeClass).trim();
@@ -4287,7 +4310,7 @@
 		},
 		"SWITCHCLASS":function(el,switchClass){
 			if(typeof switchClass==='string'){
-				var nodes = FIND(el);
+				var nodes = FSINGLE(el);
 				DATAEACH(nodes,function(node){
 					ELHASCLASS(node,switchClass) ? ELREMOVECLASS(node,switchClass) : ELADDCLASS(node,switchClass);
 				});
@@ -4295,7 +4318,7 @@
 			}
 		},
 		"COORDS":function(nodes,coordinate,insertAbsolute,offsetX,offsetY,scale){
-			var findNode = FIND(nodes,0);
+			var findNode = FSINGLE(nodes,0);
 			if(findNode && (typeof coordinate == "string")) {
 				scale = (typeof scale === 'number') ? scale : 1;
 				
@@ -4507,7 +4530,7 @@
 			return this._drawTarget.toDataURL();
 		},
 		backgroundTo:function(target,fill){
-			var target = FIND(target,0);
+			var target = FSINGLE(target)[0];
 			if(target) {
 				ELSTYLE(target,"background-image",ZSTRING("url(\"\\{$0}\")",this.toURL()));
 			}
@@ -4519,7 +4542,7 @@
 		this._drawRect   = [];
 		this._drawTarget = MAKE("canvas");
 		this.setSource(this._drawTarget);
-		if(typeof width === "string" || typeof width === "object") this._responder = FIND(width,0);
+		if(typeof width === "string" || typeof width === "object") this._responder = FSINGLE(width)[0];
 		if(this._responder){
 			this.setCanvasSize(this._responder.offsetWidth,this._responder.offsetHeight);
 		} else {
@@ -4528,17 +4551,31 @@
 	});
 	
 	extendModule("NFQuery","NFTemplate",{
-		clone    : function(nodeData,dataFilter){ return new NFTemplate(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter)); },
-		generate : function(nodeData,dataFilter){ return this.clone(nodeData,dataFilter).get(); },
-		generateWithData : function(){ 
-			var _ = this;
-			return DATAMAP(DATAFLATTEN(Array.prototype.slice.call(arguments)),function(nodeData){ 
-				return (new NFTemplate(_.TemplateNode,nodeData,_._persistantDataFilter)).get(); }
-			);
+		clone    : function(nodeData,dataFilter){ return new NFTemplate(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter),true); },
+		cloneMap:function(nodeDatas,dataFilter){
+			nodeDatas  = TOARRAY(nodeDatas);
+			var result = [];
+			for(var i=0,l=nodeDatas.length;i<l;i++) result.push( this.clone(nodeDatas[i],dataFilter) );
+			return result;
 		},
-		generateFromData : function(){
-			return new NFQuery(this.generateWithData.apply(this,Array.prototype.slice.call(arguments)));
+		render:function(nodeData,dataFilter){
+			return this.clone(nodeData,dataFilter).get();
 		},
+		renderMap:function(nodeDatas,dataFilter){
+			return DATAMAP(this.cloneMap( TOARRAY(nodeDatas) ,dataFilter ),function(template){
+				return template.get();
+			});
+		},
+		renderTo:function(appendTo,nodeDatas,dataFilter){
+			var at = FSINGLE(appendTo)[0];
+			var rr = this.renderMap( (typeof nodeDatas !== 'object') ? [{}] : nodeDatas, dataFilter );
+			if(at) ELAPPEND(at,rr);
+			return rr;
+		},
+		renderAfterQuery:function(){
+			return new NFQuery(this.render.apply(this,Array.prototype.slice.call(arguments)));
+		},
+		
 		// 키를 지우면서
 		partialAttr:function(attrKey,callback){
 			this.find("["+attrKey+"]").each(function(node){
@@ -4622,26 +4659,6 @@
 					}
 				}
 			}
-			//구현 중심 코딩
-			//PROPEACH(dataPointer,function(nodeData,partialCase){
-			//	PROPEACH(nodeData,function(nodelist,attrValue){
-			//		if(attrValue in data && data[attrValue] !== null) {
-			//			DATAEACH(nodelist,function(node){
-			//				switch(partialCase){
-			//					case "value":ELVALUE(node,data[attrValue]);break;
-			//					case "href" :node.setAttribute("href",data[attrValue]);break;
-			//					case "class":ELADDCLASS(node,data[attrValue]);break;
-			//					case "put"    : ELEMPTY(node);
-			//					case "append" : ELAPPEND(node,data[attrValue]);break;
-			//					case "prepend": ELPREPEND(node,data[attrValue]);break;
-			//					case "display": if(!data[attrValue]){ELSTYLE(node,'display','none');}  break;
-			//					case "dataset": PROPEACH(data[attrValue],function(key,value){ node.dataset[value] = key; });break;
-			//					case "custom" : if(typeof data[attrValue] === 'function') data[attrValue].call(node,node,attrValue); break;
-			//				}
-			//			});
-			//		}
-			//	});
-			//});
 			return this;
 		},
 		setDataFilter:function(dataFilter){ if(typeof dataFilter === 'object') this._persistantDataFilter = dataFilter; return this; },
@@ -4652,23 +4669,23 @@
 		reset : function(nodeData,dataFilter){
 			if (this.TemplateNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
 			if (this.TemplateNode.length !== 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
-			this.setSource(IMPORTNODE(DATAZERO(this.TemplateNode)));
+			this.setSource(IMPORTNODE(this.TemplateNode));
 			if(typeof nodeData == "object") this.setNodeData(nodeData,dataFilter);
 			return this;
 		}
-	},function(node,nodeData,dataFilter,cancel){
+	},function(node,nodeData,dataFilter,beRender){
 		this.initNode      = node;
-		this.TemplateNode  = (typeof node === "string")?/^<.+>$/.test(node)?[MAKETEMP(node)]:FIND(node):FIND(node);
+		this.TemplateNode  = (typeof node === "string")?/^<.+>$/.test(node)?[MAKETEMP(node)]:FSINGLE(node):FSINGLE(node);
 		if (!this.TemplateNode) {
 			console.error("template init falid!");
 		} else {
 			if(dataFilter) this.setDataFilter(dataFilter);
-			if(nodeData === false || dataFilter === false || cancel === false) return;
-			this.reset(nodeData,dataFilter);
+			if(nodeData === true || dataFilter === true || beRender === true) this.reset(nodeData,dataFilter);
 		}
-	},function(){
-		//get 함수입니다. Template모듈은 기본적으로 노드를 반환합니다.
-		return FIND(this,0);
+	},function(multiNodes){
+		//get 함수입니다. Template모듈은 배열이나 노드를 반환합니다.
+		var fs = FSINGLE(this);
+		return (fs.length === 1) ? fs[0] : fs;
 	});
 	
 	makeGetter('$Q',function(s,p,i)  { return new NFQuery(s,p,i);});
@@ -4788,7 +4805,7 @@
 			return this.checkout();
 		}
 	},function(context,selectRule){
-		this.Source = FIND(context,0);
+		this.Source = FSINGLE(context)[0];
 		this.form   = this.Source;
 		if( !ISELNODE(this.Source) ) { console.error( "Frame::Context를 처리할 수 없습니다. => ",this.Source," <= ", context); }
 		
@@ -4902,7 +4919,7 @@
 			return this.FormControl.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
 		}
 	},function(context,statusProp,helper){
-		this.view = FIND(context,0);
+		this.view = FSINGLE(context)[0];
 		if(this.view){
 			this.FormControl = _NFForm(this.view);
 			this._super(false,true);
@@ -4999,14 +5016,14 @@
 		getValue:function(){ return ELVALUE(this.Source); },
 		number  :function(){ return new NFNumber(ELVALUE(this.Source)).number(); }
 	},function(el){
-		this.Source = FIND(el,0);
+		this.Source = FSINGLE(el)[0];
 		if(!this.Source) console.warn("Inside의 초기값을 설정하지 못했습니다. command =>",el);
 	});
 	
 	// 컨텍스트 컨트롤러
 	makeModule("NFContexts",{
 		getContexts:function(){ 
-			return FIND(this.initCall[0]); 
+			return FSINGLE(this.initCall[0]); 
 		},
 		getSelects:function(ignorePool){
 			
@@ -5156,7 +5173,7 @@
 			});
 		}
 	},function(cSel,sSel,tSel){
-		if(ISNOTHING(FIND(cSel))) console.warn("Contexts::init::error 첫번째 파라메터의 값을 현재 찾을 수 없습니다. 들어온값", cSel,sSel,tSel);
+		if(ISNOTHING(FSINGLE(cSel))) console.warn("Contexts::init::error 첫번째 파라메터의 값을 현재 찾을 수 없습니다. 들어온값", cSel,sSel,tSel);
 		this.initCall = [cSel,sSel,tSel];
 	});
 	
@@ -5938,7 +5955,7 @@
 					break;
 				case "object":	
 					//엘리먼트 배열로 들어올경우
-					var doms = FIND(loadPath);
+					var doms = FSINGLE(loadPath);
 					
 					//loadPath가 빈 배열이라면 정상적인 처리로 간주합니다.
 					if( doms.length < 1 && !ISARRAY(loadPath) ){
@@ -5970,7 +5987,7 @@
 		},
 		//
 		addContainer:function(container,key){
-			var findContainer = FIND(container,0);
+			var findContainer = FSINGLE(container)[0];
 			if(!findContainer) return console.warn(key,"의 컨테이너를 찾을 수 없습니다.");
 			this.ContainerPlaceholder[key] = findContainer;
 			return this;
@@ -6148,7 +6165,7 @@
 			});
 		}
 	},function(container,baseParam){
-		var _container = FIND(container,0),_ = this;
+		var _container = FSINGLE(container)[0],_ = this;
 		if (_container){
 			this._super(baseParam,function(){
 				//defaultContainer를 보존합니다.
@@ -6225,7 +6242,7 @@
 			return this._viewsFormController[target];
 		}
 	},function(container,baseParam){
-		this.view = FIND(container,0), _ = this;
+		this.view = FSINGLE(container)[0], _ = this;
 		
 		if (this.view){
 			//베이스 파라메터가 존재하지 않으면 현재 컨테이너의 컨텐츠를 기본 파라메터로 봄
@@ -6591,7 +6608,7 @@
 		//tempate 타겟을 설정
 		this.Source = new NFArray(Array.prototype.slice.call(arguments)).getMap(function(a){ 
 			if(typeof a === "string"){
-				return new NFTemplate(a,undefined,false);
+				return new NFTemplate(a);
 			}
 			return a; 
 		});
@@ -6725,7 +6742,7 @@
 			});
 			
 			if(typeof _template === 'object')        { templateNode = _template.clone(this.value(),dataFilter);
-			} else if(typeof _template === 'string') { templateNode = new NFTemplate(_template,this.value(),dataFilter);
+			} else if(typeof _template === 'string') { templateNode = new NFTemplate(_template,this.value(),dataFilter,true);
 			} else                                   { console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template); return false; }
 			
 			if(templateNode.isEmpty()) { console.error("template :: 렌더링할 template를 찾을수 없습니다",templateNode); return false; }
@@ -6879,7 +6896,6 @@
 				}
 			},
 			"delete":function(arg,el,vc){
-				console.log('touchdelete')
 				this.removeManagedData();
 			},
 			"append":function(arg,el,vc){
@@ -7177,7 +7193,7 @@
 		
 		"+dataDidChange":undefined
 	},function(view,managedData,viewModel,needDisplay){
-		this.view = FIND(view,0);
+		this.view = FSINGLE(view)[0];
 		if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
 		if(managedData)this.setManagedData(managedData);
 		this.viewModel     = viewModel ? ISARRAY(viewModel) ? _NFViewModel.apply(undefined,TOARRAY(viewModel)) : viewModel : new NFViewModel();
@@ -7243,7 +7259,7 @@
 		},
 		destroy:function(){ ELOFF(window,'resize',this.Handler); }
 	},function(target,triggingMethod,firstTrigging,delay){
-		this.Source = FIND(target,0);
+		this.Source = FSINGLE(target)[0];
 		this.TriggingMethod = triggingMethod;
 		this.Delay          = TONUMBER(delay);
 		
@@ -7445,7 +7461,7 @@
 		whenTouchEnd:function(method){ this.GestureListener["touchEnd"] = method; },
 		destroy:function(){ this.applyTouchEvent(false); }
 	},function(gestureView,allowOuterMove,allowVitureFinger){
-		this.Source = FIND(gestureView,0);
+		this.Source = FSINGLE(gestureView)[0];
 		this.GestureListener = {};
 		this.StartPinchValue;
 		this.StartTouchMoveX;
@@ -7656,7 +7672,7 @@
 			}
 		}
 	},function(node,direction,virtureFinger){
-		this.Source = FIND(node,0);
+		this.Source = FSINGLE(node)[0];
 		this.isMoving = false;
 		if(this.Source){
 			
@@ -7839,7 +7855,7 @@
 			}
 		}
 	},function(scrollContainer,direction,autoResizeFix,autoScrollTrackHeight){
-		this.Source      = FIND(scrollContainer,0);
+		this.Source      = FSINGLE(scrollContainer)[0];
 		
 		if(!this.Source) {
 			return console.warn('스크롤바 초기화 실패하였습니다.');

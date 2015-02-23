@@ -212,8 +212,8 @@ var strTemp = new NFTemplate(
 	&lt;li class="text-warning">fb&lt;/li>'
 );
 
-tmpTemp.appendTo('#container');
-strTemp.appendTo('#container');
+tmpTemp.renderTo('#container');
+strTemp.renderTo('#container');
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -229,23 +229,31 @@ var t = new NFTemplate(
         &lt;figcaption>\
             &lt;a nf-href="link" nf-value="title" target="_blank">Image Ankor&lt;/a>\
         &lt;/figcaption>\
-    &lt;/figure>',false
+    &lt;/figure>'
 );
-t.generate({
-    "image":"resources/images/Greece.png",
-    "link" :"http://en.wikipedia.org/wiki/Greece",
-    "title":"Greece"
-});
-t.generate({
-    "image":"resources/images/Gabon.png",
-    "link" :"http://en.wikipedia.org/wiki/Gabon",
-    "title":"Gabon"
-});
-t.generate({
-    "image":"resources/images/Gambia.png",
-    "link" :"http://en.wikipedia.org/wiki/Gambia",
-    "title":"Gambia"
-});
+var renderResult = t.renderMap(
+	[
+		{
+		    "image":"resources/images/Greece.png",
+		    "link" :"http://en.wikipedia.org/wiki/Greece",
+		    "title":"Greece"
+		},
+		{
+		    "image":"resources/images/Gabon.png",
+		    "link" :"http://en.wikipedia.org/wiki/Gabon",
+		    "title":"Gabon"
+		},
+		{
+		    "image":"resources/images/Gambia.png",
+		    "link" :"http://en.wikipedia.org/wiki/Gambia",
+		    "title":"Gambia"
+		}
+	]
+);
+renderResult;
+renderResult[0];
+renderResult[1];
+renderResult[2];
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
 						</div>
@@ -256,14 +264,14 @@ t.generate({
 						<q>데이터를 넣을수 있습니다.</q>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>
-_NFTemplate(
+var temp = new NFTemplate(
 	'&lt;ul nf-append="list">\
 		&lt;li>hello&lt;/li>\
-	&lt;/ul>',
-	{
-	    "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
-	}
-)[0];
+	&lt;/ul>'
+);
+temp.render({
+    "list":[MAKE("li.item::item1"),MAKE("li.item::item2")]
+});
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
 						</div>
