@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure){
 	
 	// Nody version
-	var version = "0.21.4",build = "1064";
+	var version = "0.21.4",build = "1066";
 	
 	// Core verison
 	var nodyCoreVersion = "1.9.1", nodyCoreBuild = "75";
@@ -358,9 +358,8 @@
 		W[name]=m; NGetters.push(name); 
 		if(typeof bind === 'object') for(var key in bind) if(typeof bind[key] === 'function') {
 			m[key] = function(){
-				var binder = (new (function(){})());
-				bind[key].apply(binder,Array.prototype.slice.call(arguments));
-				return function(){ return m.apply(binder,Array.prototype.slice.call(arguments)) };
+				var binder = (new (function(){var _=this; this.getter = function(){ return m.apply(_,Array.prototype.slice.call(arguments));};})());
+				return bind[key].apply(binder,Array.prototype.slice.call(arguments));
 			}
 		}
 		return m;
@@ -745,7 +744,12 @@
 		},
 		//1:길이와 같이 2: 함수호출
 		"TIMES":FUT.CONTINUTILITY(function(l,f,s){ l=TONUMBER(l); for(var i=(typeof s === 'number')?s:0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },2),
-		"TIMESMAP":FUT.CONTINUTILITY(function(l,f,s){ l=TONUMBER(l); var r = []; for(var i=(typeof s === 'number')?s:0;i<l;i++) r.push(f(i)); return r; },2),
+		"TIMESMAP":FUT.CONTINUTILITY(function(l,f,s){ 
+			l=TONUMBER(l); var r = []; 
+			if(typeof f === 'string') var fs = f, f = function(i){ return ZSTRING.SEED(i)(fs); };
+			for(var i=(typeof s === 'number')?s:0;i<l;i++) r.push(f(i)); 
+			return r; 
+		},2),
 		"DATACALL":FUT.CONTINUTILITY(function(d,alt){ return (typeof d === 'undefined') ? CLONEARRAY(alt) : ((alt === true) ? CLONEARRAY(d) : TOARRAY(d)); },1),
 		"DATAHAS" :function(d,v){ d=TOARRAY(d); for(var i=0,l=d.length;i<l;i++) if(d[i] === v) return true; return false; },
 		//배열의 하나추출
@@ -1165,13 +1169,13 @@
 		//to kebab-case
 		"KEBAB":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("-"); },
 		//길이만큼 늘립니다.
-		"DATACLIP":function(v,l,ex){
+		"DATACLIP":FUT.CONTINUTILITY(function(v,l,ex){
 			var d = CLONEARRAY(v);
 			if(typeof l !== 'number' || d.length === l) return d;
 			if (d.length > l) return Array.prototype.slice.call(d,0,l);
 			TIMES(l - d.length,function(){ d.push(ex); });
 			return d;
-		},
+		},2),
 		//길이만큼 리피트 됩니다.
 		"DATATILE":function(v,l){
 			var base;
@@ -2368,7 +2372,7 @@
 	
 	
 	makeGetter("ZSTRING",function(source){
-		seed = (typeof seed === "number")?this.seed:0;
+		var seed = this.seed || 0;
 		var aPoint=[],params = DATAMAP(Array.prototype.slice.call(arguments,1),function(t){ return ZONEINFO(t); });
 		return source.replace(/(\\\([^\)]*\)|\\\{[^\}]*\})/g,function(s){
 			if(s[s.length-1] == ')') {
@@ -2395,7 +2399,10 @@
 		});
 		
 	},{
-		withSeed:function(seed){ this.seed = TONUMBER(seed); }
+		SEED:function(seed){ 
+			this.seed = TONUMBER(seed);
+			return this.getter;
+		}
 	});
 	
 	makeGetter("ZNUMBER",function(source){
@@ -2410,13 +2417,13 @@
 			return TONUMBER(ZSTRING.apply(undefined,args));
 		}
 	},{
-		withSeed:function(seed){ this.seed = TONUMBER(seed); }
+		SEED:function(seed){ this.seed = TONUMBER(seed);return this.getter; }
 	});
 	
 	
 	extendModule("NFString","ZString",{
 		getZContent:function(seed){
-			return ZSTRING.withSeed(seed).apply(undefined,[this.Source].concat(this.ZoneParams));
+			return ZSTRING.SEED(seed).apply(undefined,[this.Source].concat(this.ZoneParams));
 		},
 		toArray:function(length,startAt){
 			length  = (typeof length === "number")  ? length : 1;
@@ -3565,17 +3572,17 @@
 				return CREATE(name, attr);
 			}	
 		},1),
-		"MAKETO":FUT.CONTINUTILITY(function(nodes,attr,parent){
-			if(typeof attr === 'string') attr = FSINGLE(attr)[0];
-			if( ISELNODE(attr) ) parent = attr ,attr = undefined;
-			var makes = DATAMAP(nodes,function(node){
+		"MAKES":FUT.CONTINUTILITY(function(nodes,attr){
+			return DATAMAP(nodes,function(node){
 				if( typeof node === 'string' ) return DATAMAP(node.split(','),function(eachNode){ if(eachNode.trim().length !== 0) return CREATE(eachNode,attr) });
 				if( ISELNODE(node) ) return node;
 			},DATAFLATTEN);
-			
-			ELAPPEND(parent,makes);
-			
-			return makes.length === 0 ? undefined : makes.length === 1 ? makes[0] : makes;
+		},1),
+		"MAKETO":FUT.CONTINUTILITY(function(nodes,attr,parent){
+			if(typeof attr === 'string') attr = FSINGLE(attr)[0];
+			if( ISELNODE(attr) ) parent = attr ,attr = undefined;
+			var makes = MAKES(nodes,attr);
+			return ELAPPEND(parent,makes), (makes.length === 0 ? undefined : makes.length === 1 ? makes[0] : makes);
 		},2),
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 		"MAKECOLS":function(){ 
@@ -3855,9 +3862,11 @@
 						case "class": tclass = '.' + t.getAttribute(sign).trim().replace(/\s\s/g,' ').split(' ').join('.'); break;
 						case "name" : tname  = "[name="+t.getAttribute(sign)+"]"; break;
 						case "value": break;
-						default     : 
-							attrValue = t.getAttribute(sign);
-							tattr += ( (attrValue == '' || attrValue == null) ? ("["+sign+"]") : ("["+sign+"="+attrValue+"]") );
+						default     :
+							if(detail == true) {
+								attrValue = t.getAttribute(sign);
+								tattr += ( (attrValue == '' || attrValue == null) ? ("["+sign+"]") : ("["+sign+"="+attrValue+"]") );
+							}
 						break; 
 					}
 				});

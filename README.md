@@ -15,6 +15,7 @@ MAKE('div',
 	MAKE('a',MAKE('span','second value'))
 );
 
+MAKETO('div#foo, div#bar, div#third','body');
 ```
 
   - You can find node and mix function
