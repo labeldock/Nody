@@ -1,6 +1,6 @@
 Nody.js
 =======
-# introduce #
+# Introduce #
 Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리이다. 
 
 ## Feature #
@@ -73,6 +73,10 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
 ## Version info #
 
 ## 예정된 계획 #
+
+#### 0.21.5
+- IE8에서 쿼리셀렉터가 동작하도록 조정
+- IE8테스트중(HTML5태그가 동작하지 않는 부분 확인중)
 
 #### 0.23 예정
 - 0.22.x 버전 버그수정 및 호환성 향상을 목표로 합니다.

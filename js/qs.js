@@ -10,7 +10,7 @@ var __GCC__IE_NODE_CONSTRUCTOR_AS_DOM_ELEMENT__ = false;
 /** @define {boolean} */
 var __GCC__QUERY_SELECTOR_ALL_RESULT_AS_NODE_LIST_AND_NODE_LIST_POLYFILL__ = true;
 /** @define {boolean} */
-var __GCC__EXPORT_MATCHES_SHIMS__ = false;
+var __GCC__EXPORT_MATCHES_SHIMS__ = true;
 /** @define {boolean} */
 var __GCC__EXPORT_QUERY_SELECTOR_ALL_SHIM__ = false;
 /** @define {boolean} */
