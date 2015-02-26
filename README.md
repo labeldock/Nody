@@ -72,11 +72,13 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
 
 ## Version info #
 
-## 예정된 계획 #
-
 #### 0.21.5
 - IE8에서 쿼리셀렉터가 동작하도록 조정
-- IE8테스트중(HTML5태그가 동작하지 않는 부분 확인중)
+- 순수 Nody셀렉터 엔진 완전제거
+- 얼티네네이티브 셀렉터 엔진을 Sizzle로 변경
+
+
+## 예정된 계획 #
 
 #### 0.23 예정
 - 0.22.x 버전 버그수정 및 호환성 향상을 목표로 합니다.

@@ -30,30 +30,43 @@
 </head>
 <body>
 	<h3>ELON</h3>
-	<button class='elon-test'>ELON test</button>
+	<div class='container'>
+		<button class='elon-test'>ELON test</button>
+	</div>
+	
 	
 	<h3>Partial test</h3>
-	<div id='test1' class='well'>
+	<div class='container'>
+		<div id='test1' class='well'>
 		
+		</div>
+		<button class='pt-string'>Partial script string</button>
+		<button class='pt-template'>Partial template</button>
+		<button class='pt-vtemplate'>Partial vitrue template</button>
+		<template id='test1-template'><input value='made in template'></template>
+		<div id='test1-vtemplate' class='hidden'><input value='made in vtemplate'></div>
 	</div>
-	<button class='pt-string'>Partial test width string</button>
-	<form>
-		<label>name</label>
-		<input name='name'>
-		<label>desc</label>
-		<input>
-		<button name='button'>submit</button>
-	</form>
 	
-	<div class='btn-group'>
-		<a class='btn btn-default'>1</a>
-		<a class='btn btn-default'>2</a>
-		<a class='btn btn-default'>3</a>
-		<a class='btn btn-default'>4</a>
+	
+	<h3>Form Controller</h3>
+	<div>
+		<form>
+			<label>name</label>
+			<input name='name'>
+			<label>desc</label>
+			<input>
+			<button name='button'>submit</button>
+		</form>
+	
+		<div class='btn-group'>
+			<a class='btn btn-default'>1</a>
+			<a class='btn btn-default'>2</a>
+			<a class='btn btn-default'>3</a>
+			<a class='btn btn-default'>4</a>
+		</div>
 	</div>
-	<template>
-		<div>innerContent</div>
-	</template>
+	
+	
 	
 	<!-- Placed at the end of the document so the pages load faster -->
 	<script src="js/nody.js"></script>
@@ -68,6 +81,14 @@
 			var temp = new NFTemplate(
 				'<input value="partial-string">'
 			);
+			temp.renderTo('#test1');
+		});
+		ELON('.pt-template','click',function(){
+			var temp = new NFTemplate('#test1-template');
+			temp.renderTo('#test1');
+		});
+		ELON('.pt-vtemplate','click',function(){
+			var temp = new NFTemplate('#test1-vtemplate');
 			temp.renderTo('#test1');
 		});
 	</script>

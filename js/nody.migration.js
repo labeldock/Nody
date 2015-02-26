@@ -1,4 +1,4 @@
-makeGetter('THE',function(node,selectText,extraData){			
+makeGetter('ELTHE',function(node,selectText,extraData){			
 	if(NODYENV.matchesSelector) return NODYENV.matchesSelector(node,selectText);
 	
 	var tagInfo = SELECTINFO(selectText);
@@ -99,4 +99,86 @@ makeGetter('THE',function(node,selectText,extraData){
 		}
 	}
 	return true;
+});
+
+// IS Helper
+//"Structure#QueryDataInfo":function(querys){
+//	this.keymap(OUTERSPLIT(querys,",",["()"]),function(query){
+//		var querySplit = [];
+//		
+//		query.trim()
+//		.replace(/[\n]|[\s]{2,}/g," ")
+//		.replace(/\s*(\>|\+)\s*/g,function(s){ return s.replace(/\s/g,""); })
+//		.replace(/(\[[\w\=\_\-]+\]|\:\w+\([^\)]+\)|[\w\-\_\.\#\:]+\([^\)]+\)|[\w\-\_\.\#\:]+)(\s|\>|)/g,function(s){ 
+//			querySplit.push(s);
+//		});
+//		
+//		return querySplit;
+//	});
+//},
+
+makeGetter("ELIS",function(node,selectText,advenceResult){
+	//
+	if(!ISELNODE(node)) return false;
+	if((typeof selectText === "undefined") || selectText == "*" || selectText == "") return true;
+	
+	var judgement, inspectData = StructureInit("QueryDataInfo",selectText);
+	
+	inspectData.each(function(querys,queryCase,index){
+		// querys,queryCase,index
+		// "[name]" => ["name"], "[name]"
+		if(judgement == true) return false;
+		
+		if(querys.length == 0){
+			judgement = false;
+		} else if(querys.length == 1) {
+			judgement = NUT.THE(node,querys[0]);
+		} else {
+			var allNodes   = [node].concat(NUT.PARENTS(node));
+			var findThe    = 0;
+			var lastResult = true;
+			//console.log(allNodes);
+			for(var i=querys.length-1;i>-1;i--){
+				if(lastResult == false) return false;
+				switch(querys[i].substr(querys[i].length-1)){
+					case " ":
+						//console.log("case ' '");
+						for(var f=findThe+1,l=allNodes.length-findThe;f<l;f++){
+							findThe++;
+							var queryText = querys[i].trim();
+							//console.log(NUT.THE(allNodes[f],queryText),allNodes[f],queryText);
+							if( NUT.THE(allNodes[f],queryText) ){
+								lastResult = true;
+								break;
+							} else {
+								lastResult = false;
+							}
+						}
+						break;
+					case ">":
+						//console.log("case '>'");
+						findThe++;
+						var queryText = querys[i].trim();
+						if(NUT.THE(allNodes[findThe],queryText)){
+							lastResult = true;
+						} else {
+							lastResult = false;
+							break;
+						}
+						break;
+					default:
+						//console.log("case 'd'");
+						if( NUT.THE(allNodes[findThe],querys[i]) ){
+							lastResult = true;
+						} else {
+							lastResult = false;
+						}
+						break;
+				}
+				//console.log("target=>",allNodes[findThe],"query=>",querys[i],lastResult);
+			}
+			judgement = lastResult;
+		}
+	});
+	return judgement;
 });
