@@ -1,6 +1,6 @@
 (function(){
 	
-	makeGetter("CODE",function(){
+	nody.method("CODE",function(){
 		return _NFArray(arguments).map(function(func){
 			if(ISELNODE(func)){
 				return _NFString(func.innerHTML).trimLine().getTabsAlign();
@@ -18,13 +18,13 @@
 		}).compact().join("\n\n");
 	});
 	
-	makeGetter("CODEBLOCK",function(node){
+	nody.method("CODEBLOCK",function(node){
 		DATAEACH(node,function(){
 			hljs.highlightBlock(FIND("code",node,0));
 		});
 	});
 	
-	makeModule("MixedMoment",{
+	nody.module("MixedMoment",{
 		getCommand:function(name){
 			var args = CLONEARRAY(arguments);
 			args.shift();
@@ -101,16 +101,17 @@
 			this.Source = moment.apply(undefined,CLONEARRAY(arguments));
 		}
 	});
-	makeGetter("NOTY",function(s){
+	nody.method("NOTY",function(s){
 		var text = DATAMAP(arguments,function(vs){
 			return TOS(vs,true);
 		}).join("\n");
 		noty({theme:"relax",layout:"topLeft",text:text,timeout:4000})
 	});
 	
-	var root  = FUT.LOADINGSCRIPTROOT();
-	FUT.INCLUDE(root + "moment-with-locales.js");
-	FUT.INCLUDE(root + "jquery.noty.packaged.min.js");
-	FUT.INCLUDE(root + "highlight.pack.js");
-	FUT.INCLUDE(root + "highlight/github.css");
+	
+	var root  = nody.url.scriptRoot();
+	nody.include(root + "moment-with-locales.js");
+	nody.include(root + "jquery.noty.packaged.min.js");
+	nody.include(root + "highlight.pack.js");
+	nody.include(root + "highlight/github.css");
 })();
