@@ -1,5 +1,5 @@
-Nody.js
-=======
+![Nody.js](/logo/nodyjs-small.png)
+==================================
 # Introduce #
 Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리이다. 
 
