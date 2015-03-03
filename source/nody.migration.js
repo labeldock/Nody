@@ -455,3 +455,157 @@ nody.extendModule("NFObject","NFModel",{
 	}
 	this.imports(target);
 });
+
+nody.makeModule("Color",{
+	getColorSource : function(){
+		console.log(this.OriginSource);
+		switch(this.OriginSource[0]){
+			case "HEX" : return this.Utility.HEXToHSV(this.OriginSource[1]); break;
+			case "RGB" : return this.Utility.HEXToHSV(this.OriginSource.shift()); break;
+			case "RGBA": return this.Utility.HEXToHSV(this.OriginSource.shift()); break;
+			case "HSV" : var c = this.OriginSource;  return [c[1],c[2],c[3]] ; break;
+			case "HSVA": var c = this.OriginSource; return [c[1],c[2],c[3]] ; break;
+			default:
+				console.log("Color::getColorSource Source형식이 지원하지 않습니다.");
+				break;
+		}
+	},
+	isValid:function(){return this.OriginSource?true:false;},
+	//getProps
+	getFiltedHSV:function(){
+		var s = CLONE(this.Source);
+		for(var key in this.ColorFilter) {
+			if(this.ColorFilter[key] !== 0) switch(key) {
+				case "cold"  : s[0]+=s[0]; break;
+				case "light" : s[1]+=s[1]; break;
+				case "bright": s[2]+=s[2]; break;
+				default      : console.warn("Color::getFiltedHSV 알수 없는 필터값이 존재합니다. =>",key); break;
+			}
+		}
+		return s;
+	},
+    getHSV :function() { return STRING("hsv(", STRINGC.apply(undefined,this.getFiltedHSV()),")"); },
+	getHEX :function() { return STRING("#",this.Utility.HSVToHEX(this.getFiltedHSV()));},
+    getRGB :function() { return STRING("rgb(", STRINGC.apply(undefined,this.Utility.HSVToRGB(this.getFiltedHSV())),")"); },
+	getRGBA:function() { return STRING("rgba(",STRINGC.apply(undefined,this.Utility.HSVToRGB(this.getFiltedHSV())),","+this.alpha+")"); },
+    //filter
+    bright:function(level){ this.ColorFilter["bright"]+= NUMBER(level,10); return this; },
+    dark  :function(level){ this.ColorFilter["bright"]-= NUMBER(level,10); return this; },
+    cold  :function(level){ this.ColorFilter["cold"]  += NUMBER(level,10); return this; },
+    warm  :function(level){ this.ColorFilter["cold"]  -= NUMBER(level,10); return this; },
+    light :function(level){ this.ColorFilter["light"] += NUMBER(level,10); return this; },
+	bold  :function(level){ this.ColorFilter["light"] -= NUMBER(level,10); return this; },
+	//utility
+	Utility:{
+	    HEXToRGB: function(hex) {
+	        var hex = parseInt(((hex.indexOf('#') > -1) ? hex.substring(1) : hex), 16);
+	        return [hex >> 16, (hex & 0x00FF00) >> 8, (hex & 0x0000FF)];
+	    },
+	    HEXToHSV: function(hex) { return this.RGBToHSV(this.HEXToRGB(hex)); },
+	    RGBToHSV: function(rgb_array) {
+	        var r = rgb_array[0] / 255;
+	        var g = rgb_array[1] / 255;
+	        var b = rgb_array[2] / 255;
+	        var H, S, V, C;
+	        V = Math.max(r, g, b);
+	        C = V - Math.min(r, g, b);
+	        H = (C === 0 ? null : V == r ? (g - b) / C : V == g ? (b - r) / C + 2 : (r - g) / C + 4);
+	        H = ((H + 360) % 6) * 60 / 360;
+	        S = C === 0 ? 0 : C / V;
+	        return [360 * (H || 1), 100 * S, 100 * V];
+	    },
+	    HSVToRGB: function(hsb_array) {
+	        var rgb = {};
+	        var h = Math.round(hsb_array[0]),
+	            s = Math.round(hsb_array[1] * 255 / 100),
+	            v = Math.round(hsb_array[2] * 255 / 100);
+	        if (s == 0) {
+	            rgb.r = rgb.g = rgb.b = v;
+	        } else {
+	            var t1 = v;
+	            var t2 = (255 - s) * v / 255;
+	            var t3 = (t1 - t2) * (h % 60) / 60;
+	            if (h == 360) h = 0;
+	            if (h < 60) {
+	                rgb.r = t1;
+	                rgb.b = t2;
+	                rgb.g = t2 + t3;
+	            } else if (h < 120) {
+	                rgb.g = t1;
+	                rgb.b = t2;
+	                rgb.r = t1 - t3;
+	            } else if (h < 180) {
+	                rgb.g = t1;
+	                rgb.r = t2;
+	                rgb.b = t2 + t3;
+	            } else if (h < 240) {
+	                rgb.b = t1;
+	                rgb.r = t2;
+	                rgb.g = t1 - t3;
+	            } else if (h < 300) {
+	                rgb.b = t1;
+	                rgb.g = t2;
+	                rgb.r = t2 + t3;
+	            } else if (h < 360) {
+	                rgb.r = t1;
+	                rgb.g = t2;
+	                rgb.b = t1 - t3;
+	            } else {
+	                rgb.r = 0;
+	                rgb.g = 0;
+	                rgb.b = 0;
+	            }
+	        }
+	        return [Math.round(rgb.r), Math.round(rgb.g), Math.round(rgb.b)];
+	    },
+	    RGBToHEX: function(rgb_array) {
+	        var hex = [rgb_array[0].toString(16), rgb_array[1].toString(16), rgb_array[2].toString(16)];
+			for(var i=0,l=hex.length;i<l;i++) if(hex[i].length < 2) hex[i] = "0"+hex[i];
+			return hex.join("");
+	    },
+	    HSVToHEX: function(hsv) { return this.RGBToHEX(this.HSVToRGB(hsv)); }
+	}
+},function(p1){
+	p1               = p1.toUpperCase().trim();
+	this.alpha       = 1;
+	this.ColorFilter = { "bright":0, "cold" :0, "light" :0 };
+	//
+	if(/(hex|\#|)[0-9a-f]{3}/i.test(p1)){
+		if(/([0-9a-f]{6})/i.test(p1)){
+			//hex6
+			this.OriginSource = /([0-9a-f]{6})/i.exec(p1);
+			this.OriginSource[0] = "HEX";
+		} else {
+			//hex3
+			this.OriginSource = /([0-9a-f]{3})/i.exec(p1);
+			this.OriginSource[0] = "HEX";
+			this.OriginSource[1] = this.OriginSource[1].replace(/[0-9a-f]/gi,function(s){return s+s;});
+		}
+	} else if(/\D+(\d+)\D+(\d+)\D+(\d+)/i.test(p1)) {
+		if(/hsva\D+(\d+)\D+(\d+)\D+(\d+)\D+([\.\d]+)/i.test(p1)){
+			this.OriginSource = /\D+(\d+)\D+(\d+)\D+(\d+)\D+([\.\d]+)/i.exec(p1);
+			this.OriginSource[0] = "HSVA";
+			this.alpha = parseFloat(this.OriginSource[4]);
+		} else if(/hsv\D+(\d+)\D+(\d+)\D+(\d+)/i.test(p1)){
+			this.OriginSource = /\D+(\d+)\D+(\d+)\D+(\d+)/i.exec(p1);
+			this.OriginSource[0] = "HSV";
+		} else if(/\D+(\d+)\D+(\d+)\D+(\d+)\D+([\.\d]+)/i.test(p1)){
+			this.OriginSource = /\D+(\d+)\D+(\d+)\D+(\d+)\D+([\.\d]+)/i.exec(p1);
+			this.OriginSource[0] = "RGBA";
+			this.alpha = parseFloat(this.OriginSource[4]);
+		} else {
+			this.OriginSource = /\D+(\d+)\D+(\d+)\D+(\d+)/i.exec(p1);
+			this.OriginSource[0] = "RGB";
+		}
+	}
+	if(!this.isValid()){ console.error("Color::파라메터의 형식에 대응할 수 올바르지 없습니다. white로 대응합니다.=> ",p1); this.OriginSource=["HEX","FFFFFF"]; };
+	this.Source = this.getColorSource();
+},function(){
+	switch(this.OriginSource[0]){
+		case "HEX"  : return this.getHEX();  break;
+		case "RGB"  : return this.getRGB();  break;
+		case "RGBA" : return this.getRGBA(); break;
+		case "HSV"  : return this.getHSV();  break;
+		default: console.log("Color::getColorSource Source형식이 지원하지 않습니다."); break;
+	}
+});

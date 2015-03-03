@@ -80,4 +80,36 @@ FIND('.code-section > article > header',DATAMAP,function(header){
 	
 },ELAPPENDTO,'.table-of-contents menu');
 
+var DropdownInterface = function(opt){
+	$(document).on('click',opt.wrapper + ' > ' + opt.toggler,function(e){
+		var $dropdownParent  = $(this).parent();
+		var $dropdownContent = $dropdownParent.children(opt.content);
+		if($dropdownContent.length){
+			if(opt.onlyToggle || $dropdownParent.is('.'+opt.name+'-only-toggle-button')) {
+				if( !$dropdownContent.is('.show') ) {
+					$dropdownContent.addClass('show');
+					$dropdownParent.addClass(opt.name+'-open');
+				} else {
+					$dropdownContent.removeClass('show');
+					$dropdownParent.removeClass(opt.name+'-open');
+				}
+			} else {
+				if( !$dropdownContent.is('.show') ) {
+					$dropdownParent.addClass(opt.name+'-open');
+					$dropdownContent.addClass('show');
+					$(document).one('click',function(e){ 
+						$dropdownContent.removeClass('show'); 
+						$dropdownParent.removeClass(opt.name+'-open');
+					});
+				}
+			}
+		}
+	});
+};
 
+DropdownInterface({
+	name   :'dropdown',
+	wrapper:'.dropdown',
+	toggler:'.dropdown-toggle',
+	content:'.dropdown-content'
+});

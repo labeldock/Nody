@@ -1,9 +1,9 @@
 @charset "UTF-8";
-/* include Nody SASS Kit : version 2.4 Build (alpha 126) */
+/* include Nody SASS Kit : version 2.5 Build */
 /*
 	Nody modernize support kit
 	auther        : hojugn ahn (https://github.com/labeldock/Nody_SASS)
-	version       : 2.5
+	version       : 2.6
 */
 /* mordernizer */
 *, *:before, *:after { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; }
@@ -479,6 +479,10 @@ aside .aside-footer .aside-footer-commands > *, aside .aside-footer .aside-foote
 aside .aside-footer .aside-footer-commands p, aside .aside-footer .aside-footer-right p, .aside .aside-footer .aside-footer-commands p, .aside .aside-footer .aside-footer-right p { cursor: default; margin: 0; }
 aside .aside-footer .aside-footer-commands li, aside .aside-footer .aside-footer-commands a, aside .aside-footer .aside-footer-right li, aside .aside-footer .aside-footer-right a, .aside .aside-footer .aside-footer-commands li, .aside .aside-footer .aside-footer-commands a, .aside .aside-footer .aside-footer-right li, .aside .aside-footer .aside-footer-right a { cursor: pointer; text-decoration: none; }
 aside .aside-body, .aside .aside-body { position: relative; }
+
+.dropdown > .dropdown-content { display: none; }
+
+.dropdown.dropdown-show > .dropdown-content { display: block; }
 
 .nody-scroll-track { background-color: #666; min-height: 40px; min-width: 5px; }
 .nody-scroll-track .nody-scroll-handle { cursor: -webkit-grab; cursor: -moz-grab; background-color: #ccc; min-height: 10px; min-width: 5px; }

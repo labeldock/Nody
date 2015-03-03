@@ -3,7 +3,7 @@
 /*
 	Nody modernize support kit
 	auther        : hojugn ahn (https://github.com/labeldock/Nody_SASS)
-	version       : 2.5
+	version       : 2.6
 */
 /* mordernizer */
 *{
@@ -297,6 +297,20 @@ span.ellipsis { @include inline-block;margin:0px;padding:0px;width:100%; }
 					 ('article','article,.article'),
 					 ('aside','aside,.aside'),
 { #{$sel} {@include panel-variant($model);} }
+
+.dropdown {
+	> .dropdown-toggle {
+		
+	}
+	> .dropdown-content {
+		display:none;
+	}
+}
+.dropdown.dropdown-show {
+	> .dropdown-content {
+		display:block;
+	}
+}
 
 .nody-scroll-track {
 	background-color:#666;

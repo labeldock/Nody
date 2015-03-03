@@ -1,4 +1,4 @@
-/* include Nody SASS Kit : version 2.4 Build (alpha 126) */ 
+/* include Nody SASS Kit : version 2.5 Build */ 
 // auther : hojugn ahn (https://github.com/labeldock/Nody_SASS)
 // easy hack, mordern styleing
 
@@ -314,14 +314,23 @@ $placeholder-variant: '&::-webkit-input-placeholder,&:-moz-placeholder,&::-moz-p
 @mixin relativeY($y){
 	@include relative(false,$y);
 }
-@mixin translate($x,$y){
-	@include css3f(transform, translate(#{$x},#{$y}));
-}
+
 @mixin translateX($x){
 	@include css3f(transform, translateX(#{$x}));
 }
 @mixin translateY($y){
 	@include css3f(transform, translateY(#{$y}));
+}
+@mixin translate($x:false,$y:false){
+	@if ($x == false and $y == false) {
+		@include css3f(transform, translate(0px,0px));
+	} @else if ($x != false and $y != false){
+		@include css3f(transform, translate(#{$x},#{$y}));
+	} @else if($x == false) {
+		@include translateY($y);
+	} @else {
+		@include translateX($x);
+	}
 }
 @mixin flipH($flip:true){
 	@if $flip == true {
@@ -1026,12 +1035,22 @@ $placeholder-variant: '&::-webkit-input-placeholder,&:-moz-placeholder,&::-moz-p
 		background-position:$background-position;
 	}	
 }
-@mixin content-background-variant($url,$background-position:0px 0px,$axis:false,$width:auto,$height:auto,$offset-x:0,$offset-y:0){
-	@include content-position-variant($axis,$width,$height,$offset-x,$offset-y);
-	background:url($url); 
-	background-position:$background-position;
-	background-repeat:no-repeat;
+@mixin background-variant($url:false,$position:center center,$repeat:no-repeat){
+	@if $url {
+		background:url($url);
+	}
+	@if $position {
+		background-position:$position;
+	}
+	@if $repeat {
+		background-repeat:no-repeat;
+	}
 }
+@mixin content-background-variant($url,$background-position:center center,$axis:false,$width:auto,$height:auto,$offset-x:0,$offset-y:0){
+	@include content-position-variant($axis,$width,$height,$offset-x,$offset-y);
+	@include background-variant($url,$background-position);
+}
+
 
 @mixin image-text-active($uri,$offsetTop:false,$active-class:".active"){
 	&#{$active-class} {

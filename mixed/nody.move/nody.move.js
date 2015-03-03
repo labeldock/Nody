@@ -7,7 +7,7 @@
 
 (+(function(){
 	//action // movement
-	makeModule("Action",{
+	nody.module("Action",{
 		addMovement : function(){
 			var _value = this.Source;
 			var _movements = _Array(arguments).filter(function(target){
@@ -63,7 +63,7 @@
 		var own = this;
 		this.currentEvent = { "complete":[],"master":[] };
 	});
-	makeModule("TimelineInterface",{
+	nody.module("TimelineInterface",{
 		toggleEvent : function(eventName) { 
 			var own = this,_events = _Array(this.MoveEvent[eventName]); if (_events.length) _events.each(function(eventMethod) { eventMethod.call(own.Source,own); }); return this; 
 		},
@@ -97,7 +97,7 @@
 		});
 		this.MovementTimeLine.pause();
 	});
-	extendModule("TimelineInterface","Move",{
+	nody.extendModule("TimelineInterface","Move",{
 		play : function() { this.MovementTimeLine.play(); return this; },
 		kill : function() { this.MovementTimeLine.kill(); return this; },
 		playAndKill : function() { 
@@ -154,7 +154,8 @@
 		}
 		if(this.__NativeClass__("Move")) this.playAndKill();
 	});
-	extendModule("Move","Movement",{
+	
+	nody.module("Move","Movement",{
 		relative: function() { _Element(this.Source).layerInterface();return this; },
 		to      : function(t){ this.MovementTimeLine.seek(t/1000); return this; },
 		speed   : function(s){ this.MovementTimeLine.timeScale(s); return this; }
@@ -162,7 +163,7 @@
 		this._super(element,movevalue,beginEvent,completeEvent);
 	});
 	
-	makeGetter("ELFLASH",function(){
+	nody.method("ELFLASH",function(){
 		if(typeof loc == "function"){
 			callback = loc;
 			loc      = undefined;
@@ -196,10 +197,5 @@
 			});
 		}
 	});
-	
-	//Load tweenmax script
-	var root  = FUT.LOADINGSCRIPTROOT();
-	FUT.INCLUDE(root + "TweenMax.js");
-	FUT.INCLUDE(root + "ScrollToPlugin.min.js");
 	
 })());
