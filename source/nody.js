@@ -1,12 +1,10 @@
 /* Nody js
  * GIT         // https://github.com/labeldock/Nody
- * tested in   // IE9 + (on 4.0) & webkit2 & air13
  * Copyright HOJUNG-AHN. and other contributors
  * Released under the MIT license
  * 
  * Includes Sizzle.js
  * http://sizzlejs.com/
- *
  */
 
 

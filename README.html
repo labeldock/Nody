@@ -1,4 +1,4 @@
-<h1>Nody.js</h1>
+<h1><img src="/logo/nodyjs-small.png" alt="Nody.js" /></h1>
 
 <h1>Introduce</h1>
 
@@ -7,8 +7,8 @@
 <h2>Feature</h2>
 
 <ul>
-<li>Nody plays well with another library</li>
-<li>Nody helps create node as CSS Style
+<li>다른 라이브러리와 이질감 없이 사용할 수 있습니다.(Nody plays well with another library)</li>
+<li>CSS스타일로 노드를 생성할 수 있습니다.(Nody helps create node as CSS Style)
 ```javascript
 MAKE(&lsquo;div&rsquo;);
 MAKE(&lsquo;button.btn.btn-default#btn-action&rsquo;);
@@ -24,13 +24,13 @@ MAKE(&lsquo;a&rsquo;,MAKE(&lsquo;span&rsquo;,&lsquo;second value&rsquo;))
 ```</p>
 
 <ul>
-<li><p>Nody can find node and mix function
+<li><p>노드를 찾은 후 바로 다른 파라메터 안에 다른 액션을 사용할 수 있습니다.(Nody can find node and mix function)
 <code>javascript
 FIND('div','#wrapper');
 FIND('ul li',0); //=&gt; nth-child 0
 FIND('ul li',jQuery).css('color','red');
 </code></p></li>
-<li><p>Nody is easy to make node with template and data
+<li><p>템플릿 사용이 편하며 표현이 매우 다양합니다.(Nody is easy to make node with template and data)
 ```javascript
 MAKETO(&lsquo;ul#ul&rsquo;,&lsquo;body&rsquo;);</p></li>
 </ul>
@@ -48,7 +48,7 @@ MAKETO(&lsquo;ul#ul&rsquo;,&lsquo;body&rsquo;);</p></li>
 ```</p>
 
 <ul>
-<li>Nody is easy to bind node</li>
+<li>바인딩을 쉽게 구현할수 있습니다.(Nody is easy to bind node)</li>
 </ul>
 
 
@@ -61,9 +61,14 @@ MAKETO(&lsquo;div#placeholder-1, div#placeholder-2&rsquo;,&lsquo;body&rsquo;);</
 new NFPresentor(&lsquo;#placeholder-2&rsquo;,dataContext,[&lsquo;<input type="text" nf-bind="name">&rsquo;],true);
 ```</p>
 
-<p><code>
-    Just do it in console before include the Nody.js
-</code></p>
+<p>```
+    Nody가 불러와진 상태에서 콘솔로 바로 실행해 보세요.
+    (Just do it in console before include the Nody.js)</p>
+
+<pre><code>혹은 아래의 데모를 통해 Nody를 실행해불 수 있습니다.
+</code></pre>
+
+<p>```</p>
 
 <h1>Live demo</h1>
 
@@ -84,6 +89,7 @@ new NFPresentor(&lsquo;#placeholder-2&rsquo;,dataContext,[&lsquo;<input type="te
 
 <ul>
 <li>IE8+</li>
+<li>air 13+</li>
 <li>firefox</li>
 <li>opera</li>
 </ul>
@@ -91,23 +97,16 @@ new NFPresentor(&lsquo;#placeholder-2&rsquo;,dataContext,[&lsquo;<input type="te
 
 <h2>Version info</h2>
 
-<h4>0.21.5</h4>
+<h4>0.22</h4>
 
 <ul>
-<li>IE8에서 쿼리셀렉터가 동작하도록 조정</li>
-<li>순수 Nody셀렉터 엔진 완전제거</li>
-<li>얼티네네이티브 셀렉터 엔진을 Sizzle로 변경</li>
+<li>IE8 호환성 향상</li>
+<li>버그수정</li>
+<li>소스폴더 구조 개선</li>
 </ul>
 
 
 <h2>예정된 계획</h2>
-
-<h4>0.23 예정</h4>
-
-<ul>
-<li>0.22.x 버전 버그수정 및 호환성 향상을 목표로 합니다.</li>
-</ul>
-
 
 <h4>0.30 예정</h4>
 

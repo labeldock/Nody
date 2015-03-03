@@ -70,22 +70,19 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
   
 ### Incomplete Support #
   - IE8+
+  - air 13+
   - firefox
   - opera
 
 ## Version info #
 
-#### 0.21.5
-- IE8에서 쿼리셀렉터가 동작하도록 조정
-- 순수 Nody셀렉터 엔진 완전제거
-- 얼티네네이티브 셀렉터 엔진을 Sizzle로 변경
+#### 0.22
+- IE8 호환성 향상
+- 버그수정
+- 소스폴더 구조 개선
 
 
 ## 예정된 계획 #
-
-#### 0.23 예정
-- 0.22.x 버전 버그수정 및 호환성 향상을 목표로 합니다.
-
 
 #### 0.30 예정
 - Rails의 기본 패턴에 최적화된 MVVM + Remote 컨트롤 제작 
