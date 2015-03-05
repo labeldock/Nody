@@ -1,4 +1,4 @@
-@nodyjs_path = File.expand_path('../../source/nody.js', __FILE__)
+@nodyjs_path = File.expand_path('../nody.js', __FILE__)
 @nodyjs_file = File.open @nodyjs_path, 'r'
 
 

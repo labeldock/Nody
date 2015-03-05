@@ -10,7 +10,7 @@
 	<title>Nody js</title>
 	
 	<!-- Custom styles for this template -->
-	<link href="resources/css/nody.css" rel="stylesheet">
+	<link href="../source/scss-kit/nody.css" rel="stylesheet">
 	
 	<!-- Bootstrap core CSS -->
 	<link href="resources/css/bootstrap.min.css" rel="stylesheet">
@@ -41,10 +41,21 @@
 		<div class='container'>
 			<nav>
 				<menu>
-					<a class="active" href="index.html">Live demo</a>
-					<a href="#">Perfomance</a>
-					<a href="#">About</a>
-					<a href="api.html">API Design</a>
+					<li><a href="index.html#">Demo</a></li>
+					<li><a href="api.html#" class="active" >API Guide</a></li>
+					<li>
+						<div class='dropdown'>
+							<div class='dropdown-toggle'>Before Page</div>
+							<div class='dropdown-content'>
+								<menu>
+									<a href="ie8.html">IE8 Test</a>
+									<a href="nftouch.html">Touch Test</a>
+									<a href="nfscroll.html">Scroll Test</a>
+									<a href="nfapp.html">Old page</a>
+								</menu>
+							</div>
+						</div>
+					</li>
 				</menu>
 			</nav>
 		</div>
@@ -61,50 +72,657 @@
 			<div class='row'>
 				<section class='col-sm-8 code-section'>
 					<article>
-						<header>need..</header>
-						<p>need.. 문은 화면상 변화가 있는 API에 사용됩니다. 호출시 동작이 안될수도 있음을 암시해야 합니다.</p>
+						<header>FIND</header>
+						<p>select는 css스타일로 노드를 찾습니다. FIND는 루트도 선택될 수 있습니다. 이 부분은 querySelector랑 조금 다른점입니다.</p>
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;ul class='list'>
+	&lt;li class='first'>first&lt;/li>
+	&lt;li class='second'>seconde&lt;/li>
+	&lt;li class='third'>third&lt;/li>
+&lt;/ul>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>
+FIND('ul.list li:first-child');
+FIND('ul.list li:nth-child(2)');
+FIND('li','ul');
+FIND('ul','ul');
+FIND('.second','ul.list li');
+FIND('li',0);
+FIND('li',2);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+		
+						<b>또 다른 FIND 메소드</b>
+		
+						<ul>
+							<li>FINDMEMBER : 같은 래벨상의 노드를 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
+							<li>FINDIN : 모든 자식의 노드를 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
+							<li>FINDON : 바로 아래 자식 노드만 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
+							<li>FINDPARENTS : 모든 부모를 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
+							<li>FINDPARENT : 바로 상위 부모나 트리의 부모 중 하나를 얻어낼 수 있습니다. (두번째 파라메터 문자등으로 더 상위의 부모를 찾을 수 있음)</li>
+							<li>FINDBEFORE : 선택된 노드의 전 맴버들만 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
+							<li>FINDAFTER : 선택된 노드의 다음 맴버의  맴버들만 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
+							<li>FINDDOCUMENT : 선택된 노드(IFRAME)의 도큐먼트를 찾습니다.</li>
+						</ul>
+		
+						<div class='code-wrapper'>
+							<pre class='language-markup hidden'><code class='language-markup'>
+&lt;ul class='list'>
+	&lt;li class='first'>&lt;span>first&lt;/span>&lt;/li>
+	&lt;li class='second'>&lt;span>seconde&lt;/span>&lt;/li>
+	&lt;li class='third'>&lt;span>third&lt;/span>&lt;/li>
+&lt;/ul>
+&lt;iframe id='frm'>&lt;iframe>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>
+FINDMEMBER('.first');
+FINDIN('.list');
+FINDON('.list');
+FINDPARENTS('.first span');
+FINDPARENTS('.first span','[class]');
+FINDPARENT('.first span','ul');
+FINDBEFORE('.third');
+FINDAFTER('.first');
+FINDDOCUMENT('#frm');
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+		
+		
 					</article>
+	
 					<article>
-						<header>some, getSome</header>
-						<p>예를들어 NFArray에서 map은 오브젝트 원문에 영향을 줍니다. 하지만 getMap은 오브젝트 원문과 관련없이 새로운 오브젝트를 반환합니다.</p>
+						<header>
+							MAKE
+						</header>
+						<p>MAKE는 CSS스타일로 노드를 만들때 사용되는 함수입니다.</p>
+						<q>
+			
+						</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>
+MAKE('div#foo','hello world');
+MAKE('div#foo.bar');
+MAKE('div.foo.bar');
+MAKE('div[role=foo][role2=foo]');
+MAKE('button:disabled');
+MAKE('button','Button');
+MAKE('input','foo');
+MAKE('input?radio!group1');
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
+						</div>
+						<p>중첩하여 사용가능합니다.</p>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>
+MAKE('ul',
+	MAKE('li.item','list1'),
+	MAKE('li.item','list2'),
+	MAKE('li.item.text-success','list3'),
+	MAKE('li.item.text-danger','list4'),
+	MAKE('li.item','list5')
+);
+MAKE('table.table.table-bordered',
+	MAKE('thead',
+		MAKE('tr',
+			MAKE('th','check'),
+			MAKE('th','title'),
+			MAKE('th','status')
+		)
+	),
+	MAKE('tbody',
+		MAKE('tr',
+			MAKE('td',MAKE('input[type=checkbox][name=chk][checked]')),
+			MAKE('td',MAKE('span','Title 1')),
+			MAKE('td',MAKE('span','Title 1'))
+		),
+		/* lazy */
+		MAKE('tr',
+			MAKE('input?checkbox!chk'),
+			MAKE('span','Title 2'),
+			MAKE('span','Title 2')
+		),
+		MAKE('tr',
+			MAKE('checkbox!chk'),
+			MAKE('span','Title 3'),
+			MAKE('span','Title 3')
+		)
+	)
+);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
+						</div>
+						<p>MAKE는 일반적으로 간단하게 노드를 만들때 도움을 줍니다. 복잡한 구조일수록 NFTemplate 모듈을 활용하는것이 좋습니다. </p>
 					</article>
+	
 					<article>
-						<header>whenDid.. , whenWill..</header>
-						<p>어느 시점의 커스텀 이벤트문입니다. 시점의 전과 후로 나뉘며 will문에서는 반환값이 false일 경우 일반적으로 이벤트가 취소 됩니다.</p>
+						<header>NFTemplate</header>
+						<p>NFTemplate는 template태그를 활용하거나 직접 태그를 입력하여 데이터와 동기화된 노드를 만들 수 있습니다.</p>
+		
+						<b class='text-info'>템플릿 생성과 렌더 예제</b>
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;!-- Container -->
+&lt;ul id="container">&lt;/ul>
+
+&lt;!-- Template -->
+&lt;template id="foo-temp">
+    &lt;li class="foo">foo&lt;/li>
+	&lt;li class="bar">bar&lt;/li>
+	&lt;li class="text-success">fb&lt;/li>
+&lt;/template>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>
+/* with template tag */
+var tmpTemp = new NFTemplate('#foo-temp');
+
+/* with string */
+var strTemp = new NFTemplate(
+	'&lt;li class="foo">foo&lt;/li>\
+	&lt;li class="bar">bar&lt;/li>\
+	&lt;li class="text-warning">fb&lt;/li>'
+);
+
+tmpTemp.renderTo('#container');
+strTemp.renderTo('#container');
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+		
+		
+						<b class='text-info'>템플릿 파셜(Template Partial) 예제</b>
+						<p>하나의 템플릿과 다수의 데이터를 가지고 간단하게 노드를 만들어 낼 수 있습니다.</p>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>
+var t = new NFTemplate(
+    '&lt;figure>\
+        &lt;img nf-value="image">\
+        &lt;figcaption>\
+            &lt;a nf-href="link" nf-value="title" target="_blank">Image Ankor&lt;/a>\
+        &lt;/figcaption>\
+    &lt;/figure>'
+);
+var renderResult = t.renderMap(
+	[
+		{
+		    "image":"resources/images/Greece.png",
+		    "link" :"http://en.wikipedia.org/wiki/Greece",
+		    "title":"Greece"
+		},
+		{
+		    "image":"resources/images/Gabon.png",
+		    "link" :"http://en.wikipedia.org/wiki/Gabon",
+		    "title":"Gabon"
+		},
+		{
+		    "image":"resources/images/Gambia.png",
+		    "link" :"http://en.wikipedia.org/wiki/Gambia",
+		    "title":"Gambia"
+		}
+	]
+);
+renderResult;
+renderResult[0];
+renderResult[1];
+renderResult[2];
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
+						</div>
+		
+						<b class='text-info'>템플릿 파셜(Template Partial) append, prepend, put 예제</b>
+						<p>파셜 데이터에 노드를 삽입 후 append, prepend, put등의 명령어로 노드를 집어넣을수 있습니다.</p>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>
+var temp = new NFTemplate(
+	'&lt;ul nf-append="nodeList tempList">\
+		&lt;li>hello&lt;/li>\
+	&lt;/ul>'
+);
+temp.render({
+    "nodeList":[MAKE("li.item::MAKE item1"),MAKE("li.item::MAKE item2")],
+	"tempList":_NFTemplate('&lt;li class="item" nf-value="t">&lt;/li>').renderMap([{t:'Temp item1'},{t:'Temp item2'}])
+});
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
+						</div>
+		
 					</article>
+	
 					<article>
-						<header>Module::Source</header>
-						<p>모듈의 Source는 모듈상 가장 중심이 되는 값을 Source에 넣습니다. 예를 들어 NFArray는 array NFString은 string입니다.</p>
+						<header>CONTINUETILITY</header>
+						<p>
+							이 방식은 다른 어떠한 라이브러리에서 찾을수 없는 Nody의 특수한 기법입니다. 
+							이것은 함수 내에서 재귀를 내부에서 함과 동시에 다른 라이브러리 함수들과 쉽게 섞어 사용할 수 있습니다.
+						</p>
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;!-- Container -->
+&lt;ul id="placeholder">&lt;/ul>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>
+TIMESMAP(10,function(index){ return MAKE('li',index) },DATAEACH,function(){ ELAPPEND('#placeholder',this) },jQuery).css('color','red');
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+						<p>컨티뉴틸리티는 다음 함수에서 사용할수 있습니다.</p>
+						<ul>
+							<li>TIMES</li>
+							<li>TIMESMAP</li>
+							<li>DATACALL</li>
+							<li>DATAEACH</li>
+							<li>DATAEACHBACK</li>
+							<li>DATAMAP</li>
+							<li>DATAFILTER</li>
+							<li>PROPEACH</li>
+							<li>PROPMAP</li>
+							<li>PROPDATA</li>
+							<li>DATACLIP</li>
+							<li>FIND</li>
+							<li>FINDIN</li>
+							<li>FINDON</li>
+							<li>FINDPARENTS</li>
+							<li>FINDBEFORE</li>
+							<li>FINDAFTER</li>
+							<li>FINDPARENT</li>
+							<li>FINDDOCUMENT</li>
+							<li>FINDTREE</li>
+							<li>MAKETEXT</li>
+							<li>MAKE</li>
+							<li>MAKES</li>
+							<li>MAKETO</li>
+							<li>ELBEFORE</li>
+							<li>ELAFTER</li>
+							<li>ELCHANGE</li>
+						</ul>
 					</article>
+	
+	
 					<article>
-						<header>Getter</header>
-						<p>Getter는 단순 함수이나 함수자체에서 인스턴스를 만들어내는 기능이 들어있습니다. 예를들어 ZSTRING의 경우 ZSTRING.SEED(1)('seed is \\{$i}')와 같이 확장함수가 포함되어 있습니다.</p>
+						<header>MVVM (Basic)</header>
+						<ul>
+							<li>다중의 뎁스구조 지원</li>
+							<li>데이터 모델의 구조를 미리 정의하지 않음</li>
+							<li>일부만 따로 렌더링 할 수 있음</li>
+							<li>실시간 바인드 지원</li>
+						</ul>
+		
+						<b class='text-info'>기본 생성 예제</b>
+						<p>Nody의 MVVM은 기본적으로 DataContext, ViewModel, Presentor로 구성되어 생성됩니다.</p>
+		
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;!-- Container -->
+&lt;div id="placeholder-bind1">&lt;/div>
+&lt;div id="placeholder-bind2">&lt;/div>
+&lt;div id="placeholder-bind3">&lt;/div>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>
+/* Original data */ 
+var data = [
+    {index:"1",value:"one"},
+    {index:"2",value:"two"},
+    {index:"3",value:"three"}
+];
+
+/* Presentation object */ 
+var dataContext = new NFDataContext(data);
+
+/* Draw model */
+var inputViewModel = new NFViewModel(
+	function(){
+	    return this.placeholder("ul.top")
+	},
+	function(){
+	    return MAKE("li",MAKE("span",{href:this.value("index")}),this.bind("value","input?text"))
+	}
+);
+var labelViewModel = inputViewModel.clone(undefined,
+	function(){
+		return MAKE("li",MAKE("span",{href:this.value("index")}),this.bind("value","label.label.label-info"))
+	}
+);
+
+/* View controller */ 
+new NFPresentor("#placeholder-bind1",dataContext,inputViewModel,true);
+new NFPresentor("#placeholder-bind2",dataContext,inputViewModel,true);
+new NFPresentor("#placeholder-bind3",dataContext,labelViewModel,true);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+						<p>
+							바인딩된 데이터를 얻고자 할 시에는 dataContext.getJSONObject(); 와 같이 호출하면 됩니다.
+						</p>
+		
+						<b class='text-info'>템플릿과 함깨 사용하기</b>
+						<p>탬플릿과 함께 사용하면 자바스크립트를 좀 더 간결하게 사용할 수 있습니다.</p>
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;div id="placeholder">&lt;/div>
+&lt;template id="table">
+    &lt;table class="table table-bordered">
+        &lt;thead>
+            &lt;tr>
+                &lt;th>index&lt;/th>
+                &lt;th>value&lt;/th>
+            &lt;/tr>
+        &lt;/thead>
+        &lt;tbody nf-placeholder>&lt;/tbody>
+    &lt;/table>
+&lt;/template>
+&lt;template id="tbody-item">
+    &lt;tr>
+        &lt;td nf-value="index">&lt;/td>
+        &lt;td nf-value="value">&lt;/td>
+    &lt;/tr>
+&lt;/template>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>								
+var data = [
+    {index:"1",value:"one"},
+    {index:"2",value:"two"},
+    {index:"3",value:"three"}
+];
+
+var dataContext    = new NFDataContext(data);
+var viewModel      = new NFViewModel("#table","#tbody-item");
+var viewController = new NFPresentor("#placeholder",dataContext,viewModel,true);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+		
+						<b class='text-info'>Only Presentor</b>
+						<p>DataContext와 ViewModel을 생성하지 않고 호출시 내부적으로 자동 생성되어 관리됩니다. 주의할 점은 <span class='text-danger'>이 방법은 DataContext에 접근하기가 어려워</span> 바인딩을 구현할 경우 사용하지 않는것이 좋습니다. </p>
+		
+						<div class='code-wrapper'>
+							<pre class='language-markup hidden'><code class='language-markup'>
+&lt;div id="placeholder">&lt;/div>
+&lt;template id="table">
+    &lt;table class="table table-bordered">
+        &lt;thead>
+            &lt;tr>
+                &lt;th>index&lt;/th>
+                &lt;th>value&lt;/th>
+            &lt;/tr>
+        &lt;/thead>
+        &lt;tbody nf-placeholder>&lt;/tbody>
+    &lt;/table>
+&lt;/template>
+&lt;template id="tbody-item">
+    &lt;tr>
+        &lt;td nf-value="index">&lt;/td>
+        &lt;td nf-value="value">&lt;/td>
+    &lt;/tr>
+&lt;/template>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>								
+var data = [
+    {index:"1",value:"one"},
+    {index:"2",value:"two"},
+    {index:"3",value:"three"}
+];
+new NFPresentor("#placeholder",data,["#table","#tbody-item"],true);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+		
 					</article>
+
+	
 					<article>
-						<header>should..</header>
-						<p>should문은 오브젝트가 반드시 되어야할 상태값을 명령하는 것입니다. should문은 반드시 코드블럭이 끝나기전에 상태값이 완전히 셋팅되어야만 하는것이 아닌것임을 염두해야합니다.</p>
+						<header>Object Extend</header>
+						<p>키값에 매칭하여 값을 대입합니다. EXTEND는 첫번째 오브젝트에 덮어씌우고 MARGE는 새로운 오브젝트를 이용해 반영합니다.</p>
+						<p>
+							...FILL은 존재하지 않는 키값에 대해서만 대입하지만 예외를 두고싶을 경우 세번째 파라메터에 강제로 대입하고자 하는 키값을 넣어주면 됩니다.
+						</p>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+var a = {a:1,b:2,c:3};
+var b = {b:20,c:30,d:40};
+
+EXTEND(a,b);
+EXTEND(a,b) === a;
+
+MARGE(a,b);
+MARGE(a,b) === a;
+
+var c = {a:1,b:2,c:3,d:4};
+var d = {b:20,c:30,d:40,e:50};
+
+MARGEFILL(c,d);
+MARGEFILL(c,d,'b');
+MARGEFILL(c,d,['b','c']);
+//(EXTENDFILL same)
+
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
 					</article>
+	
 					<article>
-						<header>find..</header>
-						<p>find문은 반드시 노드가 리턴되는 API가 되어야 합니다.</p>
+						<header>Parsing</header>
+						<q>TOOBJECT 파싱기능은 Json이거나 명확하지 않은 텍스트를 오브젝트로 파싱 가능하다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+TOOBJECT("{'hello':'world','foo':'bar','1':2}");
+TOOBJECT("{hello:world,foo:bar,1:2}");
+TOOBJECT("hello:world,foo:bar,1:2");
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
 					</article>
+	
 					<article>
-						<header>DATA..</header>
-						<p>DATA..은 배열 데이터를 다루기 위한 함수입니다. DATA의 특징은 undefined와 array를 제외한 모든 값들은 단수의 배열로 취급합니다..</p>
+						<header>IS</header>
+						<q>IS는 데이터 타입과 크기 유효성등을 확인할수 있다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+IS("123","string"); //=> true
+IS("123","number"); //=> false
+IS("123","nothing"); //=> false
+IS("123","ok"); //=> true
+IS("0","ok"); //=> true
+IS(0,"ok"); //=> false
+IS(0,"nok"); //=> true
+IS("123","string>5"); //=> false
+IS("123456","string>5"); //=> true
+IS(123456,"text>5"); //=> true
+IS(123456,"number&lt;100"); //=> false
+IS({},"object"); //=> true
+IS([],"array"); //=> true
+
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+IS([],"nothing array"); //=> true
+IS({},"nothing object"); //=> true
+IS(12,"nothing number"); //=> false
+IS(0,"nothing number"); //=> true
+IS(0,"nothing text"); //=> true
+IS(0,"nothing string"); //=> false
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+IS(23,"number:10~30");
+IS(23,"number:10~20");
+IS("23","text:0~10");
+IS("hello world","text:8~16");
+IS("hello world","text:2~8");
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
 					</article>
+	
 					<article>
-						<header>PROP..</header>
-						<p>PROP..은 오브젝트의 어트리뷰트값을 다루기위한 함수입니다..</p>
+						<header>AS</header>
+						<q>AS는 IS와 동일하다 다만 trim이 자동으로 된다는 특징이 있다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+AS("123     ","string>4"); //=> false
+AS("        ","string==1"); //=> false
+AS("        ","string==0"); //=> true
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
 					</article>
+
 					<article>
-						<header>NF..</header>
-						<p>NF(Nody Foundation)문은 nody의 기본 모듈집합을 의미합니다.</p>
+						<header>NFString</header>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+_NFString("McDonald's").getByteSize(); //=> 10
+_NFString("맥도널드").getByteSize(); //=>8
+_NFString("マクドナルド").getByteSize(); //=>12
+_NFString("McDonald's").addModel("good").get(); //=>"McDonald's good"
+_NFString("McDonald's").removeModel("Mc").get(); //=>"McDonald's"
+_NFString("McDonald's").removeModel("McDonald's").get(); //=>""
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
 					</article>
+	
 					<article>
-						<header>Z..</header>
-						<p>NF와 다른 Z문들의 특징은 함수 한번으로 빠르게 종결하려는 특징이 있습니다.</p>
+						<header>ZString (Basic)</header>
+						<q>\() 구문은 곧바로 값을 환산하여 뽑아준다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+//range param
+ZSTRING("Total \\(10~20)%"); //=> "Total 17%"
+ZSTRING("Total \\(10~20)%"); //=> "Total 12%"
+ZSTRING("Total \\(10~20)%"); //=> "Total 15%"
+//choice param
+ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say hello"
+ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Girl say hi"
+ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say bye"
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
 					</article>
-					
+	
+					<article>
+						<header>ZString (pointer)</header>
+						<q>환산된 값을 재귀하여 다시 사용할 수 있다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+ZSTRING("\\(apple,banana,chocolate,cheese) + \\(milk,cake,pie) = \\{&0 + ' and ' + &1}");
+ZSTRING("\\(apple,banana,chocolate,cheese) + \\(milk,cake,pie) = \\{&0 + ' and ' + &1}");
+ZSTRING("\\(apple,banana,chocolate,cheese) + \\(milk,cake,pie) = \\{&0 + ' and ' + &1}");
+ZSTRING("\\(30~20) - \\{$0} = \\{&0 - &1}","\\?10~30");
+ZSTRING("\\(30~20) - \\{$0} = \\{&0 - &1}","\\?10~30");
+ZSTRING("\\(30~20) - \\{$0} = \\{&0 - &1}","\\?10~30");
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+	
+					<article>
+						<header>ZString (With param)</header>
+						<q>\() 구문은 곧바로 값을 환산하여 뽑아준다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+//range string
+ZSTRING("Result : \\{$0+$1}","2","3"); //=> "Result : 5"
+ZSTRING("Result : \\{$0-$1}","2","3"); //=> "Result : -1"
+ZSTRING("Result : \\{$0*$1}","2","3"); //=> "Result : 6"
+ZSTRING("Result : \\{$0/$1}","2","3"); //=> "Result : 0.6666666666666666"
+ZSTRING("Result : \\{$0+' '+$1}","not","enough"); //=> "Result : not enough"
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+	
+					<article>
+						<header>ZString (To many array)</header>
+						<q>ZSTRING을 실제로 _ZString모듈을 호출하여 값을 반환한다. 직접적으로 _ZString모듈을 호출하여 많은 값의 생성 가능하다.</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+_ZString("Result[\\{$i+1}] : \\{10*$i+$0}","\\?1~9").toArray(5);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+	
+					<article>
+						<header>ZNumber</header>
+						<q>Absolutely return a type of number</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+ZNUMBER("20~30");
+ZNUMBER("$0 + $1","\\?10~20","10");
+
+//As ZSTRING
+ZSTRING("\\(20~30)");
+ZSTRING("\\{$0 + $1}","\\?10~20","10");
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+	
+					<article>
+						<header>ZNumber</header>
+						<q>Absolutely return a type of number</q>
+						<div class='code-wrapper'>
+							<pre class='language-javascript'><code class='language-javascript'>								
+_NFNumber(3000).getNumber();
+_NFNumber(3000).getDecimal();
+_NFNumber("halfby $3000 dance").number();
+_NFNumber("halfby $3000 dance").getNumber();
+_NFNumber("halfby $3000 dance").getDecimal();
+_NFNumber("halfby $3000 dance").getPrefix();
+_NFNumber("halfby $3000 dance").getSuffix();
+_NFNumber("hello world").number();
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+
+					<article>
+						<header>NFActiveController</header>
+						<div class='code-wrapper'>
+							<pre class='language-markup'><code class='language-markup'>
+&lt;div class='row-1'>
+	&lt;div class='btn-group'>
+		&lt;a class='btn btn-default'> 이것도 &lt;/a>
+		&lt;a class='btn btn-default'> &lt;div>저것도&lt;/div> &lt;/a>
+		&lt;a class='btn btn-default'> &lt;label>요것도&lt;/label> &lt;/a>
+		&lt;a class='btn btn-default'> &lt;img src='resources/images/Gabon.png'> &lt;/a>
+	&lt;/div>
+&lt;/div>
+&lt;div class='row-2'>
+	&lt;div class='btn-group g1'>
+		&lt;a class='btn btn-default'> 다같이 &lt;/a>
+		&lt;a class='btn btn-default'> 돌자 &lt;/a>
+		&lt;a class='btn btn-default'> 동네한바퀴 &lt;/a>
+	&lt;/div>
+	&lt;div class='btn-group g2'>
+		&lt;a class='btn btn-default'> 다같이 &lt;/a>
+		&lt;a class='btn btn-default'> 돌자 &lt;/a>
+		&lt;a class='btn btn-default'> 동네한바퀴 &lt;/a>
+	&lt;/div>
+	&lt;div class='btn-group g3'>
+		&lt;a class='btn btn-default'> 다같이 &lt;/a>
+		&lt;a class='btn btn-default'> 돌자 &lt;/a>
+		&lt;a class='btn btn-default'> 동네한바퀴 &lt;/a>
+	&lt;/div>
+&lt;/div>
+							</code></pre>
+							<pre class='language-javascript'><code class='language-javascript'>								
+new NFActiveController('.row-1 .btn-group','.btn','click',true);
+
+var manager = new NFActiveControllerManager();
+manager.makeActiveController('.row-2 .g1','.btn','click',true);
+manager.makeActiveController('.row-2 .g2','.btn','click',true);
+manager.makeActiveController('.row-2 .g3','.btn','click',true);
+							</code></pre>
+							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
+						</div>
+					</article>
+	
 				</section><!-- 좌측 끝 -->
 				<aside class='col-sm-3 col-sm-push-1'>
 					<div class='box-module table-of-contents hidden-xs'>

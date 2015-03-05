@@ -3,7 +3,7 @@
 /*
 	Nody modernize support kit
 	auther        : hojugn ahn (https://github.com/labeldock/Nody_SASS)
-	version       : 2.6
+	version       : 2.6.1
 */
 /* mordernizer */
 *, *:before, *:after { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; }
@@ -480,7 +480,8 @@ aside .aside-footer .aside-footer-commands p, aside .aside-footer .aside-footer-
 aside .aside-footer .aside-footer-commands li, aside .aside-footer .aside-footer-commands a, aside .aside-footer .aside-footer-right li, aside .aside-footer .aside-footer-right a, .aside .aside-footer .aside-footer-commands li, .aside .aside-footer .aside-footer-commands a, .aside .aside-footer .aside-footer-right li, .aside .aside-footer .aside-footer-right a { cursor: pointer; text-decoration: none; }
 aside .aside-body, .aside .aside-body { position: relative; }
 
-.dropdown > .dropdown-content { display: none; }
+.dropdown { position: relative; }
+.dropdown > .dropdown-content { display: none; position: absolute; }
 
 .dropdown.dropdown-show > .dropdown-content { display: block; }
 
