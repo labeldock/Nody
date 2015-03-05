@@ -1,40 +1,44 @@
 <h1><img src="/source/logo/nodyjs-small.png" alt="Nody.js" /></h1>
 
-<h1>Introduce</h1>
-
-<p>Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리이다.</p>
+<p>Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리입니다.</p>
 
 <h2>Feature</h2>
 
 <ul>
 <li>다른 라이브러리와 이질감 없이 사용할 수 있습니다.(Nody plays well with another library)</li>
-<li>CSS스타일로 노드를 생성할 수 있습니다.(Nody helps create node as CSS Style)
-```javascript
+<li>CSS스타일로 노드를 생성할 수 있습니다.(Nody helps create node as CSS Style)</li>
+<li>노드를 찾은 후 바로 다른 파라메터 안에 다른 액션을 사용할 수 있습니다.(Nody can find node and mix function)</li>
+<li>템플릿 사용이 편하며 표현이 매우 다양합니다.(Nody is easy to make node with template and data)</li>
+<li>바인딩을 쉽게 구현할수 있습니다.(Nody is easy to bind node)</li>
+</ul>
+
+
+<h4>노드생성 예제</h4>
+
+<p>```javascript
 MAKE(&lsquo;div&rsquo;);
 MAKE(&lsquo;button.btn.btn-default#btn-action&rsquo;);
 MAKE(&lsquo;input[type=checkbox][checked]&rsquo;);
 MAKE(&lsquo;div&rsquo;,
-MAKE(&lsquo;a&rsquo;,MAKE(&lsquo;span&rsquo;,&lsquo;first value&rsquo;)),
-MAKE(&lsquo;a&rsquo;,MAKE(&lsquo;span&rsquo;,&lsquo;second value&rsquo;))
-);</li>
-</ul>
-
+    MAKE(&lsquo;a&rsquo;,MAKE(&lsquo;span&rsquo;,&lsquo;first value&rsquo;)),
+    MAKE(&lsquo;a&rsquo;,MAKE(&lsquo;span&rsquo;,&lsquo;second value&rsquo;))
+);</p>
 
 <p>MAKETO(&lsquo;div#foo, div#bar, div#third&rsquo;,&lsquo;body&rsquo;);
 ```</p>
 
-<ul>
-<li><p>노드를 찾은 후 바로 다른 파라메터 안에 다른 액션을 사용할 수 있습니다.(Nody can find node and mix function)
-<code>javascript
-FIND('div','#wrapper');
-FIND('ul li',0); //=&gt; nth-child 0
-FIND('ul li',jQuery).css('color','red');
-</code></p></li>
-<li><p>템플릿 사용이 편하며 표현이 매우 다양합니다.(Nody is easy to make node with template and data)
-```javascript
-MAKETO(&lsquo;ul#ul&rsquo;,&lsquo;body&rsquo;);</p></li>
-</ul>
+<h4>노드생성 예제</h4>
 
+<p><code>javascript
+FIND('div','#wrapper'); //=&gt; [element...]
+FIND('ul li',0); //=&gt; [element]
+FIND('ul li',jQuery).css('color','red');
+</code></p>
+
+<h4>템플릿 사용 예제</h4>
+
+<p>```javascript
+MAKETO(&lsquo;ul#ul&rsquo;,&lsquo;body&rsquo;);</p>
 
 <p>var temp = new NFTemplate(&lsquo;<li nf-class="index" nf-value="item-value"></li>&rsquo;);
     temp.renderTo(&lsquo;#ul&rsquo;,
@@ -47,10 +51,7 @@ MAKETO(&lsquo;ul#ul&rsquo;,&lsquo;body&rsquo;);</p></li>
     );
 ```</p>
 
-<ul>
-<li>바인딩을 쉽게 구현할수 있습니다.(Nody is easy to bind node)</li>
-</ul>
-
+<h4>파셜 및 바인딩 예제</h4>
 
 <p>```javascript
 MAKETO(&lsquo;div#placeholder-1, div#placeholder-2&rsquo;,&lsquo;body&rsquo;);</p>
@@ -61,14 +62,11 @@ MAKETO(&lsquo;div#placeholder-1, div#placeholder-2&rsquo;,&lsquo;body&rsquo;);</
 new NFPresentor(&lsquo;#placeholder-2&rsquo;,dataContext,[&lsquo;<input type="text" nf-bind="name">&rsquo;],true);
 ```</p>
 
-<p>```
+<p><code>
     Nody가 불러와진 상태에서 콘솔로 바로 실행해 보세요.
-    (Just do it in console before include the Nody.js)</p>
-
-<pre><code>혹은 아래의 데모를 통해 Nody를 실행해불 수 있습니다.
-</code></pre>
-
-<p>```</p>
+    (Just do it in console before include the Nody.js)
+    아래의 데모를 통해 Nody를 실행해불 수 있습니다.
+</code></p>
 
 <h1>Live demo</h1>
 
