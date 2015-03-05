@@ -23,11 +23,11 @@ MAKE('div',
 MAKETO('div#foo, div#bar, div#third','body');
 ```
 
-#### 노드생성 예제
+#### 노드선택 예제
 ```javascript
 FIND('div','#wrapper'); //=> [element...]
-FIND('ul li',0); //=> [element]
-FIND('ul li',jQuery).css('color','red');
+FIND('ul li',0); //=> element
+FIND('ul li',jQuery).atte('role','list-item');  // => [li[role=list-item]]
 ```
 
 #### 템플릿 사용 예제
