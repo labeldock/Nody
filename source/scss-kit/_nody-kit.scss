@@ -1,4 +1,4 @@
-/* include Nody SASS Kit : version 2.5 Build */ 
+/* include Nody SASS Kit : version 2.5.1 Build */ 
 // auther : hojugn ahn (https://github.com/labeldock/Nody_SASS)
 // easy hack, mordern styleing
 
@@ -1187,4 +1187,9 @@ $placeholder-variant: '&::-webkit-input-placeholder,&:-moz-placeholder,&::-moz-p
 	border-color: transparent $arrow-color transparent transparent;
 	width: 0;
 	height: 0;
+}
+@mixin ie-10-fix {
+	@media all and (-ms-high-contrast:none) {
+		@content
+	}
 }
