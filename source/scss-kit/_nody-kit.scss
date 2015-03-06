@@ -1,4 +1,4 @@
-/* include Nody SASS Kit : version 2.5.1 Build */ 
+/* include Nody SASS Kit : version 2.5.2 Build */ 
 // auther : hojugn ahn (https://github.com/labeldock/Nody_SASS)
 // easy hack, mordern styleing
 
@@ -1187,6 +1187,60 @@ $placeholder-variant: '&::-webkit-input-placeholder,&:-moz-placeholder,&::-moz-p
 	border-color: transparent $arrow-color transparent transparent;
 	width: 0;
 	height: 0;
+}
+$nody-mobile-width           : 768;
+$nody-tablet-landscape-width : 992;
+$nody-desktop-width          : 1200;
+
+@mixin media-mobile-xs {
+	@media (max-width: #{$nody-mobile-width}px) {
+		@content
+	}
+}
+@mixin media-mobile {
+	@media (max-width: #{$nody-mobile-width}px) {
+		@content
+	}
+}
+@mixin media-mobile-gt {
+	@media (min-width: #{$nody-mobile-width + 1}px) {
+		@content
+	}
+}
+@mixin media-tablet {
+	@media (min-width: #{$nody-mobile-width + 1}px) and (max-width: #{$nody-desktop-width - 1}px) {
+		@content
+	}
+}
+@mixin media-tablet-portrait {
+	@media (min-width: #{$nody-mobile-width + 1}px) and (max-width: #{$nody-tablet-landscape-width - 1}px) {
+		@content
+	}
+}
+@mixin media-tablet-portrait-gt {
+	@media (min-width: #{$nody-tablet-landscape-width}px) {
+		@content
+	}
+}
+@mixin media-tablet-landscape {
+	@media (min-width: #{$nody-tablet-landscape-width}px) and (max-width: #{$nody-desktop-width - 1}px) {
+		@content
+	}
+}
+@mixin media-tablet-landscape-lt {
+	@media (max-width: #{$nody-tablet-landscape-width - 1}px) {
+		@content
+	}
+}
+@mixin media-desktop {
+	@media (min-width: #{$nody-desktop-width}px) {
+		@content
+	}
+}
+@mixin media-desktop-lt {
+	@media (max-width: #{$nody-desktop-width - 1}px) {
+		@content
+	}
 }
 @mixin ie-10-fix {
 	@media all and (-ms-high-contrast:none) {
