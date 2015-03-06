@@ -52,7 +52,7 @@ header.master-header {
 						}
 						.dropdown-content {
 							@include box-shadow(1px,1px,3px);
-							background:blue;
+							background:#3177ba;
 							border:5px solid white;
 							z-index:10;
 							width:130px;
@@ -62,12 +62,17 @@ header.master-header {
 								a:before {
 									content:'- ';
 								}
+								a:hover, &:focus {
+									color: #fff;
+								}
 							}
 						}
 					}
 					
 					&:hover, &:focus {
-						color: #fff;
+						> a, .dropdown-toggle {
+							color: #fff;
+						}
 						text-decoration: none;
 						&:after {
 							@include opacity(0.5);

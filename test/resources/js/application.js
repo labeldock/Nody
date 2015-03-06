@@ -1,16 +1,17 @@
-
 var GNBNFContentLoader = new NFContentLoader("main",function(){	
 	//active event controller
 	return this.needActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
 		return GNBNFContentLoader.active((this.textContent || this.innerText).toLowerCase());
-	},2).injectSelects(function(accessData,node){
+	},0).injectSelects(function(accessData,node){
 		//navigation data
 		var name = (node.textContent || node.innerText).toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
 	});
 });
+
 var gnb = GNBNFContentLoader;
+
 var appearLoad = function(){
 	/*linehide*/
 	var css3Transform = function(query,value){
@@ -18,6 +19,7 @@ var appearLoad = function(){
 			$(query).css(s.replace(",","")+"transform",value);
 		});
 	}
+	
 	window.css3Transform = css3Transform;
 	/*linehide*/
 	
@@ -45,7 +47,6 @@ var appearOpen = function(){
 	FIRE(FIND(".appear-ready"),
 		function(node,i,touch){
 			var timeout = 100*i;
-	
 			setTimeout(function(){
 				$(node).addClass("appear-submit");
 				touch();
@@ -58,16 +59,9 @@ var appearOpen = function(){
 		}
 	)
 };
-
 GNBNFContentLoader.whenLoad("appear",function(){
-	FIND(".code-block-1 code",ELVALUE,CODE(FIND(".read-block-1",0)));
-	CODEBLOCK(".code-block-1");
-	
-	FIND(".code-block-2 code",ELVALUE,CODE(appearOpen,appearLoad));
-	CODEBLOCK(".code-block-2");
-	
 	appearLoad();
-})
+});
 GNBNFContentLoader.whenActiveToggle("appear",function(){	
 	appearOpen();
 },function(){
@@ -103,13 +97,14 @@ GNBNFContentLoader.whenLoad("mvvm",function(){
 
 // common data
 var viewData = [
-	{name:"Ghana",native:"Republic of Ghana",image:"resources/images/Ghana.png"},
-	{name:"Gabon",native:"République Gabonaise",image:"resources/images/Gabon.png"},
-	{name:"Guyana",native:"Co-operative Republic of Guyana",image:"resources/images/Guyana.png"},
-	{name:"Gambia",native:"Republic of The Gambia",image:"resources/images/Gambia.png"},
-	{name:"Guatemala",native:"República de Guatemala",image:"resources/images/Guatemala.png"},
-	{name:"Greece",native:"Ελληνική Δημοκρατία",image:"resources/images/Greece.png"}
+	{name:"Ghana"    ,native:"Republic of Ghana"              ,image:"resources/images/Ghana.png"},
+	{name:"Gabon"    ,native:"République Gabonaise"           ,image:"resources/images/Gabon.png"},
+	{name:"Guyana"   ,native:"Co-operative Republic of Guyana",image:"resources/images/Guyana.png"},
+	{name:"Gambia"   ,native:"Republic of The Gambia"         ,image:"resources/images/Gambia.png"},
+	{name:"Guatemala",native:"República de Guatemala"         ,image:"resources/images/Guatemala.png"},
+	{name:"Greece"   ,native:"Ελληνική Δημοκρατία"            ,image:"resources/images/Greece.png"}
 ];
+
 var viewNFDataContext = new NFDataContext(viewData);
 window.viewNFDataContext = viewNFDataContext;
 
@@ -350,24 +345,19 @@ _NFTemplate("template#test").get();
 }
 ]
 GNBNFContentLoader.whenLoad("speedtest",function(){
-	setTimeout(function(){
-		TIMES(testset.length,function(i){
-			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset[i]));
-			CODEBLOCK(".code-block-"+ i);
-		});
-		FIND(".code-block-template code",ELVALUE,CODE("template#test"));
-		CODEBLOCK(FIND(".code-block-template",0));
-	
-		ELON("#teststart","click",function(){
-			DATAEACH(testset,function(method,i){
-				MARK("test"+i);
-				TIMES(2000,function(){
-					method();
-				});
-				FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
+	TIMES(testset.length,function(i){
+		FIND(".code-block-"+ i +" code",ELVALUE,testset[i]);
+	});
+
+	ELON("#teststart","click",function(){
+		DATAEACH(testset,function(method,i){
+			MARK("test"+i);
+			TIMES(2000,function(){
+				method();
 			});
+			FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
 		});
-	},500);
+	});
 });
 
 var testset2 = [
@@ -394,46 +384,21 @@ function(){
 ]
 
 GNBNFContentLoader.whenLoad("speedtest2",function(){
-	setTimeout(function(){
-		TIMES(testset2.length,function(i){
-			FIND(".code-block-"+ i +" code",ELVALUE,CODE(testset2[i]));
-			CODEBLOCK(".code-block-"+ i);
-		});
-		FIND(".code-block-template code",ELVALUE,CODE("template#test"));
-		CODEBLOCK(FIND(".code-block-template",0));
-	
-		ELON("#teststart","click",function(){
-			DATAEACH(testset2,function(method,i){
-				MARK("test"+i);
-				TIMES(8000,function(){
-					method();
-				});
-				FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
+	TIMES(testset2.length,function(i){
+		FIND(".code-block-"+ i +" code",ELVALUE,testset2[i]);
+	});
+	ELON("#teststart","click",function(){
+		DATAEACH(testset2,function(method,i){
+			MARK("test"+i);
+			TIMES(8000,function(){
+				method();
 			});
+			FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
 		});
-	},500);
+	});
 });
 
-GNBNFContentLoader.whenLoad("canvas2d",function(){
-	var canvasArea = $("#canvas-area",this);
-	var canvasBackground = $("#canvas-background td",this);
-	_NFContext2D(100).drawCrossLine(2,0,0,0).needDraw().appendTo(canvasArea);
-	_NFContext2D(100).drawCrossLine(2,2,0,0).needDraw().appendTo(canvasArea);
-	_NFContext2D(100).drawCrossLine(4,4,4,0).needDraw().appendTo(canvasArea);
-	_NFContext2D(100).drawCrossLine(6,6,6,6).needDraw().appendTo(canvasArea);
-	
-	
-	_NFContext2D(canvasBackground.eq(0)).drawCrossLine(4,4,4,5).needDraw().backgroundToResponder();
-	_NFContext2D(canvasBackground.eq(1)).drawCrossLine(0,4,0,4,"#5c5").needDraw().backgroundToResponder();
-	_NFContext2D(canvasBackground.eq(2)).drawCrossLine(0,0,4,4).needDraw().backgroundToResponder();
-	_NFContext2D(canvasBackground.eq(3)).drawCrossLine(4,4,0,0,"#cc5").needDraw().backgroundToResponder();
-	_NFContext2D(canvasBackground.eq(4)).drawCrossLine(0,4,4,4).needDraw().backgroundToResponder();
-	_NFContext2D(canvasBackground.eq(5)).drawCrossLine(4,0,0,4).needDraw().backgroundToResponder();
-	
-});
-
-GNBNFContentLoader.whenLoad('formcontroller',function(){	
-	
+GNBNFContentLoader.whenLoad('formcontroller',function(){
 	var plainNFFormController = new NFFormController('.plain-form-area',null,{
 		normal:function(){
 			this.controls(function(){
@@ -443,8 +408,7 @@ GNBNFContentLoader.whenLoad('formcontroller',function(){
 		disabled:function(){
 			this.controls(function(){
 				$(this).css('color','red');
-			},'.em-target');
-			
+			},'.em-target');	
 		}
 	});
 	var realNFFormController  = new NFFormController('.real-form-area',{

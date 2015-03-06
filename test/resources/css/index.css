@@ -52,7 +52,7 @@ header.master-header {
           -moz-box-shadow: 1px 1px 3px #000;
           -ms-box-shadow: 1px 1px 3px #000;
           box-shadow: 1px 1px 3px #000;
-          background: blue;
+          background: #3177ba;
           border: 5px solid white;
           z-index: 10;
           width: 130px;
@@ -60,9 +60,12 @@ header.master-header {
           padding: 10px; }
           header.master-header.master-header-menu nav menu > li .dropdown .dropdown-content menu a:before {
             content: '- '; }
+          header.master-header.master-header-menu nav menu > li .dropdown .dropdown-content menu a:hover, header.master-header.master-header-menu nav menu > li .dropdown .dropdown-content menu:focus {
+            color: #fff; }
       header.master-header.master-header-menu nav menu > li:hover, header.master-header.master-header-menu nav menu > li:focus {
-        color: #fff;
         text-decoration: none; }
+        header.master-header.master-header-menu nav menu > li:hover > a, header.master-header.master-header-menu nav menu > li:hover .dropdown-toggle, header.master-header.master-header-menu nav menu > li:focus > a, header.master-header.master-header-menu nav menu > li:focus .dropdown-toggle {
+          color: #fff; }
         header.master-header.master-header-menu nav menu > li:hover:after, header.master-header.master-header-menu nav menu > li:focus:after {
           opacity: 0.5;
           filter: alpha(opacity=50);
