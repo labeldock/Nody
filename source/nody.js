@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	nody.version = "0.22.0", nody.build = "1076";
+	nody.version = "0.22.1", nody.build = "1078";
 	
 	// Core verison
 	nody.coreVersion = "1.9.2", nody.coreBuild = "76";
@@ -7168,6 +7168,7 @@ if (!Array.prototype.forEach) {
 					
 					if (_.GestureListener["pinch"] && (e.touches.length === 2)) {
 						e.stopPropagation();
+						e.preventDefault();
 						_.StartPinchValue = _.getPinchDistance(
 							 e.touches[0].pageX,
 							 e.touches[0].pageY,
@@ -7175,6 +7176,7 @@ if (!Array.prototype.forEach) {
 							 e.touches[1].pageY
 						);
 						CALL(_.GestureListener["pinchStart"],_.Source,e);
+						return;
 					}
 					if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
 						e.stopPropagation();
@@ -7191,7 +7193,7 @@ if (!Array.prototype.forEach) {
 				this._currentTouchMoveEvent = function(e){
 					//2 _
 					if(_.GestureListener["pinch"] && _.StartPinchValue && (e.touches.length === 2)){
-						if(_.AllowPinch) return;
+						if(!_.AllowPinch) return;
 						e.stopPropagation();
 						e.preventDefault();
 						var currentDistance = _.getPinchDistance(
