@@ -27,12 +27,12 @@ MAKE(&lsquo;div&rsquo;,
 <p>MAKETO(&lsquo;div#foo, div#bar, div#third&rsquo;,&lsquo;body&rsquo;);
 ```</p>
 
-<h4>노드생성 예제</h4>
+<h4>노드선택 예제</h4>
 
 <p><code>javascript
 FIND('div','#wrapper'); //=&gt; [element...]
-FIND('ul li',0); //=&gt; [element]
-FIND('ul li',jQuery).css('color','red');
+FIND('ul li',0); //=&gt; element
+FIND('ul li',jQuery).attr('role','list-item');  // =&gt; [li[role=list-item]]
 </code></p>
 
 <h4>템플릿 사용 예제</h4>
@@ -95,12 +95,11 @@ new NFPresentor(&lsquo;#placeholder-2&rsquo;,dataContext,[&lsquo;<input type="te
 
 <h2>Version info</h2>
 
-<h4>0.22</h4>
+<h4>0.22.2</h4>
 
 <ul>
-<li>IE8 호환성 향상</li>
-<li>버그수정</li>
-<li>소스폴더 구조 개선</li>
+<li>IE8 호환성 향상 (모든 기능이 IE8에서 동작하진 않습니다)</li>
+<li>노드생성 안정성 향상</li>
 </ul>
 
 

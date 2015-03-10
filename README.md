@@ -27,7 +27,7 @@ MAKETO('div#foo, div#bar, div#third','body');
 ```javascript
 FIND('div','#wrapper'); //=> [element...]
 FIND('ul li',0); //=> element
-FIND('ul li',jQuery).atte('role','list-item');  // => [li[role=list-item]]
+FIND('ul li',jQuery).attr('role','list-item');  // => [li[role=list-item]]
 ```
 
 #### 템플릿 사용 예제
@@ -78,10 +78,9 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
 
 ## Version info #
 
-#### 0.22
-- IE8 호환성 향상
-- 버그수정
-- 소스폴더 구조 개선
+#### 0.22.2
+- IE8 호환성 향상 (모든 기능이 IE8에서 동작하진 않습니다)
+- 노드생성 안정성 향상
 
 
 ## 예정된 계획 #

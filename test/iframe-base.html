@@ -29,11 +29,10 @@
 		document.body.innerHTML = '';
 		DATAEACH(htmls,function(html,i){
 			if(i > 0) ELAPPEND(document.body,MAKE('hr'));
-			
 			if(ISELNODE(html)){
 				ELAPPEND(document.body,CLONENODES(html));
 			} else {
-				ELAPPEND(document.body,HTMLTOEL(html));
+				ELAPPEND(document.body,ELPARSE(html));
 			}
 		});
 	};
@@ -58,7 +57,7 @@
 		document.body.innerHTML = '';
 		DATAEACH(codes,function(codeData){
 			var code = ISELNODE(codeData) ? ELTRACE(codeData,true) : TOS(codeData);
-			var pre = HTMLTOEL(ZSTRING("<pre class='language-\\{$0}'><code class='language-\\{$0}'>\\{$1}</code></pre>",type || 'javascript',code+''))[0];
+			var pre = ELPARSE(ZSTRING("<pre class='language-\\{$0}'><code class='language-\\{$0}'>\\{$1}</code></pre>",type || 'javascript',code+''))[0];
 			ELAPPEND(document.body,pre);
 			Prism.highlightElement(pre.children[0]);
 		});

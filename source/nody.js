@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	nody.version = "0.22.1", nody.build = "1078";
+	nody.version = "0.22.2", nody.build = "1081";
 	
 	// Core verison
 	nody.coreVersion = "1.9.2", nody.coreBuild = "76";
@@ -387,7 +387,7 @@
 		// // 엘리먼트 유형 검사
 		"ISWINDOW"  :function(a){ if(typeof a === "object") return "navigator" in a; return false; },
 		"ISDOCUMENT":function(a){ return typeof a === "object" ? a.nodeType == 9 ? true : false : false; },
-		"ISELNODE"  :function(a){ if(a == null) return false; if(typeof a === "object") if(a.nodeType == 1 || ISDOCUMENT(a) ) return true; return false;},
+		"ISELNODE"  :function(a){ if(a == null) return false; if(typeof a === "object") if(a.nodeType == 1) return true; return false;},
 		"HASELNODE" :function(a){ if( ISARRAY(a) ){ for(var i=0,l=a.length;i<l;i++) if(ISELNODE(a[i])) return true; return false; } else { return ISELNODE(a); } },
 		"ISTEXTNODE":function(a){ if(a == null) return false; if(typeof a === "object") if(a.nodeType == 3 || a.nodeType == 8) return true; return false;},
 		// // 브라우저 유형 검사
@@ -965,7 +965,8 @@
 						}) 
 					})
 				);	
-				var result = [];			
+				var result = [];		
+					
 				for(var i=0,l=nodeList.length;i<l;i++){
 					nodeList[i] && result.push(nodeList[i]);
 				} 
@@ -1382,13 +1383,10 @@
 	
 	nody.method("ZNUMBER",function(source){
 		if(arguments.length === 1){
-			//console.log("single mode")
-			var sn = "\\("+source+")";
-			return TONUMBER(ZSTRING.call(undefined,sn));
+			return TONUMBER(ZSTRING.call(undefined,"\\("+source+")"));
 		} else {
-			//console.log("dual mode");
 			var args = Array.prototype.slice.call(arguments);
-			args[0] = "\\{"+args[0]+"}";
+			args[0]  = "\\{"+args[0]+"}";
 			return TONUMBER(ZSTRING.apply(undefined,args));
 		}
 	},{
@@ -2872,7 +2870,49 @@ if (!Array.prototype.forEach) {
 		"::.*$"
 	].join("|") +")","gi");
 	
+	safeParseMap = {
+		option : [1,"<select multiple='multiple'>", "</select>" ],
+		legend : [1,"<fieldset>", "</fieldset>" ],
+		area   : [1,"<map>", "</map>" ],
+		param  : [1,"<object>", "</object>" ],
+		thead  : [1,"<table>", "</table>" ],
+		tr     : [2,"<table><tbody>", "</tbody></table>" ],
+		col    : [2,"<table><tbody></tbody><colgroup>", "</colgroup></table>" ],
+		td     : [3,"<table><tbody><tr>", "</tr></tbody></table>" ]
+	};
+	safeParseMap.optgroup = safeParseMap.option;
+	safeParseMap.tbody    = safeParseMap.tfoot 
+						  = safeParseMap.colgroup 
+						  = safeParseMap.caption 
+						  = safeParseMap.thead;
+	safeParseMap.th       = safeParseMap.td;
+	
 	nody.singleton("ELUT",{
+		"ELPARSE":function(html){
+			//if has cache
+			var cache = nody.cache.get("ELPARSE",html);
+			if(cache) return CLONENODES(cache);
+			
+			//text node
+			if( !/<|&#?\w+;/.test(html) ) return [];
+			
+			//html
+			var tagName=/<([\w]+)/.exec(html), tagName=tagName?tagName[1].toLowerCase():"",
+			    parseWrapper = document.createElement("div"), parseDepth = 0;
+			
+			if( tagName in safeParseMap) {
+				parseWrapper.innerHTML = safeParseMap[tagName][1] + html + safeParseMap[tagName][2];
+				parseDepth = safeParseMap[tagName][0];
+			} else {
+				parseWrapper.innerHTML = html;
+			}
+			
+			while ( parseDepth-- ) parseWrapper = parseWrapper.lastChild;
+			
+			nody.cache.set("ELPARSE",html,CLONENODES(parseWrapper.children));
+			return CLONEARRAY(parseWrapper.children);
+		},
+		
 		//테그의 속성을 text로 표현합니다.
 		"SELECTINFO"   : function(tagProperty,attrValue){ 
 			tagProperty = (typeof tagProperty !== "string") ? "" : tagProperty;
@@ -3061,17 +3101,6 @@ if (!Array.prototype.forEach) {
 			}
 			return [stakes,stakee]; 
 		},
-		"HTMLTOEL":function(html){
-			var cache = nody.cache.get("HTMLTOEL",html);
-			if( cache ) {
-				return CLONENODES(cache);
-			} else {
-				var makeWrapper = document.createElement("div");
-				makeWrapper.innerHTML = html;
-				nody.cache.set("HTMLTOEL",html,CLONENODES(makeWrapper.children));
-				return CLONEARRAY(makeWrapper.children);
-			}
-		},
 		"PRINT":function(a){ return CREATE("div",a,W.document); }
 	});
 	ELUT.eachGetter();
@@ -3208,7 +3237,7 @@ if (!Array.prototype.forEach) {
 			if( typeof find === 'string' ){
 				// [string,null]
 				return NUT.QUERY(find);
-			} else if( ISELNODE(find) ){
+			} else if(ISELNODE(find)){
 				// [node]
 				return [find];
 			}  else if(ISARRAY(find)) {
@@ -3460,42 +3489,7 @@ if (!Array.prototype.forEach) {
 			
 			//랜더링 시작
 			if(!skipRender){
-				if(name.indexOf("<") !== 0) name = TAG(name,attrValue);
-				switch(name.substr(0,3)){
-					case "<tr" :
-						var sWrap = TAGSTACKS("table","tbody");
-						element = FIND("tr",HTMLTOEL(sWrap[0] + name + sWrap[1]),0);
-						break;
-					case "<td" : case "<th" :
-						if(name.substr(0,6) == "<thead"){
-							var sWrap = TAGSTACKS("table");
-							element = FIND("thead",HTMLTOEL(sWrap[0] + name + sWrap[1]),0);
-						} else {
-							var sWrap = TAGSTACKS("table","tbody");
-							element = FIND(name.substr(1,2),HTMLTOEL(sWrap[0] + name + sWrap[1]),0);
-						}
-						break;
-					case "<tb" : case "<tf" :
-						if(name.substr(0,6) == "<tbody" || name.substr(0,6) == "<tfoot"){
-							var sWrap = TAGSTACKS("table");
-							element = FIND(name.substr(1,5),HTMLTOEL(sWrap[0] + name + sWrap[1]),0);
-						}
-						break;
-					case "<co" :
-						if(name.substr(0,9) == "<colgroup" ){
-							var sWrap = TAGSTACKS("table");
-							element = FIND("colgroup",HTMLTOEL(sWrap[0] + name + sWrap[1]),0);
-						} else if (name.substr(0,4) == "<col" ) {
-							var sWrap = TAGSTACKS("table","colgroup");
-							element = FIND("col",HTMLTOEL(sWrap[0] + name + sWrap[1]),0);
-						} else {
-							element = HTMLTOEL(name)[0];
-						}
-						break;
-					default:
-						element = HTMLTOEL(name)[0];
-						break;
-				}
+				element = ELPARSE( (name.indexOf("<") !== 0) ? TAG(name,attrValue) : name )[0];
 				//캐시 저장
 				if(cacheEnable) nody.cache.set("CREATE",cacheName,CLONENODES(element)[0]);
 			}
@@ -3560,7 +3554,7 @@ if (!Array.prototype.forEach) {
 			var temphtml = (typeof id === "string") ? ('<template id="' + id + '">') : '<template>' ;
 				temphtml += innerHTML;
 				temphtml += '</template>';
-			return HTMLTOEL(temphtml)[0];
+			return ELPARSE(temphtml)[0];
 		},
 		"MAKEIMG":function(src,width){
 			if(typeof src === 'string') {
