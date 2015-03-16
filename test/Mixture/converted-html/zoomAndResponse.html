@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=2">
+  <title>Command Zone</title>
+  <link rel="stylesheet" href="resources/css/quick.css">
+</head>
+<body>
+	
+	<div class="container">
+		<div class="row">
+			<div class="col-xs-12">
+				<br>
+				<h1>ZOOM and response</h1>
+				<hr>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-8">
+				<a name="sample1"></a>
+				<div class="layout">
+					<div class="layout-left">
+						<h2>Create object</h2>
+					</div>
+					<div class="layout-right">
+						<a class="btn btn-default" id="zin-1"><span class="glyphicon glyphicon-plus-sign"></span> ZoomIn</a>
+						<a class="btn btn-default" id="zout-1"><span class="glyphicon glyphicon-minus-sign"></span> ZoomOut</a>
+					</div>
+				</div>
+				<div class="zoom-sample zoom-sample-1">
+					<div id="response-area-1" class="response-area">
+					</div>
+				</div>
+			</div>
+		</div>
+		<hr>
+		<div class="row">
+			<div class="col-xs-8">
+				<div class="layout">
+					<div class="layout-left">
+						<h2>Grid base dropdown</h2>
+					</div>
+					<div class="layout-right">
+						<a class="btn btn-default" id="zin-2"><span class="glyphicon glyphicon-plus-sign"></span> ZoomIn</a>
+						<a class="btn btn-default" id="zout-2"><span class="glyphicon glyphicon-minus-sign"></span> ZoomOut</a>
+					</div>
+				</div>
+				<div class="zoom-sample zoom-sample-2">
+					<div id="response-area-2" class="response-area">
+						<table>
+						</table>
+					</div>
+				</div>
+			</div>
+			
+		</div>
+	</div>
+	<aside>
+		<div class="draggable">
+			<small>Drag me</small>
+			<br>
+			<div class="btn btn-primary" id="dragme"><span class="glyphicon glyphicon-pencil"></span></div>
+		</div>
+	</aside>
+	<script src="../js/nody.js"></script>
+	<script src="resources/js/jquery-1.11.1.min.js"></script>
+	<script src="resources/js/jquery-ui.min.js"></script>
+	<script src="resources/js/jquery-ui.touch-punch.min.js"></script>
+	<script src="resources/js/bootstrap.min.js"></script>
+	<script>
+		//helper
+		makeGetter("NOTY",function(s){
+			var text = DATAMAP(arguments,function(vs){
+				return TOS(vs,true);
+			}).join("\n");
+			noty({theme:"relax",layout:"topLeft",text:text,timeout:4000})
+		});
+		
+		$("#dragme").draggable({
+			start:function(e,ui){
+				$(this).addClass("drag-effect");
+			},
+			stop:function(e){
+				$(this).removeClass("drag-effect");
+				$(this).css({"top":0,"left":0});
+			}
+		});
+		
+		var z1 = new ZoomBox(".zoom-sample-1");
+		var newItemIndex = 0;
+		
+		$("#zin-1").on("click",function(){
+			z1.needZoomWithOffset(0.3);
+		});
+		$("#zout-1").on("click",function(){
+			z1.needZoomWithOffset(-0.3);
+		});
+		
+		$(".zoom-sample-1 #response-area-1").droppable({
+			tolerance:"pointer",
+			drop:function(e,ui){
+				var pos  = ui.draggable.offset();
+				var	dPos = $(this).offset();
+				var	top  = (pos.top - dPos.top);
+				var	left = (pos.left - dPos.left);
+			
+				NOTY("drop position",top,left);
+			
+				ELAPPEND(e.target,
+					MAKE("div.create-object",{html:(newItemIndex++),style:ZSTRING("left:\\{$0}px;top:\\{$1}px;",left,top)})
+				)
+			}
+		});
+		
+		var z2 = new ZoomBox(".zoom-sample-2");
+		
+		
+		$(".zoom-sample-2 table").append(
+			TIMESMAP(40,function(){
+				return MAKE("tr",
+					TIMESMAP(40,function(){
+						return MAKE("td");
+					})
+				)
+			})
+		)
+		
+		$("#zin-2").on("click",function(){
+			z2.needZoomWithOffset(0.3);
+		});
+		$("#zout-2").on("click",function(){
+			z2.needZoomWithOffset(-0.3);
+		});
+		
+		var tds = $(".zoom-sample-2 #response-area-2 td").droppable({
+			tolerance:"pointer",
+			drop:function(e,ui){
+				tds.removeClass("over");
+				$(this).addClass("over");
+			},
+			over:function(){
+				if(z2.ZoomValue == 1) $(this).addClass("over");
+			},
+			out:function(){
+				$(this).removeClass("over");
+			}
+		});
+		
+	</script>	
+</body>
+</html>

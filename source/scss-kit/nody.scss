@@ -3,7 +3,7 @@
 /*
 	Nody modernize support kit
 	auther        : hojugn ahn (https://github.com/labeldock/Nody_SASS)
-	version       : 2.6.1
+	version       : 2.7
 */
 /* mordernizer */
 *{
@@ -91,39 +91,7 @@ fieldset,.layout {
 .cell-layout { 
 	@include cell-layout-variant("cell");
 }
-.fieldset {
-	display:table;
-	> div.row {
-		display:table-row;
-		> div.cell {
-			width:auto;
-			display:table-cell;
-		}
-	}
-}
 
-/********
-block */
-.block { 
-	display:block;
-	&-center{ margin-left:auto;margin-right:auto;}
-	&-left{ margin-right:auto;margin-left:0px;}
-	&-right{ margin-left:auto;margin-right:0px;}
-}
-.inline-block {@include inline-block;}
-.scroll-block {overflow-y:scroll;overflow-x:hidden;}
-.hidden-block {overflow:hidden;}
-.full-width {
-	display:block;
-	width:100%;
-}
-/********
- scroll */
-.scroll-{
-	&auto{ overflow:auto;-webkit-overflow-scrolling: touch; }
-	&x   { overflow-x:auto;-webkit-overflow-scrolling: touch; }
-	&y   { overflow-y:auto;-webkit-overflow-scrolling: touch; }
-}
 /*******************
  - fast layout set
 */
@@ -153,66 +121,6 @@ $xxl:30px;
 .full-{ &width {width:100%; } &height{height:100%;} }
 
 /********
- status */
-.muted { color:#777 !important;}
-.caption { color:#777; padding-top:3px; padding-bottom:3px !important;}
-
-.heightfix{@include heightfix;}
-
-/*****************************
- group layout */
-.inline-group,.input-group,.text-group,.box{ display:block;}
-@each $name in inline, input, text {
-	.#{$name}-group { 
-		>*{
-			@include inline-block;
-			@if $name != "inline"{
-				margin-bottom:10px;
-			}
-		}
-	}
-}
-.inline{@include inline-block;}
-
-/*text positon*/
-@each $direction in center,right,left {
-	.text-#{$direction}-th th{text-align:#{$direction} !important;}
-	.text-#{$direction}-td td{text-align:#{$direction} !important;}
-	.text-#{$direction}{text-align:#{$direction} !important;} 
-	
-}
-
-/*text weight*/
-.text-weak  {font-weight:thin   !important;}
-.text-normal{font-weight:normal !important;}
-.text-strong{font-weight:bold   !important;}
-
-/*default color property*/
-.text-{
-	&default { color :black;}
-	&primary { color :#3071a9;}
-	&success { color :#449d44;}
-	&warning { color :#f0ad4e;}
-	&info    { color :#5bc0de;}	
-	&danger  { color :#d9534f;}
-}
-@mixin badge-inset {
-	&.inset {border-radius:3px;}
-	&.inset-xs {border-radius:1px;}
-	&.inset-sm {border-radius:2px;}
-	&.inset-lg {border-radius:5px;}
-	&.inset-xl {border-radius:10px;}
-}
-.badge-{
-	&default { @include badge-inset; color: #000; background:white; }
-	&primary { @include badge-inset; color: #fff; background-color:#3071a9;}
-	&success { @include badge-inset; color: #fff; background-color:#449d44;}
-	&warning { @include badge-inset; color: #fff; background-color:#f0ad4e;}
-	&info    { @include badge-inset; color: #fff; background-color:#5bc0de;}
-	&danger  { @include badge-inset; color: #fff; background-color:#d9534f;}
-}
-
-/********
  table */
 table.grid {
 	@include table-variant();
@@ -221,62 +129,13 @@ table.cellbase  {
 	@include cellbase-table-variant();
 }
 .table-fixed{table-layout:fixed;}
-.table-frame{
-	width:100%;
-	overflow:auto;
-	-webkit-overflow-scrolling: touch;
-	border:1px solid #eee;height:370px;
-	
-	&-auto{
-		height:auto;
-	}
-	
-	> table {
-		margin-top:0px;
-		padding-top:0px;
-		top:0px; table-layout:auto !important;
-		width:inherit !important;
-	}
-	th, td {
-		white-space:no-wrap !important;
-		text-overflow:clip !important;
-		-o-text-overflow:clip !important;
-		-ms-text-overflow:clip !important; 
-		overflow:visible !important;
-		word-wrap:normal !important;
-	}
-}
-.table-group > table{margin-top:0px;margin-bottom:0px;}
 
 /*****************************
-select block*/
-.no-select{ @include no-select; }
-/*****************************
- 인터페이스 - 리무버 */
-.clearfix      { clear:both !important; }
-
-@mixin breakfix-def { display:block; clear:both !important; }
-.breakfix      { 
-	@include breakfix-def;
-	height:10px;
-	&-xs{@include breakfix-def;height:$xs;}
-	&-sm{@include breakfix-def;height:$sm;}
-	&-lg{@include breakfix-def;height:$lg;}
-	&-xl{@include breakfix-def;height:$xl;}
-}
-
-@mixin linebreakfix-def { @include inline-block; clear:both !important; }
-.linebreakfix {
-	@include linebreakfix-def;
-	width:10px;
-	&-xs{@include linebreakfix-def;width:$xs;}
-	&-sm{@include linebreakfix-def;width:$sm;}
-	&-lg{@include linebreakfix-def;width:$lg;}
-	&-xl{@include linebreakfix-def;width:$xl;}
-}
+no block*/
 @each $name in '',ul,ol {
 	#{$name}.no-style{ list-style:none !important;text-decoration:none !important; }
 }
+.no-select{ @include no-select; }
 .no-decoration { text-decoration:none !important;  }
 .no-background { background-image:none !important; }					
 
@@ -290,13 +149,8 @@ span.ellipsis { @include inline-block;margin:0px;padding:0px;width:100%; }
 .pointer { &,&-each>*{ cursor:pointer; } }
 .pointer-underline{ &:hover,&-each>*:hover { text-decoration:underline; } }
 
-@each $model,$sel in ('header','header,.header'),
-					 ('footer','footer,.footer'),
-					 ('main','main,.main'),
-					 ('section','section,.section'),
-					 ('article','article,.article'),
-					 ('aside','aside,.aside'),
-{ #{$sel} {@include panel-variant($model);} }
+/*****************************
+ Nody js */
 
 .dropdown {
 	position:relative;
@@ -323,3 +177,4 @@ span.ellipsis { @include inline-block;margin:0px;padding:0px;width:100%; }
 		min-width:5px;
 	}
 }
+

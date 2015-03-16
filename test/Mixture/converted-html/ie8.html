@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>Nody js</title>
+	
+	<!-- Custom styles for this template -->
+	<link href="resources/css/nody.css" rel="stylesheet">
+	
+	<!-- Bootstrap core CSS -->
+	<link href="resources/css/bootstrap.min.css" rel="stylesheet">
+	<link href="resources/css/bootstrap-theme.min.css" rel="stylesheet">
+	
+	<!-- prism -->
+	<link href="resources/css/prism.css" rel="stylesheet">
+	
+	<!-- Custom styles for this template -->
+	<link href="resources/css/index.css" rel="stylesheet">
+	
+	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->	
+	<script src="resources/js/modernizr.js"></script>
+	<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+</head>
+<body>
+	
+	<div class='container'>
+		<hr>
+		<h3>ELON</h3>
+		<button class='elon-test-action btn btn-primary'>ELON test</button>
+	</div>
+	
+	
+	<div class='container'>
+		<hr>
+		<h3>Partial test</h3>
+		<div id='test1' class='well'>
+		
+		</div>
+		<button class='btn btn-info pt-string'>Partial script string</button>
+		<button class='btn btn-success pt-template'>Partial template</button>
+		<button class='btn btn-warning pt-vtemplate'>Partial vitrue template</button>
+		<template id='test1-template'><input value='made in template'></template>
+		<div id='test1-vtemplate' class='hidden'><input value='made in vtemplate'></div>
+	</div>
+	
+	
+	
+	<div class='container'>
+		<hr>
+		<h3>Form Controller</h3>
+		<form id='form-controller-form'>
+			<label>name</label>
+			<input name='name'>
+			<label>desc</label>
+			<input name='desc'>
+		</form>
+		<button class='set-form-data-action btn btn-warning'>Set form data with RANDOM </button>
+		<button class='get-form-data-action btn btn-primary'>Get form data</button>
+		<ul class='get-from-data-list list-group'></ul>
+	</div>
+	
+	
+	<div class='container'>
+		<hr>
+		<button class='make-test-action btn btn-primary pull-right'>Run All</button>
+		<h3>MAKE ELEMENT</h3>
+		<br>
+		<table class='table table-bordered'>
+			<colgroup>
+				<col style='width:200px'>
+			</colgroup>
+			<thead>
+				<tr>
+					<th>Tag</th>
+					<th>result</th>
+					<th>HTML</th>
+				</tr>
+			</thead>
+			<tbody class='make-table-body'>
+				<tr><td>MAKE('div')<td><td>
+				<tr><td>MAKE('div::foobar')<td><td>
+				<tr><td>MAKE('div','foobar')<td><td>
+				<tr><td>MAKE('input')<td><td>
+				<tr><td>MAKE('input::foobar')<td><td>
+				<tr><td>MAKE('input','foobar')<td><td>
+				<tr><td>MAKE('radio')<td><td>
+				<tr><td>MAKE('button')<td><td>
+				<tr><td>MAKE('p','foo')<td><td>
+			</tbody>
+		</table>
+	</div>
+	
+	<!-- Placed at the end of the document so the pages load faster -->
+	<script src="resources/js/nody.js"></script>
+	<script src="resources/js/jquery-1.11.1.min.js"></script>
+	<script src="resources/js/bootstrap.min.js"></script>	
+	<script>
+		ELON('.elon-test-action','click',function(){
+			alert('heelo');
+		});
+		ELON('.pt-string','click',function(){
+			var temp = new NFTemplate(
+				'<input value="partial-string">'
+			);
+			temp.renderTo('#test1');
+		});
+		ELON('.pt-template','click',function(){
+			var temp = new NFTemplate('#test1-template');
+			temp.renderTo('#test1');
+		});
+		ELON('.pt-vtemplate','click',function(){
+			var temp = new NFTemplate('#test1-vtemplate');
+			temp.renderTo('#test1');
+		});
+		
+		ELON('.set-form-data-action','click',function(){
+			var form = new NFForm('#form-controller-form');
+			form.setFormData({
+				'name':ZSTRING('\\(Noah,Liam,Jacob,Mason,William,Ethan,Michael,Alexander,Jayden,Daniel,Elijah,Aiden,James,Benjamin,Matthew,Jackson,Logan,David,Anthony,Joseph,Joshua,Andrew,Lucas,Gabriel,Samuel,Christopher,John,Dylan,Isaac,Ryan,Nathan,Carter,Caleb,Luke,Christian,Hunter,Henry,Owen)'),
+				'desc':ZSTRING('\\(He seems to be busy.,This town has an air of prosperity.,His story has the appearance of truth.,Her explanation sounds all right.)')
+			});
+		});
+		
+		ELON('.get-form-data-action','click',function(){
+			var form = new NFForm('#form-controller-form');
+			var formListItem = new NFTemplate(
+				'<li class=list-group-item>\
+					<h4 class=list-group-item-heading nf-value=name></h4>\
+					<p class=list-group-item-text nf-value=desc></p>\
+				</li>');
+			formListItem.renderTo('.get-from-data-list',
+				form.getFormData()
+			);
+		});
+		
+		ELON('.make-test-action','click',function(){
+			FIND('.make-table-body tr',DATAEACH,function(){
+				var evalContent = FINDIN(this,'td:nth-child(1)',ELCONTENT);
+				
+				var result = eval(evalContent);
+				
+				FINDIN(this,'td:nth-child(2)',ELAPPEND,result);
+				FINDIN(this,'td:nth-child(3)',ELCONTENT,result.outerHTML);
+			});
+		});
+		
+	</script>
+</body>
+</html>

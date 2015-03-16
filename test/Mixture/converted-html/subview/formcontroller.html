@@ -1,0 +1,104 @@
+<div class="page-header">
+	<h1>FormController <small>Moduel: FormController Module </small></h1>
+</div>
+
+<div class="row">
+	<div class='col-sm-4'>
+		<div class='data-example data-example-1'>
+			<pre>
+				{
+					"name":"foo",
+					"age":"12",
+					"nick":"Colorfull"
+				}
+			</pre>
+		</div>
+	</div>
+	<div class='col-sm-4'>
+		<div class='data-example data-example-2'>
+			<pre>
+				{
+					"name":"bar",
+					"age":"13",
+					"nick":"😜😎"
+				}
+			</pre>
+		</div>
+	</div>
+	<div class='col-sm-4'>
+		<div class='data-example data-example-3'>
+			<pre>
+				{
+					"name":"막시무스",
+					"age":"14",
+					"nick":"카이져스"
+				}
+			</pre>
+		</div>
+	</div>
+</div>
+<hr>
+<div class='row'>
+	<div class="col-sm-6">
+		<div>Set data</div>
+		<div class='btn-group'>
+			<button class='btn btn-primary setdata-action-1'>
+				setData 1
+			</button>
+			<button class='btn btn-primary setdata-action-2'>
+				setData 2
+			</button>
+			<button class='btn btn-primary setdata-action-3'>
+				setData 3
+			</button>
+		</div>
+		<div>Set status</div>
+		<div class='btn-group'>
+			<button class='btn btn-warning form-status-1'>
+				form-status-1
+			</button>
+			<button class='btn btn-warning form-status-2'>
+				form-status-2
+			</button>
+		</div>
+		<div>get JSON</div>
+		<div class='btn-group'>
+			<button class='btn btn-success getdata-action'>
+				getJSON
+			</button>
+		</div>
+	</div>
+	<div class="col-sm-6">
+		<div class='plain-form-area'>
+			<div><b>Name : </b><var class='em-target' name='name'></var></div>
+			<div><b>Age  : </b><var class='em-target' name='age'></var></div>
+			<div><b>Nick : </b><var name='nick'></var></div>
+		</div>		
+		<div class='real-form-area'>
+			<div>
+				<label>
+					Name : 
+					<input class='disabled-target' type='text' name='name'/>
+				</label>
+			</div>
+			<div>
+				<label>
+					Age  : 
+					<input class='disabled-target' type='text' name='age'/>
+				</label>
+			</div>
+			<div>
+				<label>
+					Nick : 
+					<input type='text' name='nick'/>
+				</label>
+			</div>
+		</div>
+	</div>
+</div>
+<hr>
+<div class='row'>
+	<div class='well'>
+		<var class='getdata-veriant'></var>
+	</div>
+</div>

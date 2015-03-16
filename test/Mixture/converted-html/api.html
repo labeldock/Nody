@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>Nody js</title>
+	
+	<!-- Custom styles for this template -->
+	<link href="resources/css/nody.css" rel="stylesheet">
+	
+	<!-- Bootstrap core CSS -->
+	<link href="resources/css/bootstrap.min.css" rel="stylesheet">
+	<link href="resources/css/bootstrap-theme.min.css" rel="stylesheet">
+	
+	<!-- prism -->
+	<link href="resources/css/prism.css" rel="stylesheet">
+	
+	<!-- Custom styles for this template -->
+	<link href="resources/css/index.css" rel="stylesheet">
+	
+	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->	
+	<script src="resources/js/modernizr.js"></script>
+	
+	<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+</head>
+<body>
+	<header class='master-header master-header-brand'>
+		<div class='container'>
+			<div class='brand'>
+				<a href='https://github.com/labeldock/nody'>Nody.js <small>0.22</small></a>
+			</div>
+		</div>
+	</header>
+	<header class='master-header master-header-menu'>
+		<div class='container'>
+			<nav>
+				<menu>
+					<li><a href="index.html#">Demo</a></li>
+					<li><a href="api.html#" class="active" >API guide</a></li>
+					<li>
+						<div class='dropdown'>
+							<div class='dropdown-toggle'>Before page</div>
+							<div class='dropdown-content'>
+								<menu>
+									<a href="ie8.html">IE8 test</a>
+									<a href="nftouch.html">Touch test</a>
+									<a href="nfscroll.html">Scroll test</a>
+									<a href="app.html">Old page</a>
+								</menu>
+							</div>
+						</div>
+					</li>
+				</menu>
+			</nav>
+		</div>
+	</header>
+	<header class='master-header master-header-fork'>
+		<a href="https://github.com/labeldock/nody">
+			<img src="https://camo.githubusercontent.com/365986a132ccd6a44c23a9169022c0b5c890c387/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f7265645f6161303030302e706e67" 
+			alt="Fork me on GitHub" 
+			data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png">
+		</a>
+	</header>
+	<main class='master-main'>
+		
+	<div class='container'>
+		<div class='row'>
+			<section class='col-sm-8 code-section'>
+				<article>
+					<header>need..</header>
+					<p>need.. 문은 화면상 변화가 있는 API에 사용됩니다. 호출시 동작이 안될수도 있음을 암시해야 합니다.</p>
+				</article>
+				<article>
+					<header>some, getSome</header>
+					<p>예를들어 NFArray에서 map은 오브젝트 원문에 영향을 줍니다. 하지만 getMap은 오브젝트 원문과 관련없이 새로운 오브젝트를 반환합니다.</p>
+				</article>
+				<article>
+					<header>whenDid.. , whenWill..</header>
+					<p>어느 시점의 커스텀 이벤트문입니다. 시점의 전과 후로 나뉘며 will문에서는 반환값이 false일 경우 일반적으로 이벤트가 취소 됩니다.</p>
+				</article>
+				<article>
+					<header>Module::Source</header>
+					<p>모듈의 Source는 모듈상 가장 중심이 되는 값을 Source에 넣습니다. 예를 들어 NFArray는 array NFString은 string입니다.</p>
+				</article>
+				<article>
+					<header>Getter</header>
+					<p>Getter는 단순 함수이나 함수자체에서 인스턴스를 만들어내는 기능이 들어있습니다. 예를들어 ZSTRING의 경우 ZSTRING.SEED(1)('seed is \\{$i}')와 같이 확장함수가 포함되어 있습니다.</p>
+				</article>
+				<article>
+					<header>should..</header>
+					<p>should문은 오브젝트가 반드시 되어야할 상태값을 명령하는 것입니다. should문은 반드시 코드블럭이 끝나기전에 상태값이 완전히 셋팅되어야만 하는것이 아닌것임을 염두해야합니다.</p>
+				</article>
+				<article>
+					<header>find..</header>
+					<p>find문은 반드시 노드가 리턴되는 API가 되어야 합니다.</p>
+				</article>
+				<article>
+					<header>DATA..</header>
+					<p>DATA..은 배열 데이터를 다루기 위한 함수입니다. DATA의 특징은 undefined와 array를 제외한 모든 값들은 단수의 배열로 취급합니다..</p>
+				</article>
+				<article>
+					<header>PROP..</header>
+					<p>PROP..은 오브젝트의 어트리뷰트값을 다루기위한 함수입니다..</p>
+				</article>
+				<article>
+					<header>NF..</header>
+					<p>NF(Nody Foundation)문은 nody의 기본 모듈집합을 의미합니다.</p>
+				</article>
+				<article>
+					<header>Z..</header>
+					<p>NF와 다른 Z문들의 특징은 함수 한번으로 빠르게 종결하려는 특징이 있습니다.</p>
+				</article>
+				
+			</section><!-- 좌측 끝 -->
+			<aside class='col-sm-3 col-sm-push-1'>
+				<div class='box-module table-of-contents hidden-xs'>
+					<h4>About</h4>
+					<menu class='text-primary'>
+					</menu>
+				</div>
+			</aside>
+		</div>
+	</div>
+
+	</main>
+	<div class='run-modal'>
+		<div class='run-dialog'>
+			<div class='run-content'>
+				<nav class='tabs'>
+					<ul class='nav nav-pills'>
+						<li><a>Code Result</a></li>
+						<li><a>VIEW Code</a></li>
+					</ul>
+					<div class='run-modal-escape'>
+						<a>esc &times;</a>
+					</div>
+				</nav>
+				<div class='tab-contents'>
+					<div class='code-set'>
+						<div class='code-set-javascript'>
+							<div class='code-result'>
+								<label class='label label-primary'>Javascript result</label>
+								<iframe class='javascript-result' src='iframe-base.html'></iframe>
+							</div>
+							<div class='code-origin'>
+								<label class='label label-danger'>Javascript code</label>
+								<iframe class='javascript-code' src='iframe-base.html'></iframe>
+							</div>
+						</div>
+						<div class='code-set-view'>
+							<label class='label label-default'>View result</label>
+							<iframe class='view-result' src='iframe-base.html'></iframe>
+						</div>
+						<div class='code-set-html'>
+							<div class='code-result'>
+								<label class='label label-primary'>HTML result</label>
+								<iframe class='html-result' src='iframe-base.html'></iframe>
+							</div>
+							<div class='code-origin'>
+								<label class='label label-danger'>HTML code</label>
+								<iframe class='html-code' src='iframe-base.html'></iframe>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- Placed at the end of the document so the pages load faster -->
+	
+	<script src="resources/js/nody.js"></script>
+	<script src="resources/js/jquery-1.11.1.min.js"></script>
+	<script src="resources/js/bootstrap.min.js"></script>	
+	<script src="resources/js/livecode.js"></script>	
+	<script src="resources/js/prism.js"></script>
+</body>
+</html>
+

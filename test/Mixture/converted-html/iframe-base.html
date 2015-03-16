@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Nody iframe base">
+	<meta name="author" content="HO JUNG AHN">
+
+	<title>Nody iframe base</title>
+	
+	<!-- Custom styles for this template -->
+	<link href="resources/css/nody.css" rel="stylesheet">
+	
+	<!-- Bootstrap core CSS -->
+	<link href="resources/css/bootstrap.min.css" rel="stylesheet">
+	
+	<link href="resources/css/prism-default.css" rel="stylesheet">
+	
+	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->	
+	<script src="resources/js/modernizr.js"></script>
+	
+	<script src="resources/js/nody.js"></script>
+	<script src="resources/js/jquery-1.11.1.min.js"></script>
+	<script src="resources/js/bootstrap.min.js"></script>
+	<script src="resources/js/prism.js"></script>
+	<script>
+	document.setHTML = function(htmls){
+		document.body.innerHTML = '';
+		DATAEACH(htmls,function(html,i){
+			if(i > 0) ELAPPEND(document.body,MAKE('hr'));
+			if(ISELNODE(html)){
+				ELAPPEND(document.body,CLONENODES(html));
+			} else {
+				ELAPPEND(document.body,ELPARSE(html));
+			}
+		});
+	};
+	
+	document.runCode = function(codes){
+		var codes  = codes.trim().split(';');
+		if(codes[codes.length - 1] == '') codes.pop();
+		
+		var result = [];
+		
+		for(var i=0,l=codes.length;i<l;i++){
+			//주석제거 함께
+			var code = codes[i].replace(/\*\//g,'^').replace(/\/\*[^\^]+\^/g,'').trim();
+			var thisVariant = /^var\s/.test(code);
+			console.log('runCode','\n'+code,thisVariant);
+			thisVariant ? eval(code) : result.push( eval(code) );
+		} 
+		return result;
+	};
+	
+	document.setJSResult = function(codes,type){
+		document.body.innerHTML = '';
+		DATAEACH(codes,function(codeData){
+			var code = ISELNODE(codeData) ? ELTRACE(codeData,true) : TOS(codeData);
+			var pre = ELPARSE(ZSTRING("<pre class='language-\\{$0}'><code class='language-\\{$0}'>\\{$1}</code></pre>",type || 'javascript',code+''))[0];
+			ELAPPEND(document.body,pre);
+			Prism.highlightElement(pre.children[0]);
+		});
+	}
+	document.setHTMLResult = function(htmls,code){
+		var codeTag = (typeof code == 'string') ? 'code.language-'+code : 'code.language-markup';
+		
+		document.body.innerHTML = '';
+		DATAEACH(htmls,function(html){
+			var pre = ISELNODE(html) ? 
+			MAKE('pre',MAKE(codeTag,_NFString(html.outerHTML).getHTMLSafe())) :
+			MAKE('pre',MAKE(codeTag,_NFString(html).getHTMLSafe()));
+			ELAPPEND(document.body,pre);
+			Prism.highlightElement(pre.children[0]);
+		});
+	}
+	
+	document.noResult = function(){
+		document.body.innerHTML = 'no result';
+	}
+	</script>
+	<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+	<style>body{padding:0px 10px;}</style>
+</head>
+<body>
+</body>
+</html>
+
