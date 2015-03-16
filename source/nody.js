@@ -11,7 +11,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	nody.version = "0.22.2", nody.build = "1081";
+	nody.version = "0.22.3", nody.build = "1082";
 	
 	// Core verison
 	nody.coreVersion = "1.9.2", nody.coreBuild = "76";
@@ -274,7 +274,7 @@
 		return bf;
 	});
 	//trycatch high perfomance
-	nody.method("TRYCATCH",function(t,c,s){try{return t.call(s);}catch(e){return c.call(s,e);}});
+	nody.method("TRYCATCH",function(t,c,s){try{return t.call(s);}catch(e){if(typeof c === 'function') return c.call(s,e);}});
 	nody.url = {
 		info : function(url){
 			if(typeof url === "object") return ( url["ConstructorMark"] === ("ClientURLInfo" + W.nody)) ? url : null;
@@ -845,7 +845,9 @@
 		}
 	});
 	nodyBaseKit.eachGetter();
-	
+})(window,[],{},{},{},((function(){window.nody = {};return window.nody;})()));
+
+(function(nody){
 	nody.env = (function(){
 		var info = {};
 		if(navigator) {
@@ -998,7 +1000,7 @@
 		};
 		return info;
 	})();
-})(window,[],{},{},{},((function(){window.nody = {};return window.nody;})()));
+})(window.nody);
 
 //Nody Foundation
 (function(W){
@@ -1189,6 +1191,13 @@
 			if(typeof l !== 'number' || d.length === l) return d;
 			if (d.length > l) return Array.prototype.slice.call(d,0,l);
 			TIMES(l - d.length,function(){ d.push(ex); });
+			return d;
+		},2),
+		"DATAREPEAT":CONTINUEFUNCTION(function(v,l){
+			var d = CLONEARRAY(v);
+			if(typeof l !== 'number' || d.length === l) return d;
+			if (d.length > l) return Array.prototype.slice.call(d,0,l);
+			TIMES(l - d.length,function(){ d.push(v); });
 			return d;
 		},2),
 		//길이만큼 리피트 됩니다.
@@ -1395,7 +1404,7 @@
 	
 	// 키를 찾는 함수입니다.
 	var objectCommonInterface = {
-		"getKeys":function(rule){
+		"keys":function(rule){
 			var r = [];
 			if(typeof rule === "string"){
 				this.each(function(v,k){ if(k.indexOf(rule) > -1){ r.push(k); }});
@@ -1412,13 +1421,16 @@
 	// NFArray
 	nody.arrayModule("NFArray",{
 		// 요소 각각에 형식인수를 넘기며 한번씩 호출한다.
-		each     : function(method) { for ( var i = 0, l = this.length ; i < l  ; i++) { if( method(this[i],i) == false ) break; } return this; },
-		getKeys  : objectCommonInterface.getKeys,
-		eachBack : function(method) { for ( var i = this.length - 1    ; i > -1 ; i--) { if( method(this[i],i) == false ) break; } return this; },
+		each     : function(block) { for ( var i = 0, l = this.length ; i < l  ; i++) { if( block(this[i],i) == false ) break; } return this; },
+		// each의 반대 동작
+		eachBack : function(block) { for ( var i = this.length - 1    ; i > -1 ; i--) { if( block(this[i],i) == false ) break; } return this; },
+		// key배열 습득
+		keys  : objectCommonInterface.keys,
 		//첫번째 요소 반환.
-		zero:function() { return this[0]; },
+		zero  :function(){ return DATAZERO(this); },
+		first :function(){ return DATAZERO(this); },
 		//마지막 요소 반환.
-		last:function() { return this[this.length - 1]},
+		last :function(){ return DATALAST(this); },
 		//
 		has:function(v){ for(var i=0,l=this.length;i<l;i++) if(this[i] === v) return true; return false; },
 		// 값을 추가한다.
@@ -1443,10 +1455,10 @@
 				return this;
 			}
 		},
-		//
-		isEmpty:function(){ return (this.length === 0) ? true : false },
-		isMulti:function(){ return (this.length > 1) ? true : false },
-		isSingle:function(){ return (this.length === 1) ? true : false },
+		//값의 길이
+		isNone:function(){ return (this.length === 0) ? true : false },
+		isOne:function(){ return (this.length === 1) ? true : false },
+		isMany:function(){ return (this.length > 1) ? true : false },
 		//선택된 값으로 배열이 재정렬 됩니다.
 		selectValue:function(value){ var selects = []; DATAEACH(this,function(v){ if(v == value) selects.push(v); }); this.setSource(selects); },
 		selectIndex:function(index){ return this.setSource(this[index]); },
@@ -1462,48 +1474,26 @@
 		//내부요소 모두 지우기
 		clear   : function() { this.splice(0,this.length); return this; },
 		clone:function(){ return new NFArray(this);},
-		//
-		getFirst:function(){ return DATAZERO(this); },
-		getLast :function(){ return DATALAST(this); },
-		//
 		//정렬합니다.
-		getSortBy:function(sortInspector){},
 		getSort:function(positive){
-			positive=typeof positive=="undefined"?true:false;var clone=this.clone();
-			return positive?clone.sort():clone.sort().reverse();
+			return (typeof positive=="undefined"?true:false)?this.clone().sort():this.clone().sort().reverse();
 		},
-		getSortFirst:function(){ return this.getSort().getFirst(); },
-		getSortLast:function(){ return this.getSort().getLast(); },
 		//뒤로부터 원하는 위치에 대상을 삽입합니다.
 		behind: function(v,a){ return this.insert(v, this.length - (isNaN(a) ? 0 : parseInt(a)) ); },
 		//원하는 위치에 대상을 덮어씁니다.
 		overwrite : function(v,a){ this.min(a+1); this[a] = v; return this; },
 		//양방향에 대상을 삽입합니다.
-		getBoth:function(f,l){ return this.save().insert(f).push(l);   },
-		both:function(f,l)   { return this.setSource(this.getBoth(f,l)); },
+		getBoth:function(insert,push){ return this.save().insert(insert).push(push);     },
+		both:function(insert,push)   { return this.setSource(this.getBoth(insert,push)); },
 		// 현재의 배열을 보호하고 새로운 배열을 반환한다.
-		save    : function(v){ return this.__GlobalConstructor__(this); },
+		save : function(v){ return this.__GlobalConstructor__(this); },
 		//요소안의 array 녹이기
-		getFlatten : function(){
-			var r = [];
-			for(var i=0,l=this.length;i<l;i++) {
-				if(typeof this[i] === "object") {
-					for(var ai=0,ar=TOARRAY(this[i]),arl=ar.length;ai<arl;ai++) r.push(ar[ai]);
-				} else {
-					r.push(this[i]);
-				}
-			}
-			return new NFArray(r);
-		},
+		getFlatten : function(){ return new NFArray(DATAFLATTEN(this)); },
 		flatten    : function(){return this.setSource(this.getFlatten());},
 		//다른 배열 요소를 덛붙인다.
-		getConcat : function(){
-			return new NFArray(arguments).inject(this.save(),function(v,_a){
-				new NFArray(v).each(function(v2){
-					_a.push(v2);
-				});
-			});
-		},
+		getConcat : function(){ return new NFArray(arguments).inject(this.save(),function(v,_a){ new NFArray(v).each(function(v2){ _a.push(v2); }); }); },
+		concat    : function(){ return this.setSource(this.getConcat.apply(this,arguments)); },			
+		//어떠한 요소끼리 위치를 바꾼다
 		changeIndex:function(leftIndex,rightIndex){
 			var left  = this[leftIndex];
 			var right = this[rightIndex];
@@ -1511,14 +1501,12 @@
 			this[rightIndex] = left;
 		},
 		hasIndex:function(index){ if (index < 0) return false; if (this.length - 1 < index) return false; return true; },
-		concat    : function(){ return this.setSource(this.getConcat.apply(this,arguments)); },			
 		// 리턴한 요소를 누적하여 차례로 전달함
 		inject:function(firstValue,method) { for(var i = 0,l = this.length;i<l;i++) { var returnValue = method(this[i],firstValue,i); if(typeof returnValue !== "undefined") firstValue = returnValue; } return firstValue; },
 		// 리턴되는 오브젝트로 새 배열은 만들어냅니다.
 		mapUtil: { "&":function(owner,param){ return owner.getMap(function(a){ if(typeof a === "object") return a[param]; return undefined;}); }},
 		getMap : function(process,start) { if(typeof process=="function"){var result=[];for(var i=(typeof start === "number" ? start : 0),l=this.length;i<l;i++)result.push(process(this[i],i,this.length));return new NFArray(result);}else if(typeof getOrder=="string"){process=process.trim();for(var key in this.mapUtil)if(process.indexOf(key)==0){var tokenWith=process[key.length]==":"?true:false;var param=tokenWith?process.substr(key.length+1):process.substr(key.length);return new NFArray(this.mapUtil[key](this,param));}}return new NFArray(); },
 		map : function(process) { return this.setSource(this.getMap(process)); },
-		
 		// index가 maxIndex한계값이 넘으면 index가 재귀되어 반환된다.
 		turning:function(maxIndex,method){
 			var NI = parseInt(maxIndex);
@@ -1582,11 +1570,6 @@
 		subarray:function() { return this.setSource(this.getSubArray.apply(this,arguments));},
 		getSubarr:function(fi,li) { return this.getSubArray(fi,li ? li + fi : this.length); },
 		subarr:function(fi,li){return this.setSource(this.getSubarr(fi,li));},
-		//해당 인덱스 요소를 옮김 (자리바꿈)
-		getLeft:function(index){ if(index < 1) return this.save(); if(index > this.length-1) return this.save(); var t1 = this[index]; var t2 = this[index-1]; return this.save().overwrite(t1,index-1).overwrite(t2,index); },
-		left:function(index){ return this.setSource(this.getLeft(index)); },
-		getRight:function(index){ if(index < 0) return this.save(); if(index > this.length-2) return this.save(); var t1 = this[index]; var t2 = this[index+1]; return this.save().overwrite(t1,index+1).overwrite(t2,index); },
-		right:function(index){ return this.setSource(this.getRight(index)); },
 		//해당되는 인덱스를 제거
 		getDrop:function(index){ index=index?index:0;return this.getSubArray(index).getConcat(this.getSubarr(index+1)); },
 		drop:function(index) { return this.setSource(this.getDrop(index)); },
@@ -1630,10 +1613,6 @@
 		// undefined를 제외한 가장 처음의 
 		useFirst : function(){ return this.firstMatch(function(matchValue){ if(typeof matchValue !== "undefined") return true; }); },
 		useLast  : function(){ return this.lastMatch (function(matchValue){ if(typeof matchValue !== "undefined") return true; }); },
-		
-		//사용성 증가를 위한 코드
-		isNothing:function(){ if(this.length == 0) return true; return false; },
-		isEnough:function(){ if(this.length > 0) return true; return false;   },
 		//요소안의 string까지 split하여 flaatten을 실행
 		getStringFlatten:function(){ return this.save().map(function(t){ if(typeof t === "string") return t.split(" "); if(ISARRAY(t)) return new NFArray(t).flatten().type("string"); }).remove(undefined).flatten(); },
 		stringFlatten:function(){ return this.setSource( this.getStringFlatten() ); },
@@ -1654,7 +1633,6 @@
 		getRandom:function(length){ return new NFArray(DATARANDOM(this.toArray())); },
 		getShuffle:function(){ return new NFArray(DATASHUFFLE(this.toArray())); },
 		join:function(t,p,s){ return (ISTEXT(p)?p:"")+Array.prototype.join.call(this,t)+((ISTEXT(s))?s:""); },
-		joint:function(t,p,s){ return (ISTEXT(p)?p+(ISTEXT(t)?t:""):"")+Array.prototype.join.call(this,t)+((ISTEXT(s))?(ISTEXT(t)?t:"")+s:""); },
 		//Object로 반환
 		keyPair:function(key,value){
 			if (!ISTEXT(key)) key = "key";
@@ -1679,12 +1657,12 @@
 	nody.module("NFObject",{
 		//each
 		each:function(f){ for(key in this.Source){ var r = f(this.Source[key],key); if(typeof r == false) {break;} } return this; },
-		getKeys:objectCommonInterface.getKeys,
-		eachBack:function(method){ var keys = this.getKeys(); for ( var i = keys.length - 1 ; i > -1 ; i--) { if( method(keys[i],i) == false ) break; } return this; },
+		keys:objectCommonInterface.keys,
+		eachBack:function(method){ var keys = this.keys(); for ( var i = keys.length - 1 ; i > -1 ; i--) { if( method(keys[i],i) == false ) break; } return this; },
 		//첫번째 요소 반환.
 		zero:function(){ for(var k in this.Source) return this.Source[k]; },
 		//마지막 요소 반환.
-		last:function(){ var keys = this.getKeys(); return this.Source[keys[keys.length-1]];},
+		last:function(){ var keys = this.keys(); return this.Source[keys[keys.length-1]];},
 		// 값을 추가한다
 		push:function(value,key){ if( typeof key === "string" || typeof key === "number" ){ this.Source[key] = value; } else { var i = 0; var ex = true; do { if(i in this.Source){ i++; } else { ex = false; this.Source[i] = value; } } while (ex); } return this; },
 		setSource:function(obj,k){ 
@@ -1737,7 +1715,7 @@
 		getMap:function(f,ksel){ 
 			if(typeof f === "function"){
 				var result = CLONE(this.Source);
-				var keys   = this.getKeys(ksel);
+				var keys   = this.keys(ksel);
 				for(var i=0,l=keys.length;i<l;i++) result[keys[i]] = f(this.Source[keys[i]],keys[i]);
 				return result; 
 			} else { 
@@ -1757,7 +1735,7 @@
 					return this.Source[k];
 				}
 			} else if(k instanceof RegExp || ISARRAY(k)){
-				var keys   = this.getKeys(rule),result = {};
+				var keys   = this.keys(rule),result = {};
 				for(var key in keys) result[key] = keys[key];
 				return result;
 			} else {
@@ -1766,7 +1744,7 @@
 		},
 		//inspect key value
 		isSame:function(obj){ var originObject = this.Source; var judgement = true; new NFObject(obj).each(function(v,k){ if( !(k in originObject) || originObject[k] !== v){ judgement = false; return false; } }); return judgement; },
-		isEqual:function(obj){ var _obj = new NFObject(obj); var oObj = this.Source; var iObj = _obj.get(); var oKeys = this.getKeys().sort(); var iKeys = _obj.getKeys().sort(); if(oKeys.length !== iKeys.length) return false; for(var i=0,l=oKeys.length;i<l;i++){ if(oKeys[i] !== iKeys[i]) return false; if(oObj[oKeys[i]] !== iObj[iKeys[i]]) return false; } return true; },
+		isEqual:function(obj){ var _obj = new NFObject(obj); var oObj = this.Source; var iObj = _obj.get(); var oKeys = this.keys().sort(); var iKeys = _obj.keys().sort(); if(oKeys.length !== iKeys.length) return false; for(var i=0,l=oKeys.length;i<l;i++){ if(oKeys[i] !== iKeys[i]) return false; if(oObj[oKeys[i]] !== iObj[iKeys[i]]) return false; } return true; },
 		//오브젝트를 배열로 반환함
 		hashes:function(key,val){ key = typeof key !== "string" ? "key" : key; val = typeof val !== "string" ? "value" : val; var r=[]; for(var k in this.Source){ var o = {}; o[key] = k; o[val] = this.Source[k]; r.push(o); } return r; },
 		//
@@ -3532,18 +3510,26 @@ if (!Array.prototype.forEach) {
 				return CREATE(name, attr);
 			}	
 		},1),
-		"MAKES":CONTINUEFUNCTION(function(nodes,attr){
-			return DATAMAP(nodes,function(node){
-				if( typeof node === 'string' ) return DATAMAP(node.split(','),function(eachNode){ if(eachNode.trim().length !== 0) return CREATE(eachNode,attr) });
+		"MAKES":CONTINUEFUNCTION(function(nodes,attr,repeat){
+			if( typeof repeat === 'number' ) nodes = DATAREPEAT(nodes,repeat).join(',');			
+			var makes = DATAMAP(nodes,function(node){
+				if( typeof node === 'string' ) {
+					if(typeof attr === 'string') var isZAttr = !!attr.match('\\\\{');
+					return DATAMAP(node.split(','),function(eachNode,index){ 
+						if (eachNode.trim().length === 0) return;
+						if (isZAttr) {
+							var cre = ZSTRING.SEED(index)(eachNode+attr);
+							return CREATE(cre);
+						} else {
+							return CREATE( typeof attr === 'string' ? eachNode+attr : eachNode);
+						}
+					});
+				}
 				if( ISELNODE(node) ) return node;
 			},DATAFLATTEN);
+			
+			return makes;
 		},1),
-		"MAKETO":CONTINUEFUNCTION(function(nodes,attr,parent){
-			if(typeof attr === 'string') attr = FSINGLE(attr)[0];
-			if( ISELNODE(attr) ) parent = attr ,attr = undefined;
-			var makes = MAKES(nodes,attr);
-			return ELAPPEND(parent,makes), (makes.length === 0 ? undefined : makes.length === 1 ? makes[0] : makes);
-		},2),
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 		"MAKECOLS":function(){ 
 			return MAKE('colgroup', DATAMAP(arguments,function(arg){
@@ -4210,7 +4196,7 @@ if (!Array.prototype.forEach) {
 		//Disabled
 		"DISABLED":function(node,status){
 			var elf = new NFArray(FSINGLE(node));
-			if( elf.isNothing() ){
+			if( elf.isNone() ){
 				console.error("ELDISABLED:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
 			} else {
 				elf.each(function(el){
@@ -4231,7 +4217,7 @@ if (!Array.prototype.forEach) {
 		//Readonly
 		"READONLY":function(node,status){
 			var elf = new NFArray(FSINGLE(node));
-			if( elf.isNothing() ){
+			if( elf.isNone() ){
 				console.error("ELREADONLY:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
 			} else {
 				elf.each(function(el){
@@ -6497,7 +6483,7 @@ if (!Array.prototype.forEach) {
 			} else if(typeof _template === 'string') { templateNode = new NFTemplate(_template,this.value(),dataFilter,true);
 			} else                                   { console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template); return false; }
 			
-			if(templateNode.isEmpty()) { console.error("template :: 렌더링할 template를 찾을수 없습니다",templateNode); return false; }
+			if(templateNode.isNone()) { console.error("template :: 렌더링할 template를 찾을수 없습니다",templateNode); return false; }
 			
 			templateNode.partialNodeProps(['bind','action','placeholder'],
 				function(name,node,nodeAlias){
@@ -6609,7 +6595,7 @@ if (!Array.prototype.forEach) {
 			if(typeof data === "function") data = data();
 			if(typeof data === "object") {
 				this.context.feedDownManagedDataMake(data||{},this);
-				var makedData = this.Child.getLast();
+				var makedData = this.Child.last();
 				NFDataContextNotificationCenter.addChildData(this.BindID,makedData);
 				return makedData;
 			} else {

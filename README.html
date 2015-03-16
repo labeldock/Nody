@@ -38,7 +38,7 @@ FIND('ul li',jQuery).attr('role','list-item');  // =&gt; [li[role=list-item]]
 <h4>템플릿 사용 예제</h4>
 
 <p>```javascript
-MAKETO(&lsquo;ul#ul&rsquo;,&lsquo;body&rsquo;);</p>
+MAKE(&lsquo;ul#ul&rsquo;,$Q).appendTo(&lsquo;body&rsquo;);</p>
 
 <p>var temp = new NFTemplate(&lsquo;<li nf-class="index" nf-value="item-value"></li>&rsquo;);
     temp.renderTo(&lsquo;#ul&rsquo;,
@@ -54,7 +54,7 @@ MAKETO(&lsquo;ul#ul&rsquo;,&lsquo;body&rsquo;);</p>
 <h4>파셜 및 바인딩 예제</h4>
 
 <p>```javascript
-MAKETO(&lsquo;div#placeholder-1, div#placeholder-2&rsquo;,&lsquo;body&rsquo;);</p>
+MAKES(&lsquo;div#placeholder-1, div#placeholder-2&rsquo;,$Q).appendTo(&lsquo;body&rsquo;);</p>
 
 <p>var dataContext = new NFDataContext({name:&lsquo;hello world&rsquo;});</p>
 
@@ -95,11 +95,19 @@ new NFPresentor(&lsquo;#placeholder-2&rsquo;,dataContext,[&lsquo;<input type="te
 
 <h2>Version info</h2>
 
+<h4>0.22.3</h4>
+
+<ul>
+<li>Mixture기반 데모페이지 변경</li>
+</ul>
+
+
 <h4>0.22.2</h4>
 
 <ul>
-<li>IE8 호환성 향상 (모든 기능이 IE8에서 동작하진 않습니다)</li>
+<li>IE8 호환성 향상 (모든 기능이 IE8에서 동작하는것은 아닙니다)</li>
 <li>노드생성 안정성 향상</li>
+<li>MAKETO문 제거</li>
 </ul>
 
 

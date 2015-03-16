@@ -32,7 +32,7 @@ FIND('ul li',jQuery).attr('role','list-item');  // => [li[role=list-item]]
 
 #### 템플릿 사용 예제
 ```javascript
-MAKETO('ul#ul','body');
+MAKE('ul#ul',$Q).appendTo('body');
 
 var temp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
 	temp.renderTo('#ul',
@@ -47,7 +47,7 @@ var temp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
   
 #### 파셜 및 바인딩 예제
 ```javascript
-MAKETO('div#placeholder-1, div#placeholder-2','body');
+MAKES('div#placeholder-1, div#placeholder-2',$Q).appendTo('body');
 
 var dataContext = new NFDataContext({name:'hello world'});
 
@@ -78,10 +78,13 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
 
 ## Version info #
 
-#### 0.22.2
-- IE8 호환성 향상 (모든 기능이 IE8에서 동작하진 않습니다)
-- 노드생성 안정성 향상
+#### 0.22.3
+- Mixture기반 데모페이지 변경
 
+#### 0.22.2
+- IE8 호환성 향상 (모든 기능이 IE8에서 동작하는것은 아닙니다)
+- 노드생성 안정성 향상
+- MAKETO문 제거
 
 ## 예정된 계획 #
 
