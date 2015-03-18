@@ -10,7 +10,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	nody.version = "0.23", nody.build = "1084";
+	nody.version = "0.23", nody.build = "1086";
 	
 	// Core verison
 	nody.coreVersion = "1.9.2", nody.coreBuild = "76";
@@ -2999,12 +2999,12 @@ if (!Array.prototype.forEach) {
 			return result;
 		},
 		//css스타일 태그를 html스타일 태그로 바꿉니다.
-		"TAG" : function(tagProperty,attrValue){
+		"TAG" : CONTINUEFUNCTION(function(tagProperty,attrValue){
 			
 			if(typeof tagProperty === "object"){
 				var tagText = [];
 				DATAEACH(tagProperty,function(tag){ if(ISELNODE(tag)) tagText.push(tag.outerHTML); });
-				return tagText.join('\n');
+				return tagText.join('');
 			}
 			
 			//TAG중첩을 지원하기 위한 것
@@ -3066,7 +3066,7 @@ if (!Array.prototype.forEach) {
 			
 			
 			return (cachePrefix + tagValue + cacheSuffix);
-		},
+		},1),
 		"TAGSTACKS":function(){
 			var stakes = new String(""),stakee = new String("");
 			for(var i=0,l=arguments.length;i<l;i++){
@@ -3419,6 +3419,12 @@ if (!Array.prototype.forEach) {
 	nody.singleton("GUT",{
 		"CREATE" :function(name,attrValue,parent){
 			var element,skipRender,name=(typeof name !== "string") ? "div" : name.trim();
+			//nf foundation
+			name = name.replace(/\[\[[\w\-\|\s]+\]\]/ig,function(s){ 
+				s = s.substr(2,s.length-4);
+				var pipe = s.indexOf('|');
+				return (pipe > 0) ? '[nf-'+s.substr(pipe+1)+'='+s.substr(0,pipe)+']' : '[nf-value='+s+']';
+			});
 			var dataset,htmlvalue,cacheName=name,cacheEnable=false;
 			
 			//attr 최적화 작업
@@ -3580,6 +3586,9 @@ if (!Array.prototype.forEach) {
 				});
 			});
 			return TOARRAY(makeRoot.children);
+		},1),
+		"TAGS":CONTINUEFUNCTION(function(fulltag){
+			return MAKES(fulltag,TAG);
 		},1),
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 		"MAKECOLS":function(){ 
@@ -4593,7 +4602,7 @@ if (!Array.prototype.forEach) {
 		var fs = FSINGLE(this);
 		return (fs.length === 1) ? fs[0] : fs;
 	});
-	
+	nody.method('ZTEMP',function(temp,data,filter){ return (new NFTemplate(temp)).renderMap(data,filter); });
 	nody.method('$Q',function(s,p,i)  { return new NFQuery(s,p,i);});
 	nody.method('$M',function(n,a,p)  { return new NFMake(n,a,p); });
 	nody.method('$T',function(n,d,f,c){ return new NFTemplate(n,d,f,c); });
