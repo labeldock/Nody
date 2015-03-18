@@ -20,10 +20,9 @@ MAKE('div',
 );
 ```
 ```javascript
-	MAKES('div>a>span::first value+span::second value');
-	MAKES('ul>li.item-$*3');
-	MAKES('table>thead>tr>td^^tbody>tr>td');
-);
+MAKES('div>a>span::first value+span::second value');
+MAKES('ul>li.item-$*3');
+MAKES('table>thead>tr>td^^tbody>tr>td');
 ```
 
 
