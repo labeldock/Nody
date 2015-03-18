@@ -85,7 +85,9 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
 - MAKES 변경 ('>','+','^','*','$' 문 지원)
 - TAGS, ZTEMP 추가
 - 탬플릿 전용 새 표현 추가 
+```
 ( MAKE('div[[foo]]') => <div nf-value="foo"></div>, MAKE('div[[foo|src]]') => <div nf-src="foo"></div> )
+```
 
 ## 예정된 계획 #
 
