@@ -35,7 +35,7 @@ FIND('ul li',jQuery).attr('role','list-item');  // => [li[role=list-item]]
 
 #### 템플릿 사용 예제
 ```javascript
-MAKE('ul#ul','body');
+MAKES('ul#ul','body');
 
 var temp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
 	temp.renderTo('#ul',
