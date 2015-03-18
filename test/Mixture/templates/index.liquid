@@ -85,9 +85,7 @@ MAKE('input?radio!group1');
 MAKE('ul',
 	MAKE('li.item','list1'),
 	MAKE('li.item','list2'),
-	MAKE('li.item.text-success','list3'),
-	MAKE('li.item.text-danger','list4'),
-	MAKE('li.item','list5')
+	MAKE('li.item','list3'),
 );
 MAKE('table.table.table-bordered',
 	MAKE('thead',
@@ -103,7 +101,6 @@ MAKE('table.table.table-bordered',
 			MAKE('td',MAKE('span','Title 1')),
 			MAKE('td',MAKE('span','Title 1'))
 		),
-		/* lazy */
 		MAKE('tr',
 			MAKE('input?checkbox!chk'),
 			MAKE('span','Title 2'),
@@ -124,9 +121,11 @@ MAKE('table.table.table-bordered',
 						<p>MAKES는 여러 노드를 한번에 만들때 유용합니다.</p>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>
-MAKES('li,li,li','.item[role=list-item]');
-MAKES('li,li,li','.item-\\{$i}');
-MAKES('li','.item-\\{$i}',3);
+MAKES('li.item[role=list-item]*3');
+MAKES('li.item-$*3');
+MAKES('li::item-$*3');
+MAKES('ul*2>li::item-$*3');
+MAKES('dl*2>dt::title+dd>span::desc+span::desc2^dt+dd');
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
 						</div>

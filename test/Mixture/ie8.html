@@ -93,6 +93,10 @@
 				<tr><td>MAKE('radio')<td><td>
 				<tr><td>MAKE('button')<td><td>
 				<tr><td>MAKE('p','foo')<td><td>
+				<tr><td>MAKES('ul>li.item[role=listitem]*3')[0]<td><td>
+				<tr><td>MAKES('ul>li.item::item-$*3')[0]<td><td>
+				<tr><td>MAKES('ul>li::item-$*3')[0]<td><td>
+				<tr><td>MAKES('dl>dt::title+dd>span::desc+span::desc2^dt+dd')[0]<td><td>
 			</tbody>
 		</table>
 	</div>

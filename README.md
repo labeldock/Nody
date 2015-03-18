@@ -12,16 +12,20 @@ Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브�
 
 #### 노드생성 예제
 ```javascript
-MAKE('div');
 MAKE('button.btn.btn-default#btn-action');
 MAKE('input[type=checkbox][checked]');
 MAKE('div',
 	MAKE('a',MAKE('span','first value')),
 	MAKE('a',MAKE('span','second value'))
 );
-
-MAKETO('div#foo, div#bar, div#third','body');
 ```
+```javascript
+	MAKES('div>a>span::first value+span::second value');
+	MAKES('ul>li.item-$*3');
+	MAKES('table>thead>tr>td^^tbody>tr>td');
+);
+```
+
 
 #### 노드선택 예제
 ```javascript
@@ -32,7 +36,7 @@ FIND('ul li',jQuery).attr('role','list-item');  // => [li[role=list-item]]
 
 #### 템플릿 사용 예제
 ```javascript
-MAKE('ul#ul',$Q).appendTo('body');
+MAKE('ul#ul','body');
 
 var temp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
 	temp.renderTo('#ul',
@@ -47,7 +51,7 @@ var temp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
   
 #### 파셜 및 바인딩 예제
 ```javascript
-MAKES('div#placeholder-1, div#placeholder-2',$Q).appendTo('body');
+MAKES('div#placeholder-$*2','body');
 
 var dataContext = new NFDataContext({name:'hello world'});
 
@@ -78,13 +82,8 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
 
 ## Version info #
 
-#### 0.22.3
-- Mixture기반 데모페이지 변경
-
-#### 0.22.2
-- IE8 호환성 향상 (모든 기능이 IE8에서 동작하는것은 아닙니다)
-- 노드생성 안정성 향상
-- MAKETO문 제거
+#### 0.23
+- MAKES 변경 ('>','+','^','*','$' 문 지원)
 
 ## 예정된 계획 #
 

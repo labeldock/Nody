@@ -7,11 +7,10 @@
  * http://sizzlejs.com/
  */
 
-
 (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	nody.version = "0.22.3", nody.build = "1082";
+	nody.version = "0.23", nody.build = "1082";
 	
 	// Core verison
 	nody.coreVersion = "1.9.2", nody.coreBuild = "76";
@@ -3510,25 +3509,71 @@ if (!Array.prototype.forEach) {
 				return CREATE(name, attr);
 			}	
 		},1),
-		"MAKES":CONTINUEFUNCTION(function(nodes,attr,repeat){
-			if( typeof repeat === 'number' ) nodes = DATAREPEAT(nodes,repeat).join(',');			
-			var makes = DATAMAP(nodes,function(node){
-				if( typeof node === 'string' ) {
-					if(typeof attr === 'string') var isZAttr = !!attr.match('\\\\{');
-					return DATAMAP(node.split(','),function(eachNode,index){ 
-						if (eachNode.trim().length === 0) return;
-						if (isZAttr) {
-							var cre = ZSTRING.SEED(index)(eachNode+attr);
-							return CREATE(cre);
-						} else {
-							return CREATE( typeof attr === 'string' ? eachNode+attr : eachNode);
-						}
-					});
-				}
-				if( ISELNODE(node) ) return node;
-			},DATAFLATTEN);
+		"MAKES":CONTINUEFUNCTION(function(fulltag,root){
+			var makeRoot   = FIND(root,0);
+			var incomeRoot = !!makeRoot;
+			if(!incomeRoot) makeRoot = MAKE('div');
 			
-			return makes;
+			var divideIndex = fulltag.indexOf(">");
+			
+			if(divideIndex>0) {
+				var currentTag  = fulltag.substr(0,divideIndex);
+				var nextTag     = fulltag.substr(divideIndex+1).trim();
+				var firstCursor = nextTag.indexOf("^");
+				var nnextTag    = nextTag.indexOf(">");
+				
+				if( firstCursor > 1 ){
+					if( nnextTag == -1 || firstCursor < nextTag.indexOf(">") ){
+						var nextCursor,cursorDepth,nextTag = nextTag.replace(/\^.+/,function(s){
+							nextCursor = s.replace(/[\^]+/,function(s){
+								cursorDepth = s.length;
+								return "";
+							}).trim();
+							return "";
+						}).trim();
+					}
+				}
+			} else {
+				var currentTag  = fulltag
+				var nextTag     = ''
+			}
+			
+			var multiMake    = currentTag.split("+");
+			var multiMakeEnd = currentTag.split("+").length-1;
+			
+			
+			DATAEACH(multiMake,function(eachtag,eachtagIndex){
+				///////////////
+				var repeat = 1;
+				//repeat
+				eachtag = eachtag.replace(/\*[\d]+$/,function(s){
+					repeat = parseInt(s.substr(1)); return "";
+				});
+				//generate
+				var findroot = FSINGLE(root)[0];
+				TIMES(repeat,function(i){
+					var rtag     = eachtag.replace("$",i+1);
+					var rtagNode = MAKE(rtag);
+					
+					makeRoot.appendChild(rtagNode);
+					
+					if(eachtagIndex == multiMakeEnd) {
+						if(nextTag.length > 0) MAKES(nextTag,rtagNode);
+						if(nextCursor){
+							var findRoot = makeRoot;
+							TIMES(cursorDepth-1,function(){
+								if(findRoot && findRoot.parentElement) {
+									findRoot = findRoot.parentElement;
+								} else {
+									return false;
+								}
+							});
+							if(findRoot) MAKES(nextCursor,findRoot);
+						}
+					}
+				});
+			});
+			return TOARRAY(makeRoot.children);
 		},1),
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 		"MAKECOLS":function(){ 
