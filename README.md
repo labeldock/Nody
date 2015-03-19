@@ -82,13 +82,18 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
 ## Version info #
 
 #### 0.23
-- MAKES 변경 ('>','+','^','*','$' 문 지원)
-- TAGS, ZTEMP 추가
+
 - 탬플릿 전용 새 표현 추가 
 ```
-MAKE('div[[foo]]') => <div nf-value="foo"></div>
-MAKE('div[[foo|src]]') => <div nf-src="foo"></div>
+MAKE('div[[foo]]'); => <div nf-value="foo"></div>
+MAKE('div[[foo|src]]'); => <div nf-src="foo"></div>
 ```
+- MAKES 에멧스타일로 In/Out 변경 ('>','+','^','*','$' 문 지원)
+```
+MAKES('b::list+ul>li::item-$*3'); =>
+[<b>list</b>,<ul><li>item-1</li><li>item-2</li><li>item-3</li></ul>"]
+```
+- TAGS, ZTEMP 추가
 
 ## 예정된 계획 #
 
