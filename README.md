@@ -88,7 +88,7 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
 MAKE('div[[foo]]');     => <div nf-value="foo"></div>
 MAKE('div[[foo|src]]'); => <div nf-src="foo"></div>
 ```
-- MAKES 에멧스타일로 In/Out 변경 ('>','+','^','*','$' 문 지원)
+- MAKES 에멧스타일 기술 가능('>','+','^','*','$',',' 문 지원)
 ```
 MAKES('b::list+ul>li::item-$*3'); =>
 [
