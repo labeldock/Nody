@@ -10,7 +10,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	nody.version = "0.23", nody.build = "1086";
+	nody.version = "0.23", nody.build = "1087";
 	
 	// Core verison
 	nody.coreVersion = "1.9.2", nody.coreBuild = "76";
@@ -3550,8 +3550,8 @@ if (!Array.prototype.forEach) {
 				var nextTag     = ''
 			}
 			
-			var multiMake    = currentTag.split("+");
-			var multiMakeEnd = currentTag.split("+").length-1;
+			var multiMake    = currentTag.split(/\+|\,/);
+			var multiMakeEnd = currentTag.split(/\+|\,/).length-1;
 			
 			
 			DATAEACH(multiMake,function(eachtag,eachtagIndex){
