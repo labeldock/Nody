@@ -81,8 +81,9 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
 
 ## Version info #
 
-#### 0.23
+#### 0.23 에서 변경될 내용
 
+적용완료
 - nf 탬플릿을 위한 새 표현 추가 
 ```
 MAKE('div[[foo]]');     => <div nf-value="foo"></div>
@@ -97,6 +98,11 @@ MAKES('b::list+ul>li::item-$*3'); =>
 ]
 ```
 - TAGS, ZTEMP 추가
+
+적용예정
+- NFTemplate init규칙이 변경될 것입니다.
+- NFThrowProperty가 생길것입니다.
+- NFScrollBox가 재작성 될 것입니다.
 
 ## 예정된 계획 #
 
