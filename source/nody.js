@@ -10,7 +10,7 @@
 (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	nody.version = "0.23", nody.build = "1087";
+	nody.version = "0.23.1", nody.build = "1088";
 	
 	// Core verison
 	nody.coreVersion = "1.9.2", nody.coreBuild = "76";
@@ -7006,35 +7006,109 @@ if (!Array.prototype.forEach) {
 		if(needDisplay === true) this.needDisplay();
 	});
 	
+	nody.method("CUBICBEZIERMAKE",function(x1, y1, x2, y2, epsilon){
+		epsilon = (typeof epsilon === "number") ? epsilon : 1;
+		var curveX = function(t){
+				var v = 1 - t;
+				return 3 * v * v * t * x1 + 3 * v * t * t * x2 + t * t * t;
+			};
+
+			var curveY = function(t){
+				var v = 1 - t;
+				return 3 * v * v * t * y1 + 3 * v * t * t * y2 + t * t * t;
+			};
+
+			var derivativeCurveX = function(t){
+				var v = 1 - t;
+				return 3 * (2 * (t - 1) * t + v * v) * x1 + 3 * (- t * t * t + 2 * v * t) * x2;
+			};
+
+			return function(t){
+
+				var x = t, t0, t1, t2, x2, d2, i;
+
+				// First try a few iterations of Newton's method -- normally very fast.
+				for (t2 = x, i = 0; i < 8; i++){
+					x2 = curveX(t2) - x;
+					if (Math.abs(x2) < epsilon) return curveY(t2);
+					d2 = derivativeCurveX(t2);
+					if (Math.abs(d2) < 1e-6) break;
+					t2 = t2 - x2 / d2;
+				}
+
+				t0 = 0, t1 = 1, t2 = x;
+
+				if (t2 < t0) return curveY(t0);
+				if (t2 > t1) return curveY(t1);
+
+				// Fallback to the bisection method for reliability.
+				while (t0 < t1){
+					x2 = curveX(t2);
+					if (Math.abs(x2 - x) < epsilon) return curveY(t2);
+					if (x > x2) t0 = t2;
+					else t1 = t2;
+					t2 = (t1 - t0) * .5 + t0;
+				}
+
+				// Failure
+				return curveY(t2);
+
+			};
+	});
 	
-	nody.module("NFTimeCounter",{
+	nody.module("NFCounter",{
 		timeoutHandler:function(){
 			if(this._timeout)clearTimeout(this._timeout);
-			if( this._moveEnd > (+(new Date())) ) {
-				CALL(this._whenMoving,this,100 - ( this._moveEnd - (+new Date())) / this.duration * 100);
+			var now = (+(new Date()));
+			if( this._moveEnd > now ) {
+				this._countProcesser ?
+					CALL(this._whenCounting,this,this._countProcesser(1-(this._moveEnd-now)/this.duration)) :
+					CALL(this._whenCounting,this,1-(this._moveEnd-now)/this.duration);
 				var _ = this;
 				this._timeout = setTimeout(function(){ _.timeoutHandler.call(_) },this.rate);
 			} else {
 				this.moveStart = null;
 				this.moveEnd   = null;
-				CALL(this._whenMoving,this,100);
-				CALL(this._whenMoveFinish,this,100);
+				CALL(this._whenCounting,this,1);
+				CALL(this._whenCountFinish,this,1);
 			}
 		},
-		start:function(){
+		whenCountStart :function(m){ this._whenCountStart = m; },
+		whenCount      :function(m){ this._whenCounting = m; },
+		whenCountFinish:function(m){ this._whenCountFinish = m; },
+		setCountProcessor:function(m){
+			if(typeof m === "function") this._countProcesser = m;
+		},
+		setRate:function(rate){
+			this.rate = typeof rate === 'number' ? rate : 20;
+		},
+		start:function(ms,counting,finish){
+			this.duration = typeof ms   === 'number' ? ms : 300;
+			if(counting)this.whenCount(counting);
+			if(finish)this.whenCountFinish(finish);
+			
 			var _ = this;
 			this._moveStart = (+(new Date()));
 			this._moveEnd   = this._moveStart + this.duration;
 			this.timeoutHandler();
-		},
-		whenCounting   :function(m){ this._whenMoving = m; },
-		whenCountFinish:function(m){ this._whenMoveFinish = m; }
-	},function(counting,finish,ms,rate,now){
-		if(counting)this.whenCounting(counting);
-		if(finish)this.whenCountFinish(finish);
-		this.duration = typeof ms   === 'number' ? ms   : 300;
-		this.rate     = typeof rate === 'number' ? rate : 20;
-		if(finish === true || ms === true || rate === true || now === true) { this.start() }
+		}
+	},function(ms,counting,finish,rate,now){
+		this.setRate(rate);
+		if(finish === true || ms === true || rate === true || now === true) { this.start(ms,counting,finish) }
+	});
+	
+	nody.extendModule("NFCounter","NFBezierCounter",{
+		setCubicBezier:function(x1,x2,y1,y2){
+			this.setCountProcessor(CUBICBEZIERMAKE(
+				(typeof x1 === "number") ? x1 : 0,
+				(typeof x2 === "number") ? x2 : 0,
+				(typeof y1 === "number") ? y1 : 0,
+				(typeof y2 === "number") ? y2 : 0
+			));
+		}
+	},function(x1,x2,y1,y2,ms,counting,finish,rate,now){
+		this.setCubicBezier(x1,x2,y1,y2)
+		this._super(ms,counting,finish,rate,now);
 	});
 	
 	nody.module("NFTimeFire",{
@@ -7150,6 +7224,8 @@ if (!Array.prototype.forEach) {
 			ELON(window,'resize',this.Handler);
 		}
 	});
+	
+	
 	
 	nody.module("NFTouch",{
 		getPinchDistance:function(fx1,fy1,fx2,fy2){

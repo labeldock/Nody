@@ -609,3 +609,32 @@ nody.makeModule("Color",{
 		default: console.log("Color::getColorSource Source형식이 지원하지 않습니다."); break;
 	}
 });
+nody.module("NFTimeCounter",{
+	timeoutHandler:function(){
+		if(this._timeout)clearTimeout(this._timeout);
+		if( this._moveEnd > (+(new Date())) ) {
+			CALL(this._whenMoving,this,100 - ( this._moveEnd - (+new Date())) / this.duration * 100);
+			var _ = this;
+			this._timeout = setTimeout(function(){ _.timeoutHandler.call(_) },this.rate);
+		} else {
+			this.moveStart = null;
+			this.moveEnd   = null;
+			CALL(this._whenMoving,this,100);
+			CALL(this._whenMoveFinish,this,100);
+		}
+	},
+	start:function(){
+		var _ = this;
+		this._moveStart = (+(new Date()));
+		this._moveEnd   = this._moveStart + this.duration;
+		this.timeoutHandler();
+	},
+	whenCounting   :function(m){ this._whenMoving = m; },
+	whenCountFinish:function(m){ this._whenMoveFinish = m; }
+},function(counting,finish,ms,rate,now){
+	if(counting)this.whenCounting(counting);
+	if(finish)this.whenCountFinish(finish);
+	this.duration = typeof ms   === 'number' ? ms   : 300;
+	this.rate     = typeof rate === 'number' ? rate : 20;
+	if(finish === true || ms === true || rate === true || now === true) { this.start() }
+});
