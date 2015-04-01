@@ -2,6 +2,7 @@
 ==================================
 Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리입니다. 
 
+
 ## Feature #
 
   - 다른 라이브러리와 이질감 없이 사용할 수 있습니다.(Nody plays well with another library)
@@ -79,6 +80,17 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
   - firefox
   - opera
 
+## Project History #
+2013년 Nody의 베이스코드는 에니메이션을 쉽게 구성하기위한 라이브러리였습니다. 
+에니메이션과 함께 계속하여 업데이트된 Nody는 데이터 결합, 객체지향, 인터페이스등의 기능들이 보강이되었고
+이미 많은 훌륭한 에니메이션 라이브러리들의 존재의 이유로 현재는 에니메이션과 UI부분이 제거되고 데이터, 노드 조작에 중점을 두고 만들어지고 있습니다.
+
+
+## 프로젝트의 방향 #
+본 라이브러리는 베타버전이며 아직도 많은 API들이 없어지고 생기고 있습니다.
+현재 중점은 UI구현과 관련된 모듈은 제거될것이고 데이터, 타이밍, 이벤트, 네트워크쪽은 강화하될 예정입니다.
+
+
 ## Version info #
 
 #### 0.23 에서 변경될 내용
@@ -97,12 +109,14 @@ MAKES('b::list+ul>li::item-$*3'); =>
     <ul><li>item-1</li><li>item-2</li><li>item-3</li></ul>
 ]
 ```
+
 - TAGS, ZTEMP 추가
+- BEZIERCURVEMAKE 추가
 
 적용예정
 - NFTemplate init규칙이 변경될 것입니다.
-- NFThrowProperty가 생길것입니다.
-- NFScrollBox가 재작성 될 것입니다.
+- NFTimeline 이 추가될것입니다.
+
 
 ## 예정된 계획 #
 

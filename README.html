@@ -95,17 +95,45 @@ new NFPresentor(&lsquo;#placeholder-2&rsquo;,dataContext,[&lsquo;<input type="te
 </ul>
 
 
+<h2>Project History</h2>
+
+<p>2013년 Nody의 베이스코드는 에니메이션을 쉽게 구성하기위한 라이브러리였습니다.
+에니메이션과 함께 계속하여 업데이트된 Nody는 데이터 결합, 객체지향, 인터페이스등의 기능들이 보강이되었고
+이미 많은 훌륭한 에니메이션 라이브러리들의 존재의 이유로 현재는 에니메이션과 UI부분이 제거되고 데이터, 노드 조작에 중점을 두고 만들어지고 있습니다.</p>
+
+<h2>프로젝트의 방향</h2>
+
+<p>본 라이브러리는 베타버전이며 아직도 많은 API들이 없어지고 생기고 있습니다.
+현재 중점은 UI구현과 관련된 모듈은 제거될것이고 데이터, 타이밍, 이벤트, 네트워크쪽은 강화하될 예정입니다.</p>
+
 <h2>Version info</h2>
 
-<h4>0.23</h4>
+<h4>0.23 에서 변경될 내용</h4>
+
+<p>적용완료
+- nf 탬플릿을 위한 새 표현 추가
+<code>
+MAKE('div[[foo]]');     =&gt; &lt;div nf-value="foo"&gt;&lt;/div&gt;
+MAKE('div[[foo|src]]'); =&gt; &lt;div nf-src="foo"&gt;&lt;/div&gt;
+</code>
+- MAKES 에멧스타일 기술 가능(&lsquo;>&rsquo;,&lsquo;+&rsquo;,&lsquo;^&rsquo;,&lsquo;*&rsquo;,&lsquo;$&rsquo;,&lsquo;,&rsquo; 문 지원)
+<code>
+MAKES('b::list+ul&gt;li::item-$*3'); =&gt;
+[
+    &lt;b&gt;list&lt;/b&gt;,
+    &lt;ul&gt;&lt;li&gt;item-1&lt;/li&gt;&lt;li&gt;item-2&lt;/li&gt;&lt;li&gt;item-3&lt;/li&gt;&lt;/ul&gt;
+]
+</code></p>
 
 <ul>
-<li>MAKES 변경 (&lsquo;>&rsquo;,&lsquo;+&rsquo;,&lsquo;^&rsquo;,&lsquo;*&rsquo;,&lsquo;$&rsquo; 문 지원)</li>
 <li>TAGS, ZTEMP 추가</li>
-<li>탬플릿 전용 새 표현 추가
-( MAKE(&lsquo;div[[foo]]&rsquo;) => <div nf-value="foo"></div>, MAKE(&lsquo;div[[foo|src]]&rsquo;) => <div nf-src="foo"></div> )</li>
+<li>BEZIERCURVEMAKE 추가</li>
 </ul>
 
+
+<p>적용예정
+- NFTemplate init규칙이 변경될 것입니다.
+- NFTimeline 이 추가될것입니다.</p>
 
 <h2>예정된 계획</h2>
 
