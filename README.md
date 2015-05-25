@@ -16,7 +16,7 @@ Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브�
   - IE8지원을 위한 코드 개발을 중단합니다. 더불어 Polyfill 코드를 줄입니다.
   - Timeline, TimeProps 추가합니다.
   - Template, MultiContentLoader, ContentLoader, TabContents 재설계
-  - 테스트 및 데이터압축 툴로 cody-erb와 codekit을 사용할것입니다. (Mixture제거)
+  - 테스트 및 데이터압축 툴로 middleman을 사용하는것을 검토중입니다. (Mixture제거)
 
 #### 노드생성 예제
 ```javascript
