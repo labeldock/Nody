@@ -19,9 +19,11 @@ Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브�
   - 탬플릿 API사용의 직관성이 떨어진다 판단하여 Template 모듈 재설계
   - ContentLoader의 하위모듈(3개)의 통일성이 떨어져 재설계
   - ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
+  - Form모듈 강화 (리모트폼 구현)
   - Touch모듈이 Pointer이벤트 모델과 비슷하게 재설계
   - nody의 축약어 검토 $$. $N. nf. 등..
   - 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
+  - 통신모듈의 재설계
   - 테스트 및 데이터압축 툴로 middleman을 사용하는것을 검토중입니다. (Mixture제거)
 
 #### 노드생성 예제
