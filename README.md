@@ -10,12 +10,17 @@ Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브�
   - 템플릿 사용이 편하며 표현이 매우 다양합니다.(Nody is easy to make node with template and data)
   - 바인딩을 쉽게 구현할수 있습니다.(Nody is easy to bind node)
   
-## Nody 0.25 TODO #
+## Nody 0.24 ~ 0.30 TODO #
 
   - Nody와 관련된 객체와 함수를 window.nody에 모두 담는것을 검토합니다.("NF" 접두어를 제거 포함)
   - IE8지원을 위한 코드 개발을 중단합니다. 더불어 Polyfill 코드를 줄입니다.
-  - Timeline, TimeProps 추가합니다.
-  - Template, MultiContentLoader, ContentLoader, TabContents 재설계
+  - 데이터의 시간별 제어가 가능하도록 Timeline, TimePoints 모듈이 추가됩니다.
+  - 탬플릿 API사용의 직관성이 떨어진다 판단하여 Template 모듈 재설계
+  - ContentLoader의 하위모듈(3개)의 통일성이 떨어져 재설계
+  - ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
+  - Touch모듈이 Pointer이벤트 모델과 비슷하게 재설계
+  - nody의 축약어 검토 $$. $N. nf. 등..
+  - 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
   - 테스트 및 데이터압축 툴로 middleman을 사용하는것을 검토중입니다. (Mixture제거)
 
 #### 노드생성 예제
@@ -76,18 +81,12 @@ new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name"
 <a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a>
 
 ## Compatibility #
-### Recommend #
   - IE9+
   - chrome4+
   - safari4+
-  
-### Incomplete Support #
-  - IE8+
-  - air 13+
   - firefox
   - opera
-
-
+  
 ## 프로젝트의 방향 #
 본 라이브러리는 베타버전이며 아직도 많은 API들이 없어지고 생기고 있습니다.
 현재 중점은 구체적인 UI구현부는 제거될것이고 데이터, 타이밍, 이벤트, 네트워크의 베이스코드는 강화하될 예정입니다.
