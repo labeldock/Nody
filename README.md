@@ -1,6 +1,7 @@
 ![Nody.js](/source/logo/nodyjs-small.png)
 ==================================
 Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브러리입니다. 
+(여기서의 Node란 DOM의 Node를 말하는것입니다.)
 
 ## Feature #
 
