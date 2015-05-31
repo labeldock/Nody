@@ -65,7 +65,7 @@ configure :build do
   #activate :minify_css
 
   # Minify Javascript on build
-  #activate :minify_javascript
+  activate :minify_javascript
 
   # Enable cache buster
   # activate :asset_hash
@@ -81,7 +81,8 @@ configure :build do
 end
 #nody to dist
 after_build do |builder|
-    require "FileUtils"
-    
-    puts File.expand_path('../../dist/nody.min.js',Dir.pwd)
+    nody_source_path = File.expand_path('source/resources/js/nody.js',Dir.pwd)
+    nody_build_path  = File.expand_path('build/resources/js/nody.js',Dir.pwd)
+    FileUtils.cp nody_source_path, File.expand_path('../dist/nody.js',Dir.pwd)
+    FileUtils.cp nody_build_path, File.expand_path('../dist/nody.min.js',Dir.pwd)
 end
