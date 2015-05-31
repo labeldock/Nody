@@ -16,7 +16,8 @@ Nody는 아직 설계상 문제점을 가지고 있어 수정이 더 들어갈 �
 
 #### 적용예정리스트
   - Nody와 관련된 객체와 함수를 window.nody에 모두 담는것을 검토.
-  - 모듈의 "NF" 접두어를 제거 검토.
+  - window.nody의 축약어 적용 "nd" 노드상의 nf어트리뷰트도 모두 nd로 적용.
+  - 모듈의 "NF" 접두어를 제거.
   - Nody에 등록된 함수들의 이름이 uppercase 로 고정되는것을 제거
   - 모듈생성이 Nody에 덜 의존적인 방법에 대한 검토.
   - IE8지원을 위한 코드 개발을 중단합니다. 더불어 Polyfill 코드를 줄입니다.
@@ -26,14 +27,13 @@ Nody는 아직 설계상 문제점을 가지고 있어 수정이 더 들어갈 �
   - ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
   - Form모듈 강화 (리모트폼 구현)
   - Touch모듈이 Pointer이벤트 모델과 비슷하게 재설계
-  - nody의 축약어 검토 $$. $N. nf. 등..
   - 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
   - 통신모듈의 재설계
   - middleman으로 빌드시 자동으로 dist생성
-  - test에 새로운 스타일시트인 codykit적용
+  - test에 새로운 스타일시트 헬퍼 codykit적용
   
 #### 적용완료  
-  -[x] 테스트 및 데이터압축 툴로 middleman을 사용하게 되었습니다.
+  - [x] 테스트 및 데이터압축 툴로 middleman을 사용하게 되었습니다.
 
 #### 노드생성 예제
 ```javascript
