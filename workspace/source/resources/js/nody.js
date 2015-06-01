@@ -11,7 +11,7 @@
 var CURRENT_NODY = (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	N.VERSION = "0.24.5", N.BUILD = "1102";
+	N.VERSION = "0.24.5", N.BUILD = "1104";
 	
 	// Core verison
 	N.CORE_VERSION = "1.9.3", N.CORE_BUILD = "78";
@@ -3367,7 +3367,7 @@ if (!Array.prototype.forEach) {
 			name = name.replace(/\[\[[\w\-\|\s]+\]\]/ig,function(s){ 
 				s = s.substr(2,s.length-4);
 				var pipe = s.indexOf('|');
-				return (pipe > 0) ? '[nf-'+s.substr(pipe+1)+'='+s.substr(0,pipe)+']' : '[nf-value='+s+']';
+				return (pipe > 0) ? '[nd-'+s.substr(pipe+1)+'='+s.substr(0,pipe)+']' : '[nd-value='+s+']';
 			});
 			var dataset,htmlvalue,cacheName=name,cacheEnable=false;
 			
@@ -4402,7 +4402,7 @@ if (!Array.prototype.forEach) {
 		},
 		partialNodeProps:function(propKeys,callback,presets){
 			var keys  = propKeys;
-			var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new N.Array(keys)).getMap(function(key){ return 'nf-'+key; });
+			var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new N.Array(keys)).getMap(function(key){ return 'nd-'+key; });
 			var sKeys = (presets && presets.sKeys) ? presets.sKeys : (new N.Array(pKeys)).getMap(function(pkey){ return '['+ pkey +']'; });
 			var pNodes = this.find(sKeys.join(','));
 			for(var i=0,l=pNodes.length;i<l;i++){
@@ -4417,7 +4417,7 @@ if (!Array.prototype.forEach) {
 		//성능의 가속을 위해 존재하는 값들입니다. 이것을 건드리면 엄청난 문제를 초례할 가능성이 있습니다.
 		__nodeDataDefaultKeys:['value','class','dataset','href','append','prepend','put','display','custom'],
 		__nodeDataAttrKeys:["nd-value", "nd-class", "nd-dataset", "nd-href", "nd-append", "nd-prepend", "nd-put", "nd-display", "nd-custom"],
-		__nodeDataSelectKeys:["[nf-value]", "[nf-class]", "[nf-dataset]", "[nf-href]", "[nf-append]", "[nf-prepend]", "[nf-put]", "[nf-display]", "[nf-custom]"],	
+		__nodeDataSelectKeys:["[nd-value]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-append]", "[nd-prepend]", "[nd-put]", "[nd-display]", "[nd-custom]"],	
 		//
 		setNodeData:function(refData,dataFilter){
 			if(!this.TemplatePartials) this.TemplatePartials = {};
@@ -4519,7 +4519,7 @@ if (!Array.prototype.forEach) {
 			var fe = filter ? function(node){ return N.$is(node,filter)?f(node, param):undefined } : function(node){ return f(node, param); };
 			var r  = new N.Array(this.getSelects()).map( fe ).filter();
 			return (requireElement == true) ? r.toArray() : this;
-		},git 
+		},
 		disabled:function(status,filter){ return this.statusFunction(N.$disabled,(status !== false ? true : false),filter); },
 		readonly:function(status,filter){ return this.statusFunction(N.$readOnly,(status !== false ? true : false),filter); },
 		empty   :function(filter)       { filter = filter?filter+",:not(button):not(select)":":not(button):not(select)"; return this.statusFunction(N.$value   ,"",filter); },
