@@ -12,32 +12,32 @@ Nody.js는 데이터 관점에서 Node를 쉽게 구성하기 위한 라이브�
 
 #### 노드생성 예제
 ```javascript
-MAKE('button.btn.btn-default#btn-action');
-MAKE('input[type=checkbox][checked]');
-MAKE('div',
-	MAKE('a',MAKE('span','first value')),
-	MAKE('a',MAKE('span','second value'))
+nd.make('button.btn.btn-default#btn-action');
+nd.make('input[type=checkbox][checked]');
+nd.make('div',
+	nd.make('a',nd.make('span','first value')),
+	nd.make('a',nd.make('span','second value'))
 );
 ```
 ```javascript
-MAKES('div>a>span::first value+span::second value');
-MAKES('ul>li.item-$*3');
-MAKES('table>thead>tr>td^^tbody>tr>td');
+nd.makes('div>a>span::first value+span::second value');
+nd.makes('ul>li.item-$*3');
+nd.makes('table>thead>tr>td^^tbody>tr>td');
 ```
 
 
 #### 노드선택 예제
 ```javascript
-FIND('div','#wrapper'); //=> [element...]
-FIND('ul li',0); //=> element
-FIND('ul li',jQuery).attr('role','list-item');  // => [li[role=list-item]]
+nd.find('div','#wrapper'); //=> [element...]
+nd.find('ul li',0); //=> element
+nd.find('ul li',jQuery).attr('role','list-item');  // => [li[role=list-item]]
 ```
 
 #### 템플릿 사용 예제
 ```javascript
-MAKES('ul#ul','body');
+nd.makes('ul#ul','body');
 
-var temp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
+var temp = new nd.Template('<li nf-class="index" nf-value="item-value"></li>');
 	temp.renderTo('#ul',
 		[
 			{'index':'index1','item-value':'A'},
@@ -50,12 +50,12 @@ var temp = new NFTemplate('<li nf-class="index" nf-value="item-value"></li>');
   
 #### 파셜 및 바인딩 예제
 ```javascript
-MAKES('div#placeholder-$*2','body');
+nd.makes('div#placeholder-$*2','body');
 
-var dataContext = new NFDataContext({name:'hello world'});
+var dataContext = new nd.DataContext({name:'hello world'});
 
-new NFPresentor('#placeholder-1',dataContext,['<input type="text" nf-bind="name">'],true);
-new NFPresentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name">'],true);
+new nd.Presentor('#placeholder-1',dataContext,['<input type="text" nf-bind="name">'],true);
+new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name">'],true);
 ```
 
 ```
@@ -96,10 +96,10 @@ Nody는 아직 설계상 문제점을 가지고 있어 수정이 더 들어갈 �
   - [x] middleman으로 빌드시 자동으로 dist에 배포됩니다.
   - [x] requirejs의 AMD를 지원합니다.
   - [ ] 새로운 스타일시트 헬퍼 codykit적용
-  - [ ] Nody와 관련된 객체와 함수를 window.nody에 모두 담는것을 검토.
+  - [x] Nody와 관련된 객체와 함수를 window.nody에 모두 담는것을 검토.
   - [ ] window.nody의 축약어 적용 "nd" 노드상의 nf어트리뷰트도 모두 nd로 적용.
-  - [ ] 모듈의 "NF" 접두어를 제거.
-  - [ ] Nody에 등록된 함수들의 이름이 uppercase 로 고정되는것을 제거
+  - [x] 모듈의 "NF" 접두어를 제거.
+  - [x] Nody에 등록된 함수들의 이름이 uppercase 로 고정되는것을 제거
   
 ## 프로젝트의 방향 #
 본 라이브러리는 베타버전이며 아직도 많은 API들이 없어지고 생기고 있습니다.
