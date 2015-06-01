@@ -27,13 +27,13 @@ var appearLoad = function(){
 	/*linehide*/
 	
 	/* Actions */
-	FIND("#green-box",ELON,"click",function(){
+	nd.find("#green-box",nd.$on,"click",function(){
 		css3Transform(".gage-box-line-container",ZSTRING("rotate(\\(-80~20)deg)"));
 	});
-	FIND("#yellow-box",ELON,"click",function(){
+	nd.find("#yellow-box",nd.$on,"click",function(){
 		css3Transform(".gage-box-line-container",ZSTRING("rotate(\\(-20~20)deg)"));
 	});
-	FIND("#red-box",ELON,"click",function(){
+	nd.find("#red-box",nd.$on,"click",function(){
 		css3Transform(".gage-box-line-container",ZSTRING("rotate(\\(20~80)deg)"));
 	});
 };
@@ -47,7 +47,7 @@ var appearOpen = function(){
 	}
 	/*break*/
 	/* Each element select and touch complete then fire */ 
-	FIRE(FIND(".appear-ready"),
+	FIRE(nd.find(".appear-ready"),
 		function(node,i,touch){
 			var timeout = 100*i;
 			setTimeout(function(){
@@ -68,7 +68,7 @@ GNBNFContentLoader.whenLoad("appear",function(){
 GNBNFContentLoader.whenActiveToggle("appear",function(){	
 	appearOpen();
 },function(){
-	FIND(".appear-ready",DATAEACH,function(node,i){
+	nd.find(".appear-ready",nd.dataEach,function(node,i){
 		$(node).removeClass("appear-submit");
 	});
 	window.css3Transform(".gage-box-line-container","rotate(-100deg)");
@@ -80,7 +80,7 @@ GNBNFContentLoader.whenLoad("mvvm",function(){
 		{title:"Section3",list:[{title:"Item7"},{title:"Item8"}]}
     ]};
 	
-	var mvvmXMP =  $(MAKE("XMP")).appendTo("#init-data-view");
+	var mvvmXMP =  $(nd.make("XMP")).appendTo("#init-data-view");
 	
 	//데이터를 불러거나 다시 출력하는 역활
     var dataContext = new nd.DataContext(data,"list");
@@ -115,35 +115,35 @@ var viewModels = {
 	"small":new nd.ViewModel(function(){
 		return this.placeholder("ul");
 	},function(){
-		return MAKE("li.inline-box.small-box.text-center",
-			MAKE("img",{src:this.value("image")})
+		return nd.make("li.inline-box.small-box.text-center",
+			nd.make("img",{src:this.value("image")})
 		);
 	}),
 	"large":new nd.ViewModel(function(){
 		return this.placeholder("ul");
 	},function(){
-		return MAKE("li.inline-box.text-center",
-			MAKE("img",{src:this.value("image")}),
+		return nd.make("li.inline-box.text-center",
+			nd.make("img",{src:this.value("image")}),
 			this.bind("native","p")
 		);
 	}),
 	"list":new nd.ViewModel(function(){
-		return MAKE("table.table",
-			MAKE("thead",
-				MAKE("tr",
-					MAKE("th::name"),
-					MAKE("th::native"),
-					MAKE("th::image")
+		return nd.make("table.table",
+			nd.make("thead",
+				nd.make("tr",
+					nd.make("th::name"),
+					nd.make("th::native"),
+					nd.make("th::image")
 				)
 			),
 			this.placeholder("tbody")
 		);
 	},function(){
 		
-		return MAKE("tr",
-			MAKE("td",this.bind("name","input.full-width")),
-			MAKE("td",this.bind("native","input.full-width")),
-			MAKE("td",this.bind("image","p"))
+		return nd.make("tr",
+			nd.make("td",this.bind("name","input.full-width")),
+			nd.make("td",this.bind("native","input.full-width")),
+			nd.make("td",this.bind("image","p"))
 		)	
 	})
 }
@@ -177,19 +177,19 @@ GNBNFContentLoader.whenLoad("selectbind",function(){
 	function(){
 		return this.placeholder("div.menu.list-group");
 	},function(){
-		return MAKE("a.list-group-item",
-			MAKE("h4.list-group-item-heading",MAKE("img",{src:this.value("image")}),MAKE("span",{html:"&nbsp;"}),this.bind("name","span")),
+		return nd.make("a.list-group-item",
+			nd.make("h4.list-group-item-heading",nd.make("img",{src:this.value("image")}),nd.make("span",{html:"&nbsp;"}),this.bind("name","span")),
 			this.bind("native","p.list-group-item-text")
 		);
 	});
 	
 	var itemNFViewModel = new nd.ViewModel(function(){
-		return MAKE("div",
-			MAKE("h5::Name"),
+		return nd.make("div",
+			nd.make("h5::Name"),
 			this.bind("name"),
-			MAKE("h5::Native"),
+			nd.make("h5::Native"),
 			this.bind("native"),
-			MAKE("h5::Image"),
+			nd.make("h5::Image"),
 			this.bind("image","p")
 		);
 	});
@@ -222,10 +222,10 @@ GNBNFContentLoader.whenLoad("multiselect",function(){
 	var multiNFViewModel = new nd.ViewModel(function(){
 		return this.placeholder("div.row-fluid");
 	},function(){
-		return MAKE("div.col-sm-6",
-			MAKE("div.thumbnail",
-				MAKE("img",{src:this.value("image")}),
-				MAKE("div.caption",
+		return nd.make("div.col-sm-6",
+			nd.make("div.thumbnail",
+				nd.make("img",{src:this.value("image")}),
+				nd.make("div.caption",
 					this.bind("name","h3"),
 					this.bind("native","p")
 				)
@@ -245,7 +245,7 @@ GNBNFContentLoader.whenLoad("multiselect",function(){
 			var model = new nd.Model("#replaceData").removeNothing();
 		
 			if(model.count()){
-				DATAEACH(DATAMAP(activeController.getActiveSelects(),function(node){
+				nd.dataEach(nd.dataMap(activeController.getActiveSelects(),function(node){
 					return viewController.getManagedDataWithNode(node);
 				}),function(managedItem){
 					model.each(function(value,key){
@@ -283,27 +283,27 @@ GNBNFContentLoader.whenLoad("scroll",function(){
 		
 		var drawMoment = nowMoment.clone().setCommand("add",index,"month");
 		
-		return MAKE("div.calendar",
-			MAKE("h1::"+drawMoment.format("YYYY년 MM월")),
-			MAKE("table.calendar",
-				MAKE("thead",drawMoment.drawCalendarHeaderRow(function(node){ 
+		return nd.make("div.calendar",
+			nd.make("h1::"+drawMoment.format("YYYY년 MM월")),
+			nd.make("table.calendar",
+				nd.make("thead",drawMoment.drawCalendarHeaderRow(function(node){ 
 					var $node = $(node);
 					return $node.text( $node.text().substr(0,1) )[0];
 				})),
-				MAKE("tbody",drawMoment.drawCalendarBodyRows())
+				nd.make("tbody",drawMoment.drawCalendarBodyRows())
 			)
 		);
 	});
 	calendarBox.setAllowMakeAxisYItem(200,200);
 });
 
-var somenode = MAKE("div#one.two.three",MAKE("ul.list",MAKE("li.item"),MAKE("li.item"),MAKE("li.item")));
+var somenode = nd.make("div#one.two.three",nd.make("ul.list",nd.make("li.item"),nd.make("li.item"),nd.make("li.item")));
 var testset = [
 function(){
-IMPORTNODE( document.querySelectorAll("template#test")[0] );
+nd.importNode( document.querySelectorAll("template#test")[0] );
 },
 function(){
-IMPORTNODE( $("template#test")[0] );
+nd.importNode( $("template#test")[0] );
 },
 function(){
 $("<div id='one' class='two three' />").append(
@@ -316,16 +316,16 @@ $("<div id='one' class='two three' />").append(
 
 },
 function(){
-MAKE("div#one.two.three",
-	MAKE("ul.list",
-		MAKE("li.item",{"dataset":{"alias":"item"}}),
-		MAKE("li.item",{"dataset":{"alias":"item"}}),
-		MAKE("li.item",{"dataset":{"alias":"item"}})
+nd.make("div#one.two.three",
+	nd.make("ul.list",
+		nd.make("li.item",{"dataset":{"alias":"item"}}),
+		nd.make("li.item",{"dataset":{"alias":"item"}}),
+		nd.make("li.item",{"dataset":{"alias":"item"}})
 	)
 );
 },
 function(){
-CLONENODES(somenode)[0];
+nd.cloneNodes(somenode)[0];
 },
 function(){
 var data = [
@@ -336,29 +336,29 @@ var data = [
 new nd.Template(
 	"<div id='one' class='two three' node-put='items'></div>",
 	{items:data},
-	{items:function(data){ return DATAMAP(data,function(itemData){ return MAKE('li',itemData); }); }}
+	{items:function(data){ return nd.dataMap(data,function(itemData){ return nd.make('li',itemData); }); }}
 	,true
 )
 },
 function(){
-IMPORTNODE( FIND("template#test",0) );
+nd.importNode( nd.find("template#test",0) );
 },
 function(){
-_NFTemplate("template#test").get();
+nd._Template("template#test").get();
 }
 ]
 GNBNFContentLoader.whenLoad("speedtest",function(){
-	TIMES(testset.length,function(i){
-		FIND(".code-block-"+ i +" code",ELVALUE,testset[i]);
+	nd.times(testset.length,function(i){
+		nd.find(".code-block-"+ i +" code",nd.$value,testset[i]);
 	});
 
-	ELON("#teststart","click",function(){
-		DATAEACH(testset,function(method,i){
+	nd.$on("#teststart","click",function(){
+		nd.dataEach(testset,function(method,i){
 			MARK("test"+i);
-			TIMES(2000,function(){
+			nd.times(2000,function(){
 				method();
 			});
-			FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
+			nd.find(".test-"+i+" .text-danger",nd.$value,MARK("test"+i));
 		});
 	});
 });
@@ -366,12 +366,12 @@ GNBNFContentLoader.whenLoad("speedtest",function(){
 var testset2 = [
 function(){
 	var p = [];
-	DATAEACH([1,2,3,4],function(v){
+	nd.dataEach([1,2,3,4],function(v){
 		p.push(v+1);
 	});
 },
 function(){
-	var p = DATAMAP([1,2,3,4],function(v){
+	var p = nd.dataMap([1,2,3,4],function(v){
 		return v+1;
 	});
 },
@@ -387,16 +387,16 @@ function(){
 ]
 
 GNBNFContentLoader.whenLoad("speedtest2",function(){
-	TIMES(testset2.length,function(i){
-		FIND(".code-block-"+ i +" code",ELVALUE,testset2[i]);
+	nd.times(testset2.length,function(i){
+		nd.find(".code-block-"+ i +" code",nd.$value,testset2[i]);
 	});
-	ELON("#teststart","click",function(){
-		DATAEACH(testset2,function(method,i){
+	nd.$on("#teststart","click",function(){
+		nd.dataEach(testset2,function(method,i){
 			MARK("test"+i);
-			TIMES(8000,function(){
+			nd.times(8000,function(){
 				method();
 			});
-			FIND(".test-"+i+" .text-danger",ELVALUE,MARK("test"+i));
+			nd.find(".test-"+i+" .text-danger",nd.$value,MARK("test"+i));
 		});
 	});
 });

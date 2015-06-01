@@ -1,4 +1,4 @@
-FIND('pre>code',DATAEACH,function(node){
+N.find('pre>code',N.dataEach,function(node){
 	$(node).text( $(node).text().trim() );
 });
 
@@ -33,11 +33,11 @@ $('.code-wrapper').on('click','a.live-run-action',function(e){
 	var javascriptCode = $(e.delegateTarget).find('code.language-javascript').text();
 	var htmlCode       = $(e.delegateTarget).find('code.language-markup').text();
 	
-	var viewDoc  = FINDDOCUMENT('.view-result');
-	var htmlDoc  = FINDDOCUMENT('.html-result');
-	var jsDoc    = FINDDOCUMENT('.javascript-result') ;
-	var htmlCodeDoc = FINDDOCUMENT('.html-code') ;
-	var jsCodeDoc   = FINDDOCUMENT('.javascript-code') ;
+	var viewDoc  = N.findDocument('.view-result');
+	var htmlDoc  = N.findDocument('.html-result');
+	var jsDoc    = N.findDocument('.javascript-result') ;
+	var htmlCodeDoc = N.findDocument('.html-code') ;
+	var jsCodeDoc   = N.findDocument('.javascript-code') ;
 	//
 	
 	switch($(this).data('require')) {
@@ -68,17 +68,17 @@ $('.code-wrapper').on('click','a.live-run-action',function(e){
 	runTabContentsActiveController.shouldActive(0);
 });
 
-FIND('.code-section > article > header',DATAMAP,function(header){
+N.find('.code-section > article > header',N.dataMap,function(header){
 	//with position hack
-	var ankor = MAKE('a');
-	ELBEFORE(header,ankor);
+	var ankor = N.make('a');
+	N.$before(header,ankor);
 	
-	return MAKE('li',MAKE('a',{
-		href:'#'+ELUNIQUEID(ankor),
+	return N.make('li',N.make('a',{
+		href:'#'+N.$uniqueID(ankor),
 		html:header.innerHTML
 	}));
 	
-},ELAPPENDTO,'.table-of-contents menu');
+},N.appendTo,'.table-of-contents menu');
 
 var DropdownInterface = function(opt){
 	$(document).on('click',opt.wrapper + ' > ' + opt.toggler,function(e){

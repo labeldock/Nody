@@ -13,11 +13,11 @@
 &lt;/ul>
 							</code></pre>
 							<pre class='language-javascript'><code class='language-javascript'>
-FIND('li','ul');
-FIND('ul.list li:first-child');
-FIND('ul.list li:nth-child(2)');
-FIND('ul','ul');
-FIND('li',2);
+nd.find('li','ul');
+nd.find('ul.list li:first-child');
+nd.find('ul.list li:nth-child(2)');
+nd.find('ul','ul');
+nd.find('li',2);
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -25,7 +25,7 @@ FIND('li',2);
 						<b>또 다른 FIND 메소드</b>
 
 						<ul>
-							<li>FINDMEMBER : 같은 래벨상의 노드를 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
+							<li>nody.findMember : 같은 래벨상의 노드를 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
 							<li>FINDIN : 모든 자식의 노드를 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
 							<li>FINDON : 바로 아래 자식 노드만 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
 							<li>FINDPARENTS : 모든 부모를 찾습니다. (두번째 파라메터 숫자나 문자등으로 필터링 가능)</li>
@@ -45,15 +45,15 @@ FIND('li',2);
 &lt;iframe id='frm'>&lt;iframe>
 							</code></pre>
 							<pre class='language-javascript'><code class='language-javascript'>
-FINDMEMBER('.first');
-FINDIN('.list');
-FINDON('.list');
-FINDPARENTS('.first span');
-FINDPARENTS('.first span','[class]');
-FINDPARENT('.first span','ul');
-FINDBEFORE('.third');
-FINDAFTER('.first');
-FINDDOCUMENT('#frm');
+nd.findMember('.first');
+nd.findIn('.list');
+nd.findOn('.list');
+nd.findParents('.first span');
+nd.findParents('.first span','[class]');
+nd.findParent('.first span','ul');
+nd.findBefore('.third');
+nd.findAfter('.first');
+nd.findDocument('#frm');
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -63,67 +63,67 @@ FINDDOCUMENT('#frm');
 
 					<article>
 						<header>
-							MAKE
+							nd.make
 						</header>
-						<p>MAKE는 CSS스타일로 노드를 만들때 사용되는 함수입니다.</p>
+						<p>nd.make는 CSS스타일로 노드를 만들때 사용되는 함수입니다.</p>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>
-MAKE('div#foo.bar','hello world');
-MAKE('div[role=foo][role2=foo]');
-MAKE('button:disabled');
-MAKE('button','Button from MAKE');
-MAKE('input','foo');
-MAKE('input?radio!group1');
+nd.make('div#foo.bar','hello world');
+nd.make('div[role=foo][role2=foo]');
+nd.make('button:disabled');
+nd.make('button','Button from nd.make');
+nd.make('input','foo');
+nd.make('input?radio!group1');
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
 						</div>
 						<p>중첩하여 사용가능합니다.</p>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>
-MAKE('ul',
-	MAKE('li.item','list1'),
-	MAKE('li.item','list2'),
-	MAKE('li.item','list3'),
+nd.make('ul',
+	nd.make('li.item','list1'),
+	nd.make('li.item','list2'),
+	nd.make('li.item','list3'),
 );
-MAKE('table.table.table-bordered',
-	MAKE('thead',
-		MAKE('tr',
-			MAKE('th','check'),
-			MAKE('th','title'),
-			MAKE('th','status')
+nd.make('table.table.table-bordered',
+	nd.make('thead',
+		nd.make('tr',
+			nd.make('th','check'),
+			nd.make('th','title'),
+			nd.make('th','status')
 		)
 	),
-	MAKE('tbody',
-		MAKE('tr',
-			MAKE('td',MAKE('input[type=checkbox][name=chk][checked]')),
-			MAKE('td',MAKE('span','Title 1')),
-			MAKE('td',MAKE('span','Title 1'))
+	nd.make('tbody',
+		nd.make('tr',
+			nd.make('td',nd.make('input[type=checkbox][name=chk][checked]')),
+			nd.make('td',nd.make('span','Title 1')),
+			nd.make('td',nd.make('span','Title 1'))
 		),
-		MAKE('tr',
-			MAKE('input?checkbox!chk'),
-			MAKE('span','Title 2'),
-			MAKE('span','Title 2')
+		nd.make('tr',
+			nd.make('input?checkbox!chk'),
+			nd.make('span','Title 2'),
+			nd.make('span','Title 2')
 		),
-		MAKE('tr',
-			MAKE('checkbox!chk'),
-			MAKE('span','Title 3'),
-			MAKE('span','Title 3')
+		nd.make('tr',
+			nd.make('checkbox!chk'),
+			nd.make('span','Title 3'),
+			nd.make('span','Title 3')
 		)
 	)
 );
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
 						</div>
-						<p>MAKE는 일반적으로 간단하게 노드를 만들때 도움을 줍니다. 복잡한 구조일수록 NFTemplate 모듈을 활용하는것이 좋습니다. </p>
-						<header> MAKES </header>
-						<p>MAKES는 여러 노드를 한번에 만들때 유용합니다.</p>
+						<p>nd.make는 일반적으로 간단하게 노드를 만들때 도움을 줍니다. 복잡한 구조일수록 NFTemplate 모듈을 활용하는것이 좋습니다. </p>
+						<header> nd.makeS </header>
+						<p>nd.makeS는 여러 노드를 한번에 만들때 유용합니다.</p>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>
-MAKES('li.item[role=list-item]*3');
-MAKES('li.item-$*3');
-MAKES('li::item-$*3');
-MAKES('ul*2>li::item-$*3');
-MAKES('dl*2>dt::title+dd>span::desc+span::desc2^dt+dd');
+nd.makes('li.item[role=list-item]*3');
+nd.makes('li.item-$*3');
+nd.makes('li::item-$*3');
+nd.makes('ul*2>li::item-$*3');
+nd.makes('dl*2>dt::title+dd>span::desc+span::desc2^dt+dd');
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
 						</div>
@@ -148,10 +148,10 @@ MAKES('dl*2>dt::title+dd>span::desc+span::desc2^dt+dd');
 							</code></pre>
 							<pre class='language-javascript'><code class='language-javascript'>
 /* with template tag */
-var tmpTemp = new NFTemplate('#foo-temp');
+var tmpTemp = new nd.Template('#foo-temp');
 
 /* with string */
-var strTemp = new NFTemplate(
+var strTemp = new nd.Template(
 	'&lt;li class="foo">foo&lt;/li>\
 	&lt;li class="bar">bar&lt;/li>\
 	&lt;li class="text-warning">fb&lt;/li>'
@@ -168,7 +168,7 @@ strTemp.renderTo('#container');
 						<p>하나의 템플릿과 다수의 데이터를 가지고 간단하게 노드를 만들어 낼 수 있습니다.</p>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>
-var t = new NFTemplate(
+var t = new nd.Template(
     '&lt;figure>\
         &lt;img nf-value="image">\
         &lt;figcaption>\
@@ -207,14 +207,14 @@ renderResult[2];
 						<p>파셜 데이터에 노드를 삽입 후 append, prepend, put등의 명령어로 노드를 집어넣을수 있습니다.</p>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>
-var temp = new NFTemplate(
+var temp = new nd.Template(
 	'&lt;ul nf-append="nodeList tempList">\
 		&lt;li>hello&lt;/li>\
 	&lt;/ul>'
 );
 temp.render({
-    "nodeList":[MAKE("li.item::MAKE item1"),MAKE("li.item::MAKE item2")],
-	"tempList":_NFTemplate('&lt;li class="item" nf-value="t">&lt;/li>').renderMap([{t:'Temp item1'},{t:'Temp item2'}])
+    "nodeList":[nd.make("li.item::nd.make item1"),nd.make("li.item::nd.make item2")],
+	"tempList":nd._Template('&lt;li class="item" nf-value="t">&lt;/li>').renderMap([{t:'Temp item1'},{t:'Temp item2'}])
 });
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='javascript-to-html'>Live run</a>
@@ -234,14 +234,14 @@ temp.render({
 &lt;ul id="placeholder">&lt;/ul>
 							</code></pre>
 							<pre class='language-javascript'><code class='language-javascript'>
-TIMESMAP(10,function(index){ return MAKE('li',index) },DATAEACH,function(){ ELAPPEND('#placeholder',this) },jQuery).css('color','red');
+nd.timesMap(10,function(index){ return nd.make('li',index) },DATAEACH,function(){ ELAPPEND('#placeholder',this) },jQuery).css('color','red');
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
 						<p>컨티뉴틸리티는 다음 함수에서 사용할수 있습니다.</p>
 						<ul>
 							<li>TIMES</li>
-							<li>TIMESMAP</li>
+							<li>nd.timesMap</li>
 							<li>DATACALL</li>
 							<li>DATAEACH</li>
 							<li>DATAEACHBACK</li>
@@ -260,9 +260,9 @@ TIMESMAP(10,function(index){ return MAKE('li',index) },DATAEACH,function(){ ELAP
 							<li>FINDPARENT</li>
 							<li>FINDDOCUMENT</li>
 							<li>FINDTREE</li>
-							<li>MAKETEXT</li>
-							<li>MAKE</li>
-							<li>MAKES</li>
+							<li>nd.makeTEXT</li>
+							<li>nd.make</li>
+							<li>nd.makeS</li>
 							<li>ELBEFORE</li>
 							<li>ELAFTER</li>
 							<li>ELCHANGE</li>
@@ -298,27 +298,27 @@ var data = [
 ];
 
 /* Presentation object */ 
-var dataContext = new NFDataContext(data);
+var dataContext = new nd.DataContext(data);
 
 /* Draw model */
-var inputViewModel = new NFViewModel(
+var inputViewModel = new nd.ViewModel(
 	function(){
 	    return this.placeholder("ul.top")
 	},
 	function(){
-	    return MAKE("li",MAKE("span",{href:this.value("index")}),this.bind("value","input?text"))
+	    return nd.make("li",nd.make("span",{href:this.value("index")}),this.bind("value","input?text"))
 	}
 );
 var labelViewModel = inputViewModel.clone(undefined,
 	function(){
-		return MAKE("li",MAKE("span",{href:this.value("index")}),this.bind("value","label.label.label-info"))
+		return nd.make("li",nd.make("span",{href:this.value("index")}),this.bind("value","label.label.label-info"))
 	}
 );
 
 /* View controller */ 
-new NFPresentor("#placeholder-bind1",dataContext,inputViewModel,true);
-new NFPresentor("#placeholder-bind2",dataContext,inputViewModel,true);
-new NFPresentor("#placeholder-bind3",dataContext,labelViewModel,true);
+new nd.Presentor("#placeholder-bind1",dataContext,inputViewModel,true);
+new nd.Presentor("#placeholder-bind2",dataContext,inputViewModel,true);
+new nd.Presentor("#placeholder-bind3",dataContext,labelViewModel,true);
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -356,9 +356,9 @@ var data = [
     {index:"3",value:"three"}
 ];
 
-var dataContext    = new NFDataContext(data);
-var viewModel      = new NFViewModel("#table","#tbody-item");
-var viewController = new NFPresentor("#placeholder",dataContext,viewModel,true);
+var dataContext    = new nd.DataContext(data);
+var viewModel      = new nd.ViewModel("#table","#tbody-item");
+var viewController = new nd.Presentor("#placeholder",dataContext,viewModel,true);
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -393,7 +393,7 @@ var data = [
     {index:"2",value:"two"},
     {index:"3",value:"three"}
 ];
-new NFPresentor("#placeholder",data,["#table","#tbody-item"],true);
+new nd.Presentor("#placeholder",data,["#table","#tbody-item"],true);
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -445,58 +445,58 @@ TOOBJECT("hello:world,foo:bar,1:2");
 					</article>
 
 					<article>
-						<header>IS</header>
-						<q>IS는 데이터 타입과 크기 유효성등을 확인할수 있다.</q>
+						<header>nd.is</header>
+						<q>nd.is는 데이터 타입과 크기 유효성등을 확인할수 있다.</q>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
-IS("123","string"); //=> true
-IS("123","number"); //=> false
-IS("123","nothing"); //=> false
-IS("123","ok"); //=> true
-IS("0","ok"); //=> true
-IS(0,"ok"); //=> false
-IS(0,"nok"); //=> true
-IS("123","string>5"); //=> false
-IS("123456","string>5"); //=> true
-IS(123456,"text>5"); //=> true
-IS(123456,"number&lt;100"); //=> false
-IS({},"object"); //=> true
-IS([],"array"); //=> true
+nd.is("123","string"); //=> true
+nd.is("123","number"); //=> false
+nd.is("123","nothing"); //=> false
+nd.is("123","ok"); //=> true
+nd.is("0","ok"); //=> true
+nd.is(0,"ok"); //=> false
+nd.is(0,"nok"); //=> true
+nd.is("123","string>5"); //=> false
+nd.is("123456","string>5"); //=> true
+nd.is(123456,"text>5"); //=> true
+nd.is(123456,"number&lt;100"); //=> false
+nd.is({},"object"); //=> true
+nd.is([],"array"); //=> true
 
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
-IS([],"nothing array"); //=> true
-IS({},"nothing object"); //=> true
-IS(12,"nothing number"); //=> false
-IS(0,"nothing number"); //=> true
-IS(0,"nothing text"); //=> true
-IS(0,"nothing string"); //=> false
+nd.is([],"nothing array"); //=> true
+nd.is({},"nothing object"); //=> true
+nd.is(12,"nothing number"); //=> false
+nd.is(0,"nothing number"); //=> true
+nd.is(0,"nothing text"); //=> true
+nd.is(0,"nothing string"); //=> false
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
-IS(23,"number:10~30");
-IS(23,"number:10~20");
-IS("23","text:0~10");
-IS("hello world","text:8~16");
-IS("hello world","text:2~8");
+nd.is(23,"number:10~30");
+nd.is(23,"number:10~20");
+nd.is("23","text:0~10");
+nd.is("hello world","text:8~16");
+nd.is("hello world","text:2~8");
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
 					</article>
 
 					<article>
-						<header>AS</header>
-						<q>AS는 IS와 동일하다 다만 trim이 자동으로 된다는 특징이 있다.</q>
+						<header>nd.as</header>
+						<q>nd.as는 nd.is와 동일하다 다만 trim이 자동으로 된다는 특징이 있다.</q>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
-AS("123     ","string>4"); //=> false
-AS("        ","string==1"); //=> false
-AS("        ","string==0"); //=> true
+nd.as("123     ","string>4"); //=> false
+nd.as("        ","string==1"); //=> false
+nd.as("        ","string==0"); //=> true
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -506,12 +506,12 @@ AS("        ","string==0"); //=> true
 						<header>NFString</header>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
-_NFString("McDonald's").getByteSize(); //=> 10
-_NFString("맥도널드").getByteSize(); //=>8
-_NFString("マクドナルド").getByteSize(); //=>12
-_NFString("McDonald's").addModel("good").get(); //=>"McDonald's good"
-_NFString("McDonald's").removeModel("Mc").get(); //=>"McDonald's"
-_NFString("McDonald's").removeModel("McDonald's").get(); //=>""
+nd._String("McDonald's").getByteSize(); //=> 10
+nd._String("맥도널드").getByteSize(); //=>8
+nd._String("マクドナルド").getByteSize(); //=>12
+nd._String("McDonald's").addModel("good").get(); //=>"McDonald's good"
+nd._String("McDonald's").removeModel("Mc").get(); //=>"McDonald's"
+nd._String("McDonald's").removeModel("McDonald's").get(); //=>""
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -523,13 +523,13 @@ _NFString("McDonald's").removeModel("McDonald's").get(); //=>""
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
 //range param
-ZSTRING("Total \\(10~20)%"); //=> "Total 17%"
-ZSTRING("Total \\(10~20)%"); //=> "Total 12%"
-ZSTRING("Total \\(10~20)%"); //=> "Total 15%"
+nd.strexp("Total \\(10~20)%"); //=> "Total 17%"
+nd.strexp("Total \\(10~20)%"); //=> "Total 12%"
+nd.strexp("Total \\(10~20)%"); //=> "Total 15%"
 //choice param
-ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say hello"
-ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Girl say hi"
-ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say bye"
+nd.strexp("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say hello"
+nd.strexp("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Girl say hi"
+nd.strexp("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say bye"
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -540,12 +540,12 @@ ZSTRING("\\(Boy,Girl) say \\(hello,bye,hi)"); //=> "Boy say bye"
 						<q>환산된 값을 재귀하여 다시 사용할 수 있다.</q>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
-ZSTRING("\\(apple,banana,chocolate,cheese) + \\(milk,cake,pie) = \\{&0 + ' and ' + &1}");
-ZSTRING("\\(apple,banana,chocolate,cheese) + \\(milk,cake,pie) = \\{&0 + ' and ' + &1}");
-ZSTRING("\\(apple,banana,chocolate,cheese) + \\(milk,cake,pie) = \\{&0 + ' and ' + &1}");
-ZSTRING("\\(30~20) - \\{$0} = \\{&0 - &1}","\\?10~30");
-ZSTRING("\\(30~20) - \\{$0} = \\{&0 - &1}","\\?10~30");
-ZSTRING("\\(30~20) - \\{$0} = \\{&0 - &1}","\\?10~30");
+nd.strexp("\\(apple,banana,chocolate,cheese) + \\(milk,cake,pie) = \\{&0 + ' and ' + &1}");
+nd.strexp("\\(apple,banana,chocolate,cheese) + \\(milk,cake,pie) = \\{&0 + ' and ' + &1}");
+nd.strexp("\\(apple,banana,chocolate,cheese) + \\(milk,cake,pie) = \\{&0 + ' and ' + &1}");
+nd.strexp("\\(30~20) - \\{$0} = \\{&0 - &1}","\\?10~30");
+nd.strexp("\\(30~20) - \\{$0} = \\{&0 - &1}","\\?10~30");
+nd.strexp("\\(30~20) - \\{$0} = \\{&0 - &1}","\\?10~30");
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -557,11 +557,11 @@ ZSTRING("\\(30~20) - \\{$0} = \\{&0 - &1}","\\?10~30");
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
 //range string
-ZSTRING("Result : \\{$0+$1}","2","3"); //=> "Result : 5"
-ZSTRING("Result : \\{$0-$1}","2","3"); //=> "Result : -1"
-ZSTRING("Result : \\{$0*$1}","2","3"); //=> "Result : 6"
-ZSTRING("Result : \\{$0/$1}","2","3"); //=> "Result : 0.6666666666666666"
-ZSTRING("Result : \\{$0+' '+$1}","not","enough"); //=> "Result : not enough"
+nd.strexp("Result : \\{$0+$1}","2","3"); //=> "Result : 5"
+nd.strexp("Result : \\{$0-$1}","2","3"); //=> "Result : -1"
+nd.strexp("Result : \\{$0*$1}","2","3"); //=> "Result : 6"
+nd.strexp("Result : \\{$0/$1}","2","3"); //=> "Result : 0.6666666666666666"
+nd.strexp("Result : \\{$0+' '+$1}","not","enough"); //=> "Result : not enough"
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -569,7 +569,7 @@ ZSTRING("Result : \\{$0+' '+$1}","not","enough"); //=> "Result : not enough"
 
 					<article>
 						<header>ZString (To many array)</header>
-						<q>ZSTRING을 실제로 _ZString모듈을 호출하여 값을 반환한다. 직접적으로 _ZString모듈을 호출하여 많은 값의 생성 가능하다.</q>
+						<q>nd.strexp을 실제로 _ZString모듈을 호출하여 값을 반환한다. 직접적으로 _ZString모듈을 호출하여 많은 값의 생성 가능하다.</q>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
 _ZString("Result[\\{$i+1}] : \\{10*$i+$0}","\\?1~9").toArray(5);
@@ -583,12 +583,12 @@ _ZString("Result[\\{$i+1}] : \\{10*$i+$0}","\\?1~9").toArray(5);
 						<q>Absolutely return a type of number</q>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
-ZNUMBER("20~30");
-ZNUMBER("$0 + $1","\\?10~20","10");
+nd.numexp("20~30");
+nd.numexp("$0 + $1","\\?10~20","10");
 
-//As ZSTRING
-ZSTRING("\\(20~30)");
-ZSTRING("\\{$0 + $1}","\\?10~20","10");
+//As nd.strexp
+nd.strexp("\\(20~30)");
+nd.strexp("\\{$0 + $1}","\\?10~20","10");
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -599,14 +599,14 @@ ZSTRING("\\{$0 + $1}","\\?10~20","10");
 						<q>Absolutely return a type of number</q>
 						<div class='code-wrapper'>
 							<pre class='language-javascript'><code class='language-javascript'>								
-_NFNumber(3000).getNumber();
-_NFNumber(3000).getDecimal();
-_NFNumber("halfby $3000 dance").number();
-_NFNumber("halfby $3000 dance").getNumber();
-_NFNumber("halfby $3000 dance").getDecimal();
-_NFNumber("halfby $3000 dance").getPrefix();
-_NFNumber("halfby $3000 dance").getSuffix();
-_NFNumber("hello world").number();
+nd._Number(3000).getNumber();
+nd._Number(3000).getDecimal();
+nd._Number("halfby $3000 dance").number();
+nd._Number("halfby $3000 dance").getNumber();
+nd._Number("halfby $3000 dance").getDecimal();
+nd._Number("halfby $3000 dance").getPrefix();
+nd._Number("halfby $3000 dance").getSuffix();
+nd._Number("hello world").number();
 							</code></pre>
 							<a class='btn btn-primary live-run-action' data-require='default'>Live run</a>
 						</div>
@@ -643,9 +643,9 @@ _NFNumber("hello world").number();
 &lt;/div>
 							</code></pre>
 							<pre class='language-javascript'><code class='language-javascript'>								
-new NFActiveController('.row-1 .btn-group','.btn','click',true);
+new nd.ActiveController('.row-1 .btn-group','.btn','click',true);
 
-var manager = new NFActiveControllerManager();
+var manager = new nd.ActiveControllerManager();
 manager.makeActiveController('.row-2 .g1','.btn','click',true);
 manager.makeActiveController('.row-2 .g2','.btn','click',true);
 manager.makeActiveController('.row-2 .g3','.btn','click',true);

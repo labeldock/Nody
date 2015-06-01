@@ -638,3 +638,21 @@ nody.module("NFTimeCounter",{
 	this.rate     = typeof rate === 'number' ? rate : 20;
 	if(finish === true || ms === true || rate === true || now === true) { this.start() }
 });
+
+nody.METHOD("TAGSTACKS",function(){
+	var stakes = new String(""),stakee = new String("");
+	for(var i=0,l=arguments.length;i<l;i++){
+		if(typeof arguments[i] === "string"){
+			stakes += new String("<");
+			stakes += arguments[i];
+			stakes += new String(">");
+			var ee = new String("</");
+			ee += arguments[i];
+			ee += new String(">");
+			stakee = ee + stakee;
+		} else {
+			console.warn("TAGSTAKE:: 허용하지 않습니다.")
+		}
+	}
+	return [stakes,stakee]; 
+});
