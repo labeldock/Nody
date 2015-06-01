@@ -245,7 +245,7 @@
 	};
 	N.METHODS = function(o){ if(typeof o === "object") for(var k in o) N.METHOD(k,o[k]); };
 	//
-	N.METHOD("CONTINUEFUNCTION",function(func,over,owner){
+	N.CONTINUE_FUNCTION = function(func,over,owner){
 		over = (over || 1);
 		return function(){
 			if(arguments.length >= over){					
@@ -257,8 +257,8 @@
 			}
 			return func.apply(owner,Array.prototype.slice.call(arguments));
 		};
-	});
-	N.METHOD("BINDFUNCTION",function(m1,m2,requireReturn){
+	};
+	N.BIND_FUNCTION = function(m1,m2,requireReturn){
 		if(typeof m1 !== 'function') return m2;
 		if(typeof m2 !== 'function') return m1;
 		var m1f = m1._nodyBindFunction ? m1._nodyBindFunction : [m1];
@@ -274,14 +274,14 @@
 		bf._nodyBindFunction = bfs;
 		m1f = m2f = bfs = null;
 		return bf;
-	});
+	};
 	//trycatch high perfomance
-	N.METHOD("TRYCATCH",function(t,c,s){try{return t.call(s);}catch(e){if(typeof c === 'function') return c.call(s,e);}});
+	N.TRY_CATCH = function(t,c,s){try{return t.call(s);}catch(e){if(typeof c === 'function') return c.call(s,e);}};
 	N.url = {
 		info : function(url){
 			if(typeof url === "object") return ( url["ConstructorMark"] === ("ClientURLInfo" + W.nody)) ? url : null;
 			var info;
-			TRYCATCH(
+			N.TRY_CATCH(
 				function(){
 					info = /([\w]+)(\:[\/]+)([^/]*\@|)([\w\d\.\-\_\+]+)(\:[\d]+|)(\/|)([\w\d\.\/\-\_]+|)(\?[\d\w\=\&\%]+|)(\#[\d\w]*|)/.exec(url?url:window.document.URL.toString());
 				},
@@ -566,7 +566,7 @@
 		//좌측으로 0을 붙임
 		"PADLEFT":function(nr,n,str){ return new N.Array(n-new String(nr).length+1).join(str||'0')+nr; },
 		// 참고! : human readable month
-		"ZDATE":function(dv,format,pad){
+		"dateexp":function(dv,format,pad){
 			if(ISARRAY(dv)) dv = dv.join(' ');
 			
 			var dt = /(\d\d\d\d|)[^\d]?(\d\d|\d|).?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)/.exec(dv);
@@ -589,32 +589,32 @@
 				return r;
 		},
 		//1:길이와 같이 2: 함수호출
-		"TIMES":CONTINUEFUNCTION(function(l,f,s){ l=TONUMBER(l); for(var i=(typeof s === 'number')?s:0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },2),
-		"TIMESMAP":CONTINUEFUNCTION(function(l,f,s){ 
+		"TIMES":N.CONTINUE_FUNCTION(function(l,f,s){ l=TONUMBER(l); for(var i=(typeof s === 'number')?s:0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },2),
+		"TIMESMAP":N.CONTINUE_FUNCTION(function(l,f,s){ 
 			l=TONUMBER(l); var r = []; 
-			if(typeof f === 'string') var fs = f, f = function(i){ return ZSTRING.SEED(i)(fs); };
+			if(typeof f === 'string') var fs = f, f = function(i){ return N.strexp.seed(i)(fs); };
 			for(var i=(typeof s === 'number')?s:0;i<l;i++) r.push(f(i)); 
 			return r; 
 		},2),
-		"DATACALL":CONTINUEFUNCTION(function(d,alt){ return (typeof d === 'undefined') ? CLONEARRAY(alt) : ((alt === true) ? CLONEARRAY(d) : TOARRAY(d)); },1),
+		"DATACALL":N.CONTINUE_FUNCTION(function(d,alt){ return (typeof d === 'undefined') ? CLONEARRAY(alt) : ((alt === true) ? CLONEARRAY(d) : TOARRAY(d)); },1),
 		"DATAHAS" :function(d,v){ d=TOARRAY(d); for(var i=0,l=d.length;i<l;i++) if(d[i] === v) return true; return false; },
 		//배열의 하나추출
 		"DATAZERO"   :function(t){ return typeof t === "object" ? typeof t[0] === "undefined" ? undefined : t[0] : t; },
 		//배열의 뒤
 		"DATALAST"   :function(t){ return ISARRAY(t) ? t[t.length-1] : t; },
 		// 각각의 값의 function실행
-		"DATAEACH"    :CONTINUEFUNCTION(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
+		"DATAEACH"    :N.CONTINUE_FUNCTION(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
 		// 각각의 값의 function실행
-		"DATAEACHBACK":CONTINUEFUNCTION(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
+		"DATAEACHBACK":N.CONTINUE_FUNCTION(function(v,f){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
 		// 각각의 값을 배열로 다시 구해오기
-		"DATAMAP"     :CONTINUEFUNCTION(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
+		"DATAMAP"     :N.CONTINUE_FUNCTION(function(v,f){ var rv=[],ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
 		//
 		"DATAHAS":function(v,o){ var ev=TOARRAY(v); for(var i=0,l=ev.length;i<l;i++){ if(ev[i] === o) return true } return false; },
 		"INJECT":function(v,f,d){ d=(typeof d=="object"?d:{});v=TOARRAY(v); for(var i=0,l=v.length;i<l;i++)f(d,v[i],i);return d;},
 		// 배열안의 배열을 풀어냅니다.
 		"DATAFLATTEN":function(){ var result = []; function arrayFlatten(args){ DATAEACH(args,function(arg){ if(ISARRAY(arg)) return DATAEACH(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
 		// false를 호출하면 배열에서 제거합니다.
-		"DATAFILTER":CONTINUEFUNCTION(function(inData,filterMethod){
+		"DATAFILTER":N.CONTINUE_FUNCTION(function(inData,filterMethod){
 			var data = TOARRAY(inData);
 			filterMethod = filterMethod || function(a){ return typeof a === "undefined" ? false : true; };
 			if(typeof filterMethod === "function"){
@@ -692,11 +692,11 @@
 		"TURNINDEX":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 		"SPRINGINDEX":function(index,maxIndex){ index = TONUMBER(index); maxIndex = TONUMBER(maxIndex); return (index == 0 || (Math.floor(index/maxIndex)%2 == 0))?index%maxIndex:maxIndex-(index%maxIndex); },
 		//오브젝트의 key를 each열거함
-		"PROPEACH":CONTINUEFUNCTION(function(v,f){if((typeof v === "object") && (typeof f === "function")){ for(k in v) if(f(v[k],k)===false) break; }; return v; },2),
+		"PROPEACH":N.CONTINUE_FUNCTION(function(v,f){if((typeof v === "object") && (typeof f === "function")){ for(k in v) if(f(v[k],k)===false) break; }; return v; },2),
 		//
-		"PROPMAP":CONTINUEFUNCTION(function(v,f){ var result = {}; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result[k] = f(v[k],k); return result; } return result;},2),
+		"PROPMAP":N.CONTINUE_FUNCTION(function(v,f){ var result = {}; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result[k] = f(v[k],k); return result; } return result;},2),
 		//오브젝트의 key value값을 Array 맵으로 구한다.
-		"PROPDATA" :CONTINUEFUNCTION(function(v,f){ var result = []; if(typeof f !== "function") f = function(v){ return v; }; if(typeof v === "object"){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
+		"PROPDATA" :N.CONTINUE_FUNCTION(function(v,f){ var result = []; if(typeof f !== "function") f = function(v){ return v; }; if(typeof v === "object"){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
 		//
 		"PROPLENGTH":function(data){ var l = 0; if(typeof data === "object" || typeof data === "function") for(var key in data) l++; return l; },
 		//새로운 객체를 만들어 복사
@@ -1008,7 +1008,7 @@
 (function(W){
 	if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
 	N.SINGLETON("SpecialFoundation",{
-		"ZRATIO":function(ratioTotal){
+		"ratio":function(ratioTotal){
 			var total = 0;
 			ratioTotal = TONUMBER(ratioTotal) || 100;
 			return DATAMAP(Array.prototype.slice.call(arguments,1),function(v){
@@ -1188,14 +1188,14 @@
 		//to kebab-case
 		"KEBAB":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("-"); },
 		//길이만큼 늘립니다.
-		"DATACLIP":CONTINUEFUNCTION(function(v,l,ex){
+		"DATACLIP":N.CONTINUE_FUNCTION(function(v,l,ex){
 			var d = CLONEARRAY(v);
 			if(typeof l !== 'number' || d.length === l) return d;
 			if (d.length > l) return Array.prototype.slice.call(d,0,l);
 			TIMES(l - d.length,function(){ d.push(ex); });
 			return d;
 		},2),
-		"DATAREPEAT":CONTINUEFUNCTION(function(v,l){
+		"DATAREPEAT":N.CONTINUE_FUNCTION(function(v,l){
 			var d = CLONEARRAY(v);
 			if(typeof l !== 'number' || d.length === l) return d;
 			if (d.length > l) return Array.prototype.slice.call(d,0,l);
@@ -1358,7 +1358,8 @@
 	SpecialFoundation.eachGetter();
 	
 	
-	N.METHOD("ZSTRING",function(source){
+	
+	N.METHOD("strexp",function(source){
 		var seed = this.seed || 0;
 		var aPoint=[],params = DATAMAP(Array.prototype.slice.call(arguments,1),function(t){ return ZONEIN_FO(t); });
 		return source.replace(/(\\\([^\)]*\)|\\\{[^\}]*\})/g,function(s){
@@ -1386,22 +1387,22 @@
 		});
 		
 	},{
-		SEED:function(seed){ 
+		seed:function(seed){ 
 			this.seed = TONUMBER(seed);
 			return this.getter;
 		}
 	});
 	
-	N.METHOD("ZNUMBER",function(source){
+	N.METHOD("numexp",function(source){
 		if(arguments.length === 1){
-			return TONUMBER(ZSTRING.call(undefined,"\\("+source+")"));
+			return TONUMBER(N.strexp.call(undefined,"\\("+source+")"));
 		} else {
 			var args = Array.prototype.slice.call(arguments);
 			args[0]  = "\\{"+args[0]+"}";
-			return TONUMBER(ZSTRING.apply(undefined,args));
+			return TONUMBER(N.strexp.apply(undefined,args));
 		}
 	},{
-		SEED:function(seed){ this.seed = TONUMBER(seed);return this.getter; }
+		seed:function(seed){ this.seed = TONUMBER(seed);return this.getter; }
 	});
 	
 	// 키를 찾는 함수입니다.
@@ -1881,7 +1882,7 @@
 			if(autoTrim) original = this.Source.trim();
 			var trim_s = trimParam?trimParam:" ";
 			trim_s = trim_s.replace(" ","\\s");
-			return TRYCATCH(function(){
+			return N.TRY_CATCH(function(){
 				this.Source = new RegExp("^(["+trim_s+"]*)(.*[^"+trim_s.split("|").join("^")+"])(["+trim_s+"]*)$").exec(original)[2];
 			},function(){
 				return this.Source;
@@ -2040,7 +2041,7 @@
 	
 	N.EXTEND_MODULE("String","ZString",{
 		getZContent:function(seed){
-			return ZSTRING.SEED(seed).apply(undefined,[this.Source].concat(this.ZoneParams));
+			return N.strexp.seed(seed).apply(undefined,[this.Source].concat(this.ZoneParams));
 		},
 		toArray:function(length,startAt){
 			length  = (typeof length === "number")  ? length : 1;
@@ -2998,7 +2999,7 @@ if (!Array.prototype.forEach) {
 			return result;
 		},
 		//css스타일 태그를 html스타일 태그로 바꿉니다.
-		"TAG" : CONTINUEFUNCTION(function(tagProperty,attrValue){
+		"TAG" : N.CONTINUE_FUNCTION(function(tagProperty,attrValue){
 			
 			if(typeof tagProperty === "object"){
 				var tagText = [];
@@ -3277,7 +3278,7 @@ if (!Array.prototype.forEach) {
 			}
 			return DATAUNIQUE(result);
 		},
-		"FIND" : CONTINUEFUNCTION(function(find,root,eq){
+		"FIND" : N.CONTINUE_FUNCTION(function(find,root,eq){
 			return (typeof root === "number") ? FSINGLE(find)[root] :
 				   (typeof eq === "number")   ? FADVENCE(find,root)[eq] :
 				   FADVENCE(find,root);
@@ -3291,13 +3292,13 @@ if (!Array.prototype.forEach) {
 			return target.parentNode.children[currentIndex+offset];
 		},
 		// 하위루트의 모든 노드를 검색함 (Continutiltiy에서 중요함)
-		"FINDIN" : CONTINUEFUNCTION(function(root,find,index){
+		"FINDIN" : N.CONTINUE_FUNCTION(function(root,find,index){
 			return (typeof index === 'number') ? FADVENCE(find || '*',DATAMAP(FADVENCE(root),function(node){ return node.children },DATAFLATTEN))[index] :
 				   (typeof find  === 'number') ? FADVENCE('*',DATAMAP(FADVENCE(root),function(node){ return node.children },DATAFLATTEN))[find]   :
 												 FADVENCE(find || '*',DATAMAP(FADVENCE(root),function(node){ return node.children },DATAFLATTEN)) ;
 		},2),
 		// 자식루트의 노드를 검색함
-		"FINDON": CONTINUEFUNCTION(function(root,find){
+		"FINDON": N.CONTINUE_FUNCTION(function(root,find){
 			var finds = DATAMAP(FADVENCE(root),function(node){ return node.children; },DATAFLATTEN);
 			switch(typeof find){
 				case "number": return [finds[find]]; break;
@@ -3305,7 +3306,7 @@ if (!Array.prototype.forEach) {
 				default      : return finds; break;
 			}
 		},1),
-		"FINDPARENTS":CONTINUEFUNCTION(function(el,require,index){ 
+		"FINDPARENTS":N.CONTINUE_FUNCTION(function(el,require,index){ 
 			if(typeof require === 'string') {
 				return (typeof index === 'number') ?
 				DATAFILTER(NUT.PARENTS(FADVENCE(el)[0]),function(el){ return ELIS(el,require); })[index]:
@@ -3316,7 +3317,7 @@ if (!Array.prototype.forEach) {
 				return NUT.PARENTS(FADVENCE(el)[0]);
 			}
 		},1),
-		"FINDBEFORE":CONTINUEFUNCTION(function(node,filter){ 
+		"FINDBEFORE":N.CONTINUE_FUNCTION(function(node,filter){ 
 			node = FSINGLE(node)[0];
 			var index = ELINDEX(node); 
 			var result = []; 
@@ -3338,7 +3339,7 @@ if (!Array.prototype.forEach) {
 			}
 			return result; 
 		},1),
-		"FINDAFTER":CONTINUEFUNCTION(function(node,filter){ 
+		"FINDAFTER":N.CONTINUE_FUNCTION(function(node,filter){ 
 			node = FSINGLE(node)[0];
 			var index = ELINDEX(node); 
 			var result = []; 
@@ -3360,7 +3361,7 @@ if (!Array.prototype.forEach) {
 			}
 			return result; 
 		},1),
-		"FINDPARENT" :CONTINUEFUNCTION(function(el,require,index){
+		"FINDPARENT" :N.CONTINUE_FUNCTION(function(el,require,index){
 			if( (typeof require === 'number') || ((typeof require === 'string') && (typeof index === 'number')) ) return DATAZERO(FINDPARENTS(el,require,index));
 			var node = FSINGLE(el)[0];
 			if(node) {
@@ -3373,7 +3374,7 @@ if (!Array.prototype.forEach) {
 			}
 			return undefined;
 		},1),
-		"FINDDOCUMENT":CONTINUEFUNCTION(function(iframeNode){
+		"FINDDOCUMENT":N.CONTINUE_FUNCTION(function(iframeNode){
 			var iframe = FSINGLE(iframeNode)[0];
 			if(iframe) {
 				if(iframe.tagName == "IFRAME") return iframe.contentDocument || iframe.contentWindow.document;
@@ -3382,7 +3383,7 @@ if (!Array.prototype.forEach) {
 				console.warn('iframe을 찾을 수 없습니다.',iframeNode);
 			}
 		},1),
-		"FINDTREE":CONTINUEFUNCTION(function(node,stringify){
+		"FINDTREE":N.CONTINUE_FUNCTION(function(node,stringify){
 			var treeNode = FSINGLE(node)[0];
 			if(!treeNode) return [];
 			
@@ -3506,8 +3507,8 @@ if (!Array.prototype.forEach) {
 		},
 		"CREATETO":function(node,parent){ return CREATE(node,undefined,parent); },
 		//get text node element
-		"MAKETEXT":CONTINUEFUNCTION(function(t){ return W.document.createTextNode(t); },1),
-		"MAKE":CONTINUEFUNCTION(function(name,attr,third){
+		"MAKETEXT":N.CONTINUE_FUNCTION(function(t){ return W.document.createTextNode(t); },1),
+		"MAKE":N.CONTINUE_FUNCTION(function(name,attr,third){
 			if ( ISARRAY(attr) || ISELNODE(attr) || ISTEXTNODE(attr) ) {
 				var createNode = CREATE(name);
 				ELAPPEND(createNode,new N.Array(arguments).subarr(1).flatten().toArray());
@@ -3520,7 +3521,7 @@ if (!Array.prototype.forEach) {
 				return CREATE(name, attr);
 			}	
 		},1),
-		"MAKES":CONTINUEFUNCTION(function(fulltag,root){
+		"MAKES":N.CONTINUE_FUNCTION(function(fulltag,root){
 			var makeRoot   = FIND(root,0);
 			var incomeRoot = !!makeRoot;
 			if(!incomeRoot) makeRoot = MAKE('div');
@@ -3586,7 +3587,7 @@ if (!Array.prototype.forEach) {
 			});
 			return TOARRAY(makeRoot.children);
 		},1),
-		"TAGS":CONTINUEFUNCTION(function(fulltag){
+		"TAGS":N.CONTINUE_FUNCTION(function(fulltag){
 			return MAKES(fulltag,TAG);
 		},1),
 		// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
@@ -3654,7 +3655,7 @@ if (!Array.prototype.forEach) {
 			if(typeof param=="object") return param;
 			if(kv == true && ( typeof param === "string" || typeof es === "string")){ var r = {}; r[es] = param; return r; }
 			if(typeof param=="string" || typeof param=="boolean") {
-				var c = TRYCATCH(function(){
+				var c = N.TRY_CATCH(function(){
 					if(JSON == aJSON) throw new Error("not json supported browser");
 					var jp = JSON.parse(param);
 					if(typeof jp !== "object") throw new Error("pass");
@@ -4016,7 +4017,7 @@ if (!Array.prototype.forEach) {
 			return node;
 		},
 		//이전 엘리먼트를 찾습니다.
-		"BEFORE":CONTINUEFUNCTION(function(node,appendNodes){ 
+		"BEFORE":N.CONTINUE_FUNCTION(function(node,appendNodes){ 
 			var target = FSINGLE(node)[0];
 			if(!ISELNODE(target)) return node;
 			if(arguments.length < 2) return FINDMEMBER(target,-1);
@@ -4028,7 +4029,7 @@ if (!Array.prototype.forEach) {
 		},1),
 		
 		//이후 엘리먼트를 찾습니다.
-		"AFTER" :CONTINUEFUNCTION(function(target,appendNodes){ 
+		"AFTER" :N.CONTINUE_FUNCTION(function(target,appendNodes){ 
 			target = FSINGLE(target)[0];
 			if(!ISELNODE(target))    return target; 
 			if(arguments.length < 2) return FINDMEMBER(target,1);
@@ -4043,7 +4044,7 @@ if (!Array.prototype.forEach) {
 			}
 			return target;
 		},1),
-		"CHANGE":CONTINUEFUNCTION(function(left,right){
+		"CHANGE":N.CONTINUE_FUNCTION(function(left,right){
 			left  = FSINGLE(left)[0];
 			right = FSINGLE(right)[0];
 			if(left && right ){
@@ -5415,7 +5416,7 @@ if (!Array.prototype.forEach) {
 		this.FireCurrent  = 0;
 	});
 	
-	N.METHOD("FIRE",function(list,counter,executor){
+	N.METHOD("fire",function(list,counter,executor){
 		return new N.Fire(list,executor).each(counter);
 	});
 	
@@ -5502,7 +5503,7 @@ if (!Array.prototype.forEach) {
 							var response;
 							switch(this.option.dataType){
 								case "json": case "object":
-									TRYCATCH(function(){
+									N.TRY_CATCH(function(){
 										response = JSON.parse(requestObject.responseText);
 									},function(e){
 										console.error("json 포멧이 올바르지 않습니다. =>",requestObject.status,"::",requestObject.responseText);
@@ -5581,10 +5582,10 @@ if (!Array.prototype.forEach) {
 			// request params (기록용)
 			
 			N.$Meta(newRequest).setProp("requestParam",requestData.get());
-			TRYCATCH(function(){
+			N.TRY_CATCH(function(){
 				if( this.option.method.toLowerCase() == "post" ){
 					newRequest.open("POST", this.url, true );
-					TRYCATCH(function(){
+					N.TRY_CATCH(function(){
 						newRequest.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 						newRequest.setRequestHeader('Content-type'    , 'application/x-www-form-urlencoded');
 					},function(){
@@ -5829,7 +5830,7 @@ if (!Array.prototype.forEach) {
 	var nody_loader_script_start = function(container){
 		FIND("script",container,DATAEACH,function(scriptNode){
 			var script = scriptNode.innerHTML;
-			TRYCATCH(function(){
+			N.TRY_CATCH(function(){
 				eval.call(script);
 			},function(e){
 				console.error("다음의 스크립트 구문 오류로 스크립트 실행이 정지되었습니다. => ",MAX(script,200));
@@ -7005,7 +7006,7 @@ if (!Array.prototype.forEach) {
 		if(needDisplay === true) this.needDisplay();
 	});
 	
-	N.METHOD("CUBICBEZIERMAKE",function(x1, y1, x2, y2, epsilon){
+	N.METHOD("makeCubicbezier",function(x1, y1, x2, y2, epsilon){
 		epsilon = (typeof epsilon === "number") ? epsilon : 1;
 		var curveX = function(t){
 				var v = 1 - t;
@@ -7098,7 +7099,7 @@ if (!Array.prototype.forEach) {
 	
 	N.EXTEND_MODULE("Counter","BezierCounter",{
 		setCubicBezier:function(x1,x2,y1,y2){
-			this.setCountProcessor(CUBICBEZIERMAKE(
+			this.setCountProcessor(N.makeCubicbezier(
 				(typeof x1 === "number") ? x1 : 0,
 				(typeof x2 === "number") ? x2 : 0,
 				(typeof y1 === "number") ? y1 : 0,
@@ -7525,7 +7526,7 @@ if (!Array.prototype.forEach) {
 		setAllowVirtureTouch:function(flag){ this.Touch.setAllowVirtureTouch(true); },
 		//scroll event
 		whenScroll            :function(m){ 
-			this.ScrollEvent.Scroll = (!m) ? undefined : BINDFUNCTION(this.ScrollEvent.Scroll,m);
+			this.ScrollEvent.Scroll = (!m) ? undefined : N.BIND_FUNCTION(this.ScrollEvent.Scroll,m);
 		},
 		applyScrollEvent:function(flag){
 			if(typeof flag !== "boolean") return;
