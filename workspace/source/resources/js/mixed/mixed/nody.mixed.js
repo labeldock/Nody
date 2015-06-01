@@ -1,6 +1,6 @@
 (function(){	
 	
-	nody.module("MixedMoment",{
+	nody.MODULE("MixedMoment",{
 		getCommand:function(name){
 			var args = CLONEARRAY(arguments);
 			args.shift();
@@ -86,7 +86,7 @@
 	
 	//스와이퍼 컨트롤러
 	//require jQuery, iDangerous Swiper
-	nody.module('MixedSwiper',{
+	nody.MODULE('MixedSwiper',{
 		swipeNext:function(){
 			this.SourceSwiper.swipeNext();
 		},
@@ -183,7 +183,7 @@
 	});
 
 	//require jQuery, Bootstrap Modal
-	nody.extendModule('NFTemplate','MixedBSModal',{
+	nody.EXTEND_MODULE('NFTemplate','MixedBSModal',{
 		setModalOpener:function(openButton){
 			var _ = this;
 			$(openButton).on('click',function(){

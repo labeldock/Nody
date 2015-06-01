@@ -1,4 +1,7 @@
-var GNBNFContentLoader = new NFContentLoader("main",function(){	
+//
+console.log(window.nody);
+
+var GNBNFContentLoader = new nd.NFContentLoader("main",function(){	
 	//active event controller
 	return this.needActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
@@ -80,13 +83,13 @@ GNBNFContentLoader.whenLoad("mvvm",function(){
 	var mvvmXMP =  $(MAKE("XMP")).appendTo("#init-data-view");
 	
 	//데이터를 불러거나 다시 출력하는 역활
-    var dataContext = new NFDataContext(data,"list");
+    var dataContext = new nd.NFDataContext(data,"list");
 	
 	//뷰를 그리는 방법을 정의
 	var itemIndex = 10;
-	var viewModel = new NFViewModel("template#mvvm-ul","template#mvvm-list","template#mvvm-td");
+	var viewModel = new nd.NFViewModel("template#mvvm-ul","template#mvvm-list","template#mvvm-td");
 	//뷰를 그리고 이벤트를 등록함
-    var listViewController = new NFPresentor("#listContainer",dataContext.getRootManagedData(),viewModel);
+    var listViewController = new nd.NFPresentor("#listContainer",dataContext.getRootManagedData(),viewModel);
 	listViewController.dataDidChange = function(){
 		var xmpText = dataContext.getJSONString().replace(/\:\[/,":[\n\t").replace(/\}\]\}\,(\s|)/g,"}]},\n\t").replace("]}]}","]}\n]}");
 		mvvmXMP.text(xmpText);
@@ -105,18 +108,18 @@ var viewData = [
 	{name:"Greece"   ,native:"Ελληνική Δημοκρατία"            ,image:"resources/images/Greece.png"}
 ];
 
-var viewNFDataContext = new NFDataContext(viewData);
+var viewNFDataContext = new nd.NFDataContext(viewData);
 window.viewNFDataContext = viewNFDataContext;
 
 var viewModels = {
-	"small":new NFViewModel(function(){
+	"small":new nd.NFViewModel(function(){
 		return this.placeholder("ul");
 	},function(){
 		return MAKE("li.inline-box.small-box.text-center",
 			MAKE("img",{src:this.value("image")})
 		);
 	}),
-	"large":new NFViewModel(function(){
+	"large":new nd.NFViewModel(function(){
 		return this.placeholder("ul");
 	},function(){
 		return MAKE("li.inline-box.text-center",
@@ -124,7 +127,7 @@ var viewModels = {
 			this.bind("native","p")
 		);
 	}),
-	"list":new NFViewModel(function(){
+	"list":new nd.NFViewModel(function(){
 		return MAKE("table.table",
 			MAKE("thead",
 				MAKE("tr",
@@ -147,9 +150,9 @@ var viewModels = {
 
 GNBNFContentLoader.whenLoad("viewmodel",function(){	
 
-	var viewController = new NFPresentor("#view-display",viewNFDataContext);
+	var viewController = new nd.NFPresentor("#view-display",viewNFDataContext);
 	
-	var viewType = new NFContexts("#view-type","button");
+	var viewType = new nd.NFContexts("#view-type","button");
 	
 	viewType.onSelects("click",function(){
 		
@@ -170,7 +173,7 @@ GNBNFContentLoader.whenLoad("viewmodel",function(){
 });
 GNBNFContentLoader.whenLoad("selectbind",function(){
 	// view model
-	var listNFViewModel = new NFViewModel(
+	var listNFViewModel = new nd.NFViewModel(
 	function(){
 		return this.placeholder("div.menu.list-group");
 	},function(){
@@ -180,7 +183,7 @@ GNBNFContentLoader.whenLoad("selectbind",function(){
 		);
 	});
 	
-	var itemNFViewModel = new NFViewModel(function(){
+	var itemNFViewModel = new nd.NFViewModel(function(){
 		return MAKE("div",
 			MAKE("h5::Name"),
 			this.bind("name"),
@@ -190,10 +193,10 @@ GNBNFContentLoader.whenLoad("selectbind",function(){
 			this.bind("image","p")
 		);
 	});
-	var itemController = new NFPresentor("#bind-item-display",undefined,itemNFViewModel);
+	var itemController = new nd.NFPresentor("#bind-item-display",undefined,itemNFViewModel);
 	
 	// list view
-	var viewController = new NFPresentor("#bind-display",viewNFDataContext,listNFViewModel,function(){
+	var viewController = new nd.NFPresentor("#bind-display",viewNFDataContext,listNFViewModel,function(){
 		
 		var activeController = this.needActiveController('/*',function(e,managedData){
 			itemController.needDisplayWithData(managedData);
@@ -216,7 +219,7 @@ GNBNFContentLoader.whenLoad("selectbind",function(){
 	
 });
 GNBNFContentLoader.whenLoad("multiselect",function(){
-	var multiNFViewModel = new NFViewModel(function(){
+	var multiNFViewModel = new nd.NFViewModel(function(){
 		return this.placeholder("div.row-fluid");
 	},function(){
 		return MAKE("div.col-sm-6",
@@ -229,7 +232,7 @@ GNBNFContentLoader.whenLoad("multiselect",function(){
 			)
 		);
 	});
-	var viewController = new NFPresentor("#multiselect-display",viewNFDataContext,multiNFViewModel,function(){
+	var viewController = new nd.NFPresentor("#multiselect-display",viewNFDataContext,multiNFViewModel,function(){
 		var activeController = this.needActiveController('/*',null,true,true);
 		activeController.whenActiveStart(function(){
 			$(".side-bar-container").addClass("side-bar-active");
@@ -239,7 +242,7 @@ GNBNFContentLoader.whenLoad("multiselect",function(){
 		});
 		
 		$("#replaceData-submit").click(function(){
-			var model = new NFModel("#replaceData").removeNothing();
+			var model = new nd.NFModel("#replaceData").removeNothing();
 		
 			if(model.count()){
 				DATAEACH(DATAMAP(activeController.getActiveSelects(),function(node){
@@ -260,10 +263,10 @@ GNBNFContentLoader.whenLoad("multiselect",function(){
 });
 
 GNBNFContentLoader.whenLoad("scroll",function(){
-	var scrollBox    = new NFScrollBox("#scroll-box");
-	var calendarBox  = new NFScrollBox("#calendar-box");
+	var scrollBox    = new nd.NFScrollBox("#scroll-box");
+	var calendarBox  = new nd.NFScrollBox("#calendar-box");
 	var countDisplay = $("#calendar-box-count");
-	var nowMoment    = new MixedMoment("ko");
+	var nowMoment    = new nd.MixedMoment("ko");
 	
 	$(document).on("click",".zoomp",function(){
 		LG("click zoom plus");
@@ -330,7 +333,7 @@ var data = [
 	{'class':'item','data-alias':'item'},
 	{'class':'item','data-alias':'item'}
 ];
-new NFTemplate(
+new nd.NFTemplate(
 	"<div id='one' class='two three' node-put='items'></div>",
 	{items:data},
 	{items:function(data){ return DATAMAP(data,function(itemData){ return MAKE('li',itemData); }); }}
@@ -399,7 +402,7 @@ GNBNFContentLoader.whenLoad("speedtest2",function(){
 });
 
 GNBNFContentLoader.whenLoad('formcontroller',function(){
-	var plainNFFormController = new NFFormController('.plain-form-area',null,{
+	var plainNFFormController = new nd.NFFormController('.plain-form-area',null,{
 		normal:function(){
 			this.controls(function(){
 				$(this).css('color','inherit');
@@ -411,7 +414,7 @@ GNBNFContentLoader.whenLoad('formcontroller',function(){
 			},'.em-target');	
 		}
 	});
-	var realNFFormController  = new NFFormController('.real-form-area',{
+	var realNFFormController  = new nd.NFFormController('.real-form-area',{
 		normal:function(){
 			this.disabled(false);
 		},
