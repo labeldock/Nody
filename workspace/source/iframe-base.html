@@ -68,8 +68,8 @@
 		document.body.innerHTML = '';
 		DATAEACH(htmls,function(html){
 			var pre = ISELNODE(html) ? 
-			MAKE('pre',MAKE(codeTag,_NFString(html.outerHTML).getHTMLSafe())) :
-			MAKE('pre',MAKE(codeTag,_NFString(html).getHTMLSafe()));
+			MAKE('pre',MAKE(codeTag,nd.$String(html.outerHTML).getHTMLSafe())) :
+			MAKE('pre',MAKE(codeTag,nd.$String(html).getHTMLSafe()));
 			ELAPPEND(document.body,pre);
 			Prism.highlightElement(pre.children[0]);
 		});

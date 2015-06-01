@@ -17,7 +17,7 @@ $(document).on('keyup',function(e){
 	}
 });
 
-var runTabContentsActiveController = new NFActiveController('.run-content .tabs','li','click',function(e,i){
+var runTabContentsActiveController = new nd.ActiveController('.run-content .tabs','li','click',function(e,i){
 	if(i == 0) {
 		$('.run-modal .code-set').removeClass('code-set-origin');
 	} else {

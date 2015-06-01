@@ -10,10 +10,10 @@
 (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	nody.VERSION = "0.24.1", nody.BUILD = "1092";
+	N.VERSION = "0.24.1", N.BUILD = "1092";
 	
 	// Core verison
-	nody.CORE_VERSION = "1.9.3", nody.CORE_BUILD = "77";
+	N.CORE_VERSION = "1.9.3", N.CORE_BUILD = "77";
 	
 	// AMD : Requirejs
 	if (typeof define === 'function' && typeof define.amd === 'object' && define.amd) {define(function(){return nody;});};
@@ -38,8 +38,8 @@
 	
 	//NativeCore console trace
 	var traceNativeModule = function(name){ if (NModules[name]) { var result = name + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype["set"])+"") )[1] + ")"; var i2 = 0; for(var protoName in NModules[name].prototype ) switch(protoName){ case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__SelfModuleInit__": break; default: if(typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype[protoName])+"") )[1] + ")" ; i2++; break; } return result; } else { return name + " module is not found."; } };
-	nody.API = traceNativeModule;
-	nody.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "SpecialFoundation": case "ELUT": case "NODY": case "FINDEL": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n " + i + " : " + traceNativeModule(key); i++; } logText.push(moduleText); return logText.join("\n"); };
+	N.API = traceNativeModule;
+	N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "SpecialFoundation": case "ELUT": case "NODY": case "FINDEL": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n " + i + " : " + traceNativeModule(key); i++; } logText.push(moduleText); return logText.join("\n"); };
 	
 	
 	//NativeCore Start
@@ -153,23 +153,23 @@
 			NModules[name].prototype.__SelfModuleInit__ = nody["$"+name];
 		}
 	};
-	nody.MODULE = function(name,proto,setter,getter){
+	N.MODULE = function(name,proto,setter,getter){
 		if(NativeFactoryObject("object",name)){
 			NativeFactoryExtend(name,proto,setter,getter);
 			NativeFactoryDeploy(name);
 		}
 	};
-	nody.MODULE_PROPERTY = function(name,propName,propValue){
+	N.MODULE_PROPERTY = function(name,propName,propValue){
 		NModules[name][propName] = propValue;
 		return NModules[name];
 	};
-	nody.ARRAY_MODULE = function(name,proto,setter,getter){
+	N.ARRAY_MODULE = function(name,proto,setter,getter){
 		if(NativeFactoryObject("array",name)){
 			NativeFactoryExtend(name,proto,setter,getter);
 			NativeFactoryDeploy(name);
 		}
 	};
-	nody.EXTEND_MODULE = function(parentName,name,methods,setter,getter){
+	N.EXTEND_MODULE = function(parentName,name,methods,setter,getter){
 		var parentConstructor = NModules[parentName];
 		if(typeof parentConstructor === "undefined") throw new Error("확장할 behavior ("+parentName+")가 없습니다"+TOSTRING(NModules));
 		
@@ -184,7 +184,7 @@
 		}
 	};
 	//Getter:Core
-	nody.METHOD = function(n,m,bind){ 
+	N.METHOD = function(n,m,bind){ 
 		var name=n.toUpperCase(); 
 		W[name]=m; NGetters.push(name); 
 		if(typeof bind === 'object') for(var key in bind) if(typeof bind[key] === 'function') {
@@ -204,21 +204,21 @@
 		"map":function(f){ var r = []; this.each(function(v,k,i){ r.push(f(v,k,i)); }); return r; },
 		"trace":function(m){ console.log((m?m+" ":"")+TOSTRING(this.Source)); }
 	};
-	nody.STRUCTURE = function(n,m){
-		if(typeof n !== "string" || typeof m !== "function") return console.warn("nody.STRUCTURE::worng arguments!");
+	N.STRUCTURE = function(n,m){
+		if(typeof n !== "string" || typeof m !== "function") return console.warn("N.STRUCTURE::worng arguments!");
 		NStructure[n]=function(){ this.Source={};m.apply(this,Array.prototype.slice.call(arguments)); };
 		NStructure[n].prototype = {"constructor":m};
 		for(var key in structruePrototype) NStructure[n].prototype[key] = structruePrototype[key];
 		window[n] = NStructure[n];
 	};
-	nody.INIT_STRUCTURE = function(n,o){ return (o instanceof W[n]) ? o : new W[n](o); };
+	N.INIT_STRUCTURE = function(n,o){ return (o instanceof W[n]) ? o : new W[n](o); };
 	//Kit:Core
-	nody.SINGLETON = function(n,m,i){
+	N.SINGLETON = function(n,m,i){
 		var o=i?i:function(){};
 		for(var cname in m) {
 			if(typeof cname === "string" && cname.indexOf("Structure#")===0){
 				var dataName = cname.substr(10);
-				if( dataName.length > 0) nody.STRUCTURE(dataName,m[cname]);
+				if( dataName.length > 0) N.STRUCTURE(dataName,m[cname]);
 				delete m[cname];
 			}
 		}
@@ -228,7 +228,7 @@
 			for(var k in o.prototype){
 				switch(k){
 					case "eachGetter":case "eachGetterWithPrefix":case "constructor":break;
-					default: nody.METHOD(n+k,o.prototype[k]); break;
+					default: N.METHOD(n+k,o.prototype[k]); break;
 				}
 			}
 		};
@@ -236,16 +236,16 @@
 			for(var k in o.prototype){
 				switch(k){
 					case "eachGetter":case "eachGetterWithPrefix":case "constructor":break;
-					default: nody.METHOD(k,o.prototype[k]); break;
+					default: N.METHOD(k,o.prototype[k]); break;
 				}
 			}
 		};
 		W[n]=new o();
 		NSingletons[n]=W[n];
 	};
-	nody.METHODS = function(o){ if(typeof o === "object") for(var k in o) nody.METHOD(k,o[k]); };
+	N.METHODS = function(o){ if(typeof o === "object") for(var k in o) N.METHOD(k,o[k]); };
 	//
-	nody.METHOD("CONTINUEFUNCTION",function(func,over,owner){
+	N.METHOD("CONTINUEFUNCTION",function(func,over,owner){
 		over = (over || 1);
 		return function(){
 			if(arguments.length >= over){					
@@ -258,7 +258,7 @@
 			return func.apply(owner,Array.prototype.slice.call(arguments));
 		};
 	});
-	nody.METHOD("BINDFUNCTION",function(m1,m2,requireReturn){
+	N.METHOD("BINDFUNCTION",function(m1,m2,requireReturn){
 		if(typeof m1 !== 'function') return m2;
 		if(typeof m2 !== 'function') return m1;
 		var m1f = m1._nodyBindFunction ? m1._nodyBindFunction : [m1];
@@ -276,8 +276,8 @@
 		return bf;
 	});
 	//trycatch high perfomance
-	nody.METHOD("TRYCATCH",function(t,c,s){try{return t.call(s);}catch(e){if(typeof c === 'function') return c.call(s,e);}});
-	nody.url = {
+	N.METHOD("TRYCATCH",function(t,c,s){try{return t.call(s);}catch(e){if(typeof c === 'function') return c.call(s,e);}});
+	N.url = {
 		info : function(url){
 			if(typeof url === "object") return ( url["ConstructorMark"] === ("ClientURLInfo" + W.nody)) ? url : null;
 			var info;
@@ -290,7 +290,7 @@
 				}
 			)
 			if(info === null) {
-				console.error("nody.url.info::faild get url info",e);
+				console.error("N.url.info::faild get url info",e);
 				return null;
 			}
 			
@@ -309,7 +309,7 @@
 			};
 		},
 		root:function(url){ var 
-			h = nody.url.info(url);
+			h = N.url.info(url);
 			var root = h.protocol + h.divider + h.hostname + (h.port !== ""?":"+h.port:h.port);
 			return /\/$/.test(root) ? root : root + "/";
 		},
@@ -323,12 +323,12 @@
 				console.warn("GETSCRIPTURL faild");
 			}
 			//ie7 fix
-			if(!/^[\w]+\:\//.test(scriptString)) scriptString = nody.url.root() + scriptString;
+			if(!/^[\w]+\:\//.test(scriptString)) scriptString = N.url.root() + scriptString;
 			return scriptString;
 		},
-		scriptRoot:function(){ return nody.url.script().replace(/([^\/]+$)/,""); },
+		scriptRoot:function(){ return N.url.script().replace(/([^\/]+$)/,""); },
 	};
-	nody.include =function(aFilename){
+	N.include =function(aFilename){
 		var fileref,filetype = /\.([^\.]+)$/.exec(aFilename)[1];
 		if (filetype==="js"){ 
 			//if aFilename is a external JavaScript file
@@ -347,22 +347,22 @@
 	};
 	
 	var nody_cache;
-	nody.cache = {
+	N.cache = {
 		has:function(sender,name){
 			if( !(sender in nody_cache) ) return false;
 			if( !(name in nody_cache[sender]) ) return false;
 			return true;
 		},
 		set:function(s,n,v){ if( !(s in nody_cache) ) nody_cache[s] = {}; nody_cache[s][n] = v; },
-		get:function(s,n)  { if( nody.cache.has(s,n) ) return nody_cache[s][n]; },
-		clear:function()     { nody_cache = {"SELECTINFO":{"":{}},"AreaContent":{}}; },
+		get:function(s,n)  { if( N.cache.has(s,n) ) return nody_cache[s][n]; },
+		clear:function()     { nody_cache = {"SELECTIN_FO":{"":{}},"AreaContent":{}}; },
 		trace:function()     { return JSON.stringify(nody_cache); }
 	}
-	nody.cache.clear();
+	N.cache.clear();
 	
 	var nody_typemap = { "string" : "ISSTRING", "number" : "ISNUMBER", "numberText": "ISNUMBERTEXT", "text" : "ISTEXT", "array" : "ISARRAY", "object" : "ISOBJECT", "email" : "ISEMAIL", "ascii" : "ISASCII", "true" : "ISTRUE", "false" : "ISFALSE", "nothing" : "ISNOTHING", "ok" : "ISOK", "nok" : "ISNOK" };
 	
-	nody.SINGLETON("TypeBase",{
+	N.SINGLETON("TypeBase",{
 		// // 데이터 타입 검사
 		"ISUNDEFINED": function (t) {return typeof t === "undefined" ? true : false ;},
 		"ISDEFINED"  : function (t) {return typeof t !== "undefined" ? true : false ;},
@@ -544,7 +544,7 @@
 	};
 	
 	// Nody Super base
-	nody.SINGLETON("nodyBaseKit",{
+	N.SINGLETON("nodyBaseKit",{
 		//owner를 쉽게 바꾸면서 함수실행을 위해 있음
 		"APPLY" : function(f,owner,args) { if( typeof f === "function" ) { args = CLONEARRAY(args); return (args.length > 0) ? f.apply(owner,args) : f.call(owner); } },
 		//값을 플래튼하여 실행함
@@ -564,7 +564,7 @@
 			return 0;
 		},
 		//좌측으로 0을 붙임
-		"PADLEFT":function(nr,n,str){ return new Array(n-new String(nr).length+1).join(str||'0')+nr; },
+		"PADLEFT":function(nr,n,str){ return new N.Array(n-new String(nr).length+1).join(str||'0')+nr; },
 		// 참고! : human readable month
 		"ZDATE":function(dv,format,pad){
 			if(ISARRAY(dv)) dv = dv.join(' ');
@@ -847,10 +847,10 @@
 		}
 	});
 	nodyBaseKit.eachGetter();
-})(window,[],{},{},{},((function(){window.nody = window.nd = {};return window.nody;})()));
+})(window,[],{},{},{},((function(){window.nody = window.nd = window.N = {};return window.nody;})()));
 
 (function(nody){
-	nody.ENV = (function(){
+	N.ENV = (function(){
 		var info = {};
 		if(navigator) {
 			// Operating system
@@ -1007,7 +1007,7 @@
 //Nody Foundation
 (function(W){
 	if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
-	nody.SINGLETON("SpecialFoundation",{
+	N.SINGLETON("SpecialFoundation",{
 		"ZRATIO":function(ratioTotal){
 			var total = 0;
 			ratioTotal = TONUMBER(ratioTotal) || 100;
@@ -1311,13 +1311,13 @@
 		// 1,2,3,4 => random any
 		"ZONECHOICE":function(value,split){
 			if( ISARRAY(value) ) return value[Math.floor(Math.random()*(value.length))];
-			var cache = nody.cache.get("ZONECHOICE",value+split);
+			var cache = N.cache.get("ZONECHOICE",value+split);
 			if(cache) return cache[Math.floor(Math.random()*(cache.length))];
 			var cachedata = value.split(typeof split === "string"?split:",");
-			nody.cache.set("ZONECHOICE",value+split,cachedata);
+			N.cache.set("ZONECHOICE",value+split,cachedata);
 			return cachedata[Math.floor(Math.random()*(cachedata.length))];
 		},
-		"ZONEINFO":function(command){
+		"ZONEIN_FO":function(command){
 			command = TOSTRING(command);
 			var value,mutableType,type = (command.indexOf("\\!") == 0)?"fixed":(command.indexOf("\\?") == 0)?"mutable":"plain";
 			if(type != "plain"){
@@ -1358,12 +1358,12 @@
 	SpecialFoundation.eachGetter();
 	
 	
-	nody.METHOD("ZSTRING",function(source){
+	N.METHOD("ZSTRING",function(source){
 		var seed = this.seed || 0;
-		var aPoint=[],params = DATAMAP(Array.prototype.slice.call(arguments,1),function(t){ return ZONEINFO(t); });
+		var aPoint=[],params = DATAMAP(Array.prototype.slice.call(arguments,1),function(t){ return ZONEIN_FO(t); });
 		return source.replace(/(\\\([^\)]*\)|\\\{[^\}]*\})/g,function(s){
 			if(s[s.length-1] == ')') {
-				var dv = ZONEVALUE(ZONEINFO("\\!"+s.substring(2,s.length-1)));
+				var dv = ZONEVALUE(ZONEIN_FO("\\!"+s.substring(2,s.length-1)));
 				aPoint.push(dv);
 				return dv;
 			} else {
@@ -1392,7 +1392,7 @@
 		}
 	});
 	
-	nody.METHOD("ZNUMBER",function(source){
+	N.METHOD("ZNUMBER",function(source){
 		if(arguments.length === 1){
 			return TONUMBER(ZSTRING.call(undefined,"\\("+source+")"));
 		} else {
@@ -1421,7 +1421,7 @@
 	
 	//******************
 	// NodyArray
-	nody.ARRAY_MODULE("NFArray",{
+	N.ARRAY_MODULE("Array",{
 		// 요소 각각에 형식인수를 넘기며 한번씩 호출한다.
 		each     : function(block) { for ( var i = 0, l = this.length ; i < l  ; i++) { if( block(this[i],i) == false ) break; } return this; },
 		// each의 반대 동작
@@ -1475,7 +1475,7 @@
 		toArray  : function()  { return Array.prototype.slice.call(this); },
 		//내부요소 모두 지우기
 		clear   : function() { this.splice(0,this.length); return this; },
-		clone:function(){ return new nody.NFArray(this);},
+		clone:function(){ return new N.Array(this);},
 		//정렬합니다.
 		getSort:function(positive){
 			return (typeof positive=="undefined"?true:false)?this.clone().sort():this.clone().sort().reverse();
@@ -1490,10 +1490,10 @@
 		// 현재의 배열을 보호하고 새로운 배열을 반환한다.
 		save : function(v){ return this.__SelfModuleInit__(this); },
 		//요소안의 array 녹이기
-		getFlatten : function(){ return new nody.NFArray(DATAFLATTEN(this)); },
+		getFlatten : function(){ return new N.Array(DATAFLATTEN(this)); },
 		flatten    : function(){return this.setSource(this.getFlatten());},
 		//다른 배열 요소를 덛붙인다.
-		getConcat : function(){ return new nody.NFArray(arguments).inject(this.save(),function(v,_a){ new nody.NFArray(v).each(function(v2){ _a.push(v2); }); }); },
+		getConcat : function(){ return new N.Array(arguments).inject(this.save(),function(v,_a){ new N.Array(v).each(function(v2){ _a.push(v2); }); }); },
 		concat    : function(){ return this.setSource(this.getConcat.apply(this,arguments)); },			
 		//어떠한 요소끼리 위치를 바꾼다
 		changeIndex:function(leftIndex,rightIndex){
@@ -1507,7 +1507,7 @@
 		inject:function(firstValue,method) { for(var i = 0,l = this.length;i<l;i++) { var returnValue = method(this[i],firstValue,i); if(typeof returnValue !== "undefined") firstValue = returnValue; } return firstValue; },
 		// 리턴되는 오브젝트로 새 배열은 만들어냅니다.
 		mapUtil: { "&":function(owner,param){ return owner.getMap(function(a){ if(typeof a === "object") return a[param]; return undefined;}); }},
-		getMap : function(process,start) { if(typeof process=="function"){var result=[];for(var i=(typeof start === "number" ? start : 0),l=this.length;i<l;i++)result.push(process(this[i],i,this.length));return new nody.NFArray(result);}else if(typeof getOrder=="string"){process=process.trim();for(var key in this.mapUtil)if(process.indexOf(key)==0){var tokenWith=process[key.length]==":"?true:false;var param=tokenWith?process.substr(key.length+1):process.substr(key.length);return new nody.NFArray(this.mapUtil[key](this,param));}}return new nody.NFArray(); },
+		getMap : function(process,start) { if(typeof process=="function"){var result=[];for(var i=(typeof start === "number" ? start : 0),l=this.length;i<l;i++)result.push(process(this[i],i,this.length));return new N.Array(result);}else if(typeof getOrder=="string"){process=process.trim();for(var key in this.mapUtil)if(process.indexOf(key)==0){var tokenWith=process[key.length]==":"?true:false;var param=tokenWith?process.substr(key.length+1):process.substr(key.length);return new N.Array(this.mapUtil[key](this,param));}}return new N.Array(); },
 		map : function(process) { return this.setSource(this.getMap(process)); },
 		// index가 maxIndex한계값이 넘으면 index가 재귀되어 반환된다.
 		turning:function(maxIndex,method){
@@ -1523,9 +1523,9 @@
 			if(typeof filterMethod === "function"){
 				var result=[]; 
 				this.each(function(v,i){ if(true==filterMethod(v,i)){ result.push(v); } });
-				return new nody.NFArray(result);
+				return new N.Array(result);
 			}
-			return new nody.NFArray();
+			return new N.Array();
 		},
 		filter      : function(filterMethod) { return this.setSource(this.getFilter(filterMethod)); },
 		// undefined요소를 제거한다.
@@ -1553,7 +1553,7 @@
 		getSubArray:function(fi,li,infinity){
 			fi = isNaN(fi) == true ? 0 : parseInt(fi);
 			li = isNaN(li) == true ? 0 : parseInt(li);
-			var nl,ns,result = new nody.NFArray();
+			var nl,ns,result = new N.Array();
 			if (fi > li) {
 				nl = fi;
 				ns = li;
@@ -1579,7 +1579,7 @@
 		getRemove:function(target) { return this.getFilter(function(t){ if(t == target) return false; return true; }); },
 		remove:function(target) { return this.setSource(this.getRemove(target)); },
 		// 요소중의 중복된 값을 지운다.
-		getUnique:function(){var result=new nody.NFArray();this.each(function(selfObject){if(result.passAll(function(target){return selfObject!=target;}))result.push(selfObject);});return result;},
+		getUnique:function(){var result=new N.Array();this.each(function(selfObject){if(result.passAll(function(target){return selfObject!=target;}))result.push(selfObject);});return result;},
 		unique:function(){return this.setSource(this.getUnique());},
 		// 인수가 요소안에 갖고있다면 true가 반환
 		has : function(h) { return this.passAny(function(o) { return o == h; }); },
@@ -1616,24 +1616,24 @@
 		useFirst : function(){ return this.firstMatch(function(matchValue){ if(typeof matchValue !== "undefined") return true; }); },
 		useLast  : function(){ return this.lastMatch (function(matchValue){ if(typeof matchValue !== "undefined") return true; }); },
 		//요소안의 string까지 split하여 flaatten을 실행
-		getStringFlatten:function(){ return this.save().map(function(t){ if(typeof t === "string") return t.split(" "); if(ISARRAY(t)) return new nody.NFArray(t).flatten().type("string"); }).remove(undefined).flatten(); },
+		getStringFlatten:function(){ return this.save().map(function(t){ if(typeof t === "string") return t.split(" "); if(ISARRAY(t)) return new N.Array(t).flatten().type("string"); }).remove(undefined).flatten(); },
 		stringFlatten:function(){ return this.setSource( this.getStringFlatten() ); },
-		getDeepFlatten:function(){function arrayFlatten(_array){var result=new nody.NFArray();_array.each(function(value){if( ISARRAY(value) ){result.concat(arrayFlatten(new nody.NFArray(value)));}else{result.push(value);}});return result;}return arrayFlatten(this);},
+		getDeepFlatten:function(){function arrayFlatten(_array){var result=new N.Array();_array.each(function(value){if( ISARRAY(value) ){result.concat(arrayFlatten(new N.Array(value)));}else{result.push(value);}});return result;}return arrayFlatten(this);},
 		deepFlatten:function(){ return this.setSource(this.getDeepFlatten()); },
 		//그룹 지어줌
 		getGrouping:function(length,reverse){
 			var result=[];
 			if(reverse == true){
 				this.save().reverse().turning(length,function(obj,i,g){if(!result[g])result[g]=[];result[g].push(obj);});
-				return new nody.NFArray(result).map( function(groups){ return new nody.NFArray(groups).reverse().toArray(); } ).reverse();
+				return new N.Array(result).map( function(groups){ return new N.Array(groups).reverse().toArray(); } ).reverse();
 			}
 			this.turning(length,function(obj,i,g){if(!result[g])result[g]=[];result[g].push(obj);});
-			return new nody.NFArray(result);
+			return new N.Array(result);
 		},
 		grouping:function(length,reverse){ return this.setSource(this.getGrouping(length,reverse)); },
 		//랜덤으로 내용을 뽑아줌
-		getRandom:function(length){ return new nody.NFArray(DATARANDOM(this.toArray())); },
-		getShuffle:function(){ return new nody.NFArray(DATASHUFFLE(this.toArray())); },
+		getRandom:function(length){ return new N.Array(DATARANDOM(this.toArray())); },
+		getShuffle:function(){ return new N.Array(DATASHUFFLE(this.toArray())); },
 		join:function(t,p,s){ return (ISTEXT(p)?p:"")+Array.prototype.join.call(this,t)+((ISTEXT(s))?s:""); },
 		//Object로 반환
 		keyPair:function(key,value){
@@ -1653,8 +1653,8 @@
 		//수학계산
 		continueTo:function(f){ return f.apply(undefined,[this.toArray()].concat(Array.prototype.slice.call(arguments,1))); }
 	});
-	nody.MODULE_PROPERTY("NFArray","split",function(text,s){
-		if( ISARRAY(text) ) return new nody.NFArray(text);
+	N.MODULE_PROPERTY("Array","split",function(text,s){
+		if( ISARRAY(text) ) return new N.Array(text);
 		if(typeof text === "string"){
 			var result;
 			if((typeof s === "string") || typeof s === "number") {
@@ -1664,15 +1664,15 @@
 				result = [];
 				text.replace(/\S+/gi,function(s){ result.push(s); });
 			}
-			return new nody.NFArray(result);
+			return new N.Array(result);
 		}
-		console.warn("NFArray.split only text or array", text);
-		return new nody.NFArray(text);
+		console.warn("Array.split only text or array", text);
+		return new N.Array(text);
 	});
 	
 	//******************
-	//NFObject
-	nody.MODULE("NFObject",{
+	//Object
+	N.MODULE("Object",{
 		//each
 		each:function(f){ for(key in this.Source){ var r = f(this.Source[key],key); if(typeof r == false) {break;} } return this; },
 		keys:objectCommonInterface.keys,
@@ -1745,7 +1745,7 @@
 		inject:function(o,f,ksel){ if(typeof f === "function") { this.getMap(function(v,k){ var or = f(v,o,k); if(typeof or !== "undefined") { o=or; } },ksel); return o; } },
 		//key getter
 		data:function(k,v){
-			if(typeof v !== "function" && typeof v !== "undefined") { throw new Error("NFObject::data 메서드는 setter가 아닙니다."); };
+			if(typeof v !== "function" && typeof v !== "undefined") { throw new Error("Object::data 메서드는 setter가 아닙니다."); };
 			if (typeof k === "string"){
 				if(typeof v === "function"){
 					return v(this.Source[k]);
@@ -1761,28 +1761,28 @@
 			};
 		},
 		//inspect key value
-		isSame:function(obj){ var originObject = this.Source; var judgement = true; new nody.NFObject(obj).each(function(v,k){ if( !(k in originObject) || originObject[k] !== v){ judgement = false; return false; } }); return judgement; },
-		isEqual:function(obj){ var _obj = new nody.NFObject(obj); var oObj = this.Source; var iObj = _obj.get(); var oKeys = this.keys().sort(); var iKeys = _obj.keys().sort(); if(oKeys.length !== iKeys.length) return false; for(var i=0,l=oKeys.length;i<l;i++){ if(oKeys[i] !== iKeys[i]) return false; if(oObj[oKeys[i]] !== iObj[iKeys[i]]) return false; } return true; },
+		isSame:function(obj){ var originObject = this.Source; var judgement = true; new N.Object(obj).each(function(v,k){ if( !(k in originObject) || originObject[k] !== v){ judgement = false; return false; } }); return judgement; },
+		isEqual:function(obj){ var _obj = new N.Object(obj); var oObj = this.Source; var iObj = _obj.get(); var oKeys = this.keys().sort(); var iKeys = _obj.keys().sort(); if(oKeys.length !== iKeys.length) return false; for(var i=0,l=oKeys.length;i<l;i++){ if(oKeys[i] !== iKeys[i]) return false; if(oObj[oKeys[i]] !== iObj[iKeys[i]]) return false; } return true; },
 		//오브젝트를 배열로 반환함
 		hashes:function(key,val){ key = typeof key !== "string" ? "key" : key; val = typeof val !== "string" ? "value" : val; var r=[]; for(var k in this.Source){ var o = {}; o[key] = k; o[val] = this.Source[k]; r.push(o); } return r; },
 		//
 		join:function(a,b){ a = typeof a === "string" ? a : ":"; b = typeof b === "string" ? b : ","; return this.inject([],function(v,i,k){ i.push(k+a+TOSTRING(v)); }).join(b); },
 		//toParam
-		getEncodeObject : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : nody.$NFString(key).getEncode()) ] = (useEncode == false ? val : nody.$NFString(val).getEncode()); }); },
+		getEncodeObject : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : N.$String(key).getEncode()) ] = (useEncode == false ? val : N.$String(val).getEncode()); }); },
 		encodeObject    : function(){ return this.setSource(this.getEncodeObject.apply(this,arguments)); },
 		//jsonString으로 반환
 		stringify:function(){ return JSON.stringify(this.Source); },
 		changeKey:function(original, change){ if(typeof original === "string" && typeof change === "string") { this.Source[change] = this.Source[original]; delete this.Source[original]; } return this.Source; },
 		//String의 순차적으로 오브젝트 반환  "1 2 3 4" => {"1":"2","3":"4"}
-		getKvo:function(arg,split){ split = typeof split === "string" ? split : " "; arg = arg.split(split); var source = CLONE(this.Source); var keyName = undefined; new nody.NFArray(arg).turning(2,function(value,i){ if(i == 0) { keyName = value; } else if(i == 1) { if(typeof keyName !== "undefined") { switch(value){ case "''": case '""': case "'": case '"': source[keyName] = ""; break; default : source[keyName] = value; break ; } } keyName = undefined; } }); return source; },
+		getKvo:function(arg,split){ split = typeof split === "string" ? split : " "; arg = arg.split(split); var source = CLONE(this.Source); var keyName = undefined; new N.Array(arg).turning(2,function(value,i){ if(i == 0) { keyName = value; } else if(i == 1) { if(typeof keyName !== "undefined") { switch(value){ case "''": case '""': case "'": case '"': source[keyName] = ""; break; default : source[keyName] = value; break ; } } keyName = undefined; } }); return source; },
 		kvo:function(arg){ return this.setSource(this.getKvo.call(this,arg)); },
 		//오브젝트의 키를 지우고자 할때
 		removeAll:function(){ for( var key in this.Source ) delete this.Source[key]; return this.Source; },
-		getRemove:function(){ var source = this.Source; new nody.NFArray(arguments).stringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
+		getRemove:function(){ var source = this.Source; new N.Array(arguments).stringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
 		remove:function(key){ delete this.Source[key]; return this; },
 		removeNothing:function(){ for(var key in this.Source) if(ISNOTHING(this.Source[key])) delete this.Source[key]; return this; },
 		//존재하지 않는 키벨류값을 적용함;
-		getTouch:function(key,value){ var m = CLONE(this.Source);new nody.NFArray(key).stringFlatten().each(function(key){ if(!(key in m)) m[key] = value; }); return m; },
+		getTouch:function(key,value){ var m = CLONE(this.Source);new N.Array(key).stringFlatten().each(function(key){ if(!(key in m)) m[key] = value; }); return m; },
 		touch:function(key,value){ return this.setSource( this.getTouch.apply(this,arguments) ); },
 		//키의 배열을 받는다
 		keys:function(){ var result = []; for (key in this.Source) result.push(key); return result; },
@@ -1790,15 +1790,15 @@
 		values:function(){ var result = []; for (key in this.Source) result.push(this.Source[key]); return result; },
 		getValue:function(key){ return this.Source[key]; },
 		//다른 오브젝트와 함칠때
-		getConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new nody.NFObject(arguments[i]).each(function(v,k){ result[k] = v; }); }; return result; },
+		getConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Object(arguments[i]).each(function(v,k){ result[k] = v; }); }; return result; },
 		concat:function(){ this.setSource(this.getConcat.apply(this,arguments)); return this; },
 		//다른 오브젝트와 함칠때 이미 있는 값은 오버라이드 하지 않음
-		getSafeConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new nody.NFObject(arguments[i]).each(function(v,k){ if( (k in result) == false) result[k] = v; }); } return result; },
+		getSafeConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Object(arguments[i]).each(function(v,k){ if( (k in result) == false) result[k] = v; }); } return result; },
 		safeConcat:function(){ this.setSource(this.getSafeConcat.apply(this,arguments)); return this; }
 	}, function(p,n,s){
 		if(typeof s === "string"){
 			this.Source = {};
-			this[s].apply(this,new nody.NFArray(arguments).subarr(0,2).toArray());
+			this[s].apply(this,new N.Array(arguments).subarr(0,2).toArray());
 		} else {
 			this.Source = TOOBJECT(p,n);
 		}
@@ -1807,20 +1807,18 @@
 	//******************
 	//String
 	var htmlSafeMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': '&quot;', "'": '&#39;', "/": '&#x2F;' };
-	nody.MODULE("NFString",{
+	N.MODULE("String",{
 		getEncode:function(){ return encodeURI(this.Source); },
 		getDecode:function(){ return decodeURI(this.Source); },
 		encode:function(){this.Source = this.getEncode();return this;},
 		decode:function(){this.Source = this.getDecode();return this;},
-		getRaw:function(){
-			(new String(this.Source))
-		},
+		getRaw:function(){return this.Source},
 		getHTMLSafe:function(){
 			return (new String(this.Source)).replace(/[&<>"'\/]/g, function (s) { return htmlSafeMap[s]; });
 		},
 		getByteSize:function(){ return unescape(escape(this.Source).replace(/%u..../g,function(s){ return "uu"; })).length; },
-		getLines:function(){ return NFArray.split(this.Source,"\n").toArray(); },
-		eachLine:function(f,j){ if(typeof f === "function") return new nody.NFArray(this.getLines()).map(function(s,i){ return f(s,i); }).compact().join( (j?j:"\n") ); },
+		getLines:function(){ return Array.split(this.Source,"\n").toArray(); },
+		eachLine:function(f,j){ if(typeof f === "function") return new N.Array(this.getLines()).map(function(s,i){ return f(s,i); }).compact().join( (j?j:"\n") ); },
 		//한줄의 탭사이즈를 구함
 		getTabSize:function(){
 			var tabInfo = /^([\s\t]*)(.*)/.exec(this.Source);
@@ -1840,8 +1838,8 @@
 		//각각의 탭음 밀어냄
 		getTabsOffset:function(offset,tabString){
 			offset = parseInt(offset);
-			if(typeof offset === "number") return NFArray.split(this.Source,"\n").map(function(text){
-				return nody.$NFString(text).getTabAbsolute(nody.$NFString(text).getTabSize() + offset,tabString);
+			if(typeof offset === "number") return Array.split(this.Source,"\n").map(function(text){
+				return N.$String(text).getTabAbsolute(N.$String(text).getTabSize() + offset,tabString);
 			}).join("\n");
 			return this.Source;
 		},
@@ -1849,7 +1847,7 @@
 		getTabsSize:function(){
 			var minimum;
 			this.eachLine(function(line){
-				var tabSize = nody.$NFString(line).getTabSize();
+				var tabSize = N.$String(line).getTabSize();
 				if((minimum == undefined) || (tabSize < minimum)) minimum = tabSize;
 			});
 			return minimum;
@@ -1859,7 +1857,7 @@
 			var baseOffset = 0;
 			return this.eachLine(function(line){
 				//console.log("baseOffset",baseOffset);
-				var tabSize = nody.$NFString(line).getTabSize();
+				var tabSize = N.$String(line).getTabSize();
 				//console.log(tabSize,beforeSize);
 				if(beforeSize == undefined){
 					beforeSize = 0;
@@ -1872,7 +1870,7 @@
 					//nothing is right
 				}
 				beforeSize = tabSize;
-				return nody.$NFString(line).getTabAbsolute(baseOffset);
+				return N.$String(line).getTabAbsolute(baseOffset);
 			});
 		},
 		tabsAlign:function(){ this.Source = this.getTabsAlign(); return this; },
@@ -1890,7 +1888,7 @@
 			},this);
 		},
 		//content
-		abilityFunction  : function(fs,is,js){ var origin = (js==true) ? OUTERSPLIT(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs); if(origin[origin.length-1].trim()=="") origin.length = origin.length-1;  return new nody.NFArray(origin).passAll(function(s,i){ return s.indexOf(is) > 0; }) ? origin.length : 0; },
+		abilityFunction  : function(fs,is,js){ var origin = (js==true) ? OUTERSPLIT(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs); if(origin[origin.length-1].trim()=="") origin.length = origin.length-1;  return new N.Array(origin).passAll(function(s,i){ return s.indexOf(is) > 0; }) ? origin.length : 0; },
 		abilityObject    : function(){ return this.abilityFunction(",",":",true); },
 		abilityParameter : function(){ return this.abilityFunction("&","="); },
 		abilityCss       : function(){ return this.abilityFunction(";",":"); },
@@ -1912,9 +1910,9 @@
 			return "plain";
 		},
 		isDataContentFunction:function(fs,is,js){
-			return new nody.NFArray( (js==true) ? OUTERSPLIT(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs) ).inject({},function(s,inj){
+			return new N.Array( (js==true) ? OUTERSPLIT(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs) ).inject({},function(s,inj){
 				var v = s.substr(s.indexOf(is)+1);
-				if(s.trim().length > 0) inj[ UNWRAP(s.substr(0,s.indexOf(is)),['""',"''"]) ] = UNWRAP((js == true) ? nody.$NFString(v).getDataContent(true) : v,['""',"''"]);
+				if(s.trim().length > 0) inj[ UNWRAP(s.substr(0,s.indexOf(is)),['""',"''"]) ] = UNWRAP((js == true) ? N.$String(v).getDataContent(true) : v,['""',"''"]);
 				return inj;
 			});
 		},
@@ -1928,8 +1926,8 @@
 					if(a == ""){
 						return [];
 					} else {
-						return new nody.NFArray(a).inject([],function(s,inj){
-							inj.push(UNWRAP( nody.$NFString(s).getDataContent(true) , ["''",'""'] )); 
+						return new N.Array(a).inject([],function(s,inj){
+							inj.push(UNWRAP( N.$String(s).getDataContent(true) , ["''",'""'] )); 
 							return inj; 
 						});
 					}
@@ -1954,7 +1952,7 @@
 					if( f.test(this.Source) ) {
 						f = f.exec(this.Source);
 					} else {
-						console.warn("NFString::getPrintf::printf 할수 없습니다.",this.Source,f);
+						console.warn("String::getPrintf::printf 할수 없습니다.",this.Source,f);
 						return this.Source;
 					}
 				}
@@ -2040,7 +2038,7 @@
 		return this;
 	});
 	
-	nody.EXTEND_MODULE("NFString","ZString",{
+	N.EXTEND_MODULE("String","ZString",{
 		getZContent:function(seed){
 			return ZSTRING.SEED(seed).apply(undefined,[this.Source].concat(this.ZoneParams));
 		},
@@ -2059,7 +2057,7 @@
 	});
 	
 	// Number
-	nody.EXTEND_MODULE("NFString","NFNumber",{
+	N.EXTEND_MODULE("String","Number",{
 		// number core
 		// spot 1:prefix 2:integer 3:floatValue 4:suffix
 		isNotANumber:function(){ if((new StringNumberInfo(this.Source)).get("number").length) return true; return false; },
@@ -2128,7 +2126,7 @@
 		// math
 		percentIn:function(withValue,trunc){
 			//소비자가격을 입력하였다면 판매가격도 동기화된다
-			var lv = new nody.NFNumber(withValue).number();
+			var lv = new Number(withValue).number();
 			var rv = this.number();
 			var result = 0;
 		
@@ -2140,13 +2138,13 @@
 				result = isNaN(result) ? 0 : result;
 			}
 		
-			if(typeof trunc === "number"){return new nody.NFNumber(result).getTrunc(trunc);}
+			if(typeof trunc === "number"){return new Number(result).getTrunc(trunc);}
 			return result;
 		},
 		// expression
 		expression:function(senceParameter,option){
-			var senceNumber  = new nody.NFNumber(senceParameter);
-			var optionNumber = new nody.NFNumber(option);
+			var senceNumber  = new Number(senceParameter);
+			var optionNumber = new Number(option);
 			var result       = NaN;
 			switch ( senceNumber.prefix() ) {
 				case "+"  : result = this.number() + senceNumber.number(); break;
@@ -2189,7 +2187,7 @@
 				case "function" : mask = mask(value); break;
 				case "string"   : break;
 			}
-			if(typeof mask !== "string") console.error("NFNumber::getFormat::첫번째 파라메터는 반드시 string이나 function으로 string이 꼭 되도록 해주세요.",typeof mask,mask);
+			if(typeof mask !== "string") console.error("Number::getFormat::첫번째 파라메터는 반드시 string이나 function으로 string이 꼭 되도록 해주세요.",typeof mask,mask);
 			//defaultOptions
 			skipMaskChars = false;
 			//idea by http://igorescobar.github.io/jQuery-Mask-Plugin/
@@ -2290,7 +2288,7 @@
 				}
 			});
 		},
-		getDecimal:function(p,s){ return  nody.$NFString(this.getNumberFormat("#,##0",true)).getFix(p,s);  },
+		getDecimal:function(p,s){ return  N.$String(this.getNumberFormat("#,##0",true)).getFix(p,s);  },
 		// calc line
 		getPercentOf : function(maxValue,minValue) { 
 			maxValue = TONUMBER(maxValue);
@@ -2327,7 +2325,7 @@
 	
 	var util_unique_random_key = [];
 	
-	nody.SINGLETON("NFUtil",{
+	N.SINGLETON("Util",{
 		encodeString:function(v){ return TOSTRING(v,99,true); },
 		decodeString:function(v){ 
 			if(typeof v === "string") { 
@@ -2387,18 +2385,18 @@
 	
 	//******************
 	//ClientKit
-	nody.SINGLETON("NFClient",{
+	N.SINGLETON("Client",{
 		agent :function(t){ 
 			return (typeof t === "string") ? ((navigator.userAgent||navigator.vendor||window.opera).toLowerCase().indexOf(t.toLowerCase()) > -1) : (navigator.userAgent||navigator.vendor||window.opera);
 		},
-		info:nody.ENV,
+		info:N.ENV,
 		width :function(){ return (window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName('body')[0].clientWidth); },
 		height:function(){ return (window.innerHeight|| document.documentElement.clientHeight|| document.getElementsByTagName('body')[0].clientHeight); },
 		bound :function(){ return {"width":this.width(),"height":this.height()}; },
 		//document path
 		url      : function()    { return window.document.URL.toString(); },
-		urlInfo  : function(url) { return nody.url.info(); },
-		root      : function(url,slash) { return nody.url.root(); },
+		urlInfo  : function(url) { return N.url.info(); },
+		root      : function(url,slash) { return N.url.root(); },
 		protocol  : function(url) { var h = this.urlInfo(url); return h.protocol; },
 		uri       : function(url) { var h = this.urlInfo(url); return h.path;     },
 		filename  : function(url) { var h = this.urlInfo(url); return h.filename; },
@@ -2431,7 +2429,7 @@
 		fragment  : function(url) { var h = this.urlInfo(url); return h.fragment; },
 		queryData : function(url) { var h = this.urlInfo(url); return TOOBJECT(h.query); },
 		//script path
-		scriptUrl  : (function(){ var scripturl = nody.url.script(); return function(){ return scripturl; } })(),
+		scriptUrl  : (function(){ var scripturl = N.url.script(); return function(){ return scripturl; } })(),
 		scriptInfo : function(url) { return this.urlInfo(url?url:this.scriptUrl()); },
 		scriptName : function(url) { return this.scriptInfo(url).filename },
 		scriptPath : function(url) { return this.scriptInfo(url).path     },
@@ -2470,10 +2468,10 @@
 		setLocalData:function(k,v){
 			if(this.agent("adobeair")){
 				 var utf8v = new air.ByteArray();
-				 utf8v.writeUTFBytes(NFUtil.encodeString(v));
+				 utf8v.writeUTFBytes(Util.encodeString(v));
 				 air.EncryptedLocalStore.setItem(k,utf8v);
 			} else {
-				return this.setCookie(k,NFUtil.encodeString(v));
+				return this.setCookie(k,Util.encodeString(v));
 			}
 		},
 		isEventSupport:function(eventName,tagName){
@@ -2491,10 +2489,10 @@
 				if(bi==null){
 					return undefined;
 				} else {
-					return NFUtil.decodeString(bi.readUTFBytes(bi.bytesAvailable));
+					return Util.decodeString(bi.readUTFBytes(bi.bytesAvailable));
 				}
 			} else {
-				return NFUtil.decodeString(this.getCookie(k));
+				return Util.decodeString(this.getCookie(k));
 			}
 		},
 		usingLocalData:function(k){
@@ -2522,7 +2520,7 @@
 			return (location.href.indexOf("http:" == 0) || location.href.indexOf("https:" == 0)) ? true : false;
 		},
 		//include
-		include:function(aFilename){ return nody.include(aFilename); },
+		include:function(aFilename){ return N.include(aFilename); },
 		//clipboard
 		setClipboard:function(s){
 			//http://stackoverflow.com/questions/7713182/copy-to-clipboard-for-all-browsers-using-javascript
@@ -2540,8 +2538,8 @@
 		        // specify the data we wish to handle. Plaintext in this case.
 		        trans.addDataFlavor('text/unicode');
 		        // To get the data from the transferable we need two new objects
-		        var str = new Object();
-		        var len = new Object();
+		        var str = new N.Object();
+		        var len = new N.Object();
 		        var str = Components.classes["@mozilla.org/supports-string;[[[[1]]]]"].createInstance(Components.interfaces.nsISupportsString);
 		        var copytext=meintext;
 		        str.data=copytext;
@@ -2629,7 +2627,7 @@
 	//******************
 	//UID //Meta
 	W.ManagedUIDObjectData = [];
-	nody.SINGLETON("NFUID",{
+	N.SINGLETON("UID",{
 		get:function(idObject){
 			if(typeof idObject === "object" || typeof idObject === "function"){
 				for(var i=0,l=W.ManagedUIDObjectData.length;i<l;i++) if(W.ManagedUIDObjectData[i] == idObject) return i;
@@ -2660,12 +2658,12 @@
 		}
 	});
 	W.ManagedMetaObjectData = [];
-	nody.MODULE("NFMeta",{
+	N.MODULE("Meta",{
 		//validate
 		isValid :function() { return this.Source == false ? false : true; },
 		//data
 		data    :function(v){ if(this.isValid()){ return W.ManagedMetaObjectData[this.Source]; } },
-		getOwner:function() { if(this.isValid()) return NFUID.getObject(this.Source); },
+		getOwner:function() { if(this.isValid()) return UID.getObject(this.Source); },
 		//prop
 		getProp :function(propName){ if(typeof propName === "string" || typeof propName === "number"){ return W.ManagedMetaObjectData[this.Source][propName]; } },
 		getProps:function(propExpression) {
@@ -2679,8 +2677,8 @@
 		removeProp:function(propName){ if( this.hasProp(propName) ) delete W.ManagedMetaObjectData[this.Source][propName]; return this; },
 		keyChange:function(keys,toKeys){
 			var meta    = this;
-			var _keys   = new nody.NFArray(keys);
-			var _toKeys = new nody.NFArray(toKeys);
+			var _keys   = new N.Array(keys);
+			var _toKeys = new N.Array(toKeys);
 			
 			if (_keys.length == _toKeys.length) {
 				var orientation = _keys.getMap(function(key){
@@ -2693,7 +2691,7 @@
 					meta.setProp(key,orientation[i]);
 				});
 			} else {
-				console.warn("NFMeta::keyChange는 이전값과 바꿀값의 길이가 같아야합니다.");
+				console.warn("Meta::keyChange는 이전값과 바꿀값의 길이가 같아야합니다.");
 			}
 		},
 		keySort:function(){
@@ -2706,29 +2704,29 @@
 			W.ManagedMetaObjectData[this.Source] = replaceObj;
 		},
 		//Destroy
-		destroy   :function() { if(this.isValid()){ W.ManagedMetaObjectData[this.Source] = undefined; NFUID.destroy(this.Source); return true;} return false; },
+		destroy   :function() { if(this.isValid()){ W.ManagedMetaObjectData[this.Source] = undefined; UID.destroy(this.Source); return true;} return false; },
 		lastProp:function(propName){ var r = this.getProp(propName); this.destroy(); return r; },
 		lastData:function(){ var r = this.data(); this.destroy(); return r; },
 		destroyTimeout:function(time){ var own = this; setTimeout(function(){ own.destroy(); },TONUMBER(time));}
 	},function(v,d){
 		if(typeof v === "object" || typeof v === "function"){
-			this.Source = NFUID.get(v);
+			this.Source = UID.get(v);
 			if(!(this.Source in W.ManagedMetaObjectData)){
 				if(typeof d === "object"){
 					W.ManagedMetaObjectData[this.Source] = CLONE(d);
 				} else if(typeof d === "undefined"){
 					W.ManagedMetaObjectData[this.Source] = {};
 				} else {
-					console.warn("NFMeta::init::Meta의 셋팅할 property값은 Object만 가능합니다. => ",v,d)
+					console.warn("Meta::init::Meta의 셋팅할 property값은 Object만 가능합니다. => ",v,d)
 					W.ManagedMetaObjectData[this.Source] = {};
 				}
 			}
 		} else {
-			console.error("NFMeta::init::Meta는 Object나 function만 가능합니다. => ",v,d)
+			console.error("Meta::init::Meta는 Object나 function만 가능합니다. => ",v,d)
 			this.Source = false;
 		}
 	});
-	nody.MODULE_PROPERTY("NFMeta","trace",function(){
+	N.MODULE_PROPERTY("Meta","trace",function(){
 		var r = ["TRACE MetaData"];
 		for(var i=0,l=W.ManagedUIDObjectData.length;i<l;i++){
 			var pushString = MAX(TOSTRING(W.ManagedUIDObjectData[i]),40) + "  =>  ";
@@ -2865,10 +2863,10 @@ if (!Array.prototype.forEach) {
 						  = safeParseMap.thead;
 	safeParseMap.th       = safeParseMap.td;
 	
-	nody.SINGLETON("ELUT",{
+	N.SINGLETON("ELUT",{
 		"ELPARSE":function(html){
 			//if has cache
-			var cache = nody.cache.get("ELPARSE",html);
+			var cache = N.cache.get("ELPARSE",html);
 			if(cache) return CLONENODES(cache);
 			
 			//text node
@@ -2887,16 +2885,16 @@ if (!Array.prototype.forEach) {
 			
 			while ( parseDepth-- ) parseWrapper = parseWrapper.lastChild;
 			
-			nody.cache.set("ELPARSE",html,CLONENODES(parseWrapper.children));
+			N.cache.set("ELPARSE",html,CLONENODES(parseWrapper.children));
 			return CLONEARRAY(parseWrapper.children);
 		},
 		
 		//테그의 속성을 text로 표현합니다.
-		"SELECTINFO"   : function(tagProperty,attrValue){ 
+		"SELECTIN_FO"   : function(tagProperty,attrValue){ 
 			tagProperty = (typeof tagProperty !== "string") ? "" : tagProperty;
 			
 			//캐쉬를 이용해 잦은 표현에 대한 오버해드를 줄입니다.
-			var result = nody.cache.get("SELECTINFO",tagProperty);
+			var result = N.cache.get("SELECTIN_FO",tagProperty);
 			if( result ) {
 				result = CLONEOBJECT( result );
 			} else {
@@ -2984,7 +2982,7 @@ if (!Array.prototype.forEach) {
 				}
 				
 				//cache save
-				nody.cache.set("SELECTINFO",tagProperty,CLONEOBJECT(result));
+				N.cache.set("SELECTIN_FO",tagProperty,CLONEOBJECT(result));
 			}
 			
 			// 두번째 파라메터 처리
@@ -3021,14 +3019,14 @@ if (!Array.prototype.forEach) {
 			if(enableCache){
 				cacheName = tagProperty;
 				//캐쉬가 존재하면 바로 리턴
-				var result = nody.cache.get("TAG",cacheName);
+				var result = N.cache.get("TAG",cacheName);
 				if(result)if(attrValue){
 					return result[0]+attrValue+result[1];
 				} else {
 					return result[0]+result[1];
 				}
 			}
-			var tagInfo = SELECTINFO(tagProperty,attrValue);
+			var tagInfo = SELECTIN_FO(tagProperty,attrValue);
 			
 			if(!("tagName" in tagInfo) || tagInfo.tagName == "*") tagInfo.tagName = "div";
 			//make attribute text
@@ -3063,7 +3061,7 @@ if (!Array.prototype.forEach) {
 				cacheSuffix = '</' + tagInfo.tagName + '>';
 			}
 			
-			if(cacheName) nody.cache.set("TAG",cacheName,[cachePrefix,cacheSuffix]);
+			if(cacheName) N.cache.set("TAG",cacheName,[cachePrefix,cacheSuffix]);
 			
 			
 			return (cachePrefix + tagValue + cacheSuffix);
@@ -3088,7 +3086,7 @@ if (!Array.prototype.forEach) {
 		"PRINT":function(a){ return CREATE("div",a,W.document); }
 	});
 	ELUT.eachGetter();
-	nody.SINGLETON("NUT",{
+	N.SINGLETON("NUT",{
 		"ATTR":function(node,v1,v2){
 			if(!ISELNODE(node)) { console.error("NUT.ATTR은 element만 가능합니다. => 들어온값" + TOS(node)); return null; }
 			if(arguments.length === 1) {
@@ -3159,18 +3157,18 @@ if (!Array.prototype.forEach) {
 		"HASFOCUS":function(node){ return document.activeElement == node; },
 		//하나의 CSS테스트
 		"THE":function(node,selectText){
-			return nody.ENV.matchesSelector ? nody.ENV.matchesSelector(node,selectText) : Sizzle.matchesSelector(node,selectText);
+			return N.ENV.matchesSelector ? N.ENV.matchesSelector(node,selectText) : Sizzle.matchesSelector(node,selectText);
 		},
 		//다수의 CSS테스트
 		"IS":function(node,selectText){
 			if(!ISELNODE(node)) return false;
 			if((typeof selectText === "undefined") || selectText == "*" || selectText == "") return true;
-			return nody.ENV.matchesSelector ? nody.ENV.matchesSelector(node,selectText) : Sizzle.matchesSelector(node,selectText);
+			return N.ENV.matchesSelector ? N.ENV.matchesSelector(node,selectText) : Sizzle.matchesSelector(node,selectText);
 		},
 		//쿼리셀렉터와 약간 다른점은 부모도 쿼리 셀렉터에 포함된다는 점
 		"QUERY":(function(){
-			envQuerySelectorAll = nody.ENV.querySelectorAll;
-			return nody.ENV.supportStandardQuerySelectorAll ? 
+			envQuerySelectorAll = N.ENV.querySelectorAll;
+			return N.ENV.supportStandardQuerySelectorAll ? 
 			function(query,root){
 				//querySelectorSupport
 				if(typeof query !== "string" || (query.trim().length == 0)) return [];
@@ -3215,7 +3213,7 @@ if (!Array.prototype.forEach) {
 	});
 	
 	
-	nody.SINGLETON("FINDEL",{
+	N.SINGLETON("FINDEL",{
 		//배열이든 뭐든 노드로만 반환
 		"FSINGLE":function(find){
 			if( typeof find === 'string' ){
@@ -3417,7 +3415,7 @@ if (!Array.prototype.forEach) {
 	});
 	FINDEL.eachGetter();
 	
-	nody.SINGLETON("GUT",{
+	N.SINGLETON("GUT",{
 		"CREATE" :function(name,attrValue,parent){
 			var element,skipRender,name=(typeof name !== "string") ? "div" : name.trim();
 			//nf foundation
@@ -3470,7 +3468,7 @@ if (!Array.prototype.forEach) {
 			
 			//성능향상을 위한 캐시
 			if(cacheEnable){
-				var cacheNode = nody.cache.get("CREATE",cacheName);
+				var cacheNode = N.cache.get("CREATE",cacheName);
 				if(cacheNode) {
 					element    = CLONENODES(cacheNode)[0];
 					skipRender = true;
@@ -3481,7 +3479,7 @@ if (!Array.prototype.forEach) {
 			if(!skipRender){
 				element = ELPARSE( (name.indexOf("<") !== 0) ? TAG(name,attrValue) : name )[0];
 				//캐시 저장
-				if(cacheEnable) nody.cache.set("CREATE",cacheName,CLONENODES(element)[0]);
+				if(cacheEnable) N.cache.set("CREATE",cacheName,CLONENODES(element)[0]);
 			}
 			
 			//랜더링 후처리
@@ -3512,11 +3510,11 @@ if (!Array.prototype.forEach) {
 		"MAKE":CONTINUEFUNCTION(function(name,attr,third){
 			if ( ISARRAY(attr) || ISELNODE(attr) || ISTEXTNODE(attr) ) {
 				var createNode = CREATE(name);
-				ELAPPEND(createNode,new nody.NFArray(arguments).subarr(1).flatten().toArray());
+				ELAPPEND(createNode,new N.Array(arguments).subarr(1).flatten().toArray());
 				return createNode;
 			} else if(ISELNODE(third) || ISTEXTNODE(third)){
 				var createNode = CREATE(name, attr);
-				ELAPPEND(createNode,new nody.NFArray(arguments).subarr(2).flatten().toArray());
+				ELAPPEND(createNode,new N.Array(arguments).subarr(2).flatten().toArray());
 				return createNode;
 			} else {
 				return CREATE(name, attr);
@@ -3661,12 +3659,12 @@ if (!Array.prototype.forEach) {
 					var jp = JSON.parse(param);
 					if(typeof jp !== "object") throw new Error("pass");
 				},function(e){
-					if( (new nody.NFString(param)).isDataContent()=="plain" ){
+					if( (new N.String(param)).isDataContent()=="plain" ){
 						var esv = (typeof es === "string" ? es : "value");
 						var reo={};reo[esv]=param;
 						return reo;
 					}
-					return (new nody.NFString(param)).getDataContent();
+					return (new N.String(param)).getDataContent();
 				});
 			}
 			return c || {};
@@ -3744,7 +3742,7 @@ if (!Array.prototype.forEach) {
 	})(Window.prototype, HTMLDocument.prototype, Element.prototype, "addEventListener", "removeEventListener", "dispatchEvent", []);
 	
 	
-	nody.SINGLETON("EL",{
+	N.SINGLETON("EL",{
 		//포커스 상태인지 검사합니다.
 		"HASFOCUS":function(sel){ return document.activeElement == FSINGLE(sel)[0]; },
 		//케럿을 움직일수 있는 상태인지 검새합니다.
@@ -3850,7 +3848,7 @@ if (!Array.prototype.forEach) {
 		},
 		"UNIQUE":function(sel){
 			var node = FSINGLE(sel)[0];
-			if(node) { if(!ELHASATTR(node,"id")) node.setAttribute("id",NFUtil.base26UniqueRandom(8,'uq')) }
+			if(node) { if(!ELHASATTR(node,"id")) node.setAttribute("id",Util.base26UniqueRandom(8,'uq')) }
 			return node;
 		},
 		"UNIQUEID":function(sel){
@@ -4256,7 +4254,7 @@ if (!Array.prototype.forEach) {
 		},
 		//Disabled
 		"DISABLED":function(node,status){
-			var elf = new nody.NFArray(FSINGLE(node));
+			var elf = new N.Array(FSINGLE(node));
 			if( elf.isNone() ){
 				console.error("ELDISABLED:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
 			} else {
@@ -4277,7 +4275,7 @@ if (!Array.prototype.forEach) {
 		},
 		//Readonly
 		"READONLY":function(node,status){
-			var elf = new nody.NFArray(FSINGLE(node));
+			var elf = new N.Array(FSINGLE(node));
 			if( elf.isNone() ){
 				console.error("ELREADONLY:: node를 찾을수 없습니다. => 들어온값" + TOS(node));
 			} else {
@@ -4296,17 +4294,17 @@ if (!Array.prototype.forEach) {
 				});
 			}
 		},
-		"CommonNFString":new nody.NFString(),
+		"CommonString":new N.String(),
 		"ADDCLASS":function(node,addClass){	
 			var findNodes = FSINGLE(node);
 			if(typeof addClass !== "string") return findNodes;
-			for(var i=0,l=findNodes.length;i<l;i++) findNodes[i].setAttribute("class",EL.CommonNFString.set(findNodes[i].getAttribute("class")).getAddModel(addClass));
+			for(var i=0,l=findNodes.length;i<l;i++) findNodes[i].setAttribute("class",EL.CommonString.set(findNodes[i].getAttribute("class")).getAddModel(addClass));
 			return findNodes;
 		},
 		"HASCLASS":function(node,hasClass){
 			var findNodes = FSINGLE(node);
 			if(typeof hasClass !== "string") return false;
-			for(var i=0,l=findNodes.length;i<l;i++) if( !EL.CommonNFString.set(findNodes[i].getAttribute("class")).hasModel(hasClass) ) {
+			for(var i=0,l=findNodes.length;i<l;i++) if( !EL.CommonString.set(findNodes[i].getAttribute("class")).hasModel(hasClass) ) {
 				return false;
 			}
 			return true;
@@ -4315,7 +4313,7 @@ if (!Array.prototype.forEach) {
 			var findNodes = FSINGLE(node);
 			if(typeof removeClass !== "string") return findNodes;
 			for(var i=0,l=findNodes.length;i<l;i++) {
-				var didRemoveClassText = EL.CommonNFString.set(findNodes[i].getAttribute("class")).getRemoveModel(removeClass).trim();
+				var didRemoveClassText = EL.CommonString.set(findNodes[i].getAttribute("class")).getRemoveModel(removeClass).trim();
 				if( !didRemoveClassText.length ) {
 					findNodes[i].removeAttribute("class");
 				} else {
@@ -4371,8 +4369,8 @@ if (!Array.prototype.forEach) {
 	});
 	EL.eachGetterWithPrefix();
 	
-	nody.EXTEND_MODULE("NFArray","NFQuery",{
-		find:function(selector,i){ return new nody.NFQuery(selector,this,i); },
+	N.EXTEND_MODULE("Array","Query",{
+		find:function(selector,i){ return new N.Query(selector,this,i); },
 		hasFocus:function(){ return EL.HASFOCUS(this); },
 		caretPossible:function(){ return EL.CARETPOSSIBLE(this); },
 		attr:function(name){ 
@@ -4384,7 +4382,6 @@ if (!Array.prototype.forEach) {
 				return CALL(EL.ATTR,undefined,this,name);
 			}
 		},
-		
 		hasAttr:function(){ return FLATTENCALL(EL.ATTR,EL,this,arguments); },
 		addClass:function(name){ return CALL(EL.ADDCLASS,EL,this,name) },
 		hasClass:function(name){ return CALL(EL.HASCLASS,EL,this,name) },
@@ -4460,13 +4457,13 @@ if (!Array.prototype.forEach) {
 		this.setSource(FIND(select,parent,i));
 	});
 	
-	nody.EXTEND_MODULE("NFQuery","NFMake",{},function(node,attr,parent){
+	N.EXTEND_MODULE("Query","Make",{},function(node,attr,parent){
 		this.setSource(GUT.CREATE(node,attr,parent));
 	});
 	
-	nody.EXTEND_MODULE("NFQuery","NFTemplate",{
+	N.EXTEND_MODULE("Query","Template",{
 		clone    : function(nodeData,dataFilter){ 
-			return new nody.NFTemplate(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter),true); 
+			return new N.Template(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter),true); 
 		},
 		cloneMap:function(nodeDatas,dataFilter){
 			nodeDatas  = TOARRAY(nodeDatas);
@@ -4489,7 +4486,7 @@ if (!Array.prototype.forEach) {
 			return rr;
 		},
 		renderAfterQuery:function(){
-			return new nody.NFQuery(this.render.apply(this,Array.prototype.slice.call(arguments)));
+			return new N.Query(this.render.apply(this,Array.prototype.slice.call(arguments)));
 		},
 		
 		// 키를 지우면서
@@ -4503,8 +4500,8 @@ if (!Array.prototype.forEach) {
 		},
 		partialNodeProps:function(propKeys,callback,presets){
 			var keys  = propKeys;
-			var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new nody.NFArray(keys)).getMap(function(key){ return 'nf-'+key; });
-			var sKeys = (presets && presets.sKeys) ? presets.sKeys : (new nody.NFArray(pKeys)).getMap(function(pkey){ return '['+ pkey +']'; });
+			var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new N.Array(keys)).getMap(function(key){ return 'nf-'+key; });
+			var sKeys = (presets && presets.sKeys) ? presets.sKeys : (new N.Array(pKeys)).getMap(function(pkey){ return '['+ pkey +']'; });
 			var pNodes = this.find(sKeys.join(','));
 			for(var i=0,l=pNodes.length;i<l;i++){
 				for(var si=0,sl=sKeys.length;si<sl;si++){
@@ -4580,8 +4577,8 @@ if (!Array.prototype.forEach) {
 		setDataFilter:function(dataFilter){ if(typeof dataFilter === 'object') this._persistantDataFilter = dataFilter; return this; },
 		removeDataFilter:function(){ delete this['_persistantDataFilter']; return this; },
 		//name base form data
-		getFormData:function(){ return INJECT(this,function(inj,node){ EXTEND(inj,(new nody.NFForm(node)).getFormData()) }); },
-		setFormData:function(data){ if(typeof data === 'object') this.each(function(node){ (new nody.NFForm(node)).setFormData(data); }); return this; },
+		getFormData:function(){ return INJECT(this,function(inj,node){ EXTEND(inj,(new N.Form(node)).getFormData()) }); },
+		setFormData:function(data){ if(typeof data === 'object') this.each(function(node){ (new N.Form(node)).setFormData(data); }); return this; },
 		reset : function(nodeData,dataFilter){
 			if (this.TemplateNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
 			if (this.TemplateNode.length > 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
@@ -4603,23 +4600,22 @@ if (!Array.prototype.forEach) {
 		var fs = FSINGLE(this);
 		return (fs.length === 1) ? fs[0] : fs;
 	});
-	nody.METHOD('ZTEMP',function(temp,data,filter){ return (new nody.NFTemplate(temp)).renderMap(data,filter); });
-	nody.METHOD('$Q',function(s,p,i)  { return new nody.NFQuery(s,p,i);});
-	nody.METHOD('$M',function(n,a,p)  { return new nody.NFMake(n,a,p); });
-	nody.METHOD('$T',function(n,d,f,c){ return new nody.NFTemplate(n,d,f,c); });
-	nody.METHOD('$C',function(w,h)    { return new nody.NFContext2D(w,h); });
+	N.METHOD('ZTEMP',function(temp,data,filter){ return (new N.Template(temp)).renderMap(data,filter); });
+	N.METHOD('$Q',function(s,p,i)  { return new N.Query(s,p,i);});
+	N.METHOD('$M',function(n,a,p)  { return new N.Make(n,a,p); });
+	N.METHOD('$T',function(n,d,f,c){ return new N.Template(n,d,f,c); });
 	
-})(window,nody.ENV);
+})(window,N.ENV);
 
 //Nody Component Foundation
 (function(W,ENV){
 	//여러 엘리먼트를 셀렉트하여 한번에 컨트롤
-	nody.MODULE("NFControls",{
+	N.MODULE("Controls",{
 		getSelects:function(){ return this.Source; },
 		find:function(f){ if(f) return FIND(f,this.Source); return []; },
 		statusFunction:function(f,param,filter,requireElement){
 			var fe = filter ? function(node){ return ELIS(node,filter)?f(node, param):undefined } : function(node){ return f(node, param); };
-			var r  = new nody.NFArray(this.getSelects()).map( fe ).filter();
+			var r  = new N.Array(this.getSelects()).map( fe ).filter();
 			return (requireElement == true) ? r.toArray() : this;
 		},
 		disabled:function(status,filter){ return this.statusFunction(ELDISABLED,(status !== false ? true : false),filter); },
@@ -4631,7 +4627,7 @@ if (!Array.prototype.forEach) {
 			var r = this.statusFunction(function(node,param){
 				var classes = ELATTR(node,"class");
 				if(typeof classes === "string"){
-					classes = nody.$NFString(classes).getRemoveModel(eval("/^"+param+"/"));
+					classes = N.$String(classes).getRemoveModel(eval("/^"+param+"/"));
 					ELATTR(node,"class",classes);
 					return node;
 				}
@@ -4640,9 +4636,9 @@ if (!Array.prototype.forEach) {
 			return (req == true)?r:this;
 		},
 		changePartClass:function(selClass,toClass,filter){
-			new nody.NFArray(this.removePartClass(selClass,filter,true)).each(function(node){
+			new N.Array(this.removePartClass(selClass,filter,true)).each(function(node){
 				var classes = ELATTR(node,"class");
-				ELATTR(node,"class",nody.$NFString(classes).getAddModel(selClass+toClass));
+				ELATTR(node,"class",N.$String(classes).getAddModel(selClass+toClass));
 			});
 			return this;
 		}
@@ -4652,11 +4648,11 @@ if (!Array.prototype.forEach) {
 	
 	
 	// 폼은 일정 폼 노드들을 컨트롤 하기위해 사용됩니다.
-	nody.EXTEND_MODULE("NFControls","NFForm",{
+	N.EXTEND_MODULE("Controls","Form",{
 		isValid        :function(f){ if(typeof f === "function") return f.call(this); return ISELNODE(this.Source); },
 		getSelects     :function(){ return FIND(this.SelectRule,this.Source); },
 		getSelectTokens:function(){
-			return new nody.NFArray(this.SelectRule.split(",")).map(function(selString){
+			return new N.Array(this.SelectRule.split(",")).map(function(selString){
 				var execResult = /\[([a-zA-Z0-9\-]+)(.*)\]/.exec(selString);
 				if( execResult === null) return ;
 				return execResult[1];
@@ -4665,12 +4661,12 @@ if (!Array.prototype.forEach) {
 		},
 		//체크아웃 대상 (key와 무관)
 		getCheckoutElement:function(){
-			return FIND(new nody.NFArray(this.getSelectTokens()).map(function(s){ return "["+s+"]"; }).join(","), this.Source);
+			return FIND(new N.Array(this.getSelectTokens()).map(function(s){ return "["+s+"]"; }).join(","), this.Source);
 		},
 		//체크아웃 대상 (key가 존재하는 것만)
 		getCheckoutElementsWithToken:function(){
-			var tokens = new nody.NFArray(this.getSelectTokens());
-			return new nody.NFArray(this.getCheckoutElement()).inject({},function(node,inject){
+			var tokens = new N.Array(this.getSelectTokens());
+			return new N.Array(this.getCheckoutElement()).inject({},function(node,inject){
 				var getKey;
 				tokens.each(function(tokenName){
 					if( ELHASATTR(node,tokenName) == true ){
@@ -4687,7 +4683,7 @@ if (!Array.prototype.forEach) {
 		checkoutFilter:function(o){ this.FrameCheckoutFilter = o; },
 		checkinFilter:function(o){ this.FrameCheckinFilter = o; },
 		checkout:function(){
-			return new nody.NFObject(this.getCheckoutElementsWithToken()).map(function(node,key){
+			return new N.Object(this.getCheckoutElementsWithToken()).map(function(node,key){
 				var value = ELVALUE(node);
 				return value == null ? "" : value;
 			}).get();
@@ -4732,7 +4728,7 @@ if (!Array.prototype.forEach) {
 		}
 	});
 	
-	nody.MODULE("NFActiveStatus",{
+	N.MODULE("ActiveStatus",{
 		whenAnyWillActive  :function(m)  { this.StatusEvents.AnyWillActive = m; },
 		whenAnyDidActive   :function(m)  { this.StatusEvents.AnyDidActive = m; },
 		whenAnyWillInactive:function(m)  { this.StatusEvents.AnyWillInactive = m; },
@@ -4803,10 +4799,10 @@ if (!Array.prototype.forEach) {
 			"StatusWillInactive":{},
 			"StatusDidInactive":{}
 		}
-		this.ActiveKeys = new nody.NFArray();
+		this.ActiveKeys = new N.Array();
 	});
 	
-	nody.EXTEND_MODULE("NFActiveStatus","NFFormController",{
+	N.EXTEND_MODULE("ActiveStatus","FormController",{
 		isStatus:function(k){
 			return this.ActiveKeys.has(k);
 		},
@@ -4822,8 +4818,8 @@ if (!Array.prototype.forEach) {
 		},
 		addStatus:function(key,val){
 			if(!key)return;
-			if(typeof key === 'object') for(var k in key) this.addStatus(k,key[k]);	
-			else this.whenDidActive(key,val);
+			if(typeof key !== 'object') return this.whenDidActive(key,val);
+			for(var k in key) this.addStatus(k,key[k]);
 		},
 		setFormData:function(data,v2){
 			return this.FormControl.checkin(data,v2);
@@ -4837,7 +4833,7 @@ if (!Array.prototype.forEach) {
 	},function(context,statusProp,helper){
 		this.view = FSINGLE(context)[0];
 		if(this.view){
-			this.FormControl = nody.$NFForm(this.view);
+			this.FormControl = N.$Form(this.view);
 			this._super(false,true);
 			if(statusProp) this.addStatus(statusProp);
 			
@@ -4865,7 +4861,7 @@ if (!Array.prototype.forEach) {
 	});
 	
 	// 컨텍스트 컨트롤러
-	nody.MODULE("NFContexts",{
+	N.MODULE("Contexts",{
 		getContexts:function(){ 
 			return FSINGLE(this.initCall[0]); 
 		},
@@ -4937,7 +4933,7 @@ if (!Array.prototype.forEach) {
 			if(typeof event=="string" && typeof func === "function"){
 				ELON(this.getContexts(),event,function(e){
 					
-					var curSel = new nody.NFArray( _.getSelects() );
+					var curSel = new N.Array( _.getSelects() );
 					if(curSel.has(e.target)){
 						//버블이 잘 왔을때
 						var curfuncindex  = curSel.indexOf(e.target);
@@ -5006,7 +5002,7 @@ if (!Array.prototype.forEach) {
 			return false;
 		},
 		needFilterController:function(fm,fwc){
-			return new nody.NFFilterController(this.initCall[0],this.initCall[1],fm,fwc);
+			return new N.FilterController(this.initCall[0],this.initCall[1],fm,fwc);
 		},
 		injectSelects:function(method){
 			if(typeof method !== "function") return {};
@@ -5019,7 +5015,7 @@ if (!Array.prototype.forEach) {
 		this.initCall = [cSel,sSel,tSel];
 	});
 	
-	nody.EXTEND_MODULE('NFContexts','NFFilterController',{
+	N.EXTEND_MODULE('Contexts','FilterController',{
 		needFiltering:function(filterData){
 			var selectNodes = this.getSelects();
 			var fm = this.filterMethod;
@@ -5048,14 +5044,14 @@ if (!Array.prototype.forEach) {
 		}
 	},function(cSel,sSel,filterMethod,filterWithClass){
 		this._super(cSel,sSel);
-		if(typeof filterMethod !== 'function') console.error('NFFilter::세번째 파라메터는 반드시 함수를 넣어주세요',filterMethod);
+		if(typeof filterMethod !== 'function') console.error('Filter::세번째 파라메터는 반드시 함수를 넣어주세요',filterMethod);
 		this.filterMethod = filterMethod;
 		
 		if(typeof filterWithClass === 'string') this.filterClass = filterWithClass;
 		if(filterWithClass === true) this.filterClass = 'hidden';
 	});
 	
-	nody.EXTEND_MODULE("NFContexts","NFActiveController",{
+	N.EXTEND_MODULE("Contexts","ActiveController",{
 		whenWillActive:function(method){ this.ContextsEvents.willActive = method; return this; },
 		whenDidActive:function(method){ this.ContextsEvents.didActive = method; return this;},
 		whenDidInactive:function(method){ this.ContextsEvents.didInactive = method; return this; },
@@ -5098,7 +5094,7 @@ if (!Array.prototype.forEach) {
 		setActiveIndexes:function(indexes,withEvent){;
 			this.selectPoolStart();
 			
-			var indexesObject = new nody.NFArray(indexes);
+			var indexesObject = new N.Array(indexes);
 			
 			if(withEvent === false) {
 				DATAEACH( this.getSelects() , function(node,i){
@@ -5141,7 +5137,7 @@ if (!Array.prototype.forEach) {
 		shouldInactive:function(index,withEvent){
 			if(typeof index === 'number') {
 				this.selectPoolStart();
-				var activeIndexes = new nody.NFArray(this.getActiveIndexes()) ;
+				var activeIndexes = new N.Array(this.getActiveIndexes()) ;
 				if( DATAHAS(activeIndexes,index) ) {
 					activeIndexes.remove(index);
 					this.setActiveIndexes(activeIndexes,withEvent);
@@ -5254,7 +5250,7 @@ if (!Array.prototype.forEach) {
 				} else {
 					//다중 Active를 허용하지 않는 경우
 					//인액티브 대상을 찾아 인액티브 시킵니다.
-					(new nody.NFArray(currentSelects)).remove(this).each(function(node){
+					(new N.Array(currentSelects)).remove(this).each(function(node){
 						if(_.allowAutoActive) {
 							ELREMOVECLASS(node,"active");
 							if(yesEvent) CALL(_.ContextsEvents.didInactive,node);
@@ -5280,18 +5276,18 @@ if (!Array.prototype.forEach) {
 	});
 	
 	
-	nody.MODULE('NFActiveControllerManager',{
+	N.MODULE('ActiveControllerManager',{
 		getActiveIndexes:function(sourceIndex){
 			var selectSource = this.Source[sourceIndex || (this.Source.length - 1) ];
 			if(selectSource) return selectSource.getActiveIndexes();return [];
 		},
 		setActiveIndexes:function(indexes,withEvent,sender){
-			_NFArray(this.Source).remove(sender).each(function(ac, i){ 
+			_Array(this.Source).remove(sender).each(function(ac, i){ 
 				ac.setActiveIndexes( indexes, (i === 0) ? (withEvent && true) : false ); });
 			return this;
 		},
 		shouldInactive:function(index,withEvent,sender){
-			_NFArray(this.Source).remove(sender).each(function(ac, i){
+			_Array(this.Source).remove(sender).each(function(ac, i){
 				//첫번째만 무조건 이벤트 발생
 				ac.shouldInactive( index, (i === 0) ? (withEvent && true) : false ); 
 			});
@@ -5379,7 +5375,7 @@ if (!Array.prototype.forEach) {
 			return sender;
 		},
 		makeActiveController:function(){
-			return this.syncActiveController(_NFActiveController.apply(NFActiveController,Array.prototype.slice.call(arguments)));
+			return this.syncActiveController(_ActiveController.apply(ActiveController,Array.prototype.slice.call(arguments)));
 		},
 		whenWillActive:function(method){ this.ContextsEvents.willActive = method; return this; },
 		whenDidActive:function(method){ this.ContextsEvents.didActive = method; return this;},
@@ -5395,7 +5391,7 @@ if (!Array.prototype.forEach) {
 	});
 	
 	//카운트를 샌후 함수실행
-	nody.MODULE("NFFire",{
+	N.MODULE("Fire",{
 		complete:function(){ this.FireCurrent = this.FireMax; return this.FireFunction.apply(this,arguments); },
 		touch:function(){ this.FireCurrent++; if(this.FireCurrent >= this.FireMax) return this.complete.apply(this,arguments); },
 		back:function(){ this.FireCurrent--; return this; },
@@ -5405,7 +5401,7 @@ if (!Array.prototype.forEach) {
 				return own.touch();
 			}; 
 			if(ISARRAY(this.Source) && typeof f === "function"){ 
-				new nody.NFArray(this.Source).each(function(data,index){ return CALL(f,own,data,index,touchLiteral); }); 
+				new N.Array(this.Source).each(function(data,index){ return CALL(f,own,data,index,touchLiteral); }); 
 			} else { 
 				console.warn("Fire::조건이 충족되지 못해 fire를 실행하지 못하였습니다. source=> ",this.Source,"each f=>",f); 
 			} return this; 
@@ -5419,12 +5415,12 @@ if (!Array.prototype.forEach) {
 		this.FireCurrent  = 0;
 	});
 	
-	nody.METHOD("FIRE",function(list,counter,executor){
-		return new nody.NFFire(list,executor).each(counter);
+	N.METHOD("FIRE",function(list,counter,executor){
+		return new N.Fire(list,executor).each(counter);
 	});
 	
 	//XMLHTTP REQUEST
-	nody.MODULE("NFRequest",{
+	N.MODULE("Request",{
 		__debug:function(data,param,moduleOption){
 			var debugObject = {
 				method:this.option.method,
@@ -5522,7 +5518,7 @@ if (!Array.prototype.forEach) {
 									response = requestObject.responseText;
 									break;
 							}
-							this.onSuccess(response, nody.$NFMeta(requestObject).lastProp("requestParam") ,this.moduleOption, requestObject);
+							this.onSuccess(response, N.$Meta(requestObject).lastProp("requestParam") ,this.moduleOption, requestObject);
 							break;
 						default:
 							if( this.moduleOption.debug == true ) switch(requestObject.status) {
@@ -5533,7 +5529,7 @@ if (!Array.prototype.forEach) {
 									console.info("Request:: 500 응답서버 내부오류");
 									break;
 							}
-							this.onError(response, nody.$NFMeta(requestObject).lastProp("requestParam") ,this.moduleOption, requestObject);
+							this.onError(response, N.$Meta(requestObject).lastProp("requestParam") ,this.moduleOption, requestObject);
 							break;
 					};
 					break;
@@ -5579,12 +5575,12 @@ if (!Array.prototype.forEach) {
 			var newRequest = this.getRequestObject();
 		
 			//data 처리
-			var requestData   = new nody.NFObject((typeof this.moduleOption.constData === "object") ? new nody.NFObject(this.moduleOption.constData).concat(this.option.data) : this.option.data);
-			var requestString = new nody.NFObject(requestData.getEncodeObject()).join("=","&");
+			var requestData   = new N.Object((typeof this.moduleOption.constData === "object") ? new N.Object(this.moduleOption.constData).concat(this.option.data) : this.option.data);
+			var requestString = new N.Object(requestData.getEncodeObject()).join("=","&");
 			
 			// request params (기록용)
 			
-			nody.$NFMeta(newRequest).setProp("requestParam",requestData.get());
+			N.$Meta(newRequest).setProp("requestParam",requestData.get());
 			TRYCATCH(function(){
 				if( this.option.method.toLowerCase() == "post" ){
 					newRequest.open("POST", this.url, true );
@@ -5627,15 +5623,15 @@ if (!Array.prototype.forEach) {
 		}
 	});
 	
-	nody.EXTEND_MODULE("NFRequest","NFOpen",{},function(url,requestOption,moduleOption){ 
+	N.EXTEND_MODULE("Request","Open",{},function(url,requestOption,moduleOption){ 
 		this._super(url,requestOption,moduleOption);
 		this.send();
 	});
 	
-	nody.EXTEND_MODULE("NFRequest","NFHTMLOpen",{
+	N.EXTEND_MODULE("Request","HTMLOpen",{
 		send:function(){
 			
-			var requestFrame = CREATE("iframe",{src:this.url + (this.url.indexOf("?") > -1 ? "&token=" : "?token=") +NFUtil.base36Random(2),style:"display:none;"});
+			var requestFrame = CREATE("iframe",{src:this.url + (this.url.indexOf("?") > -1 ? "&token=" : "?token=") +Util.base36Random(2),style:"display:none;"});
 			
 			var dummyRequstObject = {
 				"readyState":4,
@@ -5643,7 +5639,7 @@ if (!Array.prototype.forEach) {
 				"responseText":""
 			}
 			
-			nody.$NFMeta(dummyRequstObject).setProp("requestParam",{});
+			N.$Meta(dummyRequstObject).setProp("requestParam",{});
 			
 			var _ = this;
 			
@@ -5669,17 +5665,17 @@ if (!Array.prototype.forEach) {
 	});
 	
 	
-	nody.MODULE("NFContentLoaderBase",{
+	N.MODULE("ContentLoaderBase",{
 		"+_ActiveController":undefined,
 		getActiveController:function(){ return this._ActiveController; },
 		_setEvent:function(eventType,eventName,method){
 			var _ = this;
 			DATAEACH(eventName,function(eventName){
 				if(eventName == "!global"){
-					if(typeof method === "function") _.NFContentLoaderBaseEvents[eventType] = method;
+					if(typeof method === "function") _.ContentLoaderBaseEvents[eventType] = method;
 				} else {
 					if((typeof eventName === "string") && (typeof method === "function")) 
-					return  _.NFContentLoaderBaseEvents[eventType][eventName] = method;
+					return  _.ContentLoaderBaseEvents[eventType][eventName] = method;
 				}
 			});
 		},
@@ -5720,17 +5716,17 @@ if (!Array.prototype.forEach) {
 		_triggeringActiveEvents:function(container,activeName,containerEvent,userArgs){
 			// 로드가 완료되었을때
 			if( containerEvent.match("load")) {
-				APPLY(this.NFContentLoaderBaseEvents.AnyLoadEvent,container,userArgs);
-				APPLY(this.NFContentLoaderBaseEvents.ContainerLoadEvents[activeName],container,userArgs);
+				APPLY(this.ContentLoaderBaseEvents.AnyLoadEvent,container,userArgs);
+				APPLY(this.ContentLoaderBaseEvents.ContainerLoadEvents[activeName],container,userArgs);
 			}
 			if( containerEvent.match("active")) {
-				APPLY(this.NFContentLoaderBaseEvents.AnyActiveEvent,container,userArgs);
-				APPLY(this.NFContentLoaderBaseEvents.ContainerOpenEvents[activeName],container,userArgs);
+				APPLY(this.ContentLoaderBaseEvents.AnyActiveEvent,container,userArgs);
+				APPLY(this.ContentLoaderBaseEvents.ContainerOpenEvents[activeName],container,userArgs);
 			}
 		},
 		_triggeringInactiveEvents:function(container,inactiveName){
-			APPLY(this.NFContentLoaderBaseEvents.AnyInactiveEvent,container);
-			APPLY(this.NFContentLoaderBaseEvents.ContainerInactiveEvents[inactiveName],container);
+			APPLY(this.ContentLoaderBaseEvents.AnyInactiveEvent,container);
+			APPLY(this.ContentLoaderBaseEvents.ContainerInactiveEvents[inactiveName],container);
 		},
 		loadHTML:function(loadKey,loadPath,success,error){
 			var _ = this;
@@ -5741,14 +5737,14 @@ if (!Array.prototype.forEach) {
 			//ELEMENT(s) or URL
 			switch(typeof loadPath){
 				case "string":
-					new nody.NFOpen(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") + NFUtil.base36Random(2),{
+					new N.Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") + Util.base36Random(2),{
 						"dataType":"dom",
 						"success":function(doms){
 							_.saveContainerContents(doms,loadKey);
 							CALL(success,_,loadKey,doms);
 						},
 						"error":function(){
-							console.error("NFContentLoaderBase::URL링크에서 데이트럴 찾지 못했습니다"+loadPath);
+							console.error("ContentLoaderBase::URL링크에서 데이트럴 찾지 못했습니다"+loadPath);
 							CALL(error,_,loadKey);
 						}
 					});
@@ -5759,7 +5755,7 @@ if (!Array.prototype.forEach) {
 					
 					//loadPath가 빈 배열이라면 정상적인 처리로 간주합니다.
 					if( doms.length < 1 && !ISARRAY(loadPath) ){
-						console.error("NFContentLoaderBase::불러올 엘리먼트가 존재하지 않습니다."+loadPath);
+						console.error("ContentLoaderBase::불러올 엘리먼트가 존재하지 않습니다."+loadPath);
 						CALL(error,_,loadKey);
 					} else {
 						_.saveContainerContents(doms,loadKey);
@@ -5767,7 +5763,7 @@ if (!Array.prototype.forEach) {
 					}
 					break;
 				default :
-					console.log("NFContentLoaderBase::올바르지 않은 loadPath =>",loadPath,loadKey);
+					console.log("ContentLoaderBase::올바르지 않은 loadPath =>",loadPath,loadKey);
 					CALL(error,_,loadKey);
 					return false;
 					break;
@@ -5794,7 +5790,7 @@ if (!Array.prototype.forEach) {
 		},
 		needActiveController:function(){
 			
-			this._ActiveController = APPLY(nody.$NFActiveController,undefined,arguments);
+			this._ActiveController = APPLY(N.$ActiveController,undefined,arguments);
 			return this._ActiveController;
 		},
 		currentActiveController:function(){
@@ -5804,10 +5800,10 @@ if (!Array.prototype.forEach) {
 		this.Source = {};
 		this.ContainerPlaceholder = {};
 		this.ContainerContents    = {};
-		this.ContainerActiveKeys  = new nody.NFArray();
+		this.ContainerActiveKeys  = new N.Array();
 		
 		// 로드될때 이벤트입니다.
-		this.NFContentLoaderBaseEvents = {
+		this.ContentLoaderBaseEvents = {
 			"AnyLoadEvent":undefined,
 			"AnyActiveEvent":undefined,
 			"AnyInactiveEvent":undefined,
@@ -5842,12 +5838,12 @@ if (!Array.prototype.forEach) {
 		});
 	};
 	
-	nody.EXTEND_MODULE("NFContentLoaderBase","NFMultiContentLoader",{
+	N.EXTEND_MODULE("ContentLoaderBase","MultiContentLoader",{
 		loadWithProperty:function(loadset,success){
 			//lo
 			if(typeof loadset !== "object") return console.error("loadAll이 중지되었습니다.");
 			var _ = this;
-			var successFire = new nody.NFFire(PROPLENGTH(loadset),function(){ CALL(success,_); });
+			var successFire = new N.Fire(PROPLENGTH(loadset),function(){ CALL(success,_); });
 			PROPEACH(loadset,function(loadPath,loadKey){
 				var placeholder = _.ContainerPlaceholder[loadKey];
 				if(!placeholder) {
@@ -5908,7 +5904,7 @@ if (!Array.prototype.forEach) {
 		});
 	});
 	
-	nody.EXTEND_MODULE("NFContentLoaderBase","NFContentLoader",{
+	N.EXTEND_MODULE("ContentLoaderBase","ContentLoader",{
 		_inactiveActivatedContents:function(removeInPlaceholder){
 			var _ = this;
 			this.ContainerActiveKeys.each(function(activatedKey){
@@ -5978,11 +5974,11 @@ if (!Array.prototype.forEach) {
 			//다른컨테이너도 플레이스 홀더 설정을 합니다.
 			PROPEACH(this.Source,function(value,key){ _.addContainer(_container,key); });
 		} else {
-			console.error("NFContentLoader::해당 컨테이너를 찾을수 없습니다. Navigation Controller의 작동을 완전히 중지합니다.=> ",container);
+			console.error("ContentLoader::해당 컨테이너를 찾을수 없습니다. Navigation Controller의 작동을 완전히 중지합니다.=> ",container);
 		}
 	});
 	
-	nody.EXTEND_MODULE("NFContentLoaderBase","NFTabContents",{
+	N.EXTEND_MODULE("ContentLoaderBase","TabContents",{
 		_inactiveActivatedContents:function(removeInPlaceholder){
 			var _ = this;
 			this.ContainerActiveKeys.each(function(activatedKey){
@@ -6032,14 +6028,14 @@ if (!Array.prototype.forEach) {
 		},
 		needFormController:function(target){
 			if(!target || typeof target === 'object') {
-				if(!this._globalFormController) this._globalFormController = new nody.NFFormController(this.view);
+				if(!this._globalFormController) this._globalFormController = new N.FormController(this.view);
 				this._globalFormController.addStatus(target);
 				return this._globalFormController;
 			}
 			if(!(typeof target === 'string' || typeof target === 'number')) return console.error('문자열 타겟이 아니면 폼컨트롤러를 반환할수 없습니다.');
 			if(!this.ContainerPlaceholder[target]) return console.error('존재하지 않은 컨트롤러 키의 폼컨트롤러를 호출하였습니다',target);
 			if(!this._viewsFormController) this._viewsFormController = [];
-			if(!this._viewsFormController[target]) this._viewsFormController[target] = new nody.NFFormController(this.ContainerPlaceholder[target]);
+			if(!this._viewsFormController[target]) this._viewsFormController[target] = new N.FormController(this.ContainerPlaceholder[target]);
 			return this._viewsFormController[target];
 		}
 	},function(container,baseParam){
@@ -6066,11 +6062,11 @@ if (!Array.prototype.forEach) {
 				_.addContainer( noConfigMode ? value : undefined,key); 
 			});
 		} else {
-			console.error("NFTabContents::해당 컨테이너를 찾을수 없습니다. Navigation Controller의 작동을 완전히 중지합니다.=> ",container);
+			console.error("TabContents::해당 컨테이너를 찾을수 없습니다. Navigation Controller의 작동을 완전히 중지합니다.=> ",container);
 		}
 	});
 	
-	nody.SINGLETON("NFDataContextNotificationCenter",{
+	N.SINGLETON("DataContextNotificationCenter",{
 		addObserver:function(controller){
 			if(controller)this.notificationObservers.push(controller);
 		},
@@ -6079,7 +6075,7 @@ if (!Array.prototype.forEach) {
 				if (typeof observer[methodName] === "function"){
 					observer[methodName].apply(observer,params);
 				} else {
-					console.warn("NFDataContextNotificationCenter",methodName," : 노티피케이션 api가 존재하지 않습니다. =>",observer);
+					console.warn("DataContextNotificationCenter",methodName," : 노티피케이션 api가 존재하지 않습니다. =>",observer);
 				}
 			});
 		},
@@ -6108,11 +6104,11 @@ if (!Array.prototype.forEach) {
 			if(typeof flag === "boolean") this.notificationBindEventLock = flag
 		}
 	},function(){
-		this.notificationObservers = new nody.NFArray();
+		this.notificationObservers = new N.Array();
 		this.notificationBindEventLock = false;
 	});
 	
-	nody.MODULE("NFDataContext",{
+	N.MODULE("DataContext",{
 		// 배열로된 패스를 반환한다.
 		// path rule
 		// root   = "","/"=> [/]
@@ -6129,7 +6125,7 @@ if (!Array.prototype.forEach) {
 				throw new Error("DataContext::_clearPath::1:Invaild path => "+path);
 			}
 			
-			var result    = new nody.NFArray();
+			var result    = new N.Array();
 			var splitPath = path.split("/");
 			
 			DATAEACH(splitPath,function(keyPath){
@@ -6160,7 +6156,7 @@ if (!Array.prototype.forEach) {
 				if(ISARRAY(data)) {
 					return {};
 				} else {
-					return new nody.NFObject(data).remove(this.SourceChildrenKey).get();
+					return new N.Object(data).remove(this.SourceChildrenKey).get();
 				}
 			}
 		},
@@ -6196,7 +6192,7 @@ if (!Array.prototype.forEach) {
 								// 아무것도 하지 않음
 								break;
 							case "*":
-								selectData = new nody.NFArray(selectData).getMap(function(data){
+								selectData = new N.Array(selectData).getMap(function(data){
 									if (ISARRAY(data)){
 										return data;
 									} else {
@@ -6206,7 +6202,7 @@ if (!Array.prototype.forEach) {
 								break;
 						}
 					} else if(typeof pathKey === "number") {
-						selectData = new nody.NFArray(selectData).getMap(function(data){
+						selectData = new N.Array(selectData).getMap(function(data){
 							if (ISARRAY(data)){
 								return data[pathKey];
 							} else {
@@ -6226,7 +6222,7 @@ if (!Array.prototype.forEach) {
 			
 			if( typeof data === "object" ){
 				
-				var makeManagedData = ISARRAY(data) ? new nody.NFManagedData(this,this._clearData(data),"array") : new nody.NFManagedData(this,this._clearData(data),"object");
+				var makeManagedData = ISARRAY(data) ? new N.ManagedData(this,this._clearData(data),"array") : new N.ManagedData(this,this._clearData(data),"object");
 				
 				var childDatas = this._childrenData(data);
 				var childrens  = [];
@@ -6376,16 +6372,16 @@ if (!Array.prototype.forEach) {
 			return this.RootManagedData;
 		}
 	},function(source,childrenKey){
-		this.ID                = NFUtil.base36UniqueRandom(5,'co');
+		this.ID                = Util.base36UniqueRandom(5,'co');
 		this.Source            = TOOBJECT(source,"value");
 		this.SourceChildrenKey = childrenKey || "data";
 		// 데이터 안의 모든 Managed data를 생성하여 메타안에 집어넣음
 		this.RootManagedData = this.feedDownManagedDataMake(this.Source,"root");
 	});
 	
-	nody.MODULE("NFViewModel",{
+	N.MODULE("ViewModel",{
 		needRenderView:function(depth,managedData,feedViews,viewController){
-			var renderResult = (ISTYPE(this.Source[depth],"NFTemplate") == true) ? managedData.template(this.Source[depth]) : this.Source[depth].call(managedData,managedData,feedViews);
+			var renderResult = (ISTYPE(this.Source[depth],"Template") == true) ? managedData.template(this.Source[depth]) : this.Source[depth].call(managedData,managedData,feedViews);
 			
 			if( renderResult !== false) if(typeof renderResult === 'object' && 'nodeName' in renderResult ) {
 				return renderResult;
@@ -6393,29 +6389,29 @@ if (!Array.prototype.forEach) {
 				if(ISARRAY(renderResult)) {
 					if( renderResult.length == 1 ) return renderResult[0];
 					var singleData = DATAZERO(renderResult);
-					console.log('경고::NFViewModel의 최종 렌더 노드는 하나만 반환되어야 합니다',renderResult);
+					console.log('경고::ViewModel의 최종 렌더 노드는 하나만 반환되어야 합니다',renderResult);
 					return singleData;
 				} 
-				console.error("오류::NFViewModel의 렌더값이 올바르지 않습니다. 대체 렌더링이 실시됩니다.=>",renderResult, this.Source[depth]);
+				console.error("오류::ViewModel의 렌더값이 올바르지 않습니다. 대체 렌더링이 실시됩니다.=>",renderResult, this.Source[depth]);
 			}
 			return MAKE("div",{html:TOSTRING(managedData.value()),style:'padding-left:10px;'},managedData.placeholder("div"));
 		},
 		clone:function(){
 			var init = this.Source.clone();
 			for(var i=0,l=arguments.length;i<l;i++) if( arguments[i] ) init[i] = arguments[i];
-			return _NFViewModel.apply(undefined,init.toArray());
+			return _ViewModel.apply(undefined,init.toArray());
 		}
 	},function(renderDepth){
 		//tempate 타겟을 설정
-		this.Source = new nody.NFArray(Array.prototype.slice.call(arguments)).getMap(function(a){ 
+		this.Source = new N.Array(Array.prototype.slice.call(arguments)).getMap(function(a){ 
 			if(typeof a === "string"){
-				return new nody.NFTemplate(a);
+				return new N.Template(a);
 			}
 			return a; 
 		});
 	});
 	
-	nody.MODULE("NFManagedData",{
+	N.MODULE("ManagedData",{
 		//노드구조
 		appendChild:function(childrens){
 			var parent = this;
@@ -6475,7 +6471,7 @@ if (!Array.prototype.forEach) {
 			}
 		},
 		replaceValue:function(data,rerender){
-			if( ISTYPE(data,'NFManagedData') ) data = data.value();
+			if( ISTYPE(data,'ManagedData') ) data = data.value();
 			if( typeof data === 'object' ) this.Source = CLONE(data);
 			if( rerender === true ) this.rerender();
 		},
@@ -6492,13 +6488,13 @@ if (!Array.prototype.forEach) {
 			}
 			// Write
 			this.Source[key] = value;
-			NFDataContextNotificationCenter.managedDataBindEvent(this.BindID,key,value,sender);
+			DataContextNotificationCenter.managedDataBindEvent(this.BindID,key,value,sender);
 			return this;
 		},
 		removeValue:function(key,sender){
 			if(key in this.Source){
 				delete this.Source[key];
-				NFDataContextNotificationCenter.managedDataBindEvent(this.BindID,key,"",sender);
+				DataContextNotificationCenter.managedDataBindEvent(this.BindID,key,"",sender);
 			}
 		},
 		text:function(key){
@@ -6543,7 +6539,7 @@ if (!Array.prototype.forEach) {
 			});
 			
 			if(typeof _template === 'object')        { templateNode = _template.clone(this.value(),dataFilter);
-			} else if(typeof _template === 'string') { templateNode = new nody.NFTemplate(_template,this.value(),dataFilter,true);
+			} else if(typeof _template === 'string') { templateNode = new N.Template(_template,this.value(),dataFilter,true);
 			} else                                   { console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template); return false; }
 			
 			if(templateNode.isNone()) { console.error("template :: 렌더링할 template를 찾을수 없습니다",templateNode); return false; }
@@ -6571,7 +6567,7 @@ if (!Array.prototype.forEach) {
 			this.context.getDataWithPath(this.path);
 		},
 		getPath:function(){
-			var path = new nody.NFArray();
+			var path = new N.Array();
 			this.chainUpMangedData(function(){ path.push( this.Parent ? this.Parent.Child.indexOf(this) : this.context.ID); });
 			return path.reverse().join("/");
 		},
@@ -6616,7 +6612,7 @@ if (!Array.prototype.forEach) {
 		//렌더시 다음 아래의 메서드들은 절대 호출하면 안됩니다.
 		//지정한 인덱스로
 		rerender:function(){
-			NFDataContextNotificationCenter.managedDataNeedRerender(this);
+			DataContextNotificationCenter.managedDataNeedRerender(this);
 		},
 		managedDataIndexExchange:function(changeTarget){
 			if(changeTarget){
@@ -6625,7 +6621,7 @@ if (!Array.prototype.forEach) {
 				var index1 = this.getIndex();
 				var index2 = changeTarget.getIndex();
 				this.Parent.Child.changeIndex(index1,index2);
-				NFDataContextNotificationCenter.managedDataChangePosition(bindId1,bindId2);
+				DataContextNotificationCenter.managedDataChangePosition(bindId1,bindId2);
 				return true;
 			}
 			return false;
@@ -6646,7 +6642,7 @@ if (!Array.prototype.forEach) {
 		removeManagedData:function(onlyThis){
 			if(onlyThis === true) {
 				this.removeFromParent();
-				NFDataContextNotificationCenter.removeManagedData(this.BindID);
+				DataContextNotificationCenter.removeManagedData(this.BindID);
 			} else {
 				this.feedUpManageData(function(md){ 
 					md.removeManagedData(true);
@@ -6659,7 +6655,7 @@ if (!Array.prototype.forEach) {
 			if(typeof data === "object") {
 				this.context.feedDownManagedDataMake(data||{},this);
 				var makedData = this.Child.last();
-				NFDataContextNotificationCenter.addChildData(this.BindID,makedData);
+				DataContextNotificationCenter.addChildData(this.BindID,makedData);
 				return makedData;
 			} else {
 				console.warn("addChildData :: append data가 들어오지 않았습니다", data);
@@ -6669,18 +6665,18 @@ if (!Array.prototype.forEach) {
 			if(this.Parent) return this.Parent.addChildData(data);
 		}
 	},function(context,initData,dataType){
-		this.BindID     = NFUtil.base62UniqueRandom(8,'ma');
+		this.BindID     = Util.base62UniqueRandom(8,'ma');
 		this.context    = context;
 		this.Source     = initData;
 		this.SourceType = dataType || "object";
 		//노드구조
-		this.Child  = new nody.NFArray();
+		this.Child  = new N.Array();
 		this.Parent     = undefined;        
 		//현재 컨트롤중인 뷰컨트롤입니다.
 		this.scope      = undefined;
 	});
 	
-	nody.MODULE("NFPresentor",{
+	N.MODULE("Presentor",{
 		"+events":{
 			"up":function(arg,el,vc){
 				if(typeof arg === "function") {
@@ -6729,7 +6725,7 @@ if (!Array.prototype.forEach) {
 			if(this.structureNodes[bindID]){
 				var owner = this;
 				//바인드값 삭제
-				var removeBindNodeTarget = new nody.NFArray();
+				var removeBindNodeTarget = new N.Array();
 				
 				DATAEACH(this.bindValueNodes,function(bindNode){
 					var hasNode = FIND(bindNode[2],owner.structureNodes[bindID],0);
@@ -6849,14 +6845,14 @@ if (!Array.prototype.forEach) {
 			});
 		},
 		setManagedData:function(managedData){
-			if(ISTYPE(managedData,"NFDataContext")) managedData = managedData.getRootManagedData();
-			if(ISTYPE(managedData,"NFManagedData")) {
+			if(ISTYPE(managedData,"DataContext")) managedData = managedData.getRootManagedData();
+			if(ISTYPE(managedData,"ManagedData")) {
 				this.managedData = managedData;
 				CALL(this.dataDidChange,this);
 				return true;
 			}
 			if(typeof managedData === 'object') {
-				this.managedData = new nody.NFDataContext(managedData).getRootManagedData();
+				this.managedData = new N.DataContext(managedData).getRootManagedData();
 				return true;
 			}
 			console.warn("setManagedData::managedData 오브젝트가 필요합니다. 들어온 값->", managedData);
@@ -6864,15 +6860,15 @@ if (!Array.prototype.forEach) {
 		},
 		needDisplay:function(managedData,rootElement,sigleRenderMode){
 			//기본적으로 존재하지 않는값을 경고해줌
-			if(!this.managedData) console.warn("DataContextViewController:: Must need set NFManagedData before needdisplay");
-			if(!this.viewModel) console.warn("DataContextViewController:: Must need set NFViewModel before needdisplay");
+			if(!this.managedData) console.warn("DataContextViewController:: Must need set ManagedData before needdisplay");
+			if(!this.viewModel) console.warn("DataContextViewController:: Must need set ViewModel before needdisplay");
 			//파라메터 두개가 존재하지 않으면 초기화 진행을 한다
 			if( (!managedData) && (!rootElement) ){
 				this.view.innerHTML= '';
-				this.bindValueNodes = new nody.NFArray();
+				this.bindValueNodes = new N.Array();
 				this.structureNodes = {};
 				this.placeholderNodes = {};
-				this.selectIndexes  = new nody.NFArray();
+				this.selectIndexes  = new N.Array();
 			}
 			managedData     = managedData || this.managedData;
 			rootElement     = rootElement || this.view;
@@ -6975,14 +6971,14 @@ if (!Array.prototype.forEach) {
 			if(selectPath.indexOf('/')  >= 0) {
 				var _  = this, __ = this.managedData;
 				selectPath = (typeof selectPath == 'string') ? selectPath : '/*';
-				return new nody.NFActiveController(this.view,function(){
+				return new N.ActiveController(this.view,function(){
 					return DATAMAP(__.querySelectData(selectPath),function(managedData){ return _.structureNodes[managedData.BindID]; },DATAFILTER);
 				},'click',function(e){
 					return CALL(allowSelect,this,e,_.getManagedDataWithNode(this));
 				},firstSelect,allowMultiSelect,allowInactive);
 			} else {
 				var _ = this;
-				return new nody.NFActiveController(this.view,selectPath,'click',function(e){
+				return new N.ActiveController(this.view,selectPath,'click',function(e){
 					return CALL(allowSelect,this,e,_.getManagedDataWithNode(this),_);
 				},firstSelect,allowMultiSelect,allowInactive);
 			}
@@ -6995,21 +6991,21 @@ if (!Array.prototype.forEach) {
 		this.view = FSINGLE(view)[0];
 		if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
 		if(managedData)this.setManagedData(managedData);
-		this.viewModel     = viewModel ? ISARRAY(viewModel) ? _NFViewModel.apply(undefined,TOARRAY(viewModel)) : viewModel : new nody.NFViewModel();
+		this.viewModel     = viewModel ? ISARRAY(viewModel) ? _ViewModel.apply(undefined,TOARRAY(viewModel)) : viewModel : new N.ViewModel();
 		
 		//바인딩 관련 인자
 		this.bindValueNodes = [];
 		this.structureNodes = {};
 		this.placeholderNodes = {};
 		
-		NFDataContextNotificationCenter.addObserver(this);
+		DataContextNotificationCenter.addObserver(this);
 		
 		//needDisplay
 		if(typeof needDisplay === "function") needDisplay = CALL(needDisplay,this);
 		if(needDisplay === true) this.needDisplay();
 	});
 	
-	nody.METHOD("CUBICBEZIERMAKE",function(x1, y1, x2, y2, epsilon){
+	N.METHOD("CUBICBEZIERMAKE",function(x1, y1, x2, y2, epsilon){
 		epsilon = (typeof epsilon === "number") ? epsilon : 1;
 		var curveX = function(t){
 				var v = 1 - t;
@@ -7059,7 +7055,7 @@ if (!Array.prototype.forEach) {
 			};
 	});
 	
-	nody.MODULE("NFCounter",{
+	N.MODULE("Counter",{
 		timeoutHandler:function(){
 			if(this._timeout)clearTimeout(this._timeout);
 			var now = (+(new Date()));
@@ -7100,7 +7096,7 @@ if (!Array.prototype.forEach) {
 		if(finish === true || ms === true || rate === true || now === true) { this.start(ms,counting,finish) }
 	});
 	
-	nody.EXTEND_MODULE("NFCounter","NFBezierCounter",{
+	N.EXTEND_MODULE("Counter","BezierCounter",{
 		setCubicBezier:function(x1,x2,y1,y2){
 			this.setCountProcessor(CUBICBEZIERMAKE(
 				(typeof x1 === "number") ? x1 : 0,
@@ -7114,7 +7110,7 @@ if (!Array.prototype.forEach) {
 		this._super(ms,counting,finish,rate,now);
 	});
 	
-	nody.MODULE("NFTimeFire",{
+	N.MODULE("TimeFire",{
 		cancel:function(withEvent){
 			if(withEvent !== false) CALL(this._whenCancle,this);
 			clearTimeout(this._timeout);
@@ -7146,7 +7142,7 @@ if (!Array.prototype.forEach) {
 			this._whenWillFire = m;
 		},
 		whenFire:function(m){
-			if(typeof m !== 'function') console.error('NFTimeFire:: Fire시 메서드가 들어오지 않았습니다.');
+			if(typeof m !== 'function') console.error('TimeFire:: Fire시 메서드가 들어오지 않았습니다.');
 			this._whenFire = m;
 		},
 		whenDidFire:function(m){
@@ -7160,14 +7156,14 @@ if (!Array.prototype.forEach) {
 		if(triggerNow === true) this.trigger();
 	});
 	
-	nody.METHOD('ATOB',function(a,b,p){
+	N.METHOD('ATOB',function(a,b,p){
 		a = TONUMBER(a);
 		b = TONUMBER(b);	
 		p = TONUMBER(p);
 		return (((b-a)/100)*p)+a;
 	});
 	
-	nody.MODULE("NFResize",{
+	N.MODULE("Resize",{
 		width:function(){
 			return this.Source.offsetWidth;
 		},
@@ -7230,7 +7226,7 @@ if (!Array.prototype.forEach) {
 	
 	
 	
-	nody.MODULE("NFTouch",{
+	N.MODULE("Touch",{
 		getPinchDistance:function(fx1,fy1,fx2,fy2){
 			return Math.sqrt(
 				Math.pow((fx1-fx2),2),
@@ -7400,7 +7396,7 @@ if (!Array.prototype.forEach) {
 		if(allowVitureTouch === true) this.setAllowVirtureTouch(true);
 	});
 	
-	nody.MODULE("NFScrollBox",{
+	N.MODULE("ScrollBox",{
 		needScrollingOffsetX:function(offset){
 			if(!this.allowScrollX || offset == 0 || (typeof offset !== 'number') ) return false;
 			var needTo = this.Source.scrollLeft + (-offset);
@@ -7617,7 +7613,7 @@ if (!Array.prototype.forEach) {
 			//
 			this.ScrollEvent = {};
 			
-			this.Touch = new nody.NFTouch(this.Source);
+			this.Touch = new N.Touch(this.Source);
 			
 			switch(direction) {
 				case 'horizontal':
@@ -7629,7 +7625,7 @@ if (!Array.prototype.forEach) {
 					this.allowScrollY = true;
 					break;
 				default :
-					if(direction !== undefined) console.warn('NFScrollBox :: direction 파라메터 영역에 알수없는 커멘드가 들어왔습니다.',direction)
+					if(direction !== undefined) console.warn('ScrollBox :: direction 파라메터 영역에 알수없는 커멘드가 들어왔습니다.',direction)
 					this.allowScrollX = true;
 					this.allowScrollY = true;
 					break;
@@ -7661,7 +7657,7 @@ if (!Array.prototype.forEach) {
 		}
 	});
 	
-	nody.EXTEND_MODULE("NFScrollBox","NFZoomBox",{
+	N.EXTEND_MODULE("ScrollBox","ZoomBox",{
 		needZoom:function(needTo){
 			needTo = TONUMBER(needTo);
 			if(needTo < this.zoomMin) needTo = this.zoomMin;
@@ -7733,7 +7729,7 @@ if (!Array.prototype.forEach) {
 		if(typeof initZoom == "number") this.needZoom(initZoom);
 	});
 	
-	nody.MODULE("NFScrollTrack",{		
+	N.MODULE("ScrollTrack",{		
 		resizeFix:function(){
 			if(this._autoScrollTrackHeight && this._autoScrollBoxSync){
 				var scrollBox = this._autoScrollBoxSync;
@@ -7789,7 +7785,7 @@ if (!Array.prototype.forEach) {
 
 		ELPUT(this.Source,this.ScrollTrack);
 
-		this.Touch = new nody.NFTouch(this.ScrollHanlde,true);
+		this.Touch = new N.Touch(this.ScrollHanlde,true);
 		this.Touch.setAllowVirtureTouch(true);
 		var _ = this;
 		this.Touch.whenTouchMove(function(x,y){
@@ -7807,4 +7803,4 @@ if (!Array.prototype.forEach) {
 	});
 	
 	
-})(window,nody.ENV);
+})(window,N.ENV);

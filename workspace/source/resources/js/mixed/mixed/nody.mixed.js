@@ -183,7 +183,7 @@
 	});
 
 	//require jQuery, Bootstrap Modal
-	nody.EXTEND_MODULE('NFTemplate','MixedBSModal',{
+	nody.EXTEND_MODULE('Template','MixedBSModal',{
 		setModalOpener:function(openButton){
 			var _ = this;
 			$(openButton).on('click',function(){
