@@ -11,7 +11,7 @@
 var CURRENT_NODY = (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	N.VERSION = "0.24.5", N.BUILD = "1101";
+	N.VERSION = "0.24.5", N.BUILD = "1102";
 	
 	// Core verison
 	N.CORE_VERSION = "1.9.3", N.CORE_BUILD = "78";
@@ -4416,7 +4416,7 @@ if (!Array.prototype.forEach) {
 		},
 		//성능의 가속을 위해 존재하는 값들입니다. 이것을 건드리면 엄청난 문제를 초례할 가능성이 있습니다.
 		__nodeDataDefaultKeys:['value','class','dataset','href','append','prepend','put','display','custom'],
-		__nodeDataAttrKeys:["nf-value", "nf-class", "nf-dataset", "nf-href", "nf-append", "nf-prepend", "nf-put", "nf-display", "nf-custom"],
+		__nodeDataAttrKeys:["nd-value", "nd-class", "nd-dataset", "nd-href", "nd-append", "nd-prepend", "nd-put", "nd-display", "nd-custom"],
 		__nodeDataSelectKeys:["[nf-value]", "[nf-class]", "[nf-dataset]", "[nf-href]", "[nf-append]", "[nf-prepend]", "[nf-put]", "[nf-display]", "[nf-custom]"],	
 		//
 		setNodeData:function(refData,dataFilter){
@@ -4519,7 +4519,7 @@ if (!Array.prototype.forEach) {
 			var fe = filter ? function(node){ return N.$is(node,filter)?f(node, param):undefined } : function(node){ return f(node, param); };
 			var r  = new N.Array(this.getSelects()).map( fe ).filter();
 			return (requireElement == true) ? r.toArray() : this;
-		},
+		},git 
 		disabled:function(status,filter){ return this.statusFunction(N.$disabled,(status !== false ? true : false),filter); },
 		readonly:function(status,filter){ return this.statusFunction(N.$readOnly,(status !== false ? true : false),filter); },
 		empty   :function(filter)       { filter = filter?filter+",:not(button):not(select)":":not(button):not(select)"; return this.statusFunction(N.$value   ,"",filter); },
@@ -6451,9 +6451,9 @@ if (!Array.prototype.forEach) {
 					switch(nodeAlias){
 						case 'bind': _.bind(name,node); break;
 						case 'action':
-							if(("nf-param" in node.attributes)) {
-								_.action(name,node,N.toObject(node.getAttribute("nf-param")));
-								node.removeAttribute("nf-param");
+							if(("nd-param" in node.attributes)) {
+								_.action(name,node,N.toObject(node.getAttribute("nd-param")));
+								node.removeAttribute("nd-param");
 							} else {
 								_.action(name,node);
 							}
