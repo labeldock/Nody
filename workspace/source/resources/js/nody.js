@@ -10,11 +10,14 @@
 (function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 	// Nody version
-	nody.version = "0.23.1", nody.build = "1088";
+	nody.version = "0.24.0", nody.build = "1090";
 	
 	// Core verison
 	nody.coreVersion = "1.9.2", nody.coreBuild = "76";
 	
+	// AMD : Requirejs
+	if (typeof define === 'function' && typeof define.amd === 'object' && define.amd) {define(function(){return nody;});};
+  
 	// Pollyfill : console object
 	if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(TOSTRING(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
 	
