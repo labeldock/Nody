@@ -32,8 +32,8 @@
 	
 	<div class='container'>
 		<hr>
-		<h3>ELON</h3>
-		<button class='elon-test-action btn btn-primary'>ELON test</button>
+		<h3>nd.$on</h3>
+		<button class='elon-test-action btn btn-primary'>nd.$on test</button>
 	</div>
 	
 	
@@ -84,19 +84,19 @@
 				</tr>
 			</thead>
 			<tbody class='make-table-body'>
-				<tr><td>MAKE('div')<td><td>
-				<tr><td>MAKE('div::foobar')<td><td>
-				<tr><td>MAKE('div','foobar')<td><td>
-				<tr><td>MAKE('input')<td><td>
-				<tr><td>MAKE('input::foobar')<td><td>
-				<tr><td>MAKE('input','foobar')<td><td>
-				<tr><td>MAKE('radio')<td><td>
-				<tr><td>MAKE('button')<td><td>
-				<tr><td>MAKE('p','foo')<td><td>
-				<tr><td>MAKES('ul>li.item[role=listitem]*3')[0]<td><td>
-				<tr><td>MAKES('ul>li.item::item-$*3')[0]<td><td>
-				<tr><td>MAKES('ul>li::item-$*3')[0]<td><td>
-				<tr><td>MAKES('dl>dt::title+dd>span::desc+span::desc2^dt+dd')[0]<td><td>
+				<tr><td>nd.make('div')<td><td>
+				<tr><td>nd.make('div::foobar')<td><td>
+				<tr><td>nd.make('div','foobar')<td><td>
+				<tr><td>nd.make('input')<td><td>
+				<tr><td>nd.make('input::foobar')<td><td>
+				<tr><td>nd.make('input','foobar')<td><td>
+				<tr><td>nd.make('radio')<td><td>
+				<tr><td>nd.make('button')<td><td>
+				<tr><td>nd.make('p','foo')<td><td>
+				<tr><td>nd.makes('ul>li.item[role=listitem]*3')[0]<td><td>
+				<tr><td>nd.makes('ul>li.item::item-$*3')[0]<td><td>
+				<tr><td>nd.makes('ul>li::item-$*3')[0]<td><td>
+				<tr><td>nd.makes('dl>dt::title+dd>span::desc+span::desc2^dt+dd')[0]<td><td>
 			</tbody>
 		</table>
 	</div>
@@ -106,35 +106,35 @@
 	<script src="resources/js/jquery-1.11.1.min.js"></script>
 	<script src="resources/js/bootstrap.min.js"></script>	
 	<script>
-		ELON('.elon-test-action','click',function(){
+		nd.$on('.elon-test-action','click',function(){
 			alert('heelo');
 		});
-		ELON('.pt-string','click',function(){
-			var temp = new NFTemplate(
+		nd.$on('.pt-string','click',function(){
+			var temp = new nd.Template(
 				'<input value="partial-string">'
 			);
 			temp.renderTo('#test1');
 		});
-		ELON('.pt-template','click',function(){
-			var temp = new NFTemplate('#test1-template');
+		nd.$on('.pt-template','click',function(){
+			var temp = new nd.Template('#test1-template');
 			temp.renderTo('#test1');
 		});
-		ELON('.pt-vtemplate','click',function(){
-			var temp = new NFTemplate('#test1-vtemplate');
+		nd.$on('.pt-vtemplate','click',function(){
+			var temp = new nd.Template('#test1-vtemplate');
 			temp.renderTo('#test1');
 		});
 		
-		ELON('.set-form-data-action','click',function(){
-			var form = new NFForm('#form-controller-form');
+		nd.$on('.set-form-data-action','click',function(){
+			var form = new nd.Form('#form-controller-form');
 			form.setFormData({
-				'name':ZSTRING('\\(Noah,Liam,Jacob,Mason,William,Ethan,Michael,Alexander,Jayden,Daniel,Elijah,Aiden,James,Benjamin,Matthew,Jackson,Logan,David,Anthony,Joseph,Joshua,Andrew,Lucas,Gabriel,Samuel,Christopher,John,Dylan,Isaac,Ryan,Nathan,Carter,Caleb,Luke,Christian,Hunter,Henry,Owen)'),
-				'desc':ZSTRING('\\(He seems to be busy.,This town has an air of prosperity.,His story has the appearance of truth.,Her explanation sounds all right.)')
+				'name':nd.exp('\\(Noah,Liam,Jacob,Mason,William,Ethan,Michael,Alexander,Jayden,Daniel,Elijah,Aiden,James,Benjamin,Matthew,Jackson,Logan,David,Anthony,Joseph,Joshua,Andrew,Lucas,Gabriel,Samuel,Christopher,John,Dylan,Isaac,Ryan,Nathan,Carter,Caleb,Luke,Christian,Hunter,Henry,Owen)'),
+				'desc':nd.exp('\\(He seems to be busy.,This town has an air of prosperity.,His story has the appearance of truth.,Her explanation sounds all right.)')
 			});
 		});
 		
-		ELON('.get-form-data-action','click',function(){
-			var form = new NFForm('#form-controller-form');
-			var formListItem = new NFTemplate(
+		nd.$on('.get-form-data-action','click',function(){
+			var form = new nd.Form('#form-controller-form');
+			var formListItem = new nd.Template(
 				'<li class=list-group-item>\
 					<h4 class=list-group-item-heading nf-value=name></h4>\
 					<p class=list-group-item-text nf-value=desc></p>\
@@ -144,14 +144,14 @@
 			);
 		});
 		
-		ELON('.make-test-action','click',function(){
-			FIND('.make-table-body tr',DATAEACH,function(){
-				var evalContent = FINDIN(this,'td:nth-child(1)',ELCONTENT);
+		nd.$on('.make-test-action','click',function(){
+			nd.find('.make-table-body tr',nd.dataEach,function(){
+				var evalContent = nd.findIn(this,'td:nth-child(1)',nd.$content);
 				
 				var result = eval(evalContent);
 				
-				FINDIN(this,'td:nth-child(2)',ELAPPEND,result);
-				FINDIN(this,'td:nth-child(3)',ELCONTENT,result.outerHTML);
+				nd.findIn(this,'td:nth-child(2)',nd.$append,result);
+				nd.findIn(this,'td:nth-child(3)',nd.$content,result.outerHTML);
 			});
 		});
 		

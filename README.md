@@ -100,7 +100,8 @@ IE8지원을 위한 코드 개발을 중단합니다. 더불어 Polyfill 코드�
   - [x] window.nody의 축약어 적용 "nd" 노드상의 nf어트리뷰트도 모두 nd로 적용.
   - [x] 모듈의 "NF" 접두어를 제거.
   - [x] Nody에 등록된 함수들의 이름이 uppercase 로 고정되는것을 제거
-  - [x] isTextNumber와 isText가 asNumber와 asNumber로 변경
+  - [x] (::is) isNok 제거, isTextNumber와 isText가 asNumber와 asString로 변경
+  
   
 ## 프로젝트의 방향 #
 본 라이브러리는 베타버전이며 아직도 많은 API들이 없어지고 생기고 있습니다.
