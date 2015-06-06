@@ -103,7 +103,7 @@ Nody는 0.24버전은 매우 불안정 합니다. 그래서 dist에 추가하지
   - [x] 모듈의 "NF" 접두어를 제거.
   - [x] Nody에 등록된 함수들의 이름이 uppercase 로 고정되는것을 제거
   - [x] ::is isNok 제거, isTextNumber와 isText가 asNumber와 asString로 변경
-  - [x] 코어 업데이트 메서드의 이름이 "++"로 시작하면 모듈 메서드로 추가됩니니다. (but super호출 불가능)
+  - [x] 코어 업데이트 : 메서드의 이름이 "++"로 시작하면 모듈 메서드로 추가됩니니다. (but super호출 불가능)
   - [x] Template에 html(string) 파셜 추가
   
   
