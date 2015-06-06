@@ -82,12 +82,13 @@ Nody는 0.24~0.25버전은 매우 불안정 할 예정입니다. 그래서 왠�
 #### 0.25 업데이트
   - [X] 메서드 디자인의 변화 map, getMap 등의 패턴이 setMap, map으로 변경
   - [X] 문자 연산 퍼포먼스를 약간 더 빠르게 함
+  - [X] node template의 컨샙을 명확히 함
+  - [X] MVVM 모듈 안정화
   - [ ] RoleComponent의 구체화
   - [ ] Timeline 개발
   - [ ] TimeProps 개발
   - [ ] 데이터와 연동이 자연스럽게 연결되는 ActiveController 업데이트
   - [ ] ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
-  - [ ] MVVM 모듈 안정화 테스트
   - [ ] 새로운 스타일시트 헬퍼 codykit적용
   - [ ] Form모듈 강화 (리모트폼 구현)
   - [ ] Touch모듈이 Pointer이벤트 모델과 비슷하게 재설계
