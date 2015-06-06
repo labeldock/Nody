@@ -76,10 +76,12 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name
   
   
 ## Nody 0.24 ~ 0.30 TODO #
-Nody는 0.24버전은 매우 불안정 합니다. 그래서 dist에 추가하지 않았습니다. 
-0.25부터 안정화와 코드정리가 좀 더 활성화 될것입니다.
+Nody는 0.24~0.25버전은 매우 불안정 할 예정입니다. 그래서 왠만하면 dist에 추가되지 않습니다. 
+0.26부터 안정화와 코드정리가 좀 더 활성화 될것입니다.
 
-#### 0.25 업데이트  
+#### 0.25 업데이트 
+  - [X] 메서드 디자인의 변화 map, getMap 등의 패턴이 setMap, map으로 변경
+  - [X] 문자 연산 퍼포먼스를 약간 더 빠르게 함
   - [ ] RoleComponent의 구체화
   - [ ] Timeline 개발
   - [ ] TimeProps 개발
