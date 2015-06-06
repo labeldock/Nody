@@ -12,10 +12,10 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.24.8", N.BUILD = "1116";
+		N.VERSION = "0.24.9", N.BUILD = "1120";
 	
 		// Core verison
-		N.CORE_VERSION = "1.9.3", N.CORE_BUILD = "78";
+		N.CORE_VERSION = "1.9.4", N.CORE_BUILD = "80";
   
 		// Pollyfill : console object
 		if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(N.toString(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
@@ -48,19 +48,28 @@
 				switch(type){
 					case "object":
 						nativeProto = {};
-						setter      = typeof sm === "function" ? function(v){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : function(v){ this.Source = v; return this; };
+						setter      = typeof sm === "function" ? 
+									  function(v){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : 
+									  function(v){ this.Source = v; return this; };
 						getter      = gm?gm:function(){return this.Source;};
 						break;
 					case "array":
 						nativeProto = [];
-						setter      = typeof sm === "function" ? sm : function(v){ return this.setSource(v); };
+						setter      = typeof sm === "function" ? 
+									  sm : 
+									  function(v){ return this.setSource(v); };
 						getter      = function(){ return this.toArray.apply(this,arguments); };
 						break;
-				
 					default: throw new Error("NativeFactoryObject :: 옳지않은 타입이 이니셜라이징 되고 있습니다. => " + type);
 				}
-				var nativeConstructor = function(){ if(typeof this.set === "function"){ 
-					for(var protoKey in NModules[name].prototype){ if(protoKey.indexOf("+") == 0) this[protoKey.substr(1)] = NModules[name].prototype[protoKey]; }; this.set.apply(this,Array.prototype.slice.apply(arguments)); } 
+				
+				var nativeConstructor = function(){ 
+					if(typeof this.set === "function"){ 
+						for(var protoKey in NModules[name].prototype) 
+							if(protoKey.indexOf("+") == 0) 
+								this[protoKey.substr(1)] = NModules[name].prototype[protoKey];
+						this.set.apply(this,Array.prototype.slice.apply(arguments)); 
+					} 
 				};
 			
 				NModules[name]               = nativeConstructor;
@@ -75,7 +84,12 @@
 				NModules[name].prototype.constructor = nativeConstructor;
 				NModules[name].prototype._super = function(){
 					//scope start
-					var currentScopeDepth,currentScopeModuleName,currentScopePrototype,currentMethodName,currentCallMethod=arguments.callee.caller,superScope = 0;
+					var currentScopeDepth,
+						currentScopeModuleName,
+						currentScopePrototype,
+						currentMethodName,
+						currentCallMethod=arguments.callee.caller,
+						superScope = 0;
 					for(scopeMax=this.__NativeHistroy__.length;superScope<scopeMax;superScope++){
 						currentScopeDepth      = (this.__NativeHistroy__.length - 1) - superScope ;
 						currentScopeModuleName = this.__NativeHistroy__[currentScopeDepth];
@@ -132,7 +146,22 @@
 						break;
 					case "set": if(setflag == true) protoObject[key] = methods[key]; break;
 					case "get": if(getflag == true) protoObject[key] = methods[key]; break;
-					default   : protoObject[key] = methods[key]; break;
+					default   :
+						if(/^\+\+[^\+]+/.test(key)){
+							var moduleMethodName = key.substr(2);
+							if(moduleMethodName) {
+								if(typeof methods[key] === "function") {
+									var moduleMethod = methods[key];
+									NModules[name][moduleMethodName] = function(){	
+										moduleMethod.apply(NModules[name],Array.prototype.slice.call(arguments));
+									};
+								} else {
+									NModules[name][moduleMethodName] = methods[key];
+								}
+							} 
+						}
+						protoObject[key] = methods[key];
+						break;
 				} }
 				return true;
 			} else {
@@ -362,15 +391,14 @@
 		}
 		N.cache.clear();
 	
-		var nody_typemap = { "string" : "isString", "number" : "isNumber", "asnumber": "asNumber", "asstring" : "asString", "array" : "isArray", "object" : "isObject", "email" : "isEmail", "ascii" : "isAscii", "true" : "isTrue", "false" : "isFalse", "nothing" : "isNothing", "ok" : "isOk", "nok" : "isNok" };
+		var nody_typemap = { "string" : "isString", "number" : "isNumber", "asnumber": "asNumber", "asstring" : "asString", "array" : "isArray", "object" : "isObject", "email" : "isEmail", "ascii" : "isAscii", "true" : "isTrue", "false" : "isFalse", "nothing" : "isNothing", "ok" : "isOk" };
 	
 		N.SINGLETON("TYPE",{
 			// // 데이터 타입 검사
 			"isUndefined": function (t) {return typeof t === "undefined" ? true : false ;},
 			"isDefined"  : function (t) {return typeof t !== "undefined" ? true : false ;},
 			"isNull"     : function (t) {return t === null ? true : false;},
-			"isNill"      : function (t) {return ((t === null) || (typeof t === "undefined")) ? true : false;},
-		
+			"isNil"      : function (t) {return ((t === null) || (typeof t === "undefined")) ? true : false;},
 			"isFunction" : function (t) {return typeof t === "function" ? true : false;},
 			"isBoolean"  : function (t) {return typeof t === "boolean"  ? true : false;},
 			"isObject"   : function (t) {return typeof t === "object"   ? true : false;},
@@ -4089,12 +4117,13 @@
 				return target;
 			},1),
 			//
-			"wrapIn":N.CONTINUE_FUNCTION(function(wrapper,target){
+			"wrap":N.CONTINUE_FUNCTION(function(target,wrapper){
 				wrapper = N.findLite(wrapper);
+				target  = N.findLite(target);
 				if(!wrapper.length) return undefined;
 				if(wrapper.length > 1) console.warn('wrapTo::wrapper select is mustbe one',wrapper);
 				wrapper = wrapper[0];
-				N.$before(target,wrapper);
+				if(target[0].parentElement) N.$before(target[0],wrapper);				
 				N.$append(wrapper,target);
 				return wrapper;
 			},1),
@@ -4397,22 +4426,14 @@
 				return findNodes;
 			},
 			"toggleClass":function(el,toggleName,flag){
-				switch(flag){
-					case true:
-						return N.$addClass(el,toggleName);
-						break;
-					case false:
-						return N.$removeClass(el,toggleName);
-						break;
-					default:
-						if(typeof toggleName==='string'){
-							var nodes = N.findLite(el);
-							N.dataEach(nodes,function(node){
-								N.$hasClass(node,toggleName) ? N.$removeClass(node,toggleName) : N.$addClass(node,toggleName);
-							});
-							return nodes;
-						}
-						break;
+				var nodes = N.findLite(el);
+				if(typeof toggleName !== 'string') return nodes;
+				if(flag===undefined) {
+					return N.dataEach(nodes,function(node){
+						N.$hasClass(node,toggleName) ? N.$removeClass(node,toggleName) : N.$addClass(node,toggleName);
+					});
+				} else {
+					return flag ? N.$addClass(el,toggleName) : N.$removeClass(el,toggleName);
 				}
 			},
 			"coords":function(nodes,coordinate,insertAbsolute,offsetX,offsetY,scale){
@@ -7092,11 +7113,16 @@
 			if(needDisplay === true) this.needDisplay();
 		});
 		
-		nd.MODULE("Component",{
-			getProp:function(){
+		nd.MODULE("RoleController",{
+			"++activeRole":function(){
+				
+			},
+			prop:function(key,value){
+				if(typeof value === "function" && typeof key === "string") return value.call(this,this._prop[key]);
+				if(typeof key === "string") return this._prop[key];
 				return this._hash;
 			},
-			getData:function(){
+			data:function(){
 				return this._data;
 			}
 		},function(target_role){
@@ -7114,8 +7140,9 @@
 							nd.extend(_self._prop,jsonData);
 						}
 					}
+					nd.$remove(scriptTag);
 				});
-				this.view.controller = this;
+				this.view.roleController = this;
 			} else {
 				console.warn(target_role, '을 찾을수 없습니다.');
 			}
