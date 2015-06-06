@@ -76,33 +76,37 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name
   
   
 ## Nody 0.24 ~ 0.30 TODO #
-Nody는 아직 설계상 문제점을 가지고 있어 수정이 더 들어갈 예정입니다.
-IE8지원을 위한 코드 개발을 중단합니다. 더불어 Polyfill 코드를 줄입니다.
+Nody는 0.24버전은 매우 불안정 합니다. 그래서 dist에 추가하지 않았습니다. 
+0.25부터 안정화와 코드정리가 좀 더 활성화 될것입니다.
 
-#### 적용예정리스트
+#### 0.25 업데이트  
+  - [ ] RoleComponent의 구체화
+  - [ ] Timeline 개발
+  - [ ] TimeProps 개발
+  - [ ] 데이터와 연동이 자연스럽게 연결되는 ActiveController 업데이트
+  - [ ] ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
+  - [ ] MVVM 모듈 안정화 테스트
+  - [ ] 새로운 스타일시트 헬퍼 codykit적용
+  - [ ] Form모듈 강화 (리모트폼 구현)
+  - [ ] Touch모듈이 Pointer이벤트 모델과 비슷하게 재설계
+  - [ ] ContentLoader의 하위모듈(3개)의 통일성이 떨어져 재설계
+  - [ ] 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
+  - [ ] 통신모듈의 재설계
   
-  - 데이터의 시간별 제어가 가능하도록 Timeline, TimeProps 모듈이 추가됩니다.
-  - 탬플릿 API사용의 직관성이 떨어진다 판단하여 Template 모듈 재설계
-  - ContentLoader의 하위모듈(3개)의 통일성이 떨어져 재설계
-  - 데이터와 연동되는 ActiveController 개발
-  - ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
-  - Form모듈 강화 (리모트폼 구현)
-  - Touch모듈이 Pointer이벤트 모델과 비슷하게 재설계
-  - 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
-  - 통신모듈의 재설계
   
 #### 0.24 업데이트
   - [x] 테스트 및 데이터압축 툴로 middleman을 사용하게 되었습니다.
   - [x] middleman으로 빌드시 자동으로 dist에 배포됩니다.
   - [x] requirejs의 AMD를 지원합니다.
-  - [ ] 새로운 스타일시트 헬퍼 codykit적용
   - [x] Nody와 관련된 객체와 함수를 window.nody에 모두 담는것을 검토.
   - [x] window.nody의 축약어 적용 "nd" 노드상의 nf어트리뷰트도 모두 nd로 적용.
   - [x] 모듈의 "NF" 접두어를 제거.
   - [x] Nody에 등록된 함수들의 이름이 uppercase 로 고정되는것을 제거
-  - [x] (::is) isNok 제거, isTextNumber와 isText가 asNumber와 asString로 변경
+  - [x] ::is isNok 제거, isTextNumber와 isText가 asNumber와 asString로 변경
+  - [x] 코어 업데이트 메서드의 이름이 "++"로 시작하면 모듈 메서드로 추가됩니니다. (but super호출 불가능)
+  - [x] Template에 html(string) 파셜 추가
   
   
 ## 프로젝트의 방향 #
-본 라이브러리는 베타버전이며 아직도 많은 API들이 없어지고 생기고 있습니다.
-현재 중점은 구체적인 UI구현부는 제거될것이고 데이터, 타이밍, 이벤트, 네트워크의 베이스코드는 강화하될 예정입니다.
+데이터를 쉽게 뷰로 구성하고 반영할 수 있도록 할것입니다.
+타이밍 이벤트, 네트워크에 대한 강화가 이루어질것입니다.
