@@ -12,7 +12,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.25.0", N.BUILD = "1123";
+		N.VERSION = "0.25.1", N.BUILD = "1124";
 	
 		// Core verison
 		N.CORE_VERSION = "1.9.4", N.CORE_BUILD = "80";
@@ -1920,16 +1920,12 @@
 			setTabsAlign:function(){ this.Source = this.tabsAlign(); return this; },
 			trimLine:function(){ return this.lineEach(function(line){ var trimText = line.trim(); return (trimText == "") ? undefined : line; }); },
 			setTrimLine:function(){ this.Source = this.trimLine(); return this; },
-			trim:function(trimParam,autoTrim){
-				original = this.Source;
-				if(autoTrim) original = this.Source.trim();
-				var trim_s = trimParam?trimParam:" ";
-				trim_s = trim_s.replace(" ","\\s");
-				return N.TRY_CATCH(function(){
-					this.Source = new RegExp("^(["+trim_s+"]*)(.*[^"+trim_s.split("|").join("^")+"])(["+trim_s+"]*)$").exec(original)[2];
-				},function(){
-					return this.Source;
-				},this);
+			trim:function(){
+				return this.Source.trim();
+			},
+			setTrim:function(){
+				this.Source = this.trim();
+				return this;
 			},
 			//content
 			abilityFunction  : function(fs,is,js){ var origin = (js==true) ? N.safeSplit(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs); if(origin[origin.length-1].trim()=="") origin.length = origin.length-1;  return new N.Array(origin).passAll(function(s,i){ return s.indexOf(is) > 0; }) ? origin.length : 0; },
@@ -2012,7 +2008,7 @@
 				}
 				return result.join(space);
 			},
-			removeModel:function(target,space){
+			setRemoveModel:function(target,space){
 				this.Source = this.removeModel(target,space);
 				return this;
 			},
@@ -2907,23 +2903,19 @@
 			},
 			//css스타일 태그를 html스타일 태그로 바꿉니다.
 			"parseTag" : N.CONTINUE_FUNCTION(function(tagProperty,attrValue){
-			
 				if(typeof tagProperty === "object"){
 					var tagText = [];
 					N.dataEach(tagProperty,function(tag){ if(N.isNode(tag)) tagText.push(tag.outerHTML); });
 					return tagText.join('');
 				}
-			
 				//TAG중첩을 지원하기 위한 것
 				if((arguments.length > 1) && (typeof attrValue === "string" || typeof attrValue === "number")) {
 					var newValue = "";
 					for(var i=1,l=arguments.length;i<l;i++) if(typeof arguments[i] !== "undefined") newValue += arguments[i];
 					attrValue = newValue;
 				} 
-			
 				//캐쉬를 이용해 잦은 표현에 대한 오버해드를 줄입니다.
 				var tagInfo,cacheName,enableCache = (typeof attrValue === "string" || typeof attrValue === "undefined") ? true : false;
-			
 				if(enableCache){
 					cacheName = tagProperty;
 					//캐쉬가 존재하면 바로 리턴
@@ -3590,34 +3582,37 @@
 			"cloneNodes":function(node){
 				return N.dataMap(N.findLite(node),function(findNode){ return findNode.cloneNode(findNode,true); });
 			},
-			//template의 컨텐츠를 복사함
-			"importTemplate":function(node,virtureRootSafe){
-				node = N.findLite(node);
-				if( node.length === 0) return undefined;
-				if( node.length !== 1 ) console.warn("importTemplate:: 한개의 노드만 복사할수 있습니다.",node);
-				node = N.dataFirst(node);
-			
-				return ('content' in node) ? N.find(document.importNode(node.content,true).childNodes) :
-					   (virtureRootSafe == true) ? N.cloneNodes(node) : N.cloneNodes(node.children);
+			"importNodes":function(node){
+				if(typeof node === "string" && /^<.+>$/.test(node)) node = N.parseHTML(node);
+				var result=[], targetNodes=N.findLite(node);
+				if( targetNodes.length === 0){
+					console.warn("importNodes::복사할 노드를 찾을 수 없습니다.",node);
+					return result;
+				}
+				N.dataEach(targetNodes,function(target){
+					if('content' in target) {
+						N.dataEach( document.importNode(target.content,true).childNodes, function(oneNode){
+							result.push(oneNode); 
+						});
+					} else {
+						result.push(target.cloneNode(true));
+					}
+				});
+				return N.findLite(result);
 			},
 			"makeSampleNode":function(node,rootExp){
-				var sampleNode;
-				if(typeof node === "string" && /^<.+>$/.test(node)){
-					sampleNode = N.importTemplate(N.makeTemplate(node));
-				} else {
-					sampleNode = N.findLite(node);
-					if(sampleNode.length === 0) console.error("makeSampleNode::해당 셀렉터로 sampleNode를 찾을 수 없습니다.",node);
+				var result, importSample = N.importNodes(node);
+				if(importSample.length === 1){
+					result = importSample[0];
+				} else if(importSample.length > 1) {
+					var newRoot = N.make(rootExp);
+					for(var i=0,l=importSample.length;i<l;i++) newRoot.appendChild(importSample[i]);
+					result = newRoot;
 				}
-				
-				if(sampleNode.length == 0) return undefined;
-				
-				if(sampleNode.length  > 1) {
-					var root = N.make(rootExp);
-					for(var i=0,l=sampleNode.length;i<l;i++) root.appendChild(sampleNode[i]);
-					return root;
-				} else {
-					return N.pushCSSExpression(sampleNode[0],rootExp);
-				}
+				return result ? (typeof rootExp === "string") ? 
+							    N.pushCSSExpression(result,rootExp) : 
+							    result : 
+				console.warn("makeSampleNode::no result from",node) ;
 			},
 			"cloneObject":function(inv){ 
 				if(typeof inv === "object"){ var result = {}; for(var k in inv) result[k] = inv[k]; return result; } return N.toObject(inv); 
@@ -4276,7 +4271,7 @@
 				var findNodes = N.findLite(node);
 				if(typeof removeClass !== "string") return findNodes;
 				for(var i=0,l=findNodes.length;i<l;i++) {
-					var didRemoveClassText = N.$.CommonString.set(findNodes[i].getAttribute("class")).removeModel(removeClass).trim();
+					var didRemoveClassText = N.$.CommonString.set(findNodes[i].getAttribute("class")).setRemoveModel(removeClass).trim();
 					if( !didRemoveClassText.length ) {
 						findNodes[i].removeAttribute("class");
 					} else {
@@ -4428,7 +4423,7 @@
 	
 		N.EXTEND_MODULE("Query","Template",{
 			clone    : function(nodeData,dataFilter){ 
-				return new N.Template(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter),true); 
+				return new N.Template(this.initNode,nodeData,(dataFilter || this._persistantDataFilter),true); 
 			},
 			clones:function(nodeDatas,dataFilter){
 				nodeDatas  = N.toArray(nodeDatas);
@@ -4550,17 +4545,17 @@
 				if(typeof data === 'object') this.each(function(node){ (new N.Form(node)).setFormData(data); }); return this; 
 			},
 			reset : function(nodeData,dataFilter){
-				if (this.TemplateNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
-				if (this.TemplateNode.length > 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
-				this.setSource(N.importTemplate(this.TemplateNode,true));
+				if (this.initNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
+				if (this.initNode.length > 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
+				
+				this.setSource(N.cloneNodes(this.initNode));
 				if(typeof nodeData == "object") this.setNodeData(nodeData,dataFilter);
 				return this;
 			}
 		},function(node,nodeData,dataFilter,beRender){
-			this.initNode      = node;
-			this.TemplateNode  = N.makeSampleNode(node);
+			this.initNode = N.makeSampleNode(node);
 			
-			if(this.TemplateNode){
+			if(this.initNode){
 				if(dataFilter) this.setDataFilter(dataFilter);
 				if(nodeData === true || dataFilter === true || beRender === true) this.reset(nodeData,dataFilter);
 			}
@@ -4601,7 +4596,7 @@
 				var r = this.statusFunction(function(node,param){
 					var classes = N.$attr(node,"class");
 					if(typeof classes === "string"){
-						classes = (new N.String(classes)).removeModel(eval("/^"+param+"/"));
+						classes = (new N.String(classes)).setRemoveModel(eval("/^"+param+"/"));
 						N.$attr(node,"class",classes);
 						return node;
 					}

@@ -29,7 +29,7 @@
   </div>
 </div>
 <template id="mvvm-ul" hidden>
-	<ul nf-placeholder></ul>
+	<ul nd-placeholder></ul>
 </template>
 <template id="mvvm-list" hidden>
 	<li>
@@ -39,19 +39,19 @@
 					<td class="in-set-sm">
 						<div class="inline-box green">
 							<div>
-								<input class="full-width" nf-bind="title">
+								<input class="full-width" nd-bind="title">
 							</div>
 							<div>
-								<input class="full-width" nf-bind="description" placeholder="Description">
+								<input class="full-width" nd-bind="description" placeholder="Description">
 							</div>
-							<button nf-action="up"><span class="glyphicon glyphicon-arrow-up"></span></button>
-							<button nf-action="down"><span class="glyphicon glyphicon-arrow-down"></span></button>
-							<button nf-action="append" nf-param="title:New Item">
+							<button nd-action="up"><span class="glyphicon glyphicon-arrow-up"></span></button>
+							<button nd-action="down"><span class="glyphicon glyphicon-arrow-down"></span></button>
+							<button nd-action="append" nd-param="title:New Item">
 								<span class="glyphicon glyphicon-plus"></span>
 							</button>
 						</div>
 					</td>
-					<td nf-placeholder></td>
+					<td nd-placeholder></td>
 				</tr>
 			</tbody>
 		</table>
@@ -59,8 +59,8 @@
 </template>
 <template id="mvvm-td" hidden>
 	<div class="inline-box blue">
-		<input class="full-width" nf-bind="title">
-		<button nf-action="delete">
+		<input class="full-width" nd-bind="title">
+		<button nd-action="delete">
 			<span class="span glyphicon glyphicon-trash"></span>
 		</button>
 	</div>

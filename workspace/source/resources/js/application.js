@@ -6,7 +6,7 @@ var GNBNFContentLoader = new nd.ContentLoader("main",function(){
 	return this.needActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
 		return GNBNFContentLoader.active((this.textContent || this.innerText).toLowerCase());
-	},0).injectSelects(function(accessData,node){
+	},1).injectSelects(function(accessData,node){
 		//navigation data
 		var name = (node.textContent || node.innerText).toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
@@ -91,7 +91,7 @@ GNBNFContentLoader.whenLoad("mvvm",function(){
 	//뷰를 그리고 이벤트를 등록함
     var listViewController = new nd.Presentor("#listContainer",dataContext.getRootManagedData(),viewModel);
 	listViewController.dataDidChange = function(){
-		var xmpText = dataContext.getJSONString().replace(/\:\[/,":[\n\t").replace(/\}\]\}\,(\s|)/g,"}]},\n\t").replace("]}]}","]}\n]}");
+		var xmpText = dataContext.JSONString().replace(/\:\[/,":[\n\t").replace(/\}\]\}\,(\s|)/g,"}]},\n\t").replace("]}]}","]}\n]}");
 		mvvmXMP.text(xmpText);
 	}
 	listViewController.dataDidChange();
@@ -166,7 +166,7 @@ GNBNFContentLoader.whenLoad("viewmodel",function(){
 	$("#view-type button").eq(1).trigger("click");
 	
 	$("#view-data-2").click(function(){
-		$("#viewmodel-modal").find("#viewmodel-modal-data").text(viewNFDataContext.getJSONString());
+		$("#viewmodel-modal").find("#viewmodel-modal-data").text(viewNFDataContext.JSONString());
 		$("#viewmodel-modal").modal();
 	});
 	
@@ -300,10 +300,10 @@ GNBNFContentLoader.whenLoad("scroll",function(){
 var somenode = nd.make("div#one.two.three",nd.make("ul.list",nd.make("li.item"),nd.make("li.item"),nd.make("li.item")));
 var testset = [
 function(){
-nd.importNode( document.querySelectorAll("template#test")[0] );
+nd.importNodes( document.querySelectorAll("template#test")[0] );
 },
 function(){
-nd.importNode( $("template#test")[0] );
+nd.importNodes( $("template#test")[0] );
 },
 function(){
 $("<div id='one' class='two three' />").append(
@@ -341,10 +341,10 @@ new nd.Template(
 )
 },
 function(){
-nd.importNode( nd.find("template#test",0) );
+nd.importNodes( nd.find("template#test",0) );
 },
 function(){
-nd._Template("template#test").get();
+nd.makes("div#one.two.three>ul.list>li.item[data-alias=item]*3")
 }
 ]
 GNBNFContentLoader.whenLoad("speedtest",function(){
