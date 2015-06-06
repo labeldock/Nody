@@ -36,7 +36,7 @@ nd.find('ul li',jQuery).attr('role','list-item');  // => [li[role=list-item]]
 ```javascript
 nd.makes('ul#ul','body');
 
-var temp = new nd.Template('<li nf-class="index" nf-value="item-value"></li>');
+var temp = new nd.Template('<li nd-class="index" nd-value="item-value"></li>');
 	temp.renderTo('#ul',
 		[
 			{'index':'index1','item-value':'A'},
@@ -53,8 +53,8 @@ nd.makes('div#placeholder-$*2','body');
 
 var dataContext = new nd.DataContext({name:'hello world'});
 
-new nd.Presentor('#placeholder-1',dataContext,['<input type="text" nf-bind="name">'],true);
-new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nf-bind="name">'],true);
+new nd.Presentor('#placeholder-1',dataContext,['<input type="text" nd-bind="name">'],true);
+new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name">'],true);
 ```
 
 ```

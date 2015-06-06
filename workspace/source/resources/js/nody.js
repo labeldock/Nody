@@ -12,7 +12,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.25.1", N.BUILD = "1124";
+		N.VERSION = "0.25.1", N.BUILD = "1125";
 	
 		// Core verison
 		N.CORE_VERSION = "1.9.4", N.CORE_BUILD = "80";
@@ -3452,9 +3452,7 @@
 				}	
 			},1),
 			"makes":N.CONTINUE_FUNCTION(function(fulltag,root){
-				var makeRoot   = N.find(root,0);
-				var incomeRoot = !!makeRoot;
-				if(!incomeRoot) makeRoot = N.make('div');
+				var makeRoot   = N.make('div');
 			
 				var divideIndex = fulltag.indexOf(">");
 			
@@ -3482,9 +3480,8 @@
 			
 				var multiMake    = currentTag.split(/\+|\,/);
 				var multiMakeEnd = currentTag.split(/\+|\,/).length-1;
-			
-			
-				N.dataEach(multiMake,function(eachtag,eachtagIndex){
+				
+				N.dataEach(multiMake,function(eachtag,eachTagIndex){
 					///////////////
 					var repeat = 1;
 					//repeat
@@ -3492,14 +3489,13 @@
 						repeat = parseInt(s.substr(1)); return "";
 					});
 					//generate
-					var findroot = N.findLite(root)[0];
 					N.times(repeat,function(i){
 						var rtag     = eachtag.replace("$",i+1);
 						var rtagNode = N.make(rtag);
 					
 						makeRoot.appendChild(rtagNode);
 					
-						if(eachtagIndex == multiMakeEnd) {
+						if(eachTagIndex == multiMakeEnd) {
 							if(nextTag.length > 0) N.makes(nextTag,rtagNode);
 							if(nextCursor){
 								var findRoot = makeRoot;
@@ -3515,7 +3511,13 @@
 						}
 					});
 				});
-				return N.toArray(makeRoot.children);
+				
+				var makes = N.toArray(makeRoot.children);
+				if(root){
+					var targetRoot = N.findLite(root)[0];
+					if(targetRoot) for(var i=0,l=makes.length;i<l;i++) targetRoot.appendChild(makes[i]);
+				}
+				return makes;
 			},1),
 			// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 			"makeCol":function(){ 
@@ -6368,7 +6370,7 @@
 			clone:function(){
 				var init = this.Source.clone();
 				for(var i=0,l=arguments.length;i<l;i++) if( arguments[i] ) init[i] = arguments[i];
-				return _ViewModel.apply(undefined,init.toArray());
+				return nd._ViewModel.apply(undefined,init.toArray());
 			}
 		},function(renderDepth){
 			//tempate 타겟을 설정
@@ -6960,7 +6962,7 @@
 			this.view = N.findLite(view)[0];
 			if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
 			if(managedData)this.setManagedData(managedData);
-			this.viewModel     = viewModel ? N.isArray(viewModel) ? _ViewModel.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
+			this.viewModel     = viewModel ? N.isArray(viewModel) ? nd._ViewModel.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
 		
 			//바인딩 관련 인자
 			this.bindValueNodes = [];
