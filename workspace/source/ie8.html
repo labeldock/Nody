@@ -47,7 +47,7 @@
 		<button class='btn btn-success pt-template'>Partial template</button>
 		<button class='btn btn-warning pt-vtemplate'>Partial vitrue template</button>
 		<template id='test1-template'><input value='made in template'></template>
-		<div id='test1-vtemplate' class='hidden'><input value='made in vtemplate'></div>
+		<div class='hidden'><input id='test1-vtemplate' value='made in vtemplate'></div>
 	</div>
 	
 	
@@ -136,8 +136,8 @@
 			var form = new nd.Form('#form-controller-form');
 			var formListItem = new nd.Template(
 				'<li class=list-group-item>\
-					<h4 class=list-group-item-heading nf-value=name></h4>\
-					<p class=list-group-item-text nf-value=desc></p>\
+					<h4 class=list-group-item-heading nd-value=name></h4>\
+					<p class=list-group-item-text nd-value=desc></p>\
 				</li>');
 			formListItem.renderTo('.get-from-data-list',
 				form.getFormData()

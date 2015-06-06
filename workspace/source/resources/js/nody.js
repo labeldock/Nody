@@ -12,7 +12,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.25.0", N.BUILD = "1122";
+		N.VERSION = "0.25.0", N.BUILD = "1123";
 	
 		// Core verison
 		N.CORE_VERSION = "1.9.4", N.CORE_BUILD = "80";
@@ -4541,8 +4541,14 @@
 			setDataFilter:function(dataFilter){ if(typeof dataFilter === 'object') this._persistantDataFilter = dataFilter; return this; },
 			removeDataFilter:function(){ delete this['_persistantDataFilter']; return this; },
 			//name base form data
-			getFormData:function(){ return N.inject(this,function(inj,node){ N.extend(inj,(new N.Form(node)).getFormData()) }); },
-			setFormData:function(data){ if(typeof data === 'object') this.each(function(node){ (new N.Form(node)).setFormData(data); }); return this; },
+			getFormData:function(){ 
+				return N.inject(this,function(inj,node){
+					N.extend(inj,(new N.Form(node)).getFormData()); 
+				}); 
+			},
+			setFormData:function(data){ 
+				if(typeof data === 'object') this.each(function(node){ (new N.Form(node)).setFormData(data); }); return this; 
+			},
 			reset : function(nodeData,dataFilter){
 				if (this.TemplateNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
 				if (this.TemplateNode.length > 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);

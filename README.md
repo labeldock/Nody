@@ -107,7 +107,7 @@ Nody는 0.24~0.25버전은 매우 불안정 할 예정입니다. 그래서 왠�
   - [x] ::is isNok 제거, isTextNumber와 isText가 asNumber와 asString로 변경
   - [x] 코어 업데이트 : 메서드의 이름이 "++"로 시작하면 모듈 메서드로 추가됩니니다. (but super호출 불가능)
   - [x] Template에 html(string) 파셜 추가
-  - (+28kb)
+  - (+28kb:329)
   
   
 ## 프로젝트의 방향 #
