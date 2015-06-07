@@ -12,7 +12,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.25.1", N.BUILD = "1125";
+		N.VERSION = "0.25.2", N.BUILD = "1127";
 	
 		// Core verison
 		N.CORE_VERSION = "1.9.4", N.CORE_BUILD = "80";
@@ -655,9 +655,10 @@
 			// 각각의 값의 function실행
 			"dataEach"    :N.CONTINUE_FUNCTION(function(v,f){ var ev=N.toArray(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
 			// 각각의 값의 function실행
-			"dataReverseEach":N.CONTINUE_FUNCTION(function(v,f){ var ev=N.toArray(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
+			"dataReverseEach":N.CONTINUE_FUNCTION(function(v,f){ var ev=N.toArray(v); for(var i=ev.length-1;i>-1;i--) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
 			// 각각의 값을 배열로 다시 구해오기
 			"dataMap"     :N.CONTINUE_FUNCTION(function(v,f){ var rv=[],ev=N.toArray(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
+			"dataReverseMap"     :N.CONTINUE_FUNCTION(function(v,f){ var rv=[],ev=N.toArray(v); for(var i=this.length-1;i>-1;i--) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
 			//
 			"inject":function(v,f,d){ d=(typeof d=="object"?d:{});v=N.toArray(v); for(var i=0,l=v.length;i<l;i++)f(d,v[i],i);return d;},
 			// 배열안의 배열을 풀어냅니다.
@@ -1489,9 +1490,9 @@
 		// NodyArray
 		N.ARRAY_MODULE("Array",{
 			// 요소 각각에 형식인수를 넘기며 한번씩 호출한다.
-			each     : function(block) { for ( var i = 0, l = this.length ; i < l  ; i++) { if( block(this[i],i) == false ) break; } return this; },
+			each     : function(block) { for ( var i=0,l=this.length;i<l;i++) { if( block(this[i],i) == false ) break; } return this; },
 			// each의 반대 동작
-			eachBack : function(block) { for ( var i = this.length - 1    ; i > -1 ; i--) { if( block(this[i],i) == false ) break; } return this; },
+			eachBack : function(block) { for ( var i=this.length-1;i>-1;i--) { if( block(this[i],i) == false ) break; } return this; },
 			// key배열 습득
 			keys  : objectCommonInterface.keys,
 			//첫번째 요소 반환.
@@ -3452,8 +3453,8 @@
 				}	
 			},1),
 			"makes":N.CONTINUE_FUNCTION(function(fulltag,root){
-				var makeRoot   = N.make('div');
-			
+				var makeRoot    = N.make('div');
+				var hasTemplate = (fulltag.toLowerCase().indexOf("template") > -1)?true:false;
 				var divideIndex = fulltag.indexOf(">");
 			
 				if(divideIndex>0) {
@@ -3513,10 +3514,21 @@
 				});
 				
 				var makes = N.toArray(makeRoot.children);
+				
+				if(hasTemplate){
+					N.dataEach(N.find("template",makeRoot),function(template){
+						if(!("content" in template)) template.content = document.createDocumentFragment();
+						N.dataEach(N.toArray(template.childNodes),function(childNode){
+							template.content.appendChild(childNode);
+						});
+					});
+				}
+				
 				if(root){
 					var targetRoot = N.findLite(root)[0];
 					if(targetRoot) for(var i=0,l=makes.length;i<l;i++) targetRoot.appendChild(makes[i]);
 				}
+				
 				return makes;
 			},1),
 			// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
@@ -3585,7 +3597,17 @@
 				return N.dataMap(N.findLite(node),function(findNode){ return findNode.cloneNode(findNode,true); });
 			},
 			"importNodes":function(node){
-				if(typeof node === "string" && /^<.+>$/.test(node)) node = N.parseHTML(node);
+				if(typeof node === "string") {
+					node = node.trim();
+					console.log("parse node = ",node);
+					if(/^<.+>$/.test(node)){
+						node = N.parseHTML(node);
+					} else if(/^\#[\w\-]+$/.test(node)) {
+						node = N.findLite(node);
+					} else {
+						node = N.makes(node);
+					}
+				}
 				var result=[], targetNodes=N.findLite(node);
 				if( targetNodes.length === 0){
 					console.warn("importNodes::복사할 노드를 찾을 수 없습니다.",node);

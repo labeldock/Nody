@@ -87,7 +87,7 @@ GNBNFContentLoader.whenLoad("mvvm",function(){
 	
 	//뷰를 그리는 방법을 정의
 	var itemIndex = 10;
-	var viewModel = new nd.ViewModel("template#mvvm-ul","template#mvvm-list","template#mvvm-td");
+	var viewModel = new nd.ViewModel("#mvvm-ul","#mvvm-list","#mvvm-td");
 	//뷰를 그리고 이벤트를 등록함
     var listViewController = new nd.Presentor("#listContainer",dataContext.getRootManagedData(),viewModel);
 	listViewController.dataDidChange = function(){
@@ -300,10 +300,10 @@ GNBNFContentLoader.whenLoad("scroll",function(){
 var somenode = nd.make("div#one.two.three",nd.make("ul.list",nd.make("li.item"),nd.make("li.item"),nd.make("li.item")));
 var testset = [
 function(){
-nd.importNodes( document.querySelectorAll("template#test")[0] );
+nd.importNodes( document.querySelectorAll("#test")[0] );
 },
 function(){
-nd.importNodes( $("template#test")[0] );
+nd.importNodes( $("#test")[0] );
 },
 function(){
 $("<div id='one' class='two three' />").append(
@@ -341,7 +341,7 @@ new nd.Template(
 )
 },
 function(){
-nd.importNodes( nd.find("template#test",0) );
+nd.importNodes( nd.find("#test",0) );
 },
 function(){
 nd.makes("div#one.two.three>ul.list>li.item[data-alias=item]*3")

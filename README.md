@@ -82,6 +82,9 @@ Nody는 0.24~0.25버전은 매우 불안정 할 예정입니다. 그래서 왠�
   - [X] 메서드 디자인의 변화 map, getMap 등의 패턴이 setMap, map으로 변경
   - [X] 문자 연산 퍼포먼스를 약간 더 빠르게 함
   - [X] node template의 컨샙을 명확히 함
+  - [X] nd.makes에서 template태그를 제대로 지원합니다.
+  - [X] Template모듈 초기화시 좀 더 다양하고 합리적인 방법으로 만들수 있게 하였습니다.
+  - [X] node template의 컨샙을 명확히 함
   - [X] MVVM 모듈 안정화
   - [ ] RoleComponent의 구체화
   - [ ] Timeline 개발
