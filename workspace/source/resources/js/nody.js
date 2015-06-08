@@ -12,10 +12,10 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.25.2", N.BUILD = "1127";
+		N.VERSION = "0.25.3", N.BUILD = "1129";
 	
 		// Core verison
-		N.CORE_VERSION = "1.9.4", N.CORE_BUILD = "80";
+		N.CORE_VERSION = "1.9.4", N.CORE_BUILD = "82";
   
 		// Pollyfill : console object
 		if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(N.toString(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
@@ -148,17 +148,12 @@
 					case "get": if(getflag == true) protoObject[key] = methods[key]; break;
 					default   :
 						if(/^\+\+[^\+]+/.test(key)){
-							var moduleMethodName = key.substr(2);
-							if(moduleMethodName) {
-								if(typeof methods[key] === "function") {
-									var moduleMethod = methods[key];
-									NModules[name][moduleMethodName] = function(){	
-										moduleMethod.apply(NModules[name],Array.prototype.slice.call(arguments));
-									};
-								} else {
-									NModules[name][moduleMethodName] = methods[key];
-								}
-							} 
+							(function(moduleMethodName,setValue){
+								if(moduleMethodName)
+									NModules[name][moduleMethodName] = (typeof setValue === "function") ?
+							 	   		function(){ return setValue.apply(NModules[name],Array.prototype.slice.call(arguments)); } :
+										setValue ;
+							}(key.substr(2),methods[key]));
 						}
 						protoObject[key] = methods[key];
 						break;
@@ -542,7 +537,7 @@
 		N.TYPE.EACH_TO_METHOD();
 	
 		//퍼포먼스를 위해 바깥쪽에 꺼내놓았음
-		var cloneArray = function(v) { 
+		var CLONE_ARRAY = function(v) { 
 			if( N.isArray(v) ) { 
 				if("toArray" in v){ 
 					return Array.prototype.slice.apply(v.toArray()); 
@@ -556,7 +551,7 @@
 			return [];
 		}
 		//이미 배열인경우에는 그대로 리턴해준다.
-		var toArray = function(t,s){
+		var TO_ARRAY = function(t,s){
 			if(typeof t === "object") if(N.isArray(t)) {
 				if( (t instanceof NodeList) ||  (t instanceof HTMLCollection) ) return N.cloneArray(t);
 				return t;
@@ -575,9 +570,9 @@
 			"CALL"    :function(f,owner){ return (typeof f === "function") ? ((arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner)) : undefined; },
 			"CALLBACK":function(f,owner){ return (typeof f === "function") ? ((arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner)) : f; },
 			//배열이 아니면 배열로 만들어줌
-			"toArray":toArray,
+			"toArray":TO_ARRAY,
 			//배열이든 아니든 무조건 배열로 만듬
-			"cloneArray":cloneArray,
+			"cloneArray":CLONE_ARRAY,
 			//배열안에 배열을 길이만큼 추가
 			"arrays":function(l) { l=N.toNumber(l);var aa=[];for(var i=0;i<l;i++){ aa.push([]); }return aa; },
 			//숫자로 변환합니다. 디폴트 값이나 0으로 반환합니다.
@@ -4721,7 +4716,7 @@
 			}
 		});
 	
-		N.MODULE("ActiveStatus",{
+		N.MODULE("ViewStatus",{
 			whenAnyWillActive  :function(m)  { this.StatusEvents.AnyWillActive = m; },
 			whenAnyDidActive   :function(m)  { this.StatusEvents.AnyDidActive = m; },
 			whenAnyWillInactive:function(m)  { this.StatusEvents.AnyWillInactive = m; },
@@ -4745,7 +4740,7 @@
 					}
 				}
 			},
-			setActiveStatus:function(status,param,owner){
+			setViewStatus:function(status,param,owner){
 				var _ = this;
 				param = N.toArray(param);
 				if( !this.ActiveKeys.has(status) ){
@@ -4773,8 +4768,19 @@
 					}
 				}
 			},
-			getActiveStatus:function(){
+			getViewStatus:function(){
 				return this.ActiveKeys.join(" ");
+			},
+			isViewStatus:function(k){
+				return this.ActiveKeys.has(k);
+			},
+			viewStatusTo:function(status){
+				if(typeof name === 'string') this.setViewStatus(status,Array.prototype.slice.call(arguments,1),this);
+			},
+			addViewStatus:function(key,val){
+				if(!key)return;
+				if(typeof key !== 'object') return this.whenDidActive(key,val);
+				for(var k in key) this.addViewStatus(k,key[k]);
 			}
 		},function(allowMulti,allowInactive){
 			lastll = this;
@@ -4795,25 +4801,7 @@
 			this.ActiveKeys = new N.Array();
 		});
 	
-		N.EXTEND_MODULE("ActiveStatus","FormController",{
-			isStatus:function(k){
-				return this.ActiveKeys.has(k);
-			},
-			statusReset:function(status){
-				if(typeof name === 'string'){
-					this.ActiveKeys.setRemove(name);
-					this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
-				}
-			},
-			statusTo:function(status){
-				if(typeof name === 'string') 
-					this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
-			},
-			addStatus:function(key,val){
-				if(!key)return;
-				if(typeof key !== 'object') return this.whenDidActive(key,val);
-				for(var k in key) this.addStatus(k,key[k]);
-			},
+		N.EXTEND_MODULE("ViewStatus","FormController",{
 			setFormData:function(data,v2){
 				return this.FormControl.checkin(data,v2);
 			},
@@ -4823,12 +4811,12 @@
 			find:function(){
 				return this.FormControl.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
 			}
-		},function(context,statusProp,helper){
-			this.view = N.findLite(context)[0];
+		},function(targetForm,statusProp,helper){
+			this.view = N.findLite(targetForm)[0];
 			if(this.view){
 				this.FormControl = N._Form(this.view);
 				this._super(false,true);
-				if(statusProp) this.addStatus(statusProp);
+				if(statusProp) this.addViewStatus(statusProp);
 			
 				if(typeof helper === 'function') helper = {init:helper};
 				var _ = this;
@@ -4849,7 +4837,62 @@
 					}
 				});
 			} else {
-				console.warn('FormController에 view를 정상적으로 로드할수 없었습니다.',context,this.view);
+				console.warn('FormController에 view를 정상적으로 로드할수 없었습니다.',targetForm,this.view);
+			}
+		});
+		
+		nd.EXTEND_MODULE("ViewStatus","RoleController",{
+			"++findRole":function(findwhere,rolename){
+				var activeRolename, findwhere = N.find(findwhere), _prototype = this.prototype;
+				
+				//rolename
+				if(typeof rolename === "string") activeRolename = rolename;
+				if (!activeRolename) {
+					var nativeName   = _prototype.__NativeHistroy__[_prototype.__NativeHistroy__.length-1];
+					var nativePrefix = /^[A-Z]+/.exec(nativeName), nativePrefix = (nativePrefix) ? nativePrefix[0] : null;
+					activeRolename = nativePrefix ? 
+					(nativePrefix[nativePrefix.length-1] + nativeName.substr(nativePrefix.length)).toLowerCase() :
+					nativeName.toLowerCase();
+				}
+				
+				return N.find("[role~="+activeRolename+"]",findwhere);
+			},
+			"++findRoleAndActive":function(findwhere,rolename,props,data){
+				return N.dataEach(this.findRole(findwhere,rolename),function(targetRole){
+					_prototype.__SelfModuleInit__(targetRole,props,data);
+				});
+			},
+			prop:function(key,value){
+				if(typeof value === "function" && typeof key === "string") return value.call(this,this._prop[key]);
+				if(typeof key === "string") return this._prop[key];
+				return this._hash;
+			},
+			data:function(){
+				return this._data;
+			}
+		},function(target_role,props,data){
+			this.view = nd.find(target_role,0);
+			
+			if(this.view){
+				this._super(false,true);
+				this._prop = new nd.Object(props);
+				this._data = new nd.Array(data);
+				
+				var _self = this;
+				nd.find('script[type*=json]', this.view ,nd.dataEach ,function(scriptTag){
+					var jsonData = nd.$value(scriptTag);
+					if( nd.is(jsonData,"object") ){
+						if( nd.is(jsonData,"array") ) {
+							_self._data.append(jsonData);
+						} else {
+							nd.extend(_self._prop,jsonData);
+						}
+					}
+					nd.$remove(scriptTag);
+				});
+				this.view.roleController = this;
+			} else {
+				console.warn(target_role, '을 찾을수 없습니다.');
 			}
 		});
 	
@@ -6022,7 +6065,7 @@
 			needFormController:function(target){
 				if(!target || typeof target === 'object') {
 					if(!this._globalFormController) this._globalFormController = new N.FormController(this.view);
-					this._globalFormController.addStatus(target);
+					this._globalFormController.addViewStatus(target);
 					return this._globalFormController;
 				}
 				if(!(typeof target === 'string' || typeof target === 'number')) return console.error('문자열 타겟이 아니면 폼컨트롤러를 반환할수 없습니다.');
@@ -6997,41 +7040,6 @@
 			if(typeof needDisplay === "function") needDisplay = N.CALL(needDisplay,this);
 			if(needDisplay === true) this.needDisplay();
 		});
-		
-		nd.MODULE("RoleController",{
-			"++activeRole":function(){
-				
-			},
-			prop:function(key,value){
-				if(typeof value === "function" && typeof key === "string") return value.call(this,this._prop[key]);
-				if(typeof key === "string") return this._prop[key];
-				return this._hash;
-			},
-			data:function(){
-				return this._data;
-			}
-		},function(target_role){
-			this.view = nd.find(target_role,0);
-			this._prop = new nd.Object();
-			this._data = new nd.Array();
-			if(this.view){
-				var _self = this;
-				nd.find('script[type*=json]', this.view ,nd.dataEach ,function(scriptTag){
-					var jsonData = nd.$value(scriptTag);
-					if( nd.is(jsonData,"object") ){
-						if( nd.is(jsonData,"array") ) {
-							_self._data.append(jsonData);
-						} else {
-							nd.extend(_self._prop,jsonData);
-						}
-					}
-					nd.$remove(scriptTag);
-				});
-				this.view.roleController = this;
-			} else {
-				console.warn(target_role, '을 찾을수 없습니다.');
-			}
-		});
 	
 		N.METHOD("makeCubicbezier",function(x1, y1, x2, y2, epsilon){
 			epsilon = (typeof epsilon === "number") ? epsilon : 1;
@@ -7250,584 +7258,6 @@
 			
 				N.$on(window,'resize',this.Handler);
 			}
-		});
-	
-	
-	
-		N.MODULE("Touch",{
-			getPinchDistance:function(fx1,fy1,fx2,fy2){
-				return Math.sqrt(
-					Math.pow((fx1-fx2),2),
-					Math.pow((fy1-fy2),2)
-				)
-			},
-			setAllowVirtureTouch:function(flag,scaleWheel){
-				if(!this.AllowVirtureTouch && flag) {
-					this.AllowVirtureTouch = true;
-					var wasStart = false;
-					var startSource = this.Source;
-					var endSource   = this.AllowOuterEvent ? document.body : this.Source;
-					N.$on(startSource,"mousedown",function(e){
-						wasStart = true;
-						e.preventDefault();
-						N.$trigger(startSource,"touchstart",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
-					})
-					N.$on(endSource,"mousemove",function(e){
-						if(wasStart) {
-							e.preventDefault();
-							N.$trigger(endSource,"touchmove",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
-						}
-					});
-					N.$on(endSource,"mouseup",function(e){
-						wasStart = false;
-						e.preventDefault();
-						N.$trigger(endSource,"touchend",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
-					});
-					if(this.AllowOuterEvent == false) {
-						N.$on(startSource,"mouseout",function(e){
-							if(e.target == e.currentTarget) {
-								wasStart = false;
-								e.preventDefault();
-								N.$trigger(startSource,"touchend",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
-							}
-						});
-					}
-					this.AllowVirtureTouchScale = !!scaleWheel;
-					if(this.AllowVirtureTouchScale) {
-						var _ = this;
-						N.$on(startSource,'mousewheel',function(e){
-							e.preventDefault();
-							N.CALL(_.GestureListener["pinch"],this,e.wheelDelta/1500);
-						});
-					}
-				}
-			},
-			applyTouchEvent:function(flag){
-				if(typeof flag !== "boolean") return;
-				if(typeof this._applyTouchEvent === "undefined") {
-					var _ = this;
-					//touch start
-					this._currentTouchStartEvent = function(e){
-					
-						if (_.GestureListener["pinch"] && (e.touches.length === 2)) {
-							e.stopPropagation();
-							e.preventDefault();
-							_.StartPinchValue = _.getPinchDistance(
-								 e.touches[0].pageX,
-								 e.touches[0].pageY,
-								 e.touches[1].pageX,
-								 e.touches[1].pageY
-							);
-							N.CALL(_.GestureListener["pinchStart"],_.Source,e);
-							return;
-						}
-						if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
-							e.stopPropagation();
-							_.StartTouchMoveX = _.TouchMoveX = e.touches[0].pageX;
-							_.StartTouchMoveY = _.TouchMoveY = e.touches[0].pageY;
-						}
-						if (_.GestureListener["touchStart"] && (e.touches.length === 1)) {
-							e.stopPropagation();
-							N.CALL(_.GestureListener["touchStart"],_.Source,e.touches[0].pageX,e.touches[0].pageY,e);
-						}
-					
-					};
-					//touch move
-					this._currentTouchMoveEvent = function(e){
-						//2 _
-						if(_.GestureListener["pinch"] && _.StartPinchValue && (e.touches.length === 2)){
-							if(!_.AllowPinch) return;
-							e.stopPropagation();
-							e.preventDefault();
-							var currentDistance = _.getPinchDistance(
-								 e.touches[0].pageX,
-								 e.touches[0].pageY,
-								 e.touches[1].pageX,
-								 e.touches[1].pageY
-							);
-							N.CALL(_.GestureListener["pinch"],_.Source,-((_.StartPinchValue / currentDistance) - 1))
-						}
-						//핀치시에는 이벤트를 초기화함
-						if(_.StartPinchValue) {
-							_.StartTouchMoveX = _.TouchMoveX = undefined;
-							_.StartTouchMoveY = _.TouchMoveY = undefined;
-							return;
-						}
-					
-						//1 _
-						if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
-							//시작한 터치무브가 존재하지 않을경우에는 작동되지 않음 (바깥쪽 이벤트가 Touch끼리 서로 섞이지 않게 하기 위함)
-							if(_.StartTouchMoveX === undefined) return;
-						
-							var moveX = e.touches[0].pageX - _.TouchMoveX;
-							var moveY = e.touches[0].pageY - _.TouchMoveY;
-							_.TouchMoveX = e.touches[0].pageX;
-							_.TouchMoveY = e.touches[0].pageY;
-						
-							//N.CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e);
-							if(N.CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e) !== false){
-								e.stopPropagation();
-								e.preventDefault();
-							} else {
-								_._currentTouchStartEvent(e);
-							}
-						}
-					};
-					//touch end
-					this._currentTouchEndEvent = function(e){
-						e.stopPropagation();
-						_.StartTouchMoveX = _.TouchMoveX = undefined;
-						_.StartTouchMoveY = _.TouchMoveY = undefined;
-						_.StartPinchValue = undefined;
-						N.CALL(_.GestureListener["touchEnd"],e);
-					};
-				
-					this._applyTouchEvent = false;
-				} 
-			
-				if(this._applyTouchEvent !== flag) {
-					var moveReciveTarget = this.AllowOuterEvent ? document.body : this.Source;
-					if(flag){
-						N.$on(this.Source,"touchstart",this._currentTouchStartEvent);
-						N.$on(moveReciveTarget,"touchmove",this._currentTouchMoveEvent);
-						N.$on(moveReciveTarget,"touchend",this._currentTouchEndEvent);
-					} else {
-						N.$off(this.Source,"touchstart",this._currentTouchStartEvent);
-						N.$off(moveReciveTarget,"touchmove",this._currentTouchMoveEvent);
-						N.$off(moveReciveTarget,"touchend",this._currentTouchEndEvent);
-					}
-					this._applyTouchEvent = flag;
-				}
-			},
-			getGestureX:function(){ return this.TouchMoveX - this.StartTouchMoveX; },
-			getGestureY:function(){ return this.TouchMoveY - this.StartTouchMoveY; },
-			whenPinchStart:function(method){ this.GestureListener["pinchStart"] = method; },
-			whenPinch:function(method){ this.GestureListener["pinch"] = method; },
-			whenTouchStart:function(method){ this.GestureListener["touchStart"] = method; },
-			whenTouchBegin:function(method){ this.GestureListener["touchBegin"] = method; },
-			whenTouchMove:function(method){ this.GestureListener["touchMove"] = method; },
-			whenTouchEnd:function(method){ this.GestureListener["touchEnd"] = method; },
-			destroy:function(){ this.applyTouchEvent(false); }
-		},function(gestureView,allowOuterMove,allowVitureTouch){
-			this.Source = N.findLite(gestureView)[0];
-			this.GestureListener = {};
-			this.StartPinchValue;
-			this.StartTouchMoveX;
-			this.StartTouchMoveY;
-			this.TouchMoveX;
-			this.TouchMoveY;
-			this.AllowOuterEvent = !!(allowOuterMove === true);
-			this.AllowPinch = true;
-			var finger = this;
-		
-			if(this.Source) this.applyTouchEvent(true);
-			if(allowVitureTouch === true) this.setAllowVirtureTouch(true);
-		});
-	
-		N.MODULE("ScrollBox",{
-			needScrollingOffsetX:function(offset){
-				if(!this.allowScrollX || offset == 0 || (typeof offset !== 'number') ) return false;
-				var needTo = this.Source.scrollLeft + (-offset);
-				if (needTo < 0) { needTo = 0; }
-				if (needTo > this.Source.scrollWidth) needTo = this.Source.scrollWidth;
-				if (this.Source.scrollLeft != needTo) {
-					this.Source.scrollLeft = needTo;
-					return true;
-				}  else {
-					return false;
-				}
-			},
-			needScrollingOffsetY:function(offset){
-				if(!this.allowScrollY || offset == 0 || (typeof offset !== 'number') ) return false;
-			
-				var needTo = this.Source.scrollTop + (-offset);
-
-				if (needTo < 0) {
-					this.needNegativeDrawItem();
-				
-					needTo = this.Source.scrollTop + (-offset);
-					if(needTo < 0) needTo = 0;
-				}
-				if (needTo > this.Source.scrollHeight - this.Source.offsetHeight){
-					this.needPositiveDrawItem();
-				
-					if(needTo > this.Source.scrollHeight){
-						needTo = this.Source.scrollHeight;
-					} 
-				}
-				if (this.Source.scrollTop !== needTo) {
-					this.Source.scrollTop = needTo;
-					return true;
-				}
-				return false;
-			},
-			needScrollingToX:function(needTo){
-				return this.needScrollingOffsetX( this.Source.scrollLeft - needTo );
-			},
-			needScrollingToY:function(needTo){
-				return this.needScrollingOffsetY( this.Source.scrollTop - needTo );
-			},
-			needScrollingTo:function(needX,needY){
-				return (this.needScrollingToX(needX),this.needScrollingToY(needY));
-			},
-			needScrollingPercentY:function(per){
-				if(typeof per === 'number'){
-					if(per < 0) { per = 0; }
-					if(per > 100) { per = 100; }
-					var scrollTarget = ((this.Source.scrollHeight - this.Source.offsetHeight) / 100) * per;
-					this.Source.scrollTop = scrollTarget;
-				}
-			},
-			// var _drawAxisYItem
-			drawAxisYItem:function(rend){
-				this._drawAxisYItem = rend;
-			},
-			// true == infinite
-			setAllowMakeAxisYItem:function(positive,negative){
-				if (typeof positive === "boolean") {
-					this.axisYPositiveLength = positive ? 100 : 0;
-				} else if(typeof positive === "number") {
-					this.axisYPositiveLength = positive;
-				}
-			
-				if (typeof negative === "boolean") {
-					this.axisYNegativeLength = negative ? 100 : 0;
-				} else if(typeof negative === "number") {
-					this.axisYNegativeLength = negative;
-				}
-				this.needPositiveDrawItem();
-			},
-			focusTo:function(s){
-				var select = N.find(s,this.Source,0);
-				if(select) {
-					var offset = N.findOffset(select,this.ClipView);
-					if(offset) {
-						this.needScrollingToX(offset.x + (offset.width / 2) - (this.Source.offsetWidth / 2) );
-						this.needScrollingToY(offset.y + (offset.height / 2) - (this.Source.offsetHeight / 2) );
-						return select;
-					}
-				}
-				return false;
-			},
-			needPositiveDrawItem:function(){
-				if(typeof this._drawAxisYItem === "function"){
-					for(var i=this.axisYPositiveItems.length,l=this.axisYPositiveLength;i<l;i++){
-						var node = this._drawAxisYItem(i);
-					
-						if( N.isNode(node) ) {
-							this.axisYPositiveItems.push(node);
-							N.$append(this.ClipView,node);
-							//정지할지 확인
-							if(this.Source.offsetHeight < (this.ClipView.offsetHeight - this.Source.offsetTop)) break;
-						} else {
-							console.warn("needPositiveDrawItem::렌더링 에러 더이상 드로잉 할수 없습니다.");
-						}
-					}
-				}
-			},
-			needNegativeDrawItem:function(){
-				if(typeof this._drawAxisYItem === "function"){
-					if(this.axisYNegativeItems.length < this.axisYNegativeLength){
-						var i = ((this.axisYNegativeItems.length * -1) -1);
-						var node = this._drawAxisYItem(i);
-						if( N.isNode(node) ) {
-							this.axisYNegativeItems.push(node);
-							N.$prepend(this.ClipView,node);
-							this.Source.scrollTop = this.Source.scrollTop + node.offsetHeight;
-						} else {
-							return console.warn("drawAxisYItem의 값이 잘못되었습니다 노드를 반환해주세요",node);
-						}
-					}
-				}
-			},
-			restUp:function(){
-				return this.Source.scrollTop;
-			},
-			restDown:function(){
-				return this.Source.scrollHeight - this.Source.offsetHeight - this.Source.scrollTop;
-			},
-			restYSpace:function(){
-				var u = this.Source.scrollTop , d = (this.Source.scrollHeight - this.Source.offsetHeight - this.Source.scrollTop);	
-				return (u < d)?u:d;
-			},
-			setAllowVirtureTouch:function(flag){ this.Touch.setAllowVirtureTouch(true); },
-			//scroll event
-			whenScroll            :function(m){ 
-				this.ScrollEvent.Scroll = (!m) ? undefined : N.BIND_FUNCTION(this.ScrollEvent.Scroll,m);
-			},
-			applyScrollEvent:function(flag){
-				if(typeof flag !== "boolean") return;
-				if(typeof this._applyScrollEvent === "undefined") {
-					var _ = this;
-					if(!this._currentMouseWheelEvent) {
-						this._currentMouseWheelEvent = function(e){
-							if(e.wheelDeltaY) {
-								if( (e.wheelDeltaY !== 0) && (_.needScrollingOffsetY(e.wheelDeltaY/3) == true) && (_.restYSpace() !== 0) ) {
-									e.stopPropagation();
-									e.preventDefault();
-								}
-								if( (e.wheelDeltaX !== 0) && (_.needScrollingOffsetX(e.wheelDeltaX/3) == true) ) {
-									e.stopPropagation();
-									e.preventDefault();
-								}
-							} else if(e.wheelDelta) {
-								if( (e.wheelDelta !== 0) && (_.needScrollingOffsetY(e.wheelDelta/3) !== false) && (_.restYSpace() !== 0) ) {
-									e.stopPropagation();
-									e.preventDefault();
-								}
-							}
-						};
-					}
-				
-					if(!this._currentScrollEvent) {
-						this._currentScrollEvent = function(e){
-							e.stopPropagation();
-							e.preventDefault();
-							return N.CALL(_.ScrollEvent.Scroll,_,e);
-						};
-					}
-				
-					this._applyScrollEvent = false;
-				}
-				if(this._applyScrollEvent !== flag) {
-					if(flag){
-						N.$on(this.Source,"mousewheel",this._currentMouseWheelEvent);
-						N.$on(this.Source,"scroll",this._currentScrollEvent);
-						this.Touch.applyTouchEvent(true);
-					} else {
-						N.$off(this.Source,"mousewheel",this._currentMouseWheelEvent);
-						N.$off(this.Source,"scroll",this._currentScrollEvent);
-						this.Touch.applyTouchEvent(false);
-					}
-					this._applyScrollEvent = flag;
-				}
-			},
-			getBoundsInfo:function(){
-				return  {
-					frame:{
-						width:this.Source.offsetWidth,
-						height:this.Source.offsetHeight,
-					},
-					clipview:{
-						x:this.Source.scrollLeft,
-						y:this.Source.scrollTop,
-						width:this.ClipView.offsetWidth ,
-						//test
-						height:this.ClipView.offsetHeight || this.Source.offsetHeight
-					},
-					contents:{
-						width:this.Source.scrollWidth,
-						height:this.Source.scrollHeight
-					}
-				}
-			}
-		},function(node,direction,virtureTouch){
-			this.Source = N.findLite(node)[0];
-			this.isMoving = false;
-			if(this.Source){
-			
-				this.axisYPositiveLength = 0;
-				this.axisYNegativeLength = 0;
-				this.axisYPositiveItems = [];
-				this.axisYNegativeItems = [];
-			
-				this.ClipView = N.make("div.nody-scroll-box-clip-view[style=min-height:100%]");
-				N.$style(this.ClipView,"transform","matrix(1,0,0,1,0,0)");
-				N.$style(this.ClipView,"position","relative");
-			
-				N.$append(this.ClipView,this.Source.childNodes);
-				N.$append(this.Source,this.ClipView);
-			
-				//
-				this.ScrollEvent = {};
-			
-				this.Touch = new N.Touch(this.Source);
-			
-				switch(direction) {
-					case 'horizontal':
-						this.allowScrollX = true;
-						this.allowScrollY = false;
-						break;
-					case 'vertical':
-						this.allowScrollX = false;
-						this.allowScrollY = true;
-						break;
-					default :
-						if(direction !== undefined) console.warn('ScrollBox :: direction 파라메터 영역에 알수없는 커멘드가 들어왔습니다.',direction)
-						this.allowScrollX = true;
-						this.allowScrollY = true;
-						break;
-				}
-			
-				N.$style(this.Source,"overflow","hidden");
-				N.$style(this.Source,"position","relative");
-			
-				var _ = this;
-				//
-				this.Touch.whenTouchMove(function(offsetX,offsetY,e){
-					var result = false;
-					if( (offsetY !== 0) && (_.needScrollingOffsetY(offsetY) == true) && (_.restYSpace() !== 0) ) result = true;
-					if( (offsetX !== 0) && (_.needScrollingOffsetX(offsetX) == true) ) result = true;
-					if(result) _.isMoving = true;
-					return result;
-				});
-				this.Touch.whenTouchEnd(function(){
-					var t = setTimeout(function(){
-						_.isMoving = false;
-						clearTimeout(t);
-					},10);
-				});
-				this.applyScrollEvent(true);
-			
-				if(virtureTouch === true) this.setAllowVirtureTouch(true);
-			} else {
-				console.warn("ScrollBox제대로 불러오지 못했습니다.",node);
-			}
-		});
-	
-		N.EXTEND_MODULE("ScrollBox","ZoomBox",{
-			needZoom:function(needTo){
-				needTo = N.toNumber(needTo);
-				if(needTo < this.zoomMin) needTo = this.zoomMin;
-				if(needTo > this.zoomMax) needTo = this.zoomMax;
-			
-				if(needTo === this.ZoomValue) return false;
-			
-				var offsetWidth  = Math.floor(((this.ClipView.offsetWidth  * needTo) - this.ClipView.offsetWidth) / 2);
-				var offsetHeight = Math.floor(((this.ClipView.offsetHeight * needTo) - this.ClipView.offsetHeight) / 2);
-			
-				var zoomOffset = this.ZoomValue - needTo;
-				if( zoomOffset !== 0) {
-					this.needScrollingOffsetX( (this.Source.offsetWidth  * zoomOffset) / 2 );
-					this.needScrollingOffsetY( (this.Source.offsetHeight * zoomOffset) / 2 );
-				}
-			
-				N.$style(this.ClipView,"transform","matrix("+needTo+",0,0,"+needTo+","+offsetWidth+","+offsetHeight+")");
-			
-				var _ = this;
-			
-				if( !this.wasClipTimeout ) clearTimeout(this.wasClipTimeout);
-				this.wasClipTimeout = setTimeout(function(){ N.CALL(_.ZoomEvent,_); },305);
-			
-				N.CALL(this.ZoomEvent,this);
-				this.ZoomValue = needTo;
-			
-				return true;
-			},
-			needZoomWithOffset:function(offset){ 
-				return this.needZoom(this.ZoomValue + offset);
-			},
-			whenZoom:function(event){ this.ZoomEvent = event; },
-			resizeFix:function(){
-				this.nzClipWidth  = this.Source.scrollWidth;
-				this.nzClipHeigth = this.Source.scrollHeight;
-			},
-			getBoundsInfo:function(){
-				var bi = this._super();
-				bi.clipview.zoom     = this.ZoomValue;
-				bi.contents.nzWidth  = this.nzClipWidth;
-				bi.contents.nsHeight = this.nzClipHeigth;
-				return bi;
-			},
-			setAllowZoom:function(flag){
-				this.Touch.allowPinch = !!flag;
-				this._allowZoom        = !!flag;
-				return this;
-			}
-		},function(mainNode,initZoom){
-			//scrollbox이벤트의 휠 이벤트를 변경
-			var _ = this;
-			this._currentMouseWheelEvent = function(e){
-				e.preventDefault();
-				if(_._allowZoom) if(e.wheelDelta) _.needZoomWithOffset(e.wheelDelta/1500)
-			}
-		
-			this._super(mainNode);
-			this.ZoomValue = 1.0
-			this.zoomMin   = 1.0;
-			this.zoomMax   = 3.0;
-			this.ZoomEvent;
-			this.resizeFix();
-			this._allowZoom = true;
-			this.Touch.whenPinch(function(zoomOffset,e){ 
-				if(_._allowZoom) _.needZoomWithOffset(zoomOffset/30); 
-			});
-			this.setAllowVirtureTouch(true);
-		
-			if(typeof initZoom == "number") this.needZoom(initZoom);
-		});
-	
-		N.MODULE("ScrollTrack",{		
-			resizeFix:function(){
-				if(this._autoScrollTrackHeight && this._autoScrollBoxSync){
-					var scrollBox = this._autoScrollBoxSync;
-					var lengthPer = ((100 / scrollBox.Source.scrollHeight) * scrollBox.Source.offsetHeight)/100;
-					N.$style(this.ScrollHanlde,'height',N.toPx(this.ScrollTrack.offsetHeight * lengthPer));
-				
-				}
-				this.scrollLength = this.ScrollTrack.offsetHeight - this.ScrollHanlde.offsetHeight;
-				if( (typeof this.scrollPoint) !== 'number') this.scrollPoint = 0;
-			},
-			needScrollOffset:function(y){
-				var needTo = this.scrollPoint + y;
-	
-				if(needTo < 0) {
-					this.scrollPoint = 0;
-				} else if(needTo > this.scrollLength) {
-					this.scrollPoint = this.scrollLength;
-				} else {
-					this.scrollPoint = needTo;
-				}
-				N.$style(this.ScrollHanlde,'top',N.toPx(this.scrollPoint));
-				N.CALL(this._whenScroll);
-			},
-			needScrollPercent:function(per){
-				N.$style(this.ScrollHanlde,'top',N.toPx((this.scrollLength / 100) * per));
-			},
-			whenScroll:function(m){
-				var _ = this;
-				if(typeof m === 'function') this._whenScroll = function(){ m.call(_,(100 / _.scrollLength ) * _.scrollPoint)};
-			},
-			syncWithScrollBox:function(scrollBox){
-				if(typeof scrollBox === 'object' && 'needScrollingPercentY' in scrollBox) {
-					var _ = this;
-					this.whenScroll(function(per){
-						scrollBox.needScrollingPercentY(per);
-					});
-					scrollBox.whenScroll(function(a,b,c){
-						_.needScrollPercent( (100 / (scrollBox.Source.scrollHeight - scrollBox.Source.offsetHeight)) * scrollBox.Source.scrollTop );
-					});
-					this._autoScrollBoxSync = scrollBox;
-					this.resizeFix();
-				}
-			}
-		},function(scrollContainer,direction,autoResizeFix,autoScrollTrackHeight){
-			this.Source      = N.findLite(scrollContainer)[0];
-		
-			if(!this.Source) {
-				return console.warn('스크롤바 초기화 실패하였습니다.');
-			}
-
-			this.ScrollHanlde = N.make('div.nody-scroll-handle',{style:'position:relative;'});
-			this.ScrollTrack  = N.make('div.nody-scroll-track',{style:'position:absolute;'},this.ScrollHanlde);
-
-			N.$put(this.Source,this.ScrollTrack);
-
-			this.Touch = new N.Touch(this.ScrollHanlde,true);
-			this.Touch.setAllowVirtureTouch(true);
-			var _ = this;
-			this.Touch.whenTouchMove(function(x,y){
-				if( _.ScrollTrack.offsetHeight - _.ScrollHanlde.offsetHeight > 0) _.needScrollOffset(y);
-			});
-		
-			if(autoResizeFix !== false) {
-				N.$on(window,'resize',function(){
-					_.resizeFix();
-				});
-			}
-			this._autoScrollTrackHeight = autoScrollTrackHeight;
-		
-			this.resizeFix();
 		});
 	})(window,N,N.ENV);
 })();
