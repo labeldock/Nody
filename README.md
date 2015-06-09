@@ -91,7 +91,7 @@ Nody는 0.24~0.25버전은 매우 불안정 할 예정입니다. 그래서 왠�
   - [X] ViewStatus, FormController 메서드 체계 변경
   - [X] RoleController가 ViewStatus의 자식으로 변경
   - [X] Touch, ScrollBox, ScrollTrack 모듈 제거됨
-  - [ ] RoleComponent의 구체화
+  - [x] RoleComponent의 구체화
   - [ ] Timeline 개발
   - [ ] TimeProps 개발
   - [ ] 데이터와 연동이 자연스럽게 연결되는 ActiveController 업데이트

@@ -12,10 +12,10 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.25.3", N.BUILD = "1129";
+		N.VERSION = "0.25.4", N.BUILD = "1133";
 	
 		// Core verison
-		N.CORE_VERSION = "1.9.4", N.CORE_BUILD = "82";
+		N.CORE_VERSION = "1.9.5", N.CORE_BUILD = "84";
   
 		// Pollyfill : console object
 		if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(N.toString(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
@@ -30,13 +30,13 @@
 		if(typeof W.JSON === "undefined"){ W.JSON = { 'parse' : function(s) { var r; try { r = eval('(' + s + ')'); } catch(e) { r = N.toObject(s); } return r; }, 'stringify' : function(o) { return W.N.toString(obj,Number.POSITIVE_INFINITY,true); } };}
 		
 		// Pollyfill : function bind
-		if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { /* closest thing possible to the ECMAScript 5 internal IsCallable function */ throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments,1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }
+		if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }
 	
 		// BrowserFix : IE8 Success fix
 		if (typeof W.success === "function"){W.success = "success";}
 	
 		//NativeCore console trace
-		var traceNativeModule = function(name){ if (NModules[name]) { var result = name + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype["set"])+"") )[1] + ")"; var i2 = 0; for(var protoName in NModules[name].prototype ) switch(protoName){ case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__SelfModuleInit__": break; default: if(typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype[protoName])+"") )[1] + ")" ; i2++; break; } return result; } else { return name + " module is not found."; } };
+		var traceNativeModule = function(name){ if (NModules[name]) { var result = name + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype["set"])+"") )[1] + ")"; var i2 = 0; for(var protoName in NModules[name].prototype ) switch(protoName){ case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__NativeInitializer__": break; default: if(typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype[protoName])+"") )[1] + ")" ; i2++; break; } return result; } else { return name + " module is not found."; } };
 		N.API = traceNativeModule;
 		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n " + i + " : " + traceNativeModule(key); i++; } logText.push(moduleText); return logText.join("\n"); };
 	
@@ -45,11 +45,12 @@
 		var NativeFactoryObject = function(type,name,sm,gm){
 			if( !(name in NModules) ){
 				var nativeProto,setter,getter;
+				//console.log(name,type);
 				switch(type){
 					case "object":
 						nativeProto = {};
 						setter      = typeof sm === "function" ? 
-									  function(v){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : 
+									  function(){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : 
 									  function(v){ this.Source = v; return this; };
 						getter      = gm?gm:function(){return this.Source;};
 						break;
@@ -65,9 +66,13 @@
 				
 				var nativeConstructor = function(){ 
 					if(typeof this.set === "function"){ 
-						for(var protoKey in NModules[name].prototype) 
-							if(protoKey.indexOf("+") == 0) 
+						for(var protoKey in NModules[name].prototype) {
+							//init inital variable
+							if(/^\+[^+]+/.test(protoKey)) {
 								this[protoKey.substr(1)] = NModules[name].prototype[protoKey];
+							}
+						}
+						//set apppy
 						this.set.apply(this,Array.prototype.slice.apply(arguments)); 
 					} 
 				};
@@ -148,12 +153,17 @@
 					case "get": if(getflag == true) protoObject[key] = methods[key]; break;
 					default   :
 						if(/^\+\+[^\+]+/.test(key)){
-							(function(moduleMethodName,setValue){
-								if(moduleMethodName)
-									NModules[name][moduleMethodName] = (typeof setValue === "function") ?
-							 	   		function(){ return setValue.apply(NModules[name],Array.prototype.slice.call(arguments)); } :
-										setValue ;
-							}(key.substr(2),methods[key]));
+							(function(module,moduleMethodName,moduleMethod){
+								if(moduleMethodName) {
+									if(typeof moduleMethod === "function") {
+										module[moduleMethodName] = function(){
+											return moduleMethod.apply(module,Array.prototype.slice.call(arguments));
+										};
+									} else {
+										module[moduleMethodName] = moduleMethod;
+									}
+								}
+							}(NModules[name],key.substr(2),methods[key]));
 						}
 						protoObject[key] = methods[key];
 						break;
@@ -166,14 +176,11 @@
 		};
 		var NativeFactoryDeploy = function(name){
 			if(name in NModules) {
-				nody["_"+name] = function(){
-					var scArgs = Array.prototype.slice.call(arguments);
-					scArgs.unshift(NModules[name]);
-					return new (Function.prototype.bind.apply(NModules[name],scArgs)); 
-				};
-				nody[name] = NModules[name];
-				//
-				NModules[name].prototype.__SelfModuleInit__ = nody["_"+name];
+				(function(module){
+					var newInit = function(){ return new (Function.prototype.bind.apply(module,[module].concat(Array.prototype.slice.call(arguments)))); };
+					nody[name] = module;
+					nody["_"+name] = module.prototype.__NativeInitializer__ = newInit;
+				}(NModules[name]));
 			}
 		};
 		N.MODULE = function(name,proto,setter,getter){
@@ -1547,7 +1554,7 @@
 			//원하는 위치에 대상을 덮어씁니다.
 			overwrite : function(v,a){ this.min(a+1); this[a] = v; return this; },
 			// 현재의 배열을 보호하고 새로운 배열을 반환한다.
-			save : function(v){ return this.__SelfModuleInit__(this); },
+			save : function(v){ return this.__NativeInitializer__(this); },
 			//array안의 array 풀어내기
 			flatten : function(){ return new N.Array(N.dataFlatten(this)); },
 			setFlatten    : function(){return this.setSource(this.flatten());},
@@ -1741,7 +1748,7 @@
 			},
 			count:function(){return N.propsLength(this.Source); },
 			clone:function(){return N.clone(this.Source); },
-			save:function() {return this.__SelfModuleInit__(N.clone(this.Source)); },
+			save:function() {return this.__NativeInitializer__(N.clone(this.Source)); },
 			//key value get setter
 			prop:function(k,v){
 				if(N.asString(k) && arguments.length > 1){
@@ -3166,7 +3173,7 @@
 				return [];
 			},
 			//여러개의 셀럭터와 하나의 루트노드만 허용
-			"findDouble":function(findse,rootNode){
+			"findWithOnePlace":function(findse,rootNode){
 				if(typeof findse === 'string') return N.NodeUtil.query(findse,rootNode);
 				if( N.isNode(findse) ) {
 					var fs = N.NodeUtil.query(N.$trace(findse),rootNode);
@@ -3175,7 +3182,7 @@
 				if( N.isArray(findse) ) {
 					var result = [];
 					for(var i=0,l=findse.length;i<l;i++) {
-						var fd = N.findDouble(findse[i],rootNode);
+						var fd = N.findWithOnePlace(findse[i],rootNode);
 						if( fd.length ) result = result.concat(fd);
 					}				
 					return N.dataUnique(result);
@@ -3183,18 +3190,20 @@
 				return [];
 			},
 			//다수의 로트와 샐렉터를 받고 출력
-			"findAdvence":function(find,root){
-				if(arguments.length === 1) return N.findLite(find);
+			"findWithSeveralPlaces":function(find,root){
+				// 
+				if(arguments.length === 1 || typeof root === 'undefined' || root === null || root === W.document ) return N.findLite(find);
+				// find root
 				var targetRoots = N.findLite(root);
 				if(targetRoots.length === 0) {
-					if(typeof root !== 'undefined' || root === null) return [];
 					return N.findLite(find);
-				} 
+				}
+				//
 				var findes = N.toArray(find);
 				var result = [];
 				for(var i=0,l=targetRoots.length;i<l;i++) {
 					for(var fi=0,fl=findes.length;fi<fl;fi++) {
-						var fdr = N.findDouble(findes[fi],targetRoots[i]);
+						var fdr = N.findWithOnePlace(findes[fi],targetRoots[i]);
 						if( fdr.length ) result = result.concat(fdr);
 					}
 				}
@@ -3203,8 +3212,8 @@
 			//최적화 분기하여 샐랙터를 실행시킴
 			"find" : N.CONTINUE_FUNCTION(function(find,root,eq){
 				return (typeof root === "number") ? N.findLite(find)[root] :
-					   (typeof eq === "number")   ? N.findAdvence(find,root)[eq] :
-					   N.findAdvence(find,root);
+					   (typeof eq === "number")   ? N.findWithSeveralPlaces(find,root)[eq] :
+					   N.findWithSeveralPlaces(find,root);
 			}),
 			"findMember":function(sel,offset){
 				var target = N.findLite(sel)[0];
@@ -3216,13 +3225,13 @@
 			},
 			// 하위루트의 모든 노드를 검색함 (Continutiltiy에서 중요함)
 			"findIn" : N.CONTINUE_FUNCTION(function(root,find,index){
-				return (typeof index === 'number') ? N.findAdvence(find || '*',N.dataMap(N.findAdvence(root),function(node){ return node.children },N.dataFlatten))[index] :
-					   (typeof find  === 'number') ? N.findAdvence('*',N.dataMap(N.findAdvence(root),function(node){ return node.children },N.dataFlatten))[find]   :
-													 N.findAdvence(find || '*',N.dataMap(N.findAdvence(root),function(node){ return node.children },N.dataFlatten)) ;
+				return (typeof index === 'number') ? N.findWithSeveralPlaces(find || '*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.dataFlatten))[index] :
+					   (typeof find  === 'number') ? N.findWithSeveralPlaces('*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.dataFlatten))[find]   :
+													 N.findWithSeveralPlaces(find || '*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.dataFlatten)) ;
 			},2),
 			// 자식루트의 노드를 검색함
 			"findOn": N.CONTINUE_FUNCTION(function(root,find){
-				var finds = N.dataMap(N.findAdvence(root),function(node){ return node.children; },N.dataFlatten);
+				var finds = N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children; },N.dataFlatten);
 				switch(typeof find){
 					case "number": return [finds[find]]; break;
 					case "string": return N.dataFilter(finds,function(node){ return N.NodeUtil.is(node,find); }); break;
@@ -3232,12 +3241,12 @@
 			"findParents":N.CONTINUE_FUNCTION(function(el,require,index){ 
 				if(typeof require === 'string') {
 					return (typeof index === 'number') ?
-					N.dataFilter(N.NodeUtil.parents(N.findAdvence(el)[0]),function(el){ return N.$is(el,require); })[index]:
-					N.dataFilter(N.NodeUtil.parents(N.findAdvence(el)[0]),function(el){ return N.$is(el,require); });
+					N.dataFilter(N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0]),function(el){ return N.$is(el,require); })[index]:
+					N.dataFilter(N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0]),function(el){ return N.$is(el,require); });
 				} else if(typeof require === 'number') {
-					return N.NodeUtil.parents(N.findAdvence(el)[0])[require];
+					return N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0])[require];
 				} else {
-					return N.NodeUtil.parents(N.findAdvence(el)[0]);
+					return N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0]);
 				}
 			},1),
 			"findRoot":N.CONTINUE_FUNCTION(function(el){ 
@@ -3594,7 +3603,6 @@
 			"importNodes":function(node){
 				if(typeof node === "string") {
 					node = node.trim();
-					console.log("parse node = ",node);
 					if(/^<.+>$/.test(node)){
 						node = N.parseHTML(node);
 					} else if(/^\#[\w\-]+$/.test(node)) {
@@ -4162,15 +4170,39 @@
 			"onTarget":function(node){ return (N.isWindow(node) || N.isDocument(node)) ? node : N.findLite(node); },
 			//중복이벤트 등록 가능
 			"on":function(node, eventName, eventHandler, useCapture){
-				if((typeof eventName !== "string") || (typeof eventHandler !== "function")) return console.erro("N.$on 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요",node, eventName, eventHandler);
 				var nodes  = N.$onTarget(node);
 				var events = eventName.split(" ");
-			
-				N.dataEach(nodes,function(eventNode){
-					N.dataEach(events,function(event){
-						eventNode.addEventListener(event, eventHandler, useCapture==true ? true : false); 
+				
+				if(typeof arguments[1] === "string" && typeof arguments[2] === "function"){
+					//direct event
+					N.dataEach(nodes,function(eventNode){
+						N.dataEach(events,function(event){
+							eventNode.addEventListener(event, eventHandler, useCapture==true ? true : false); 
+						});
 					});
-				});
+				} else if(typeof arguments[1] === "string" && typeof arguments[2] === "string" && typeof arguments[3] === "function"){
+					var delegateTarget = arguments[2],
+						eventHandler   = arguments[3],
+						useCapture     = arguments[4];
+					//delegate event
+					N.dataEach(nodes,function(eventNode){
+						N.dataEach(events,function(event){
+							eventNode.addEventListener(event, function(e){
+								var matchingNode = N.dataMatching(
+									N.find(delegateTarget,node),
+									N.NodeUtil.is(e.target,delegateTarget) ? [e.target].concat(N.findParents(e.target,delegateTarget)) : N.findParents(e.target,delegateTarget)
+								);
+								if(matchingNode) return eventHandler.call(matchingNode,e);
+							}, useCapture==true ? true : false); 
+						});
+					});
+				} else {
+					//error
+					if((typeof eventName !== "string") || (typeof eventHandler !== "function")){
+						console.error("N.$on 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요");
+						console.error("N.$on ::",arguments);
+					} 
+				}
 				return nodes;
 			},
 			"off":function(node, eventName, eventHandler, useCapture){
@@ -4180,24 +4212,6 @@
 				N.dataEach(nodes,function(eventNode){
 					N.dataEach(events,function(event){
 						eventNode.removeEventListener(event, eventHandler, useCapture==true ? true : false); 
-					});
-				});
-				return nodes;
-			},
-			"delegate":function(node, delegateTarget, eventName, eventHandler, useCapture){
-				if((typeof delegateTarget !== "string") || (typeof eventName !== "string") || (typeof eventHandler !== "function")) return console.erro("delegate:: 노드, 델리게이트타겟 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요",node,delegateTarget,eventName,eventHandler);
-				var nodes  = N.$onTarget(node);
-				var events = eventName.split(" ");
-			
-				N.dataEach(nodes,function(eventNode){
-					N.dataEach(events,function(event){
-						eventNode.addEventListener(event, function(e){
-							var matchingNode = N.dataMatching(
-								N.find(delegateTarget,node),
-								N.NodeUtil.is(e.target,delegateTarget) ? [e.target].concat(N.findParents(e.target,delegateTarget)) : N.findParents(e.target,delegateTarget)
-							);
-							if(matchingNode) return eventHandler.call(matchingNode,e);
-						}, useCapture==true ? true : false); 
 					});
 				});
 				return nodes;
@@ -4348,8 +4362,8 @@
 		});
 		N.$.EACH_TO_METHOD_WITH_PREFIX();
 	
-		N.EXTEND_MODULE("Array","Query",{
-			find:function(selector,i){ return new N.Query(selector,this,i); },
+		N.EXTEND_MODULE("Array","NodeQuery",{
+			find:function(selector,i){ return new N.NodeQuery(selector,this,i); },
 			hasFocus:function(){ return N.$hasFocus(this); },
 			caretPossible:function(){ return N.$caretPossible(this); },
 			attr:function(name){ 
@@ -4361,10 +4375,11 @@
 					return N.CALL(N.$attr,undefined,this,name);
 				}
 			},
-			hasAttr:function(){ return N.FLATTENCALL(N.$attr,N.$,this,arguments); },
-			addClass:function(name){ return N.CALL(N.$.addClass,N.$,this,name) },
-			hasClass:function(name){ return N.CALL(N.$.hasClass,N.$,this,name) },
-			removeClass:function(name){ return N.CALL(N.$.removeClass,N.$,this,name) },
+			hasAttr:function(){ N.FLATTENCALL(N.$attr,N.$,this,arguments);return this; },
+			addClass:function(className){ N.CALL(N.$.addClass,N.$,this,className);return this; },
+			hasClass:function(className){ N.CALL(N.$.hasClass,N.$,this,className);return this; },
+			removeClass:function(className){ N.CALL(N.$.removeClass,N.$,this,className);return this; },
+			toggleClass:function(className,toggle){ N.CALL(N.$.toggleClass,N.$,this,className,toggle); return this; },
 			is     :function(){ return N.FLATTENCALL(N.$is,N.$,this,arguments); },
 			filter :function(){ this.replace(N.FLATTENCALL(N.$filter,N.$,this,arguments)); return this; },
 			value  :function(name){ 
@@ -4378,8 +4393,8 @@
 			trace    :function(){ return N.FLATTENCALL(N.$.trace,N.$,this,arguments); },
 			//index
 			currentIndex:function(){ return N.FLATTENCALL(N.$.index,N.$,this,arguments); },
-			append   :function(){ N.FLATTENCALL(N.$.append,N.$,this,arguments);    return this; },
-			prepend  :function(){ N.FLATTENCALL(N.$.prepend,N.$,this,arguments);   return this; },
+			append   :function(targets){ N.$.append(this,targets);return this; },
+			prepend  :function(targets){ N.$.prepend(this,targets);return this; },
 			appendTo :function(target){ N.CALL(N.$.appendTo,N.$,this,target); return this; },
 			prependTo:function(target){ N.CALL(N.$.prependTo,N.$,this,target);return this; },
 			put      :function(){ N.FLATTENCALL(N.$.put,N.$,this,arguments); return this;},
@@ -4418,8 +4433,8 @@
 			remove :function(){ N.CALL(N.$.remove,N.$,this); return this; },
 			caret  :function(){ N.FLATTENCALL(N.$.caret,N.$,this,arguments); },
 			trigger:function(name){ N.CALL(N.$.trigger,N.$,this,name); return this; },
-			on     :function(){ N.FLATTENCALL(N.$.on,N.$,this,arguments); return this; },
-			off    :function(){ N.FLATTENCALL(N.$.off,N.$,this,arguments); return this; },
+			on     :function(e,h,c,x){ N.$.on.call(undefined,this,e,h,c,x); return this; },
+			off    :function(e,h,c,x){ N.$.off.call(undefined,this,e,h,c,x); return this; },
 			onetime:function(){ N.FLATTENCALL(N.$.onetime,N.$,this,arguments); return this; },
 			data   :function(name){
 				if(arguments.length > 1){
@@ -4436,11 +4451,11 @@
 			this.setSource(N.find(select,parent,i));
 		});
 	
-		N.EXTEND_MODULE("Query","Make",{},function(node,attr,parent){
+		N.EXTEND_MODULE("NodeQuery","Make",{},function(node,attr,parent){
 			this.setSource(N.Element.create(node,attr,parent));
 		});
 	
-		N.EXTEND_MODULE("Query","Template",{
+		N.EXTEND_MODULE("NodeQuery","Template",{
 			clone    : function(nodeData,dataFilter){ 
 				return new N.Template(this.initNode,nodeData,(dataFilter || this._persistantDataFilter),true); 
 			},
@@ -4465,7 +4480,7 @@
 				return rr;
 			},
 			renderAfterQuery:function(){
-				return new N.Query(this.render.apply(this,Array.prototype.slice.call(arguments)));
+				return new N.NodeQuery(this.render.apply(this,Array.prototype.slice.call(arguments)));
 			},
 			// 키를 지우면서
 			partialAttr:function(attrKey,callback){
@@ -4566,7 +4581,6 @@
 			reset : function(nodeData,dataFilter){
 				if (this.initNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
 				if (this.initNode.length > 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
-				
 				this.setSource(N.cloneNodes(this.initNode));
 				if(typeof nodeData == "object") this.setNodeData(nodeData,dataFilter);
 				return this;
@@ -4576,7 +4590,8 @@
 			
 			if(this.initNode){
 				if(dataFilter) this.setDataFilter(dataFilter);
-				if(nodeData === true || dataFilter === true || beRender === true) this.reset(nodeData,dataFilter);
+				this.reset(nodeData,dataFilter);
+				if(nodeData === true || dataFilter === true || beRender === true) this.setNodeData(nodeData,dataFilter);
 			}
 		},function(multiNodes){
 			//get 함수입니다. Template모듈은 배열이나 노드를 반환합니다.
@@ -4589,7 +4604,7 @@
 		});
 		
 		N.METHOD('ZTEMP',function(temp,data,filter){ return (new N.Template(temp)).renders(data,filter); });
-		N.METHOD('$Q',function(s,p,i)  { return new N.Query(s,p,i);});
+		N.METHOD('$Q',function(s,p,i)  { return new N.NodeQuery(s,p,i);});
 		N.METHOD('$M',function(n,a,p)  { return new N.Make(n,a,p); });
 		N.METHOD('$T',function(n,d,f,c){ return new N.Template(n,d,f,c); });
 	
@@ -4716,7 +4731,7 @@
 			}
 		});
 	
-		N.MODULE("ViewStatus",{
+		N.MODULE("ActiveStatus",{
 			whenAnyWillActive  :function(m)  { this.StatusEvents.AnyWillActive = m; },
 			whenAnyDidActive   :function(m)  { this.StatusEvents.AnyDidActive = m; },
 			whenAnyWillInactive:function(m)  { this.StatusEvents.AnyWillInactive = m; },
@@ -4727,12 +4742,18 @@
 			whenDidActive      :function(n,m){ this.StatusEvents.StatusDidActive[n] = m; },
 			whenWillInactive   :function(n,m){ this.StatusEvents.StatusWillInactive[n] = m; },
 			whenDidInactive    :function(n,m){ this.StatusEvents.StatusDidInactive[n] = m; },
-			setInactiveStatus  :function(status,param,owner){
+			whenActive         :function(n,m){ this.StatusEvents.StatusActive[n] = m; },
+			whenInactive       :function(n,m){ this.StatusEvents.StatusInactive[n] = m; },
+			inactiveStatusTo   :function(status,param,owner,react){
+				owner = owner ? owner : this;
+				param = N.toArray(param);
+				if( !this.StatusEvents.StatusInactive[status] ) return console.warn('존재하지 않는 키값을 호출하였습니다.');
 				if( this.ActiveKeys.has(status) ){
 					if(this.ActiveKeys.length === 1 && !this.AllowInactive) return;
 					if( N.APPLY(this.StatusEvents.AnyWillInactive          ,owner,param) !== false &&
 						N.CALL(this.StatusEvents.StatusWillInactive[status],owner,param) !== false )
 					{
+						if( N.APPLY(this.StatusEvents.StatusInactive[status],owner,param) == false ) return;
 						this.ActiveKeys.setRemove(status);
 						N.CALL(this.StatusEvents.AnyDidInactive           ,owner,param);
 						N.CALL(this.StatusEvents.StatusDidInactive[status],owner,param);
@@ -4740,47 +4761,56 @@
 					}
 				}
 			},
-			setViewStatus:function(status,param,owner){
-				var _ = this;
+			activeStatusTo:function(status,param,owner,react){
+				owner = owner ? owner : this;
 				param = N.toArray(param);
-				if( !this.ActiveKeys.has(status) ){
-					if( this.AllowMultiStatus || (this.ActiveKeys.length === 0) ) {
+				// 존재하지 않는 스테이터스 이거나 리액트
+				if( !this.StatusEvents.StatusActive[status] ){
+					return console.warn('존재하지 않는 키값을 호출하였습니다.',status,this.StatusEvents.StatusActive);
+				} 
+				if( !this.ActiveKeys.has(status) || (react == true) ){
+					// 멀티가 가능하거나 아무것도 없을땐
+					if( this.AllowMultiStatus || 
+						(this.ActiveKeys.length === 0) || 
+						(react == true && this.ActiveKeys.length === 1 && this.ActiveKeys[0] === status)) 
+					{
 						if( N.APPLY(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
 							N.APPLY(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
 						{
-							this.ActiveKeys.push(status);
+							if( N.APPLY(this.StatusEvents.StatusActive[status],owner,param) == false ) return;
+							this.ActiveKeys.add(status);
 							N.APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
 							N.APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
-							if( this.ActiveKeys.length === N.propsLength(this.Source) ) 
-								N.APPLY(this.AllActive,owner,param);
+							if( this.ActiveKeys.length === N.propsLength(this.Source) ) N.APPLY(this.AllActive,owner,param);
 						}
 					} else  {
 						if( N.APPLY(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
 							N.APPLY(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
 						{
-							this.ActiveKeys.each(function(key){ _.setInactiveStatus(key,param,owner); })
-							this.ActiveKeys.push(status);
+							if( N.APPLY(this.StatusEvents.StatusActive[status],owner,param) == false ) return;
+							this.ActiveKeys.each(function(key){ _.inactiveStatusTo(key,param,owner); })
+							this.ActiveKeys.add(status);
 							N.APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
 							N.APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
-							if( this.ActiveKeys.length === N.propsLength(this.Source) ) 
-								N.APPLY(this.AllActive,owner,param);
+							if( this.ActiveKeys.length === N.propsLength(this.Source) ) N.APPLY(this.AllActive,owner,param);
 						}
 					}
 				}
 			},
-			getViewStatus:function(){
+			activeTo:function(status){
+				return this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this,false);
+			},
+			inactTo:function(status){
+				return this.inactiveStatusTo(status,Array.prototype.slice.call(arguments,1),this,false);
+			},
+			reactTo:function(status){
+				return this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this,true);
+			},
+			getActiveStatus:function(){
 				return this.ActiveKeys.join(" ");
 			},
-			isViewStatus:function(k){
+			isActiveStatus:function(k){
 				return this.ActiveKeys.has(k);
-			},
-			viewStatusTo:function(status){
-				if(typeof name === 'string') this.setViewStatus(status,Array.prototype.slice.call(arguments,1),this);
-			},
-			addViewStatus:function(key,val){
-				if(!key)return;
-				if(typeof key !== 'object') return this.whenDidActive(key,val);
-				for(var k in key) this.addViewStatus(k,key[k]);
 			}
 		},function(allowMulti,allowInactive){
 			lastll = this;
@@ -4793,6 +4823,8 @@
 				"AnyDidInactive":undefined,
 				"AllActive":undefined,
 				"AllInactive":undefined,
+				"StatusActive":{},
+				"StatusInactive":{},
 				"StatusWillActive":{},
 				"StatusDidActive":{},
 				"StatusWillInactive":{},
@@ -4800,51 +4832,70 @@
 			}
 			this.ActiveKeys = new N.Array();
 		});
-	
-		N.EXTEND_MODULE("ViewStatus","FormController",{
+		
+		N.EXTEND_MODULE("ActiveStatus","ViewAndMode",{
+			addViewStatus:function(statusName,active,inactive){
+				if(typeof statusName === 'string'){
+					if(typeof active === 'function'){
+						this.whenActive(statusName,active);
+					}
+					if(typeof inactive === 'function'){
+						this.whenInactive(statusName,inactive);
+					}
+				}
+			},
+			viewStatusTo:function(status){
+				if(typeof name === 'string') this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this);
+			},
+			node:function(innerKey,wrapper){
+				if(arguments.length === 0) return (wrapper ? wrapper : N._NodeQuery)(this.view);
+				if(!(innerKey in this)) return console.warn(innerKey,"인스턴스의 속성을 찾을수 없습니다.",this); 
+				return (wrapper ? wrapper : N._NodeQuery)(this[innerKey]);
+			},
+			find:function(findKeyword){
+				return findKeyword ? N.find(findKeyword,this.view) : [];
+			}
+		},function(findView,allowMulti,allowInactive){			
+			this.view = N.findLite(findView)[0];
+			
+			if(!this.view) return console.error("ViewAndMode::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",findView);
+			this._super(allowMulti,allowInactive);
+			return true;
+		});
+		
+		
+		N.EXTEND_MODULE("ViewAndMode","FormController",{
 			setFormData:function(data,v2){
 				return this.FormControl.checkin(data,v2);
 			},
 			getFormData:function(){
 				return this.FormControl.checkout();
 			},
-			find:function(){
+			getFormControl:function(){
 				return this.FormControl.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
 			}
 		},function(targetForm,statusProp,helper){
-			this.view = N.findLite(targetForm)[0];
-			if(this.view){
+			if( this._super(targetForm,false,true) === true ) {
 				this.FormControl = N._Form(this.view);
-				this._super(false,true);
-				if(statusProp) this.addViewStatus(statusProp);
-			
+				if(statusProp) this.addActiveStatus(statusProp);
+		
 				if(typeof helper === 'function') helper = {init:helper};
 				var _ = this;
 				N.propsEach(helper,function(fn,key){
 					if(!(key in _.constructor.prototype)) {
 						if(key === 'init') {
-							if(typeof fn === 'function') {
-								fn.apply(_,Array.prototype.slice.call(arguments));
-							}
+							if(typeof fn === 'function') fn.apply(_,Array.prototype.slice.call(arguments));
 						} else {
-							if(typeof fn === 'function') {
-								_[key] = function(){fn.apply(_,Array.prototype.slice.call(arguments));};
-							} else {
-								_[key] = fn;
-							}
+							_[key] = (typeof fn === 'function') ? function(){fn.apply(_,Array.prototype.slice.call(arguments));} : fn;
 						}
-					
 					}
 				});
-			} else {
-				console.warn('FormController에 view를 정상적으로 로드할수 없었습니다.',targetForm,this.view);
 			}
 		});
 		
-		nd.EXTEND_MODULE("ViewStatus","RoleController",{
+		nd.EXTEND_MODULE("ViewAndMode","RoleController",{
 			"++findRole":function(findwhere,rolename){
-				var activeRolename, findwhere = N.find(findwhere), _prototype = this.prototype;
-				
+				var activeRolename,findwhere=findwhere?N.find(findwhere):undefined,_prototype=this.prototype;
 				//rolename
 				if(typeof rolename === "string") activeRolename = rolename;
 				if (!activeRolename) {
@@ -4854,13 +4905,13 @@
 					(nativePrefix[nativePrefix.length-1] + nativeName.substr(nativePrefix.length)).toLowerCase() :
 					nativeName.toLowerCase();
 				}
-				
 				return N.find("[role~="+activeRolename+"]",findwhere);
 			},
-			"++findRoleAndActive":function(findwhere,rolename,props,data){
-				return N.dataEach(this.findRole(findwhere,rolename),function(targetRole){
-					_prototype.__SelfModuleInit__(targetRole,props,data);
-				});
+			"++findRoleAndActive":function(findwhere,props,data,rolename){
+				var _self=this;
+				var findedRoles = this.findRole(findwhere,rolename),resultController = [];
+				for(var i=0,l=findedRoles.length;i<l;i++) resultController.push(new _self(findedRoles[i],props,data));
+				return resultController;
 			},
 			prop:function(key,value){
 				if(typeof value === "function" && typeof key === "string") return value.call(this,this._prop[key]);
@@ -4870,29 +4921,20 @@
 			data:function(){
 				return this._data;
 			}
-		},function(target_role,props,data){
-			this.view = nd.find(target_role,0);
+		},function(targetRole,props,data){
 			
-			if(this.view){
-				this._super(false,true);
+			if( this._super(targetRole,true,true) === true ) {
+				
 				this._prop = new nd.Object(props);
 				this._data = new nd.Array(data);
 				
 				var _self = this;
 				nd.find('script[type*=json]', this.view ,nd.dataEach ,function(scriptTag){
 					var jsonData = nd.$value(scriptTag);
-					if( nd.is(jsonData,"object") ){
-						if( nd.is(jsonData,"array") ) {
-							_self._data.append(jsonData);
-						} else {
-							nd.extend(_self._prop,jsonData);
-						}
-					}
+					if(nd.is(jsonData,"object")) nd.is(jsonData,"array") ? _self._data.append(jsonData) : nd.extend(_self._prop,jsonData);
 					nd.$remove(scriptTag);
 				});
 				this.view.roleController = this;
-			} else {
-				console.warn(target_role, '을 찾을수 없습니다.');
 			}
 		});
 	
@@ -5680,7 +5722,7 @@
 				var _ = this;
 			
 				requestFrame.onload = function(){
-					dummyRequstObject.responseText = Array.prototype.slice.call(IFRAMEDOCUMENT(requestFrame).body.children);
+					dummyRequstObject.responseText = Array.prototype.slice.call(N.findDocument(requestFrame).body.children);
 					_.onStateChangeWithRequest(dummyRequstObject);
 				}
 				requestFrame.onerror = function(){
