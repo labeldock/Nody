@@ -122,8 +122,8 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   
   
 ## Nody 0.24 ~ 0.30 TODO #
-Nody는 0.24~0.25버전은 매우 불안정 할 예정입니다. 그래서 왠만하면 dist에 추가되지 않습니다. 
-스크립트의 크기도 매우 큰 이슈입니다. 0.26부터 안정화와 코드정리가 좀 더 활성화 될것입니다.
+Nody는 AMD로 지원을 전환하면서부터 0.26까지는 매우 불안정 할 예정입니다.
+0.27부터는 안정화 되면서 api변경이 줄것으로 예상됩니다.
 
 #### 0.25.7 업데이트
   - [x] dateExp, timeStampExp, timeScaleExp 업데이트 및 추가
