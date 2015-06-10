@@ -71,7 +71,7 @@ var binder = new nd.Binder(10); // initial value
 binder.bindNode("#bind1");
 binder.bindNode("#bind2");
 binder.inspect(function(value){
-	//if input is empty then transaction execute with return false;
+	//if input is empty then execute transaction with return false;
 	if(value === ""){ return false; }
 });
 ```
