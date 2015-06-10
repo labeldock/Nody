@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.25.8", N.BUILD = "1145";
+		N.VERSION = "0.25.9", N.BUILD = "1148";
 	
 		// Core verison
 		N.CORE_VERSION = "1.9.5", N.CORE_BUILD = "84";
@@ -75,6 +75,9 @@
 				};
 			
 				NModules[name]               = nativeConstructor;
+				NModules[name]["new"]        = (function(module){
+					return function(){ return new (Function.prototype.bind.apply(module,[module].concat(Array.prototype.slice.call(arguments)))); };
+				}(NModules[name]));
 				NModules[name].prototype     = nativeProto;
 				NModules[name].prototype.set = setter;
 				NModules[name].prototype.get = getter;
@@ -174,9 +177,8 @@
 		var NativeFactoryDeploy = function(name){
 			if(name in NModules) {
 				(function(module){
-					var newInit = function(){ return new (Function.prototype.bind.apply(module,[module].concat(Array.prototype.slice.call(arguments)))); };
 					nody[name] = module;
-					nody["_"+name] = module.prototype.__NativeInitializer__ = newInit;
+					module.prototype.__NativeInitializer__ = module.new;
 				}(NModules[name]));
 			}
 		};
@@ -865,24 +867,20 @@
 				}
 				return target;
 			},
-			//inspect type
-			"isType":function(t,v) {
-				if(typeof v === 'string'){
-					//tName
-					var vn = ((typeof v === "function") ? v["__NatvieContstructorName__"] : v);
-					//inspect
-					if( (typeof t=="object") && (typeof vn=="string") ) if("__NativeHistroy__" in t) {
-						var his = t["__NativeHistroy__"];
-				
-						for(var i=0,l=his.length;i<l;i++){
-							if(his[i] == vn) return true;
+			"isModule":function(obj,moduleName){
+				if(arguments.length == 1){
+					if(typeof obj === "object" && ("__NativeHistroy__" in obj)){
+						return true;
+					}
+				} else {
+					if(typeof obj === "object" && (typeof moduleName === "string") && ("__NativeHistroy__" in obj)){
+						var history = obj["__NativeHistroy__"];
+						for(var i=history.length-1;i>-1;i--){
+							if(history[i] === moduleName) return true;
 						}
 					}
-					return false;
-				} else if(typeof v === 'function') {
-					//javascript instance
-					if(t instanceof v) return true; return false;
 				}
+				return false;
 			},
 			// 참고! : human readable month
 			"dateExp":function(dv,format,pad){
@@ -1118,11 +1116,13 @@
 		//if natvie query selector in browser then alternative engine include
 		if(!N.QUERY_SELECTOR_ENGINE){
 			if(typeof Sizzle === "function"){
+				console.info("nody is sizzle selector engine detected");
 				N.QUERY_SELECTOR_ENGINE = function(node,selector){
 					return Sizzle(selector,node);
 				}
 				N.QUERY_SELECTOR_ENGINE_ID = "sizzle";
 			} else if(typeof jQuery === "function") {
+				console.info("nody is jquery selector engine detected");
 				N.QUERY_SELECTOR_ENGINE = function(node,selector){
 					return jQuery(selector,node).toArray();
 				}
@@ -1568,7 +1568,7 @@
 		});
 	
 		// 키를 찾는 함수입니다.
-		var objectCommonInterface = {
+		var COMMON_KEYS_METHOD = {
 			"keys":function(rule){
 				var r = [];
 				if(typeof rule === "string"){
@@ -1590,7 +1590,7 @@
 			// each의 반대 동작
 			reverseEach : function(block) { for ( var i=this.length-1;i>-1;i--) { if( block(this[i],i) == false ) break; } return this; },
 			// key배열 습득
-			keys  : objectCommonInterface.keys,
+			keys  : COMMON_KEYS_METHOD.keys,
 			//첫번째 요소 반환.
 			zero  :function(){ return N.dataFirst(this); },
 			first :function(){ return N.dataFirst(this); },
@@ -1749,8 +1749,8 @@
 			drop:function(index){ index=index?index:0;return this.subarray(index).concat(this.subarr(index+1)); },
 			setDrop:function(index) { return this.setSource(this.drop(index)); },
 			// 인수와 같은 요소를 제거한다.
-			remove:function(target) { return this.filter(function(t){ if(t == target) return false; return true; }); },
-			setRemove:function(target) { return this.setSource(this.remove(target)); },
+			getRemove:function(target) { return this.filter(function(t){ if(t == target) return false; return true; }); },
+			remove:function(target) { return this.setSource(this.getRemove(target)); },
 			// 요소중의 중복된 값을 지운다.
 			unique:function(){var result=new N.Array();this.each(function(selfObject){if(result.isAll(function(target){return selfObject!=target;}))result.push(selfObject);});return result;},
 			setUnique:function(){return this.setSource(this.unique());},
@@ -1773,7 +1773,7 @@
 				
 			},
 			//요소안의 string까지 split하여 flaatten을 실행
-			stringFlatten:function(){ return this.save().setMap(function(t){ if(typeof t === "string") return t.split(" "); if(N.isArray(t)) return new N.Array(t).setFlatten().setFilter(function(v){ return N.is(v,"string")}); }).setRemove(undefined).setFlatten(); },
+			stringFlatten:function(){ return this.save().setMap(function(t){ if(typeof t === "string") return t.split(" "); if(N.isArray(t)) return new N.Array(t).setFlatten().setFilter(function(v){ return N.is(v,"string")}); }).remove(undefined).setFlatten(); },
 			setStringFlatten:function(){ return this.setSource( this.stringFlatten() ); },
 			//그룹 지어줌
 			groupWithLength:function(length,reverse){
@@ -1807,6 +1807,7 @@
 				return r;
 			}
 		});
+		
 		N.MODULE_PROPERTY("Array","split",function(text,s){
 			if( N.isArray(text) ) return new N.Array(text);
 			if(typeof text === "string"){
@@ -1825,25 +1826,48 @@
 		});
 	
 		//******************
-		//Object
-		N.MODULE("Object",{
-			//each
-			each:function(f){ for(key in this.Source){ var r = f(this.Source[key],key); if(typeof r == false) {break;} } return this; },
-			keys:objectCommonInterface.keys,
-			reverseEach:function(method){ var keys = this.keys(); for ( var i = keys.length - 1 ; i > -1 ; i--) { if( method(keys[i],i) == false ) break; } return this; },
-			//첫번째 요소 반환.
-			zero:function(){ for(var k in this.Source) return this.Source[k]; },
-			//마지막 요소 반환.
-			last:function(){ var keys = this.keys(); return this.Source[keys[keys.length-1]];},
-			// 값을 추가한다
-			push:function(value,key){ if( typeof key === "string" || typeof key === "number" ){ this.Source[key] = value; } else { var i = 0; var ex = true; do { if(i in this.Source){ i++; } else { ex = false; this.Source[i] = value; } } while (ex); } return this; },
+		//Manage Javascript Object
+		N.MODULE("Manage",{
 			setSource:function(obj,k){ 
-				obj = N.toObject(obj,k); if(typeof obj === "object"){ for(var key in this.Source) delete this.Source[key]; for(var k in obj) this.Source[k] = obj[k]; } return this; 
+				obj = N.toObject(obj,k);
+				if(typeof obj === "object"){ 
+					for(var key in this.Source) delete this.Source[key]; 
+					for(var k in obj) this.Source[k] = obj[k]; 
+				} 
+				return this; 
 			},
+			keys:COMMON_KEYS_METHOD.keys,
+			values:function(){ 
+				var result = [];
+				if(arguments.length){
+					for(var i=0,l=arguments.length;i<l;i++){
+						result.push(this.Source[arguments[i]]);
+					}
+				} else {
+					for (key in this.Source) result.push(this.Source[key]);
+				}
+				return result;
+			},
+			each:function(f){ for(key in this.Source){ var r = f(this.Source[key],key); if(typeof r == false) {break;} } return this; },
+			reverseEach:function(method){ var keys = this.keys(); for ( var i = keys.length - 1 ; i > -1 ; i--) { if( method(keys[i],i) == false ) break; } return this; },
 			count:function(){return N.propsLength(this.Source); },
 			clone:function(){return N.clone(this.Source); },
 			save:function() {return this.__NativeInitializer__(N.clone(this.Source)); },
 			//key value get setter
+			pushKeyValue:function(){
+				for(var i=0,l=Math.ceil(arguments.length/2);i<l;i++){
+					this.Source[arguments[i*2]] = arguments[i*2+1];
+				}
+				return this;
+			},
+			//존재하지 않는 키
+			pushDefaultKeyValue:function(){
+				for(var i=0,l=Math.ceil(arguments.length/2);i<l;i++){
+					var key = this.Source[arguments[i*2]];
+					if(key in this.Source) this.Source[key] = arguments[i*2+1];
+				}
+				return this;
+			},
 			prop:function(k,v){
 				if(N.asString(k) && arguments.length > 1){
 					this.Source[k] = v;
@@ -1861,7 +1885,9 @@
 			propIs    :function(key,test,t,f) { return N.is(this.Source[key],test,t,f); },
 			propLike  :function(key,test,t,f) { return N.like(this.Source[key],test,t,f); },
 			//오브젝트에 키를 가지고 있는지 확인
-			has:function(key){ return key in this.Source; },
+			has:function(key,value){ 
+				return (arguments.length === 2) ? (key in this.Source) ? (this.Source[key] === value) : false : (key in this.Source);
+			},
 			//그러한 value가 존재하는지 확인
 			hasValue:function(value){
 				var result = false;
@@ -1901,8 +1927,8 @@
 				};
 			},
 			//inspect key value
-			isSame:function(obj){ var originObject = this.Source; var judgement = true; new N.Object(obj).each(function(v,k){ if( !(k in originObject) || originObject[k] !== v){ judgement = false; return false; } }); return judgement; },
-			isEqual:function(obj){ var _obj = new N.Object(obj); var oObj = this.Source; var iObj = _obj.get(); var oKeys = this.keys().sort(); var iKeys = _obj.keys().sort(); if(oKeys.length !== iKeys.length) return false; for(var i=0,l=oKeys.length;i<l;i++){ if(oKeys[i] !== iKeys[i]) return false; if(oObj[oKeys[i]] !== iObj[iKeys[i]]) return false; } return true; },
+			isSame:function(obj){ var originObject = this.Source; var judgement = true; new N.Manage(obj).each(function(v,k){ if( !(k in originObject) || originObject[k] !== v){ judgement = false; return false; } }); return judgement; },
+			isEqual:function(obj){ var _obj = new N.Manage(obj); var oObj = this.Source; var iObj = _obj.get(); var oKeys = this.keys().sort(); var iKeys = _obj.keys().sort(); if(oKeys.length !== iKeys.length) return false; for(var i=0,l=oKeys.length;i<l;i++){ if(oKeys[i] !== iKeys[i]) return false; if(oObj[oKeys[i]] !== iObj[iKeys[i]]) return false; } return true; },
 			//오브젝트를 배열로 반환함
 			hashes:function(key,val){ key = typeof key !== "string" ? "key" : key; val = typeof val !== "string" ? "value" : val; var r=[]; for(var k in this.Source){ var o = {}; o[key] = k; o[val] = this.Source[k]; r.push(o); } return r; },
 			//
@@ -1919,22 +1945,15 @@
 			kvo:function(arg){ return this.setSource(this.getKvo.call(this,arg)); },
 			//오브젝트의 키를 지우고자 할때
 			removeAll:function(){ for( var key in this.Source ) delete this.Source[key]; return this.Source; },
-			remove:function(){ var source = this.Source; new N.Array(arguments).setStringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
-			setRemove:function(key){ delete this.Source[key]; return this; },
-			//존재하지 않는 키벨류값을 적용함;
-			touch:function(key,value){ var m = N.clone(this.Source);new N.Array(key).setStringFlatten().each(function(key){ if(!(key in m)) m[key] = value; }); return m; },
-			setTouch:function(key,value){ return this.setSource( this.touch.apply(this,arguments) ); },
-			//키의 배열을 받는다
-			keys:function(){ var result = []; for (key in this.Source) result.push(key); return result; },
-			//값의 배열을 받는다
-			values:function(){ var result = []; for (key in this.Source) result.push(this.Source[key]); return result; },
+			getRemove:function(){ var source = this.Source; new N.Array(arguments).setStringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
+			remove:function(key){ delete this.Source[key]; return this; },
 			getValue:function(key){ return this.Source[key]; },
 			//다른 오브젝트와 함칠때
-			concat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Object(arguments[i]).each(function(v,k){ result[k] = v; }); }; return result; },
+			concat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Manage(arguments[i]).each(function(v,k){ result[k] = v; }); }; return result; },
 			setConcat:function(){ this.setSource(this.concat.apply(this,arguments)); return this; },
 			//다른 오브젝트와 함칠때 이미 있는 값은 오버라이드 하지 않음
 			//todo:marge extend 확인
-			safeConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Object(arguments[i]).each(function(v,k){ if( (k in result) == false) result[k] = v; }); } return result; },
+			safeConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Manage(arguments[i]).each(function(v,k){ if( (k in result) == false) result[k] = v; }); } return result; },
 			setSafeConcat:function(){ this.setSource(this.getSafeConcat.apply(this,arguments)); return this; }
 		}, function(p,n,s){
 			if(typeof s === "string"){
@@ -1943,6 +1962,8 @@
 			} else {
 				this.Source = N.toObject(p,n);
 			}
+		}, function(k){
+			return (arguments.length == 0) ? this.Source : this.Source[k];
 		});
 	
 		//******************
@@ -2083,14 +2104,14 @@
 			reverse : function() { return this.Source.split("").reverse().join(""); },
 			setReverse    : function()   { this.Source = this.reverse(); return this; },
 			//remove
-			remove:function(target){
+			getRemove:function(target){
 				var index = this.Source.indexOf(target);
 				if(index < 0)return this.Source;
 				var targetLength = target.length;
 				return this.Source.substr(0,index) + this.Source.substr(index + targetLength,this.Source.length);
 			},
-			setRemove:function(target){
-				this.Source = this.remove(target);
+			remove:function(target){
+				this.Source = this.getRemove(target);
 				return this;
 			},
 			//model
@@ -2641,8 +2662,8 @@
 			        // specify the data we wish to handle. Plaintext in this case.
 			        trans.addDataFlavor('text/unicode');
 			        // To get the data from the transferable we need two new objects
-			        var str = new N.Object();
-			        var len = new N.Object();
+			        var str = new N.Manage();
+			        var len = new N.Manage();
 			        var str = Components.classes["@mozilla.org/supports-string;[[[[1]]]]"].createInstance(Components.interfaces.nsISupportsString);
 			        var copytext=meintext;
 			        str.data=copytext;
@@ -4796,7 +4817,7 @@
 			checkoutFilter:function(o){ this.FrameCheckoutFilter = o; },
 			checkinFilter:function(o){ this.FrameCheckinFilter = o; },
 			checkout:function(){
-				return new N.Object(this.getCheckoutElementsWithToken()).setMap(function(node,key){
+				return new N.Manage(this.getCheckoutElementsWithToken()).setMap(function(node,key){
 					var value = N.$value(node);
 					return value == null ? "" : value;
 				}).get();
@@ -4864,7 +4885,7 @@
 						N.CALL(this.StatusEvents.StatusWillInactive[status],owner,param) !== false )
 					{
 						if( N.APPLY(this.StatusEvents.StatusInactive[status],owner,param) == false ) return;
-						this.ActiveKeys.setRemove(status);
+						this.ActiveKeys.remove(status);
 						N.CALL(this.StatusEvents.AnyDidInactive           ,owner,param);
 						N.CALL(this.StatusEvents.StatusDidInactive[status],owner,param);
 						if( this.ActiveKeys.length === 0 ) N.CALL(this.StatusEvents.AnyActive);
@@ -4958,16 +4979,15 @@
 				if(typeof name === 'string') this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this);
 			},
 			node:function(innerKey,wrapper){
-				if(arguments.length === 0) return (wrapper ? wrapper : N._NodeQuery)(this.view);
+				if(arguments.length === 0) return (wrapper ? wrapper : N.NodeQuery.new)(this.view);
 				if(!(innerKey in this)) return console.warn(innerKey,"인스턴스의 속성을 찾을수 없습니다.",this); 
-				return (wrapper ? wrapper : N._NodeQuery)(this[innerKey]);
+				return (wrapper ? wrapper : N.NodeQuery.new)(this[innerKey]);
 			},
 			find:function(findKeyword){
 				return findKeyword ? N.find(findKeyword,this.view) : [];
 			}
 		},function(findView,allowMulti,allowInactive){			
 			this.view = N.findLite(findView)[0];
-			
 			if(!this.view) return console.error("ViewAndMode::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",findView);
 			this._super(allowMulti,allowInactive);
 			return true;
@@ -4986,7 +5006,7 @@
 			}
 		},function(targetForm,statusProp,helper){
 			if( this._super(targetForm,false,true) === true ) {
-				this.FormControl = N._Form(this.view);
+				this.FormControl = new N.Form(this.view);
 				if(statusProp) this.addActiveStatus(statusProp);
 		
 				if(typeof helper === 'function') helper = {init:helper};
@@ -5049,7 +5069,7 @@
 			
 			if( this._super(targetRole,true,true) === true ) {
 				
-				this._prop = new N.Object(props);
+				this._prop = new N.Manage(props);
 				this._data = new N.Array(data);
 				
 				var _self = this;
@@ -5340,7 +5360,7 @@
 					this.selectPoolStart();
 					var activeIndexes = new N.Array(this.getActiveIndexes()) ;
 					if( N.dataHas(activeIndexes,index) ) {
-						activeIndexes.setRemove(index);
+						activeIndexes.remove(index);
 						this.setActiveIndexes(activeIndexes,withEvent);
 					}
 					this.selectPoolEnd();
@@ -5451,7 +5471,7 @@
 					} else {
 						//다중 Active를 허용하지 않는 경우
 						//인액티브 대상을 찾아 인액티브 시킵니다.
-						(new N.Array(currentSelects)).setRemove(this).each(function(node){
+						(new N.Array(currentSelects)).remove(this).each(function(node){
 							if(_.allowAutoActive) {
 								N.$removeClass(node,"active");
 								if(yesEvent) N.CALL(_.ContextsEvents.didInactive,node);
@@ -5483,12 +5503,12 @@
 				if(selectSource) return selectSource.getActiveIndexes();return [];
 			},
 			setActiveIndexes:function(indexes,withEvent,sender){
-				(new N.Array(this.Source)).setRemove(sender).each(function(ac, i){ 
+				(new N.Array(this.Source)).remove(sender).each(function(ac, i){ 
 					ac.setActiveIndexes( indexes, (i === 0) ? (withEvent && true) : false ); });
 				return this;
 			},
 			shouldInactive:function(index,withEvent,sender){
-				(new N.Array(this.Source)).setRemove(sender).each(function(ac, i){
+				(new N.Array(this.Source)).remove(sender).each(function(ac, i){
 					//첫번째만 무조건 이벤트 발생
 					ac.shouldInactive( index, (i === 0) ? (withEvent && true) : false ); 
 				});
@@ -5719,7 +5739,7 @@
 										response = requestObject.responseText;
 										break;
 								}
-								this.onSuccess(response, N._Meta(requestObject).lastProp("requestParam") ,this.moduleOption, requestObject);
+								this.onSuccess(response, (new N.Meta(requestObject)).lastProp("requestParam") ,this.moduleOption, requestObject);
 								break;
 							default:
 								if( this.moduleOption.debug == true ) switch(requestObject.status) {
@@ -5730,7 +5750,7 @@
 										console.info("Request:: 500 응답서버 내부오류");
 										break;
 								}
-								this.onError(response, N._Meta(requestObject).lastProp("requestParam") ,this.moduleOption, requestObject);
+								this.onError(response, (new N.Meta(requestObject)).lastProp("requestParam") ,this.moduleOption, requestObject);
 								break;
 						};
 						break;
@@ -5776,12 +5796,12 @@
 				var newRequest = this.getRequestObject();
 		
 				//data 처리
-				var requestData   = new N.Object((typeof this.moduleOption.constData === "object") ? new N.Object(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
-				var requestString = new N.Object(requestData.encodeObject()).join("=","&");
+				var requestData   = new N.Manage((typeof this.moduleOption.constData === "object") ? new N.Manage(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
+				var requestString = new N.Manage(requestData.encodeObject()).join("=","&");
 			
 				// request params (기록용)
 			
-				N._Meta(newRequest).setProp("requestParam",requestData.get());
+				(new N.Meta(newRequest)).setProp("requestParam",requestData.get());
 				N.TRY_CATCH(function(){
 					if( this.option.method.toLowerCase() == "post" ){
 						newRequest.open("POST", this.url, true );
@@ -5840,7 +5860,7 @@
 					"responseText":""
 				}
 			
-				N._Meta(dummyRequstObject).setProp("requestParam",{});
+				(new N.Meta(dummyRequstObject)).setProp("requestParam",{});
 			
 				var _ = this;
 			
@@ -5991,7 +6011,7 @@
 			},
 			needActiveController:function(){
 			
-				this._ActiveController = N.APPLY(N._ActiveController,undefined,arguments);
+				this._ActiveController = N.APPLY(N.ActiveController.new,undefined,arguments);
 				return this._ActiveController;
 			},
 			currentActiveController:function(){
@@ -6083,7 +6103,7 @@
 			},
 			inactive:function(name){
 				if( this.ContainerActiveKeys.has(name)) {
-					this.ContainerActiveKeys.setRemove(name);
+					this.ContainerActiveKeys.remove(name);
 					this._triggeringInactiveEvents(this.ContainerPlaceholder[name],name);
 				}
 			},
@@ -6340,7 +6360,7 @@
 					result.push( keyPath );
 				});
 			
-				result.setRemove("");
+				result.remove("");
 				return result;
 			},
 			// 글자로된 패스를 반환한다.
@@ -6357,7 +6377,7 @@
 					if(N.isArray(data)) {
 						return {};
 					} else {
-						return new N.Object(data).setRemove(this.SourceChildrenKey).get();
+						return new N.Manage(data).remove(this.SourceChildrenKey).get();
 					}
 				}
 			},
@@ -6399,7 +6419,7 @@
 										} else {
 											return owner.Source[owner.SourceChildrenKey];
 										}
-									}).setFlatten().setRemove(undefined);
+									}).setFlatten().remove(undefined);
 									break;
 							}
 						} else if(typeof pathKey === "number") {
@@ -6412,7 +6432,7 @@
 										return sourceChildren[pathKey];
 									}
 								}
-							}).setRemove(undefined);
+							}).remove(undefined);
 						}
 					});
 					return selectData;
@@ -6582,7 +6602,7 @@
 	
 		N.MODULE("ViewModel",{
 			needRenderView:function(depth,managedData,feedViews,viewController){
-				var renderResult = (N.isType(this.Source[depth],"Template") == true) ? managedData.template(this.Source[depth]) : this.Source[depth].call(managedData,managedData,feedViews);
+				var renderResult = (N.isModule(this.Source[depth],"Template") == true) ? managedData.template(this.Source[depth]) : this.Source[depth].call(managedData,managedData,feedViews);
 			
 				if( renderResult !== false) if(typeof renderResult === 'object' && 'nodeName' in renderResult ) {
 					return renderResult;
@@ -6600,7 +6620,7 @@
 			clone:function(){
 				var init = this.Source.clone();
 				for(var i=0,l=arguments.length;i<l;i++) if( arguments[i] ) init[i] = arguments[i];
-				return N._ViewModel.apply(undefined,init.toArray());
+				return N.ViewModel.new.apply(undefined,init.toArray());
 			}
 		},function(renderDepth){
 			//tempate 타겟을 설정
@@ -6623,7 +6643,7 @@
 			},
 			removeFromParent:function(){
 				if(this.Parent){
-					this.Parent.Child.setRemove(this);
+					this.Parent.Child.remove(this);
 					this.Parent = undefined;
 				}
 			},
@@ -6672,7 +6692,7 @@
 				}
 			},
 			replaceValue:function(data,rerender){
-				if( N.isType(data,'ManagedData') ) data = data.value();
+				if( N.isModule(data,'ManagedData') ) data = data.value();
 				if( typeof data === 'object' ) this.Source = N.clone(data);
 				if( rerender === true ) this.rerender();
 			},
@@ -6934,7 +6954,7 @@
 					});
 				
 					removeBindNodeTarget.each(function(bindNode){
-						owner.bindValueNodes.setRemove(bindNode);
+						owner.bindValueNodes.remove(bindNode);
 					});
 				
 					//스트럭쳐 노드 삭제
@@ -7046,8 +7066,8 @@
 				});
 			},
 			setManagedData:function(managedData){
-				if(N.isType(managedData,"DataContext")) managedData = managedData.getRootManagedData();
-				if(N.isType(managedData,"ManagedData")) {
+				if(N.isModule(managedData,"DataContext")) managedData = managedData.getRootManagedData();
+				if(N.isModule(managedData,"ManagedData")) {
 					this.managedData = managedData;
 					N.CALL(this.dataDidChange,this);
 					return true;
@@ -7192,7 +7212,7 @@
 			this.view = N.findLite(view)[0];
 			if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
 			if(managedData)this.setManagedData(managedData);
-			this.viewModel     = viewModel ? N.isArray(viewModel) ? N._ViewModel.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
+			this.viewModel     = viewModel ? N.isArray(viewModel) ? N.ViewModel.new.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
 		
 			//바인딩 관련 인자
 			this.bindValueNodes = [];
@@ -7256,47 +7276,6 @@
 				};
 		});
 	
-		N.MODULE("Counter",{
-			timeoutHandler:function(){
-				if(this._timeout)clearTimeout(this._timeout);
-				var now = (+(new Date()));
-				if( this._moveEnd > now ) {
-					this._countProcesser ?
-						N.CALL(this._whenCounting,this,this._countProcesser(1-(this._moveEnd-now)/this.duration)) :
-						N.CALL(this._whenCounting,this,1-(this._moveEnd-now)/this.duration);
-					var _ = this;
-					this._timeout = setTimeout(function(){ _.timeoutHandler.call(_) },this.rate);
-				} else {
-					this.moveStart = null;
-					this.moveEnd   = null;
-					N.CALL(this._whenCounting,this,1);
-					N.CALL(this._whenCountFinish,this,1);
-				}
-			},
-			whenCountStart :function(m){ this._whenCountStart = m; },
-			whenCount      :function(m){ this._whenCounting = m; },
-			whenCountFinish:function(m){ this._whenCountFinish = m; },
-			setCountProcessor:function(m){
-				if(typeof m === "function") this._countProcesser = m;
-			},
-			setRate:function(rate){
-				this.rate = typeof rate === 'number' ? rate : 20;
-			},
-			start:function(ms,counting,finish){
-				this.duration = typeof ms   === 'number' ? ms : 300;
-				if(counting)this.whenCount(counting);
-				if(finish)this.whenCountFinish(finish);
-			
-				var _ = this;
-				this._moveStart = (+(new Date()));
-				this._moveEnd   = this._moveStart + this.duration;
-				this.timeoutHandler();
-			}
-		},function(ms,counting,finish,rate,now){
-			this.setRate(rate);
-			if(finish === true || ms === true || rate === true || now === true) { this.start(ms,counting,finish) }
-		});
-		
 		N.MODULE("Binder",{
 			shouldSetFromListenersInfo:function(listeners,setValue,dataName){
 				var beforeValue = this.beforeProperty.prop(dataName);
@@ -7306,7 +7285,7 @@
 					listenerInfo.proc.call(listenerInfo.listener,setValue,beforeValue);
 				});
 				this.beforeProperty.prop(dataName,setValue);
-				this.protectProperty.setRemove(dataName);
+				this.protectProperty.remove(dataName);
 			},
 			getListenerInfo:function(listener,propertyName){
 				if(!listener) return this.Source.get();
@@ -7435,16 +7414,71 @@
 				redefine[this.defaultKey] = defaultData;
 				defaultData = redefine;
 			}
-			this.beforeProperty  = new N.Object(defaultData);
+			this.beforeProperty  = new N.Manage(defaultData);
 			// { listener:Object , listen:"name" ,proc: }
+		});
+	
+		N.MODULE("Counter",{
+			timeoutHandler:function(){
+				if(this._timeout)clearTimeout(this._timeout);
+				var now = (+(new Date()));
+				if( this._moveEnd > now ) {
+					this._countProcesser ?
+						N.CALL(this._whenCounting,this,this._countProcesser(1-(this._moveEnd-now)/this.duration)) :
+						N.CALL(this._whenCounting,this,1-(this._moveEnd-now)/this.duration);
+					var _ = this;
+					this._timeout = setTimeout(function(){ _.timeoutHandler.call(_) },this.rate);
+				} else {
+					this.moveStart = null;
+					this.moveEnd   = null;
+					N.CALL(this._whenCounting,this,1);
+					N.CALL(this._whenCountFinish,this,1);
+				}
+			},
+			whenCountStart :function(m){ this._whenCountStart = m; },
+			whenCount      :function(m){ this._whenCounting = m; },
+			whenCountFinish:function(m){ this._whenCountFinish = m; },
+			setCountProcessor:function(m){
+				if(typeof m === "function") this._countProcesser = m;
+			},
+			setRate:function(rate){
+				this.rate = typeof rate === 'number' ? rate : 20;
+			},
+			start:function(ms,counting,finish){
+				this.duration = typeof ms   === 'number' ? ms : 300;
+				if(counting)this.whenCount(counting);
+				if(finish)this.whenCountFinish(finish);
+			
+				var _ = this;
+				this._moveStart = (+(new Date()));
+				this._moveEnd   = this._moveStart + this.duration;
+				this.timeoutHandler();
+			}
+		},function(ms,counting,finish,rate,now){
+			this.setRate(rate);
+			if(finish === true || ms === true || rate === true || now === true) { this.start(ms,counting,finish) }
 		});
 		
 		N.MODULE("Timeline",{
-			push:function(){
-				
-			},
-			getTimeProperties:function(){
-				
+			push:function(pushProperties){
+				if( N.isModule(pushProperties,"TimeProperties") ){
+					this.Source.add(pushProperties);
+					
+					var ts = pushProperties.timeStart();
+					var te = pushProperties.timeEnd();
+					
+					if(this.Source.length === 1) {
+						this.Status.pushKeyValue("timeStart",ts,"timeEnd",te);
+					} else if(this.Source.length > 1) {
+						var se = this.Status.values("timeStart","timeEnd");
+						if(se[0] > ts){
+							this.Status.pushKeyValue("timeStart",ts);
+						}
+						if(se[1] < te){
+							this.Status.pushKeyValue("timeEnd",te);
+						}
+					}
+				}
 			},
 			currentValues:function(){
 				
@@ -7460,17 +7494,21 @@
 				
 			},
 			setFPS:function(fps){
-				this._fps = (typeof fps === "number") ? fps : 30;
-				this._fpm = N.Number.parseInt(1000 / this._fps);
+				this._fps       = (typeof fps === "number") ? fps : 30;
+				this._wheelTime = N.Number.parseInt(1000 / this._fps);
 				this._currentTime = 0;
 			}
 		},function(fps){
+			this.Source = new N.Array();
+			this.Status = new N.Manage({
+				timeStart:0,
+				timeEnd  :0
+			});
 			if(typeof fps === "number") this.setFPS(fps);
 		});
 		
 		N.MODULE("TimeProperties",{
 			insertTimeProperty:function(time,data){
-				console.log("insert",time,data);
 				if(typeof time !== "number" || typeof data !== "object"){
 					return console.error("addTimeProperty:: must be argument type (number, object)");
 				} 

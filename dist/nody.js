@@ -1118,11 +1118,13 @@
 		//if natvie query selector in browser then alternative engine include
 		if(!N.QUERY_SELECTOR_ENGINE){
 			if(typeof Sizzle === "function"){
+				console.info("nody is sizzle selector engine detected");
 				N.QUERY_SELECTOR_ENGINE = function(node,selector){
 					return Sizzle(selector,node);
 				}
 				N.QUERY_SELECTOR_ENGINE_ID = "sizzle";
 			} else if(typeof jQuery === "function") {
+				console.info("nody is jquery selector engine detected");
 				N.QUERY_SELECTOR_ENGINE = function(node,selector){
 					return jQuery(selector,node).toArray();
 				}
