@@ -9,30 +9,77 @@ Nody.js는 데이터 관점에서 표준적인 방법으로 DOM을 쉽게 구성
   - 템플릿 사용이 편하며 표현이 매우 다양합니다.
   - 바인딩을 쉽게 구현할수 있습니다.
 
-#### 노드생성 예제
+#### Example of create node
 ```javascript
 nd.make('button.btn.btn-default#btn-action');
+//=> <button class="btn btn-default" id="btn-action"></button>
+
 nd.make('input[type=checkbox][checked]');
+//=> <input type="checkbox" checked="" value="">
+
 nd.make('div',
 	nd.make('a',nd.make('span','first value')),
 	nd.make('a',nd.make('span','second value'))
 );
+//=> <div><a><span>first value</span></a><a><span>second value</span></a></div>
 ```
 ```javascript
 nd.makes('div>a>span::first value+span::second value');
+//=> [ <div><a><span>first value</span><span>second value</span></a></div> ]
+
 nd.makes('ul>li.item-$*3');
+//=> [ <ul><li class="item-1"></li><li class="item-2"></li><li class="item-3"></li></ul> ]
+
 nd.makes('table>thead>tr>td^^tbody>tr>td');
+//=> [ <table><thead><tr><td></td></tr><tbody><tr><td></td></tr></tbody></thead></table> ]
+
+nd.makes('h1::title+p::subtitle+section>header+.content+footer');
+//=> [ <h1>title</h1>, <p>subtitle</p>, <section><header></header><div class="content"></div><footer></footer></section> ]
 ```
 
 
-#### 노드선택 예제
+#### Example of selector
 ```javascript
 nd.find('div','#wrapper'); //=> [element...]
 nd.find('ul li',0); //=> element
 nd.find('ul li',jQuery).attr('role','list-item');  // => [li[role=list-item]]
 ```
 
-#### 템플릿 사용 예제
+#### Example of binding
+```html
+	<input id="bind1">
+	<p>
+		Input value is <span id="bind2"></span>
+	</p>
+```
+```javascript
+var binder = new nd.Binder(10); // initial value
+binder.bindNode("#bind1");
+binder.bindNode("#bind2");
+// That's it! :)
+```
+
+#### Example of binding 2
+```html
+	<input id="bind1">
+	<input id="bind2">
+	<p>
+		First input value is <span id="bind1-1"></span>
+	</p>
+	<p>
+		Second input value is <span id="bind2-1"></span>
+	</p>
+```
+```javascript
+var binder = new nd.Binder({"bind1":5,"bind2":10}); // initial value
+binder.bindNode("#bind1","bind1");
+binder.bindNode("#bind1-1","bind1");
+
+binder.bindNode("#bind2","bind2");
+binder.bindNode("#bind2-1","bind2");
+```
+
+#### Example of template
 ```javascript
 nd.makes('ul#ul','body');
 
@@ -47,7 +94,7 @@ var temp = new nd.Template('<li nd-class="index" nd-value="item-value"></li>');
 	);
 ```
   
-#### 파셜 및 바인딩 예제
+#### Example of partial (and binding)
 ```javascript
 nd.makes('div#placeholder-$*2','body');
 
@@ -78,9 +125,12 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
 Nody는 0.24~0.25버전은 매우 불안정 할 예정입니다. 그래서 왠만하면 dist에 추가되지 않습니다. 
 스크립트의 크기도 매우 큰 이슈입니다. 0.26부터 안정화와 코드정리가 좀 더 활성화 될것입니다.
 
-#### 0.25.7 업데이트 예정
-  - [ ] Timeline 개발(진행중)
-  - [ ] TimeProps 개발(진행중)
+#### 0.25.7 업데이트
+  - [x] dateExp, timeStampExp, timeScaleExp 업데이트 및 추가
+  - [x] TimeProps 모듈 추가
+  - [ ] Timeline 모듈 추가
+  - [x] Binder모듈 디자인골 달성
+  - [ ] MVVM그룹과 Binder모듈을 통합
   - [ ] 데이터와 연동이 자연스럽게 연결되는 ActiveController 업데이트
   - [ ] ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
   - [ ] 새로운 스타일시트 헬퍼 codykit적용
@@ -100,9 +150,8 @@ Nody는 0.24~0.25버전은 매우 불안정 할 예정입니다. 그래서 왠�
   - [X] node template의 컨샙을 명확히 함
   - [X] MVVM 모듈 안정화
   - [X] 모듈 메서드 버그 fix
-  - [X] ActiveStatus모듈이 ViewStatus로 이름변경
-  - [X] ViewStatus, FormController 메서드 체계 변경
-  - [X] RoleController가 ViewStatus의 자식으로 변경
+  - [X] ActiveStatus > ViewAndModel > FormController 상속관계 성립
+  - [X] ActiveStatus > ViewAndModel > RoleController 상속관계 성립
   - [X] Touch, ScrollBox, ScrollTrack 모듈 제거됨
   - [x] RoleComponent의 구체화
   - [x] 여러객체의 값을 동기화 시켜주는 Binder모듈이 새로 추가됨 특별한 부분은 값이 바인딩될때 객체마다의 권한과 결정에 따라 트렌젝션 같은 처리가 가능

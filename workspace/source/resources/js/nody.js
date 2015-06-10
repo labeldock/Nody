@@ -12,7 +12,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.25.6", N.BUILD = "1142";
+		N.VERSION = "0.25.7", N.BUILD = "1144";
 	
 		// Core verison
 		N.CORE_VERSION = "1.9.5", N.CORE_BUILD = "84";
@@ -573,7 +573,8 @@
 			//owner를 쉽게 바꾸면서 함수실행을 위해 있음
 			"APPLY" : function(f,owner,args) { if( typeof f === "function" ) { args = N.cloneArray(args); return (args.length > 0) ? f.apply(owner,args) : f.call(owner); } },
 			//값을 플래튼하여 실행함
-			"FLATTENCALL" : function(f,owner) { N.APPLY(f,owner,N.dataFlatten(Array.prototype.slice.call(arguments,2))); },
+			"argumentsFlatten":function(){ var result = []; function arrayFlatten(args){ N.dataEach(args,function(arg){ if(N.isArray(arg)) return N.dataEach(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
+			"FLATTENCALL" : function(f,owner) { N.APPLY(f,owner,N.argumentsFlatten(Array.prototype.slice.call(arguments,2))); },
 			"CALL"    :function(f,owner){ return (typeof f === "function") ? ((arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner)) : undefined; },
 			"CALLBACK":function(f,owner){ return (typeof f === "function") ? ((arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner)) : f; },
 			//배열이 아니면 배열로 만들어줌
@@ -609,29 +610,6 @@
 			},
 			//좌측으로 0을 붙임
 			"padLeft":function(nr,n,str){ return new N.Array(n-new String(nr).length+1).join(str||'0')+nr; },
-			// 참고! : human readable month
-			"dateexp":function(dv,format,pad){
-				if(N.isArray(dv)) dv = dv.join(' ');
-			
-				var dt = /(\d\d\d\d|)[^\d]?(\d\d|\d|).?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)/.exec(dv);
-				dt[1] = dt[1] || (((new Date()).getYear() + 1900) +'');
-				dt[2] = dt[2] || ((new Date()).getMonth()+1);
-				dt[3] = dt[3] || ((new Date()).getDate());
-				dt[4] = dt[4] || ("00");
-				dt[5] = dt[5] || ("00");
-				dt[6] = dt[6] || ("00");
-			
-				var r    = [ dt[1],dt[2],dt[3],dt[4],dt[5],dt[6],dt[0] ];
-				r.year   = dt[1],r.month  = dt[2],r.date = dt[3],r.hour = dt[4],r.minute = dt[5],r.second = dt[6],r.init = dt[7];
-				r.format = function(s){
-					return s.replace('YYYY',r.year).replace(/(MM|M)/,r.month).replace(/(DD|D)/,r.date)
-					.replace(/(hh|h)/,r.hour).replace(/(mm|m)/,r.minute).replace(/(ss|s)/,r.second)
-					.replace(/(A)/,(N.toNumber(r.hour) > 12) ? 'PM' : 'AM');
-				}
-				if(typeof format === 'string') 
-					return r.format(format);
-					return r;
-			},
 			//1:길이와 같이 2: 함수호출
 			"times":N.CONTINUE_FUNCTION(function(l,f,s){ l=N.toNumber(l); for(var i=(typeof s === 'number')?s:0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },2),
 			"timesMap":N.CONTINUE_FUNCTION(function(l,f,s){ 
@@ -664,7 +642,7 @@
 			//
 			"inject":function(v,f,d){ d=(typeof d=="object"?d:{});v=N.toArray(v); for(var i=0,l=v.length;i<l;i++)f(d,v[i],i);return d;},
 			// 배열안의 배열을 풀어냅니다.
-			"dataFlatten":function(){ var result = []; function arrayFlatten(args){ N.dataEach(args,function(arg){ if(N.isArray(arg)) return N.dataEach(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
+			"dataFlatten":N.CONTINUE_FUNCTION(function(){ return N.argumentsFlatten(arguments); },1),
 			// false를 호출하면 배열에서 제거합니다.
 			"dataFilter":N.CONTINUE_FUNCTION(function(inData,filterMethod){
 				var data = N.toArray(inData);
@@ -908,6 +886,85 @@
 					//javascript instance
 					if(t instanceof v) return true; return false;
 				}
+			},
+			// 참고! : human readable month
+			"dateExp":function(dv,format,pad){
+				if(N.isArray(dv)) dv = dv.join(' ');
+			
+				var dt = /(\d\d\d\d|)[^\d]?(\d\d|\d|).?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)/.exec(dv);
+				dt[1] = dt[1] || (((new Date()).getYear() + 1900) +'');
+				dt[2] = dt[2] || ((new Date()).getMonth()+1);
+				dt[3] = dt[3] || ((new Date()).getDate());
+				dt[4] = dt[4] || ("00");
+				dt[5] = dt[5] || ("00");
+				dt[6] = dt[6] || ("00");
+			
+				var r    = [ dt[1],dt[2],dt[3],dt[4],dt[5],dt[6],dt[0] ];
+				r.year   = dt[1],r.month  = dt[2],r.date = dt[3],r.hour = dt[4],r.minute = dt[5],r.second = dt[6],r.init = dt[7];
+				r.format = function(s){
+					return s.replace('YYYY',r.year).replace(/(MM|M)/,r.month).replace(/(DD|D)/,r.date)
+					.replace(/(hh|h)/,r.hour).replace(/(mm|m)/,r.minute).replace(/(ss|s)/,r.second)
+					.replace(/(A)/,(N.toNumber(r.hour) > 12) ? 'PM' : 'AM');
+				}
+				if(typeof format === 'string') 
+					return r.format(format);
+					return r;
+			},
+			"timeStampExp":function(exp){
+				if( arguments.length === 0){
+					return (+new Date());
+				}
+				if( typeof exp === "string") {
+					exp = N.dateExp(exp);
+				}
+				if( typeof exp === "number") {
+					return exp;
+				}
+				if( N.isArray(exp) && (exp.length == 7) ){
+					exp = new Date(exp[0], exp[1], exp[2], exp[3], exp[4], exp[5]);
+				}
+				if( exp instanceof Date){
+					return (+exp);
+				}
+				return 0;
+			},
+			"timeScaleExp":function(exp){
+				var scale = 0;
+				if(typeof exp === "number") {
+					return exp;
+				}
+				if(typeof exp === "string") {
+					// 
+					exp = exp.replace(/\d+(Y|year)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*525600000; });
+						return "";
+					})
+					exp = exp.replace(/\d+(M|month)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*43200000; });
+						return "";
+					})
+					exp = exp.replace(/\d+(D|day)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*1440000; });
+						return "";
+					})
+					exp = exp.replace(/\d+(h|hour)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*1440000; });
+						return "";
+					})
+					exp = exp.replace(/\d+(ms|millisecond)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*1; });
+						return "";
+					})
+					exp = exp.replace(/\d+(m|minute)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*60000; });
+						return "";
+					})
+					exp = exp.replace(/\d+(s|second)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*1000; });
+						return "";
+					})
+				}
+				return scale;
 			}
 		});
 		N.KIT.EACH_TO_METHOD();
@@ -1556,7 +1613,7 @@
 			// 현재의 배열을 보호하고 새로운 배열을 반환한다.
 			save : function(v){ return this.__NativeInitializer__(this); },
 			//array안의 array 풀어내기
-			flatten : function(){ return new N.Array(N.dataFlatten(this)); },
+			flatten : function(){ return new N.Array(N.argumentsFlatten(this)); },
 			setFlatten    : function(){return this.setSource(this.flatten());},
 			//다른 배열 요소를 덛붙인다.
 			concat : function(){ return new N.Array(arguments).inject(this.save(),function(v,_a){ new N.Array(v).each(function(v2){ _a.push(v2); }); }); },
@@ -3287,13 +3344,13 @@
 			},
 			// 하위루트의 모든 노드를 검색함 (Continutiltiy에서 중요함)
 			"findIn" : N.CONTINUE_FUNCTION(function(root,find,index){
-				return (typeof index === 'number') ? N.findWithSeveralPlaces(find || '*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.dataFlatten))[index] :
-					   (typeof find  === 'number') ? N.findWithSeveralPlaces('*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.dataFlatten))[find]   :
-													 N.findWithSeveralPlaces(find || '*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.dataFlatten)) ;
+				return (typeof index === 'number') ? N.findWithSeveralPlaces(find || '*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten))[index] :
+					   (typeof find  === 'number') ? N.findWithSeveralPlaces('*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten))[find]   :
+													 N.findWithSeveralPlaces(find || '*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten)) ;
 			},2),
 			// 자식루트의 노드를 검색함
 			"findOn": N.CONTINUE_FUNCTION(function(root,find){
-				var finds = N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children; },N.dataFlatten);
+				var finds = N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children; },N.argumentsFlatten);
 				switch(typeof find){
 					case "number": return [finds[find]]; break;
 					case "string": return N.dataFilter(finds,function(node){ return N.NodeUtil.is(node,find); }); break;
@@ -3745,6 +3802,7 @@
 			"hasFocus":function(sel){ return document.activeElement == N.findLite(sel)[0]; },
 			//케럿을 움직일수 있는 상태인지 검새합니다.
 			"caretPossible":function(sel){ var node = N.findLite(sel)[0]; if( N.$hasFocus(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
+			"caretPosition":function(e){ var t,n,a,o,r,c=0,l=0;return"number"==typeof e.selectionStart&&"number"==typeof e.selectionEnd?(c=e.selectionStart,l=e.selectionEnd):(n=document.selection.createRange(),n&&n.parentElement()==e&&(o=e.value.length,t=e.value.replace(/\r\n/g,"\n"),a=e.createTextRange(),a.moveToBookmark(n.getBookmark()),r=e.createTextRange(),r.collapse(!1),a.compareEndPoints("StartToEnd",r)>-1?c=l=o:(c=-a.moveStart("character",-o),c+=t.slice(0,c).split("\n").length-1,a.compareEndPoints("EndToEnd",r)>-1?l=o:(l=-a.moveEnd("character",-o),l+=t.slice(0,l).split("\n").length-1)))),{start:c,end:l}},
 			//어트리뷰트값을 읽거나 변경합니다.
 			"attr":function(sel,v1,v2){ var node = N.findLite(sel)[0]; if(node) return N.NodeUtil.attr.apply(undefined,Array.prototype.slice.call(arguments)); },
 			//css스타일로 el의 상태를 확인합니다.
@@ -3820,17 +3878,19 @@
 						}
 						//set
 						var setVal = value+"";
-			
-						if(N.$caretPossible(node)){
-							var gap = node.value.length - value.length;
-							var cur = ELCARET(node);
+						
+						// todo
+						//if( N.$.caretPossible(node) ) {
+						//	var gap = node.value.length - value.length;
+						//	var cur = N.$.caretPosition(node).start;
+						//	node.value = value;
+						//	ELCARET(node,cur-gap)
+						//	return node;
+						//} else {
+							// alt
 							node.value = value;
-							ELCARET(node,cur-gap)
 							return node;
-						} else {
-							node.value = value;
-							return node;
-						}
+						//}
 						break;
 					case "select":
 						if(typeof value === "undefined") return node.value;
@@ -4018,7 +4078,7 @@
 				var newContents = [];
 				var params = Array.prototype.slice.call(arguments);
 				params.shift();
-				N.dataEach( N.dataFlatten(params) ,function(content){
+				N.dataEach( N.argumentsFlatten(params) ,function(content){
 					if(N.isNode(content)){
 						newContents.push(content);
 					} else {
@@ -5069,7 +5129,7 @@
 					});
 				}
 			},
-			getTargets:function()  { return N.dataFlatten(this.getGroups());  },
+			getTargets:function()  { return N.argumentsFlatten(this.getGroups());  },
 			getContext:function(eq){ return this.getContexts()[eq]; },
 			getSelect :function(eq){ return this.getSelects()[eq]; },
 			getTarget :function(eq){ return this.getTargets()[eq]; },
@@ -7257,13 +7317,30 @@
 		});
 		
 		N.MODULE("Binder",{
-			send:function(sender,dataName,setValue,forceLevel){
+			shouldSetFromListenersInfo:function(listeners,setValue,dataName){
+				var beforeValue = this.beforeProperty.prop(dataName);
+				//set send
+				this.protectProperty.add(dataName);
+				(new N.Array(listeners)).each(function(listenerInfo){
+					listenerInfo.proc.call(listenerInfo.listener,setValue,beforeValue);
+				});
+				this.beforeProperty.prop(dataName,setValue);
+				this.protectProperty.setRemove(dataName);
+			},
+			getListenerInfo:function(listener,propertyName){
+				if(!listener) return this.Source.get();
+				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
+				return this.Source.filter(function(listenerInfo){
+					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName);
+				});
+			},
+			send:function(sender,setValue,dataName,forceLevel){
 				if(this.protectProperty.has(dataName)){
 					if(this.trace) console.info(sender,"was make duplicate send (",dataName,") is still processing");
 					return;
 				}
 				//duplicate send protect
-				var beforeValue = this.beforeProperty[dataName];
+				var beforeValue = this.beforeProperty.prop(dataName);
 				if(setValue === beforeValue){
 					if(this.trace) console.info(sender,"send is same from before value.");
 					return;
@@ -7272,33 +7349,30 @@
 					return (sender !== listenerInfo.sender && dataName === listenerInfo.propertyName) ? true : false;
 				});
 				//allow inspect
-				var allowProc   = true
-				var forceLevel  = (typeof forceLevel === "number") ? forceLevel : 0;
-				
+				var allowProc    = true
+				var forceLevel   = (typeof forceLevel === "number") ? forceLevel : 0;
+				var _self        = this;
 				sendTargets.each(function(listenerInfo){
 					if(listenerInfo.allowProc){
 						if( listenerInfo.allowProc(setValue,beforeValue) === false ){
 							if(listenerInfo.protectLevel >= forceLevel) {
-								allowProc = false;
-								return false;
+								//transaction
+								_self.shouldSetFromListenersInfo(_self.getListenerInfo(sender,dataName),beforeValue,dataName);
+								return allowProc = false;
 							}
 						}
 					}
 				});
-				//set send
-				this.protectProperty.add(dataName);
-				sendTargets.each(function(listenerInfo){
-					listenerInfo.proc.call(listenerInfo.listener,setValue,beforeValue);
-				});
-				this.beforeProperty[dataName] = setValue;
-				this.protectProperty.setRemove(dataName);
+				//set data
+				if(allowProc === true) this.shouldSetFromListenersInfo(sendTargets,setValue,dataName);
 			},
 			//custom send
-			setValue:function(dataName,setValue,forceLevel){
-				this.send(null,dataName,setValue,forceLevel);
+			setValue:function(setValue,propertyName,forceLevel){
+				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
+				this.send(null,setValue,propertyName,forceLevel);
 			},
-			getValue:function(dataName){
-				return this.beforeProperty[dataName]
+			getValue:function(propertyName){
+				return this.beforeProperty.prop(propertyName);
 			},
 			listen:function(listener,propertyName,proc,allowProc,protectLevel){
 				//value inspect
@@ -7311,30 +7385,47 @@
 				})){
 					return console.error("BindAdapter:: already set listener & property");
 				}
-				this.Source.push({
+				var listenerInfo = {
 					listener:listener,
 					propertyName:propertyName,
 					proc:proc,
 					allowProc:allowProc,
 					protectLevel:(typeof protectLevel === "number") ? protectLevel : 0
-				});
+				};
+				this.Source.push(listenerInfo);
+				
+				//beforeProperty set
+				if(this.beforeProperty.has(propertyName)) 
+					this.shouldSetFromListenersInfo(listenerInfo,this.beforeProperty.prop(propertyName),propertyName);
+			},
+			inspect:function(allowProc,propertyName,protectLevel){
+				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
+				if(typeof allowProc !== "function"){
+					return console.error("BindAdapter::inspect arguments must be (inspectProc,propertyName)(string,fucntion)");
+				}
+				this.listen(this,propertyName,function(){},allowProc,protectLevel);
 			},
 			bindNode:function(node,propName,setThisNodeValue){
 				var listener = N.find(node,0);
 				if(listener) {
-					var propertyName = (typeof propertyName === "string")?propertyName:"default"
+					var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
 					
 					if(listener.tagName == "INPUT") {
 						var binder = this;
 						N.$on(listener,"change",function(){
-							binder.send(listener,propertyName,listener.value);
+							binder.send(listener,listener.value,propertyName);
 						});
 					}
 					this.listen(listener,propertyName,function(value){
-						console.log('listen node!',this);
 						N.$value(listener,value);
 					});
 				}
+			},
+			getListeners:function(){
+				return this.Source.map(function(listenerInfo){ listenerInfo.listener }).setUnique();
+			},
+			getProperties:function(){
+				return this.Source.map(function(listenerInfo){ listenerInfo.propertyName }).setUnique();
 			},
 			removeListener:function(listener){
 				this.Source.setFilter(function(listenerInfo){
@@ -7346,29 +7437,35 @@
 					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName) ? false : true;
 				});
 			},
-			removeProperty:function(listener){
+			removeProperty:function(propertyName){
 				this.Source.setFilter(function(listenerInfo){
 					return (listenerInfo.propertyName === propertyName) ? false : true;
 				});
 			}
-		},function(trace){ 
+		},function(defaultData,trace,defaultKey){ 
 			//console trace
 			this.trace           = true;
 			this.Source          = new N.Array();
+			this.defaultKey      = (typeof defaultKey === "string") ? defaultKey : "default"
 			//dobule set protect
 			this.protectProperty = new N.Array();
-			this.beforeProperty  = new N.Object();
+			if(!N.isNil(defaultData) && typeof defaultData !== "object"){
+				var redefine = {};
+				redefine[this.defaultKey] = defaultData;
+				defaultData = redefine;
+			}
+			this.beforeProperty  = new N.Object(defaultData);
 			// { listener:Object , listen:"name" ,proc: }
 		});
 		
 		N.MODULE("Timeline",{
-			pushTimeProps:function(){
+			push:function(){
 				
 			},
-			getTimeProps:function(){
+			getTimeProperties:function(){
 				
 			},
-			getPropValue:function(){
+			currentValues:function(){
 				
 			},
 			timestamp:function(){
@@ -7391,7 +7488,8 @@
 		});
 		
 		N.MODULE("TimeProperties",{
-			addTimeProperty:function(time,data){
+			insertTimeProperty:function(time,data){
+				console.log("insert",time,data);
 				if(typeof time !== "number" || typeof data !== "object"){
 					return console.error("addTimeProperty:: must be argument type (number, object)");
 				} 
@@ -7407,6 +7505,18 @@
 					props:data
 				},insertAt);
 			},
+			push:function(){
+				var _self = this;
+				N.dataFlatten(arguments,N.dataEach,function(pushData){
+					if(typeof pushData !== "object"){
+						var alchemy = {};
+						alchemy[_self.defaultKey] = pushData;
+						pushData = alchemy;
+					}
+					var pushTime = _self.defaultStartTime + (_self.defaultInertval * _self.Source.length);
+					_self.insertTimeProperty(pushTime,pushData);
+				});
+			},
 			timeStart:function(){
 				var timeProps = this.Source.first();
 				return timeProps ? timeProps.time : null;
@@ -7420,9 +7530,11 @@
 						this.Source.isOne() ? 0 :
 						this.timeStart() - this.timeEnd();
 			}
-		},function(dataName){
-			this.name = dataName;
-			this.Source = new N.Array();
+		},function(startTime,interval,defaultKey){
+			this.Source     = new N.Array();
+			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "default"
+			this.defaultStartTime = startTime ? N.timeStampExp(startTime): N.timeStampExp();
+			this.defaultInertval  = interval  ? N.timeScaleExp(interval) : N.timeScaleExp("1h");
 		});
 	
 		N.EXTEND_MODULE("Counter","BezierCounter",{
