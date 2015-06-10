@@ -12,10 +12,10 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.24.6", N.BUILD = "1108";
+		N.VERSION = "0.25.7", N.BUILD = "1144";
 	
 		// Core verison
-		N.CORE_VERSION = "1.9.3", N.CORE_BUILD = "78";
+		N.CORE_VERSION = "1.9.5", N.CORE_BUILD = "84";
   
 		// Pollyfill : console object
 		if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(N.toString(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
@@ -30,13 +30,13 @@
 		if(typeof W.JSON === "undefined"){ W.JSON = { 'parse' : function(s) { var r; try { r = eval('(' + s + ')'); } catch(e) { r = N.toObject(s); } return r; }, 'stringify' : function(o) { return W.N.toString(obj,Number.POSITIVE_INFINITY,true); } };}
 		
 		// Pollyfill : function bind
-		if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { /* closest thing possible to the ECMAScript 5 internal IsCallable function */ throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments,1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }
+		if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }
 	
-		// Mordenizer : IE8 Success fix
+		// BrowserFix : IE8 Success fix
 		if (typeof W.success === "function"){W.success = "success";}
 	
 		//NativeCore console trace
-		var traceNativeModule = function(name){ if (NModules[name]) { var result = name + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype["set"])+"") )[1] + ")"; var i2 = 0; for(var protoName in NModules[name].prototype ) switch(protoName){ case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__SelfModuleInit__": break; default: if(typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype[protoName])+"") )[1] + ")" ; i2++; break; } return result; } else { return name + " module is not found."; } };
+		var traceNativeModule = function(name){ if (NModules[name]) { var result = name + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype["set"])+"") )[1] + ")"; var i2 = 0; for(var protoName in NModules[name].prototype ) switch(protoName){ case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__NativeInitializer__": break; default: if(typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype[protoName])+"") )[1] + ")" ; i2++; break; } return result; } else { return name + " module is not found."; } };
 		N.API = traceNativeModule;
 		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n " + i + " : " + traceNativeModule(key); i++; } logText.push(moduleText); return logText.join("\n"); };
 	
@@ -45,22 +45,36 @@
 		var NativeFactoryObject = function(type,name,sm,gm){
 			if( !(name in NModules) ){
 				var nativeProto,setter,getter;
+				//console.log(name,type);
 				switch(type){
 					case "object":
 						nativeProto = {};
-						setter      = typeof sm === "function" ? function(v){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : function(v){ this.Source = v; return this; };
+						setter      = typeof sm === "function" ? 
+									  function(){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : 
+									  function(v){ this.Source = v; return this; };
 						getter      = gm?gm:function(){return this.Source;};
 						break;
 					case "array":
 						nativeProto = [];
-						setter      = typeof sm === "function" ? sm : function(v){ return this.setSource(v); };
+						setter      = typeof sm === "function" ? 
+									  sm : 
+									  function(v){ return this.setSource(v); };
 						getter      = function(){ return this.toArray.apply(this,arguments); };
 						break;
-				
 					default: throw new Error("NativeFactoryObject :: 옳지않은 타입이 이니셜라이징 되고 있습니다. => " + type);
 				}
-				var nativeConstructor = function(){ if(typeof this.set === "function"){ 
-					for(var protoKey in NModules[name].prototype){ if(protoKey.indexOf("+") == 0) this[protoKey.substr(1)] = NModules[name].prototype[protoKey]; }; this.set.apply(this,Array.prototype.slice.apply(arguments)); } 
+				
+				var nativeConstructor = function(){ 
+					if(typeof this.set === "function"){ 
+						for(var protoKey in NModules[name].prototype) {
+							//init inital variable
+							if(/^\+[^+]+/.test(protoKey)) {
+								this[protoKey.substr(1)] = NModules[name].prototype[protoKey];
+							}
+						}
+						//set apppy
+						this.set.apply(this,Array.prototype.slice.apply(arguments)); 
+					} 
 				};
 			
 				NModules[name]               = nativeConstructor;
@@ -75,7 +89,12 @@
 				NModules[name].prototype.constructor = nativeConstructor;
 				NModules[name].prototype._super = function(){
 					//scope start
-					var currentScopeDepth,currentScopeModuleName,currentScopePrototype,currentMethodName,currentCallMethod=arguments.callee.caller,superScope = 0;
+					var currentScopeDepth,
+						currentScopeModuleName,
+						currentScopePrototype,
+						currentMethodName,
+						currentCallMethod=arguments.callee.caller,
+						superScope = 0;
 					for(scopeMax=this.__NativeHistroy__.length;superScope<scopeMax;superScope++){
 						currentScopeDepth      = (this.__NativeHistroy__.length - 1) - superScope ;
 						currentScopeModuleName = this.__NativeHistroy__[currentScopeDepth];
@@ -132,7 +151,22 @@
 						break;
 					case "set": if(setflag == true) protoObject[key] = methods[key]; break;
 					case "get": if(getflag == true) protoObject[key] = methods[key]; break;
-					default   : protoObject[key] = methods[key]; break;
+					default   :
+						if(/^\+\+[^\+]+/.test(key)){
+							(function(module,moduleMethodName,moduleMethod){
+								if(moduleMethodName) {
+									if(typeof moduleMethod === "function") {
+										module[moduleMethodName] = function(){
+											return moduleMethod.apply(module,Array.prototype.slice.call(arguments));
+										};
+									} else {
+										module[moduleMethodName] = moduleMethod;
+									}
+								}
+							}(NModules[name],key.substr(2),methods[key]));
+						}
+						protoObject[key] = methods[key];
+						break;
 				} }
 				return true;
 			} else {
@@ -142,14 +176,11 @@
 		};
 		var NativeFactoryDeploy = function(name){
 			if(name in NModules) {
-				nody["_"+name] = function(){
-					var scArgs = Array.prototype.slice.call(arguments);
-					scArgs.unshift(NModules[name]);
-					return new (Function.prototype.bind.apply(NModules[name],scArgs)); 
-				};
-				nody[name] = NModules[name];
-				//
-				NModules[name].prototype.__SelfModuleInit__ = nody["$"+name];
+				(function(module){
+					var newInit = function(){ return new (Function.prototype.bind.apply(module,[module].concat(Array.prototype.slice.call(arguments)))); };
+					nody[name] = module;
+					nody["_"+name] = module.prototype.__NativeInitializer__ = newInit;
+				}(NModules[name]));
 			}
 		};
 		N.MODULE = function(name,proto,setter,getter){
@@ -242,7 +273,10 @@
 			N[n]=new o();
 			NSingletons[n]=N[n];
 		};
-		//
+		//contiue function
+		// var a = N.CONTINUE_FUNCTION(function(a){ return a; });
+		// var b = function(a,b){ return a+b; };
+		// a(1,b,2); => 3
 		N.CONTINUE_FUNCTION = function(func,over,owner){
 			over = (over || 1);
 			return function(){
@@ -256,6 +290,7 @@
 				return func.apply(owner,Array.prototype.slice.call(arguments));
 			};
 		};
+		//marge function
 		N.BIND_FUNCTION = function(m1,m2,requireReturn){
 			if(typeof m1 !== 'function') return m2;
 			if(typeof m2 !== 'function') return m1;
@@ -358,15 +393,14 @@
 		}
 		N.cache.clear();
 	
-		var nody_typemap = { "string" : "isString", "number" : "isNumber", "asnumber": "asNumber", "asstring" : "asString", "array" : "isArray", "object" : "isObject", "email" : "isEmail", "ascii" : "isAscii", "true" : "isTrue", "false" : "isFalse", "nothing" : "isNothing", "ok" : "isOk", "nok" : "isNok" };
+		var nody_typemap = { "string" : "isString", "number" : "isNumber", "asnumber": "asNumber", "asstring" : "asString", "array" : "isArray", "object" : "isObject", "email" : "isEmail", "ascii" : "isAscii", "true" : "isTrue", "false" : "isFalse", "nothing" : "isNothing", "ok" : "isOk" };
 	
 		N.SINGLETON("TYPE",{
 			// // 데이터 타입 검사
 			"isUndefined": function (t) {return typeof t === "undefined" ? true : false ;},
 			"isDefined"  : function (t) {return typeof t !== "undefined" ? true : false ;},
 			"isNull"     : function (t) {return t === null ? true : false;},
-			"isNill"      : function (t) {return ((t === null) || (typeof t === "undefined")) ? true : false;},
-		
+			"isNil"      : function (t) {return ((t === null) || (typeof t === "undefined")) ? true : false;},
 			"isFunction" : function (t) {return typeof t === "function" ? true : false;},
 			"isBoolean"  : function (t) {return typeof t === "boolean"  ? true : false;},
 			"isObject"   : function (t) {return typeof t === "object"   ? true : false;},
@@ -412,7 +446,6 @@
 		        return true;
 			},
 			"isOk":function(o){ return !N.isNothing(o); },
-			"isNok":function(o){ return N.isNothing(o); },
 			// 무엇이든 길이 유형 검사
 			"toLength":function(v,d){
 				switch(typeof v){ 
@@ -423,15 +456,15 @@
 				}
 				return (typeof d=="undefined")?0:d;
 			},
-			// 무엇이든 크기 유형 검사
+			// 무엇이든 크기 유형 검사 (is에서 사용되기 위한 문법)
 			"toSize":function(target,type){
 				if((typeof type != "undefined") && (typeof type != "string")) console.error("N.toSize::type은 반드시 string으로 보내주세요",type);
 				switch(type){
-					case "numberText" : return parseFloat(target); break;
-					case "number"     : return parseFloat(target); break;
-					case "textNumber" : case "text" : case "email" : case "ascii" : return (target + "").length; break;
-					case "string" : case "array" : return target.length;
-					case "object" : default : return N.toLength(target); break;
+					case "asnumber": return parseFloat(target); break;
+					case "number"  : return parseFloat(target); break;
+					case "asstring": case "text" : case "email" : case "ascii" : return (target + "").length; break;
+					case "string"  : case "array" : return target.length;
+					case "object"  : default : return N.toLength(target); break;
 				}
 			},
 			"is":function(target,test,trueBlock,falseBlock){
@@ -485,7 +518,7 @@
 									if(!testResult) break;
 								}
 							} else {
-								console.warn("인식할수 없는 타입의 키워드 입니다.",param[2]);
+								console.warn("인식할수 없는 타입의 키워드 입니다.",param[2],"(",typeof param[2],")");
 							}	
 						}
 						break;
@@ -503,7 +536,7 @@
 			
 				return false;
 			},
-			"as":function(target,test,tb,fb){
+			"like":function(target,test,tb,fb){
 				if(N.isString(target)) target = target.trim();
 				return N.is(target,test,tb,fb);
 			}
@@ -511,7 +544,7 @@
 		N.TYPE.EACH_TO_METHOD();
 	
 		//퍼포먼스를 위해 바깥쪽에 꺼내놓았음
-		var cloneArray = function(v) { 
+		var CLONE_ARRAY = function(v) { 
 			if( N.isArray(v) ) { 
 				if("toArray" in v){ 
 					return Array.prototype.slice.apply(v.toArray()); 
@@ -525,7 +558,7 @@
 			return [];
 		}
 		//이미 배열인경우에는 그대로 리턴해준다.
-		var toArray = function(t,s){
+		var TO_ARRAY = function(t,s){
 			if(typeof t === "object") if(N.isArray(t)) {
 				if( (t instanceof NodeList) ||  (t instanceof HTMLCollection) ) return N.cloneArray(t);
 				return t;
@@ -540,13 +573,14 @@
 			//owner를 쉽게 바꾸면서 함수실행을 위해 있음
 			"APPLY" : function(f,owner,args) { if( typeof f === "function" ) { args = N.cloneArray(args); return (args.length > 0) ? f.apply(owner,args) : f.call(owner); } },
 			//값을 플래튼하여 실행함
-			"FLATTENCALL" : function(f,owner) { N.APPLY(f,owner,N.dataFlatten(Array.prototype.slice.call(arguments,2))); },
+			"argumentsFlatten":function(){ var result = []; function arrayFlatten(args){ N.dataEach(args,function(arg){ if(N.isArray(arg)) return N.dataEach(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
+			"FLATTENCALL" : function(f,owner) { N.APPLY(f,owner,N.argumentsFlatten(Array.prototype.slice.call(arguments,2))); },
 			"CALL"    :function(f,owner){ return (typeof f === "function") ? ((arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner)) : undefined; },
 			"CALLBACK":function(f,owner){ return (typeof f === "function") ? ((arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner)) : f; },
 			//배열이 아니면 배열로 만들어줌
-			"toArray":toArray,
+			"toArray":TO_ARRAY,
 			//배열이든 아니든 무조건 배열로 만듬
-			"cloneArray":cloneArray,
+			"cloneArray":CLONE_ARRAY,
 			//배열안에 배열을 길이만큼 추가
 			"arrays":function(l) { l=N.toNumber(l);var aa=[];for(var i=0;i<l;i++){ aa.push([]); }return aa; },
 			//숫자로 변환합니다. 디폴트 값이나 0으로 반환합니다.
@@ -569,46 +603,31 @@
 							var reo={};reo[esv]=param;
 							return reo;
 						}
-						return (new N.String(param)).getDataContent();
+						return (new N.String(param)).getContentObject();
 					});
 				}
 				return c || {};
 			},
 			//좌측으로 0을 붙임
 			"padLeft":function(nr,n,str){ return new N.Array(n-new String(nr).length+1).join(str||'0')+nr; },
-			// 참고! : human readable month
-			"dateexp":function(dv,format,pad){
-				if(N.isArray(dv)) dv = dv.join(' ');
-			
-				var dt = /(\d\d\d\d|)[^\d]?(\d\d|\d|).?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)/.exec(dv);
-				dt[1] = dt[1] || (((new Date()).getYear() + 1900) +'');
-				dt[2] = dt[2] || ((new Date()).getMonth()+1);
-				dt[3] = dt[3] || ((new Date()).getDate());
-				dt[4] = dt[4] || ("00");
-				dt[5] = dt[5] || ("00");
-				dt[6] = dt[6] || ("00");
-			
-				var r    = [ dt[1],dt[2],dt[3],dt[4],dt[5],dt[6],dt[0] ];
-				r.year   = dt[1],r.month  = dt[2],r.date = dt[3],r.hour = dt[4],r.minute = dt[5],r.second = dt[6],r.init = dt[7];
-				r.format = function(s){
-					return s.replace('YYYY',r.year).replace(/(MM|M)/,r.month).replace(/(DD|D)/,r.date)
-					.replace(/(hh|h)/,r.hour).replace(/(mm|m)/,r.minute).replace(/(ss|s)/,r.second)
-					.replace(/(A)/,(N.toNumber(r.hour) > 12) ? 'PM' : 'AM');
-				}
-				if(typeof format === 'string') 
-					return r.format(format);
-					return r;
-			},
 			//1:길이와 같이 2: 함수호출
 			"times":N.CONTINUE_FUNCTION(function(l,f,s){ l=N.toNumber(l); for(var i=(typeof s === 'number')?s:0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },2),
 			"timesMap":N.CONTINUE_FUNCTION(function(l,f,s){ 
 				l=N.toNumber(l); var r = []; 
-				if(typeof f === 'string') var fs = f, f = function(i){ return N.strexp.seed(i)(fs); };
+				if(typeof f === 'string') var fs = f, f = function(i){ return N.exp.seed(i)(fs); };
 				for(var i=(typeof s === 'number')?s:0;i<l;i++) r.push(f(i)); 
 				return r; 
 			},2),
 			"dataCall":N.CONTINUE_FUNCTION(function(d,alt){ return (typeof d === 'undefined') ? N.cloneArray(alt) : ((alt === true) ? N.cloneArray(d) : N.toArray(d)); },1),
 			"dataHas" :function(d,v){ d=N.toArray(d); for(var i=0,l=d.length;i<l;i++) if(d[i] === v) return true; return false; },
+			"dataMatching" :function(da,ca){ 
+				da = N.toArray(da),ca = N.toArray(ca);
+				for(var di=0,dl=da.length;di<dl;di++)
+					for(var ci=0,cl=ca.length;ci<cl;ci++)
+						if(da[di] == ca[ci]) 
+							return da[di];
+				return false;
+			},
 			//배열의 하나추출
 			"dataFirst"   :function(t){ return typeof t === "object" ? typeof t[0] === "undefined" ? undefined : t[0] : t; },
 			//배열의 뒤
@@ -616,13 +635,14 @@
 			// 각각의 값의 function실행
 			"dataEach"    :N.CONTINUE_FUNCTION(function(v,f){ var ev=N.toArray(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
 			// 각각의 값의 function실행
-			"dataReverseEach":N.CONTINUE_FUNCTION(function(v,f){ var ev=N.toArray(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
+			"dataReverseEach":N.CONTINUE_FUNCTION(function(v,f){ var ev=N.toArray(v); for(var i=ev.length-1;i>-1;i--) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
 			// 각각의 값을 배열로 다시 구해오기
 			"dataMap"     :N.CONTINUE_FUNCTION(function(v,f){ var rv=[],ev=N.toArray(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
+			"dataReverseMap"     :N.CONTINUE_FUNCTION(function(v,f){ var rv=[],ev=N.toArray(v); for(var i=this.length-1;i>-1;i--) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
 			//
 			"inject":function(v,f,d){ d=(typeof d=="object"?d:{});v=N.toArray(v); for(var i=0,l=v.length;i<l;i++)f(d,v[i],i);return d;},
 			// 배열안의 배열을 풀어냅니다.
-			"dataFlatten":function(){ var result = []; function arrayFlatten(args){ N.dataEach(args,function(arg){ if(N.isArray(arg)) return N.dataEach(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
+			"dataFlatten":N.CONTINUE_FUNCTION(function(){ return N.argumentsFlatten(arguments); },1),
 			// false를 호출하면 배열에서 제거합니다.
 			"dataFilter":N.CONTINUE_FUNCTION(function(inData,filterMethod){
 				var data = N.toArray(inData);
@@ -823,6 +843,18 @@
 			},
 			//무엇이든 문자열로 넘기지만 4댑스 이하로는 읽지 않음
 			"tos"  : function(tosv,jsonfy){ return N.toString(tosv,9,jsonfy); },
+			"toDataString":function(v){ return N.toString(v,99,true); },
+			"fromDataString":function(v){ 
+				if(typeof v === "string") { 
+					if( v.charAt(0)=="\"" && v.charAt(v.length-1)=="\"" ){
+						return v.substr(1,v.length-2);
+					} else {
+						return eval("(" + v + ")");
+					}
+					console.error("decodeString::디코딩실패 ->",v,"<-");throw e;
+				}
+				return v; 
+			},
 			//어떠한 객체의 길이를 조절함
 			"max"  : function(target,length,suffix){
 				if(typeof target === "string"){
@@ -854,6 +886,85 @@
 					//javascript instance
 					if(t instanceof v) return true; return false;
 				}
+			},
+			// 참고! : human readable month
+			"dateExp":function(dv,format,pad){
+				if(N.isArray(dv)) dv = dv.join(' ');
+			
+				var dt = /(\d\d\d\d|)[^\d]?(\d\d|\d|).?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)[^\d]?(\d\d|\d|)/.exec(dv);
+				dt[1] = dt[1] || (((new Date()).getYear() + 1900) +'');
+				dt[2] = dt[2] || ((new Date()).getMonth()+1);
+				dt[3] = dt[3] || ((new Date()).getDate());
+				dt[4] = dt[4] || ("00");
+				dt[5] = dt[5] || ("00");
+				dt[6] = dt[6] || ("00");
+			
+				var r    = [ dt[1],dt[2],dt[3],dt[4],dt[5],dt[6],dt[0] ];
+				r.year   = dt[1],r.month  = dt[2],r.date = dt[3],r.hour = dt[4],r.minute = dt[5],r.second = dt[6],r.init = dt[7];
+				r.format = function(s){
+					return s.replace('YYYY',r.year).replace(/(MM|M)/,r.month).replace(/(DD|D)/,r.date)
+					.replace(/(hh|h)/,r.hour).replace(/(mm|m)/,r.minute).replace(/(ss|s)/,r.second)
+					.replace(/(A)/,(N.toNumber(r.hour) > 12) ? 'PM' : 'AM');
+				}
+				if(typeof format === 'string') 
+					return r.format(format);
+					return r;
+			},
+			"timeStampExp":function(exp){
+				if( arguments.length === 0){
+					return (+new Date());
+				}
+				if( typeof exp === "string") {
+					exp = N.dateExp(exp);
+				}
+				if( typeof exp === "number") {
+					return exp;
+				}
+				if( N.isArray(exp) && (exp.length == 7) ){
+					exp = new Date(exp[0], exp[1], exp[2], exp[3], exp[4], exp[5]);
+				}
+				if( exp instanceof Date){
+					return (+exp);
+				}
+				return 0;
+			},
+			"timeScaleExp":function(exp){
+				var scale = 0;
+				if(typeof exp === "number") {
+					return exp;
+				}
+				if(typeof exp === "string") {
+					// 
+					exp = exp.replace(/\d+(Y|year)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*525600000; });
+						return "";
+					})
+					exp = exp.replace(/\d+(M|month)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*43200000; });
+						return "";
+					})
+					exp = exp.replace(/\d+(D|day)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*1440000; });
+						return "";
+					})
+					exp = exp.replace(/\d+(h|hour)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*1440000; });
+						return "";
+					})
+					exp = exp.replace(/\d+(ms|millisecond)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*1; });
+						return "";
+					})
+					exp = exp.replace(/\d+(m|minute)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*60000; });
+						return "";
+					})
+					exp = exp.replace(/\d+(s|second)/,function(t){
+						t.replace(/\d+/,function(d){ scale += d*1000; });
+						return "";
+					})
+				}
+				return scale;
 			}
 		});
 		N.KIT.EACH_TO_METHOD();
@@ -1373,7 +1484,7 @@
 	
 	
 	
-		N.METHOD("strexp",function(source){
+		N.METHOD("exp",function(source){
 			var seed = this.seed || 0;
 			var aPoint=[],params = N.dataMap(Array.prototype.slice.call(arguments,1),function(t){ return N.zoneInfo(t); });
 			return source.replace(/(\\\([^\)]*\)|\\\{[^\}]*\})/g,function(s){
@@ -1409,11 +1520,11 @@
 	
 		N.METHOD("numexp",function(source){
 			if(arguments.length === 1){
-				return N.toNumber(N.strexp.call(undefined,"\\("+source+")"));
+				return N.toNumber(N.exp.call(undefined,"\\("+source+")"));
 			} else {
 				var args = Array.prototype.slice.call(arguments);
 				args[0]  = "\\{"+args[0]+"}";
-				return N.toNumber(N.strexp.apply(undefined,args));
+				return N.toNumber(N.exp.apply(undefined,args));
 			}
 		},{
 			seed:function(seed){ this.seed = N.toNumber(seed);return this.getter; }
@@ -1438,9 +1549,9 @@
 		// NodyArray
 		N.ARRAY_MODULE("Array",{
 			// 요소 각각에 형식인수를 넘기며 한번씩 호출한다.
-			each     : function(block) { for ( var i = 0, l = this.length ; i < l  ; i++) { if( block(this[i],i) == false ) break; } return this; },
+			each     : function(block) { for ( var i=0,l=this.length;i<l;i++) { if( block(this[i],i) == false ) break; } return this; },
 			// each의 반대 동작
-			eachBack : function(block) { for ( var i = this.length - 1    ; i > -1 ; i--) { if( block(this[i],i) == false ) break; } return this; },
+			reverseEach : function(block) { for ( var i=this.length-1;i>-1;i--) { if( block(this[i],i) == false ) break; } return this; },
 			// key배열 습득
 			keys  : objectCommonInterface.keys,
 			//첫번째 요소 반환.
@@ -1485,7 +1596,7 @@
 			max:function(length) { this.length = length > this.length ? this.length : length; return this; },
 			min:function(length,undefTo){var count=parseInt(length);if(typeof count=="number")if(this.length<count)for(var i=this.length;i<count;i++)this.push(undefTo);return this;},
 			//원하는 위치에 대상을 삽입합니다.
-			insert: function(v,a){ this.min(a); var pull=[],a=a?a:0; for(var i=a,l=this.length;i<l;i++)pull.push(this[i]); return this.max(a).push(v).concat(pull); },
+			insert: function(v,a){ this.min(a); var pull=[],a=a?a:0; for(var i=a,l=this.length;i<l;i++)pull.push(this[i]); return this.max(a).push(v).setConcat(pull); },
 			// 순수 Array로 반환
 			toArray  : function()  { return Array.prototype.slice.call(this); },
 			//내부요소 모두 지우기
@@ -1499,17 +1610,27 @@
 			behind: function(v,a){ return this.insert(v, this.length - (isNaN(a) ? 0 : parseInt(a)) ); },
 			//원하는 위치에 대상을 덮어씁니다.
 			overwrite : function(v,a){ this.min(a+1); this[a] = v; return this; },
-			//양방향에 대상을 삽입합니다.
-			getBoth:function(insert,push){ return this.save().insert(insert).push(push);     },
-			both:function(insert,push)   { return this.setSource(this.getBoth(insert,push)); },
 			// 현재의 배열을 보호하고 새로운 배열을 반환한다.
-			save : function(v){ return this.__SelfModuleInit__(this); },
-			//요소안의 array 녹이기
-			getFlatten : function(){ return new N.Array(N.dataFlatten(this)); },
-			flatten    : function(){return this.setSource(this.getFlatten());},
+			save : function(v){ return this.__NativeInitializer__(this); },
+			//array안의 array 풀어내기
+			flatten : function(){ return new N.Array(N.argumentsFlatten(this)); },
+			setFlatten    : function(){return this.setSource(this.flatten());},
 			//다른 배열 요소를 덛붙인다.
-			getConcat : function(){ return new N.Array(arguments).inject(this.save(),function(v,_a){ new N.Array(v).each(function(v2){ _a.push(v2); }); }); },
-			concat    : function(){ return this.setSource(this.getConcat.apply(this,arguments)); },			
+			concat : function(){ return new N.Array(arguments).inject(this.save(),function(v,_a){ new N.Array(v).each(function(v2){ _a.push(v2); }); }); },
+			setConcat    : function(){ return this.setSource(this.concat.apply(this,arguments)); },
+			//
+			append:function(a){
+				if(a === undefined || a === null) return this;
+				if( !N.isArray(a) ) return this.push(a);
+				for(var i=0,l=a.length;i<l;i++) this.push(a[i]);
+				return this;
+			},
+			prepend:function(a){
+				if(a === undefined || a === null) return this;
+				if( !N.isArray(a) ) return this.insert(a,0);
+				for(var i=0,l=a.length;i<l;i++) this.insert(a[i],i);
+				return this;
+			},
 			//어떠한 요소끼리 위치를 바꾼다
 			changeIndex:function(leftIndex,rightIndex){
 				var left  = this[leftIndex];
@@ -1521,9 +1642,9 @@
 			// 리턴한 요소를 누적하여 차례로 전달함
 			inject:function(firstValue,method) { for(var i = 0,l = this.length;i<l;i++) { var returnValue = method(this[i],firstValue,i); if(typeof returnValue !== "undefined") firstValue = returnValue; } return firstValue; },
 			// 리턴되는 오브젝트로 새 배열은 만들어냅니다.
-			mapUtil: { "&":function(owner,param){ return owner.getMap(function(a){ if(typeof a === "object") return a[param]; return undefined;}); }},
-			getMap : function(process,start) { if(typeof process=="function"){var result=[];for(var i=(typeof start === "number" ? start : 0),l=this.length;i<l;i++)result.push(process(this[i],i,this.length));return new N.Array(result);}else if(typeof getOrder=="string"){process=process.trim();for(var key in this.mapUtil)if(process.indexOf(key)==0){var tokenWith=process[key.length]==":"?true:false;var param=tokenWith?process.substr(key.length+1):process.substr(key.length);return new N.Array(this.mapUtil[key](this,param));}}return new N.Array(); },
-			map : function(process) { return this.setSource(this.getMap(process)); },
+			mapUtil: { "&":function(owner,param){ return owner.map(function(a){ if(typeof a === "object") return a[param]; return undefined;}); }},
+			map : function(process,start) { if(typeof process=="function"){var result=[];for(var i=(typeof start === "number" ? start : 0),l=this.length;i<l;i++)result.push(process(this[i],i,this.length));return new N.Array(result);}else if(typeof getOrder=="string"){process=process.trim();for(var key in this.mapUtil)if(process.indexOf(key)==0){var tokenWith=process[key.length]==":"?true:false;var param=tokenWith?process.substr(key.length+1):process.substr(key.length);return new N.Array(this.mapUtil[key](this,param));}}return new N.Array(); },
+			setMap : function(process) { return this.setSource(this.map(process)); },
 			// index가 maxIndex한계값이 넘으면 index가 재귀되어 반환된다.
 			turning:function(maxIndex,method){
 				var NI = parseInt(maxIndex);
@@ -1533,7 +1654,7 @@
 				return this;
 			},
 			// true를 반환하면 새 배열에 담아 리턴합니다.
-			getFilter   : function(filterMethod) { 
+			filter   : function(filterMethod) { 
 				if(typeof filterMethod === "undefined") { filterMethod = function(a){ return typeof a === "undefined" ? false : true; }; } 
 				if(typeof filterMethod === "function"){
 					var result=[]; 
@@ -1542,12 +1663,12 @@
 				}
 				return new N.Array();
 			},
-			filter      : function(filterMethod) { return this.setSource(this.getFilter(filterMethod)); },
+			setFilter      : function(filterMethod) { return this.setSource(this.filter(filterMethod)); },
 			// undefined요소를 제거한다.
-			getCompact : function(){ return this.getFilter(function(a){ return a == undefined ? false : true; }); },
-			compact    : function(){ return this.setSource(this.getCompact());},
+			compact : function(){ return this.filter(function(a){ return a == undefined ? false : true; }); },
+			setCompact    : function(){ return this.setSource(this.compact());},
 			// time // 오버라이팅
-			getTimesmap : function(time,method,start,end){
+			timesmap : function(time,method,start,end){
 				var _ = this;
 				var length = _.length;
 				var result = this.clone();
@@ -1559,13 +1680,13 @@
 			
 				return result;
 			},
-			timesmap:function(time,method,start,end){ return this.setSource(this.getTimesmap(time,method,start,end)); },
+			setTimesmap:function(time,method,start,end){ return this.setSource(this.timesmap(time,method,start,end)); },
 			// 파라메터 함수가 모두 true이면 true입니다.
-			passAll:function(passMethod) { for(var i=0,l=this.length;i<l;i++) if(passMethod(this[i],i) != true) return false; return true; },
+			isAll:function(passMethod) { for(var i=0,l=this.length;i<l;i++) if(passMethod(this[i],i) != true) return false; return true; },
 			// 하나라도 참이면 true입니다
-			passAny:function(passMethod) { for(var i=0,l=this.length;i<l;i++) if(passMethod(this[i],i) == true) return true; return false; },
+			isAny:function(passMethod) { for(var i=0,l=this.length;i<l;i++) if(passMethod(this[i],i) == true) return true; return false; },
 			//substr처럼 array를 자른다.
-			getSubArray:function(fi,li,infinity){
+			subarray:function(fi,li,infinity){
 				fi = isNaN(fi) == true ? 0 : parseInt(fi);
 				li = isNaN(li) == true ? 0 : parseInt(li);
 				var nl,ns,result = new N.Array();
@@ -1584,71 +1705,54 @@
 				for(var i=ns,l=nl;i<l;i++) result.push(this[i]);
 				return result;
 			},
-			subarray:function() { return this.setSource(this.getSubArray.apply(this,arguments));},
-			getSubarr:function(fi,li) { return this.getSubArray(fi,li ? li + fi : this.length); },
-			subarr:function(fi,li){return this.setSource(this.getSubarr(fi,li));},
+			setSubarray:function() { return this.setSource(this.subarray.apply(this,arguments));},
+			subarr:function(fi,li) { return this.subarray(fi,li ? li + fi : this.length); },
+			setSubarr:function(fi,li){return this.setSource(this.subarr(fi,li));},
 			//해당되는 인덱스를 제거
-			getDrop:function(index){ index=index?index:0;return this.getSubArray(index).getConcat(this.getSubarr(index+1)); },
-			drop:function(index) { return this.setSource(this.getDrop(index)); },
+			drop:function(index){ index=index?index:0;return this.subarray(index).concat(this.subarr(index+1)); },
+			setDrop:function(index) { return this.setSource(this.drop(index)); },
 			// 인수와 같은 요소를 제거한다.
-			getRemove:function(target) { return this.getFilter(function(t){ if(t == target) return false; return true; }); },
-			remove:function(target) { return this.setSource(this.getRemove(target)); },
+			remove:function(target) { return this.filter(function(t){ if(t == target) return false; return true; }); },
+			setRemove:function(target) { return this.setSource(this.remove(target)); },
 			// 요소중의 중복된 값을 지운다.
-			getUnique:function(){var result=new N.Array();this.each(function(selfObject){if(result.passAll(function(target){return selfObject!=target;}))result.push(selfObject);});return result;},
-			unique:function(){return this.setSource(this.getUnique());},
+			unique:function(){var result=new N.Array();this.each(function(selfObject){if(result.isAll(function(target){return selfObject!=target;}))result.push(selfObject);});return result;},
+			setUnique:function(){return this.setSource(this.unique());},
 			// 인수가 요소안에 갖고있다면 true가 반환
-			has : function(h) { return this.passAny(function(o) { return o == h; }); },
-			// 다른 요소를 반환
-			getOther:function(){
-				var exception = Array.prototype.slice.call(arguments);
-				return this.getFilter(function(o){ for(var i=0,l=exception.length;i<l;i++) if(exception[i] == o) { return false;} return true; });
-			},
-			other:function(){ return this.setSource(this.getOther.apply(this,Array.prototype.slice.apply(arguments))); },
-			// 원하는 type만 남기고 리턴
-			getType : function(wanted) { return this.getFilter(function(v){ return N.is(v,wanted); }); },
-			type    : function(watend) { return this.setSource(this.getType(watend)); },
-			// 같은 요소를 반환
-			getEqual:function(v){ return this.getFilter(function(fv){return fv == v ? true : false; }); },
-			equal:function(v)   { return this.setSource(this.getEqual(v)); },
-			// 컨스트럭터를 비교하기 위한
-			getEqualClass:function(v){
-				this.getFilter(function(ref){
-					if(typeof ref === "object" || typeof ref === "function"){
-						if(ref.constructor == v) return true;
-					}
-				});
-			},
-			equalClass:function(v){ return this.setSource(this.getEqualClass(v)); },
+			has : function(h) { return this.isAny(function(o) { return o == h; }); },
 			// index위치에 있는 요소를 얻어온다.
-			eq:function(index,length){if(isNaN(length))length=1;return this.getSubarr(index,length);},
+			eq:function(index,length){if(isNaN(length))length=1;return this.subarr(index,length);},
 			// 요소중 처음으로 일치하는 index를 반환한다.
 			indexOf:function(target){var result=-1;this.each(function(t,i){if(t==target){result=i;return false;}});return result;},
-			lastIndexOf:function(target){var result=-1;this.eachBack(function(t,i){if(t==target){result=i;return false;}});return result;},
+			lastIndexOf:function(target){var result=-1;this.reverseEach(function(t,i){if(t==target){result=i;return false;}});return result;},
+			//todo
+			nthIndexOf:function(nth,target){
+				
+			},
 			// 첫번째부터 참인 오브젝트만 반환합니다. //마지막부터 참인
 			firstMatch:function(matchMethod){var result;this.each(function(value,index){if(matchMethod(value,index)==true){result=value;return false;}});return result;},
-			lastMatch:function(matchMethod){var result;this.eachBack(function(value,index){if(matchMethod(value,index)==true){result=value;return false;}});return result;},
-			// undefined를 제외한 가장 처음의 
-			useFirst : function(){ return this.firstMatch(function(matchValue){ if(typeof matchValue !== "undefined") return true; }); },
-			useLast  : function(){ return this.lastMatch (function(matchValue){ if(typeof matchValue !== "undefined") return true; }); },
+			lastMatch:function(matchMethod){var result;this.reverseEach(function(value,index){if(matchMethod(value,index)==true){result=value;return false;}});return result;},
+			//todo
+			nthMatch:function(nth,value,index){
+				
+			},
 			//요소안의 string까지 split하여 flaatten을 실행
-			getStringFlatten:function(){ return this.save().map(function(t){ if(typeof t === "string") return t.split(" "); if(N.isArray(t)) return new N.Array(t).flatten().type("string"); }).remove(undefined).flatten(); },
-			stringFlatten:function(){ return this.setSource( this.getStringFlatten() ); },
-			getDeepFlatten:function(){function arrayFlatten(_array){var result=new N.Array();_array.each(function(value){if( N.isArray(value) ){result.concat(arrayFlatten(new N.Array(value)));}else{result.push(value);}});return result;}return arrayFlatten(this);},
-			deepFlatten:function(){ return this.setSource(this.getDeepFlatten()); },
+			stringFlatten:function(){ return this.save().setMap(function(t){ if(typeof t === "string") return t.split(" "); if(N.isArray(t)) return new N.Array(t).setFlatten().setFilter(function(v){ return N.is(v,"string")}); }).setRemove(undefined).setFlatten(); },
+			setStringFlatten:function(){ return this.setSource( this.stringFlatten() ); },
 			//그룹 지어줌
-			getGrouping:function(length,reverse){
+			groupWithLength:function(length,reverse){
 				var result=[];
 				if(reverse == true){
 					this.save().reverse().turning(length,function(obj,i,g){if(!result[g])result[g]=[];result[g].push(obj);});
-					return new N.Array(result).map( function(groups){ return new N.Array(groups).reverse().toArray(); } ).reverse();
+					return new N.Array(result).setMap( function(groups){ return new N.Array(groups).reverse().toArray(); } ).reverse();
 				}
 				this.turning(length,function(obj,i,g){if(!result[g])result[g]=[];result[g].push(obj);});
 				return new N.Array(result);
 			},
-			grouping:function(length,reverse){ return this.setSource(this.getGrouping(length,reverse)); },
+			setGroupWithLength:function(length,reverse){ return this.setSource(this.groupWithLength(length,reverse)); },
 			//랜덤으로 내용을 뽑아줌
-			getRandom:function(length){ return new N.Array(N.dataRandom(this.toArray())); },
-			getShuffle:function(){ return new N.Array(N.dataShuffle(this.toArray())); },
+			random:function(length){ return new N.Array(N.dataRandom(this.toArray())); },
+			shuffle:function(){ return new N.Array(N.dataShuffle(this.toArray())); },
+			setShuffle:function(){ return this.setSource(this.shuffle()); },
 			join:function(t,p,s){ return (N.asString(p)?p:"")+Array.prototype.join.call(this,t)+((N.asString(s))?s:""); },
 			//Object로 반환
 			keyPair:function(key,value){
@@ -1664,9 +1768,7 @@
 					}
 				});
 				return r;
-			},
-			//수학계산
-			continueTo:function(f){ return f.apply(undefined,[this.toArray()].concat(Array.prototype.slice.call(arguments,1))); }
+			}
 		});
 		N.MODULE_PROPERTY("Array","split",function(text,s){
 			if( N.isArray(text) ) return new N.Array(text);
@@ -1691,7 +1793,7 @@
 			//each
 			each:function(f){ for(key in this.Source){ var r = f(this.Source[key],key); if(typeof r == false) {break;} } return this; },
 			keys:objectCommonInterface.keys,
-			eachBack:function(method){ var keys = this.keys(); for ( var i = keys.length - 1 ; i > -1 ; i--) { if( method(keys[i],i) == false ) break; } return this; },
+			reverseEach:function(method){ var keys = this.keys(); for ( var i = keys.length - 1 ; i > -1 ; i--) { if( method(keys[i],i) == false ) break; } return this; },
 			//첫번째 요소 반환.
 			zero:function(){ for(var k in this.Source) return this.Source[k]; },
 			//마지막 요소 반환.
@@ -1701,19 +1803,9 @@
 			setSource:function(obj,k){ 
 				obj = N.toObject(obj,k); if(typeof obj === "object"){ for(var key in this.Source) delete this.Source[key]; for(var k in obj) this.Source[k] = obj[k]; } return this; 
 			},
-			select:function(obj){
-			
-			},
-			// 길이를 조절합니다
-			max :function(){
-			
-			},
-			min :function(){
-			
-			},
-			count:function(){ return N.propsLength(this.Source); },
+			count:function(){return N.propsLength(this.Source); },
 			clone:function(){return N.clone(this.Source); },
-			save:function() {return this.__SelfModuleInit__(N.clone(this.Source)); },
+			save:function() {return this.__NativeInitializer__(N.clone(this.Source)); },
 			//key value get setter
 			prop:function(k,v){
 				if(N.asString(k) && arguments.length > 1){
@@ -1728,11 +1820,9 @@
 					return this.Source; 
 				};
 			},
-			//모든 프로퍼티에 적용
-			propAll:function(dv){for(var key in this.Source) this.Source[key] = dv;return this;},
 			//키값판별
 			propIs    :function(key,test,t,f) { return N.is(this.Source[key],test,t,f); },
-			propAs    :function(key,test,t,f) { return N.as(this.Source[key],test,t,f); },
+			propLike  :function(key,test,t,f) { return N.like(this.Source[key],test,t,f); },
 			//오브젝트에 키를 가지고 있는지 확인
 			has:function(key){ return key in this.Source; },
 			//그러한 value가 존재하는지 확인
@@ -1742,10 +1832,8 @@
 				return result;
 				return key in this.Source; 
 			},
-		
-		
 			//map
-			getMap:function(f,ksel){ 
+			map:function(f,ksel){ 
 				if(typeof f === "function"){
 					var result = N.clone(this.Source);
 					var keys   = this.keys(ksel);
@@ -1755,9 +1843,9 @@
 					return N.clone(this.Source);
 				} 
 			},
-			map:function() { return this.setSource( this.getMap.apply(this,arguments) ); },
+			setMap:function() { return this.setSource( this.map.apply(this,arguments) ); },
 			//inject 
-			inject:function(o,f,ksel){ if(typeof f === "function") { this.getMap(function(v,k){ var or = f(v,o,k); if(typeof or !== "undefined") { o=or; } },ksel); return o; } },
+			inject:function(o,f,ksel){ if(typeof f === "function") { this.map(function(v,k){ var or = f(v,o,k); if(typeof or !== "undefined") { o=or; } },ksel); return o; } },
 			//key getter
 			data:function(k,v){
 				if(typeof v !== "function" && typeof v !== "undefined") { throw new Error("Object::data 메서드는 setter가 아닙니다."); };
@@ -1783,37 +1871,38 @@
 			//
 			join:function(a,b){ a = typeof a === "string" ? a : ":"; b = typeof b === "string" ? b : ","; return this.inject([],function(v,i,k){ i.push(k+a+N.toString(v)); }).join(b); },
 			//toParam
-			getEncodeObject : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : N._String(key).getEncode()) ] = (useEncode == false ? val : N._String(val).getEncode()); }); },
-			encodeObject    : function(){ return this.setSource(this.getEncodeObject.apply(this,arguments)); },
+			encodeObject : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : (new N.String(key)).encode()) ] = (useEncode == false ? val : (new N.String(val)).encode()); }); },
+			setEncodeObject : function(){ return this.setSource(this.encodeObject.apply(this,arguments)); },
 			//jsonString으로 반환
 			stringify:function(){ return JSON.stringify(this.Source); },
-			changeKey:function(original, change){ if(typeof original === "string" && typeof change === "string") { this.Source[change] = this.Source[original]; delete this.Source[original]; } return this.Source; },
+			//키이름을 변경
+			change:function(original, change){ if(typeof original === "string" && typeof change === "string") { this.Source[change] = this.Source[original]; delete this.Source[original]; } return this.Source; },
 			//String의 순차적으로 오브젝트 반환  "1 2 3 4" => {"1":"2","3":"4"}
 			getKvo:function(arg,split){ split = typeof split === "string" ? split : " "; arg = arg.split(split); var source = N.clone(this.Source); var keyName = undefined; new N.Array(arg).turning(2,function(value,i){ if(i == 0) { keyName = value; } else if(i == 1) { if(typeof keyName !== "undefined") { switch(value){ case "''": case '""': case "'": case '"': source[keyName] = ""; break; default : source[keyName] = value; break ; } } keyName = undefined; } }); return source; },
 			kvo:function(arg){ return this.setSource(this.getKvo.call(this,arg)); },
 			//오브젝트의 키를 지우고자 할때
 			removeAll:function(){ for( var key in this.Source ) delete this.Source[key]; return this.Source; },
-			getRemove:function(){ var source = this.Source; new N.Array(arguments).stringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
-			remove:function(key){ delete this.Source[key]; return this; },
-			removeNothing:function(){ for(var key in this.Source) if(N.isNothing(this.Source[key])) delete this.Source[key]; return this; },
+			remove:function(){ var source = this.Source; new N.Array(arguments).setStringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
+			setRemove:function(key){ delete this.Source[key]; return this; },
 			//존재하지 않는 키벨류값을 적용함;
-			getTouch:function(key,value){ var m = N.clone(this.Source);new N.Array(key).stringFlatten().each(function(key){ if(!(key in m)) m[key] = value; }); return m; },
-			touch:function(key,value){ return this.setSource( this.getTouch.apply(this,arguments) ); },
+			touch:function(key,value){ var m = N.clone(this.Source);new N.Array(key).setStringFlatten().each(function(key){ if(!(key in m)) m[key] = value; }); return m; },
+			setTouch:function(key,value){ return this.setSource( this.touch.apply(this,arguments) ); },
 			//키의 배열을 받는다
 			keys:function(){ var result = []; for (key in this.Source) result.push(key); return result; },
 			//값의 배열을 받는다
 			values:function(){ var result = []; for (key in this.Source) result.push(this.Source[key]); return result; },
 			getValue:function(key){ return this.Source[key]; },
 			//다른 오브젝트와 함칠때
-			getConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Object(arguments[i]).each(function(v,k){ result[k] = v; }); }; return result; },
-			concat:function(){ this.setSource(this.getConcat.apply(this,arguments)); return this; },
+			concat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Object(arguments[i]).each(function(v,k){ result[k] = v; }); }; return result; },
+			setConcat:function(){ this.setSource(this.concat.apply(this,arguments)); return this; },
 			//다른 오브젝트와 함칠때 이미 있는 값은 오버라이드 하지 않음
-			getSafeConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Object(arguments[i]).each(function(v,k){ if( (k in result) == false) result[k] = v; }); } return result; },
-			safeConcat:function(){ this.setSource(this.getSafeConcat.apply(this,arguments)); return this; }
+			//todo:marge extend 확인
+			safeConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Object(arguments[i]).each(function(v,k){ if( (k in result) == false) result[k] = v; }); } return result; },
+			setSafeConcat:function(){ this.setSource(this.getSafeConcat.apply(this,arguments)); return this; }
 		}, function(p,n,s){
 			if(typeof s === "string"){
 				this.Source = {};
-				this[s].apply(this,new N.Array(arguments).subarr(0,2).toArray());
+				this[s].apply(this,new N.Array(arguments).setSubarr(0,2).toArray());
 			} else {
 				this.Source = N.toObject(p,n);
 			}
@@ -1823,26 +1912,26 @@
 		//String
 		var htmlSafeMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': '&quot;', "'": '&#39;', "/": '&#x2F;' };
 		N.MODULE("String",{
-			getEncode:function(){ return encodeURI(this.Source); },
-			getDecode:function(){ return decodeURI(this.Source); },
-			encode:function(){this.Source = this.getEncode();return this;},
-			decode:function(){this.Source = this.getDecode();return this;},
-			getRaw:function(){return this.Source},
-			getHTMLSafe:function(){
+			encode:function(){ return encodeURI(this.Source); },
+			decode:function(){ return decodeURI(this.Source); },
+			setEncode:function(){this.Source = this.encode();return this;},
+			setDecode:function(){this.Source = this.decode();return this;},
+			raw:function(){return this.Source},
+			HTMLSafe:function(){
 				return (new String(this.Source)).replace(/[&<>"'\/]/g, function (s) { return htmlSafeMap[s]; });
 			},
-			getByteSize:function(){ return unescape(escape(this.Source).replace(/%u..../g,function(s){ return "uu"; })).length; },
-			getLines:function(){ return Array.split(this.Source,"\n").toArray(); },
-			eachLine:function(f,j){ if(typeof f === "function") return new N.Array(this.getLines()).map(function(s,i){ return f(s,i); }).compact().join( (j?j:"\n") ); },
+			byteSize:function(){ return unescape(escape(this.Source).replace(/%u..../g,function(s){ return "uu"; })).length; },
+			lines:function(){ return Array.split(this.Source,"\n").toArray(); },
+			lineEach:function(f,j){ if(typeof f === "function") return new N.Array(this.lines()).setMap(function(s,i){ return f(s,i); }).setCompact().join( (j?j:"\n") ); },
 			//한줄의 탭사이즈를 구함
-			getTabSize:function(){
+			tabSize:function(){
 				var tabInfo = /^([\s\t]*)(.*)/.exec(this.Source);
 				var tab   = tabInfo[1].replace(/[^\t]*/g,"").length;
 				var space = tabInfo[1].replace(/[^\s]*/g,"").length - tab;
 				return tab + Math.floor(space / 4);
 			},
 			//한줄의 탭을 정렬함
-			getTabAbsolute:function(tabSize,tabString){
+			tabAbsolute:function(tabSize,tabString){
 				tabSize = N.toNumber(tabSize);
 				if(arguments.length < 2) tabString = "\t";
 				if(tabSize < 0) tabSize = 0;
@@ -1851,28 +1940,28 @@
 				return result + /^([\s\t]*)(.*)/.exec(this.Source)[2];
 			},
 			//각각의 탭음 밀어냄
-			getTabsOffset:function(offset,tabString){
+			tabsOffset:function(offset,tabString){
 				offset = parseInt(offset);
-				if(typeof offset === "number") return Array.split(this.Source,"\n").map(function(text){
-					return N._String(text).getTabAbsolute(N._String(text).getTabSize() + offset,tabString);
+				if(typeof offset === "number") return N.Array.split(this.Source,"\n").setMap(function(text){
+					return (new N.String(text)).tabAbsolute((new N.String(text)).tabSize() + offset,tabString);
 				}).join("\n");
 				return this.Source;
 			},
 			//라인중
-			getTabsSize:function(){
+			tabsSize:function(){
 				var minimum;
-				this.eachLine(function(line){
-					var tabSize = N._String(line).getTabSize();
+				this.lineEach(function(line){
+					var tabSize = (new N.String(line)).tabSize();
 					if((minimum == undefined) || (tabSize < minimum)) minimum = tabSize;
 				});
 				return minimum;
 			},
-			getTabsAlign:function(){
+			tabsAlign:function(){
 				var beforeSize;
 				var baseOffset = 0;
-				return this.eachLine(function(line){
+				return this.lineEach(function(line){
 					//console.log("baseOffset",baseOffset);
-					var tabSize = N._String(line).getTabSize();
+					var tabSize = (new N.String(line)).tabSize();
 					//console.log(tabSize,beforeSize);
 					if(beforeSize == undefined){
 						beforeSize = 0;
@@ -1885,25 +1974,21 @@
 						//nothing is right
 					}
 					beforeSize = tabSize;
-					return N._String(line).getTabAbsolute(baseOffset);
+					return (new N.String(line)).tabAbsolute(baseOffset);
 				});
 			},
-			tabsAlign:function(){ this.Source = this.getTabsAlign(); return this; },
-			getTrimLine:function(){ return this.eachLine(function(line){ var trimText = line.trim(); return (trimText == "") ? undefined : line; }); },
-			trimLine:function(){ this.Source = this.getTrimLine(); return this; },
-			trim:function(trimParam,autoTrim){
-				original = this.Source;
-				if(autoTrim) original = this.Source.trim();
-				var trim_s = trimParam?trimParam:" ";
-				trim_s = trim_s.replace(" ","\\s");
-				return N.TRY_CATCH(function(){
-					this.Source = new RegExp("^(["+trim_s+"]*)(.*[^"+trim_s.split("|").join("^")+"])(["+trim_s+"]*)$").exec(original)[2];
-				},function(){
-					return this.Source;
-				},this);
+			setTabsAlign:function(){ this.Source = this.tabsAlign(); return this; },
+			trimLine:function(){ return this.lineEach(function(line){ var trimText = line.trim(); return (trimText == "") ? undefined : line; }); },
+			setTrimLine:function(){ this.Source = this.trimLine(); return this; },
+			trim:function(){
+				return this.Source.trim();
+			},
+			setTrim:function(){
+				this.Source = this.trim();
+				return this;
 			},
 			//content
-			abilityFunction  : function(fs,is,js){ var origin = (js==true) ? N.safeSplit(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs); if(origin[origin.length-1].trim()=="") origin.length = origin.length-1;  return new N.Array(origin).passAll(function(s,i){ return s.indexOf(is) > 0; }) ? origin.length : 0; },
+			abilityFunction  : function(fs,is,js){ var origin = (js==true) ? N.safeSplit(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs); if(origin[origin.length-1].trim()=="") origin.length = origin.length-1;  return new N.Array(origin).isAll(function(s,i){ return s.indexOf(is) > 0; }) ? origin.length : 0; },
 			abilityObject    : function(){ return this.abilityFunction(",",":",true); },
 			abilityParameter : function(){ return this.abilityFunction("&","="); },
 			abilityCss       : function(){ return this.abilityFunction(";",":"); },
@@ -1927,11 +2012,11 @@
 			isDataContentFunction:function(fs,is,js){
 				return new N.Array( (js==true) ? N.safeSplit(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs) ).inject({},function(s,inj){
 					var v = s.substr(s.indexOf(is)+1);
-					if(s.trim().length > 0) inj[ N.unwrap(s.substr(0,s.indexOf(is)),['""',"''"]) ] = N.unwrap((js == true) ? N._String(v).getDataContent(true) : v,['""',"''"]);
+					if(s.trim().length > 0) inj[ N.unwrap(s.substr(0,s.indexOf(is)),['""',"''"]) ] = N.unwrap((js == true) ? (new N.String(v)).getContentObject(true) : v,['""',"''"]);
 					return inj;
 				});
 			},
-			getDataContent:function(absoluteWrap){
+			getContentObject:function(absoluteWrap){
 				switch(this.isDataContent(absoluteWrap)){
 					case "object"       : return this.isDataContentFunction(",",":",true); break;
 					case "parameter"    : return this.isDataContentFunction("&","="); break;
@@ -1942,7 +2027,7 @@
 							return [];
 						} else {
 							return new N.Array(a).inject([],function(s,inj){
-								inj.push(N.unwrap( N._String(s).getDataContent(true) , ["''",'""'] )); 
+								inj.push(N.unwrap( (new N.String(s)).getContentObject(true) , ["''",'""'] )); 
 								return inj; 
 							});
 						}
@@ -1956,67 +2041,23 @@
 					break;
 				};
 			},
-			getJSON:function(){ return JSON.stringify(this.getDataContent());},
+			JSON:function(){ return JSON.stringify(this.getContentObject());},
 			//reverse
-			getReverse : function() { return this.Source.split("").reverse().join(""); },
-			reverse    : function()   { this.Source = this.getReverse(); return this; },
-			//printf
-			getPrintf:function(f){
-				if(typeof f === "object"){
-					if(f instanceof RegExp){
-						if( f.test(this.Source) ) {
-							f = f.exec(this.Source);
-						} else {
-							console.warn("String::getPrintf::printf 할수 없습니다.",this.Source,f);
-							return this.Source;
-						}
-					}
-					var result  = "";
-					for(var i=1,l=arguments.length;i<l;i++){
-						switch(typeof arguments[i]){
-							case "object":
-								if(typeof arguments[i][0] === "string" || typeof arguments[i][0] === "number") if(arguments[i][0] in f) result = result + f[arguments[i][0]];
-								break;
-							case "number": case "string":
-								result = result + arguments[i];
-								break;
-							default:break;
-						}
-					}
-					return result;
-				} else if(typeof f === "string" || typeof f === "number"){
-					var i = -1;
-					var p = Array.prototype.slice.call(arguments);
-					return this.Source.replace(/%@/gi,function(){
-						i++;
-						if(typeof p[i] === "string" || typeof p[i] === "number"){
-							return p[i]+"";
-						} else {
-							return "";
-						}
-					});
-				} else {
-					console.warn("getPrintf::파라메터가 존재하지거나 올바르지 않습니다.",arguments);
-					return this.Source+"";
-				}
-			},
-			printf:function(){
-				this.Source = this.getPrintf.apply(this,arguments);
-				return this.Source;
-			},
+			reverse : function() { return this.Source.split("").reverse().join(""); },
+			setReverse    : function()   { this.Source = this.reverse(); return this; },
 			//remove
-			getRemove:function(target){
+			remove:function(target){
 				var index = this.Source.indexOf(target);
 				if(index < 0)return this.Source;
 				var targetLength = target.length;
 				return this.Source.substr(0,index) + this.Source.substr(index + targetLength,this.Source.length);
 			},
-			remove:function(target){
-				this.Source = this.getRemove(target);
+			setRemove:function(target){
+				this.Source = this.remove(target);
 				return this;
 			},
 			//model
-			getRemoveModel:function(target,space){
+			removeModel:function(target,space){
 				space = space ? space : " ";
 				var models = this.Source.split(space);
 				var result = [];
@@ -2027,8 +2068,8 @@
 				}
 				return result.join(space);
 			},
-			removeModel:function(target,space){
-				this.Source = this.getRemoveModel(target,space);
+			setRemoveModel:function(target,space){
+				this.Source = this.removeModel(target,space);
 				return this;
 			},
 			hasModel:function(target,space){
@@ -2037,13 +2078,13 @@
 				for (var i=0,l=models.length;i<l;i++) if(models[i] == target)  return true;
 				return false;
 			},
-			getAddModel:function(target,space) { space = space ? space : " ";if(this.hasModel(target,space)) return this.Source; return this.Source + space + target; },
-			addModel:function(target,space){
-				this.Source = this.getAddModel(target,space);
+			addModel:function(target,space) { space = space ? space : " ";if(this.hasModel(target,space)) return this.Source; return this.Source + space + target; },
+			setAddModel:function(target,space){
+				this.Source = this.addModel(target,space);
 				return this;
 			},
 			//prefix suffix
-			getFix:function(p,s){ return (typeof p === "string"?p:"") + this.Source + (typeof s === "string"?s:""); }
+			fixString:function(p,s){ return (typeof p === "string"?p:"") + this.Source + (typeof s === "string"?s:""); }
 		},function(param,jsonfy){
 			if( typeof param === "undefined" || param == null ){
 				this.Source = ""
@@ -2055,7 +2096,7 @@
 	
 		N.EXTEND_MODULE("String","ZString",{
 			getZContent:function(seed){
-				return N.strexp.seed(seed).apply(undefined,[this.Source].concat(this.ZoneParams));
+				return N.exp.seed(seed).apply(undefined,[this.Source].concat(this.ZoneParams));
 			},
 			toArray:function(length,startAt){
 				length  = (typeof length === "number")  ? length : 1;
@@ -2073,11 +2114,70 @@
 	
 		// Number
 		N.EXTEND_MODULE("String","Number",{
+			"++divideNumber":function(value,padRigth){
+				var numberInfo = [0,0];
+	            var parseString = "";
+	            (value+"").replace(/\d|\./g,function(s){ parseString += s; });
+
+	            // test exsist number
+	            if(/\d/.test(parseString)){
+	                var dotIndex = parseString.indexOf(".");
+	                switch(dotIndex) {
+	                    case -1:
+	                        numberInfo[0] = parseString*1;
+	                        break;
+	                    case 0:
+	                        parseString = "0" + parseString;
+	                    default:
+	                        var intValue = /[\d]+\./.exec(parseString)[0];
+	                        numberInfo[0] = intValue.substr(0,intValue.length - 1) * 1;
+            
+	                        numberInfo[1] = /\.[\d]+/.exec(parseString);
+	                        numberInfo[1] = numberInfo[1] === null ? 0 : numberInfo[1][0].substr(1);
+            
+	                        break;
+	                }
+	            }
+	            return numberInfo;
+			},
+			"++decimalValue":function(text){
+	            var numberValue = N.Number.divideNumber(text)[0]+"";
+	            if(numberValue.length < 4) return numberValue;
+	            var total = "",count = 0;
+	            (numberValue.split('').reverse().join('')).replace(/./g,function(s){ total = ((count%3) === 2 ) ? ("," + s + total) : (s + total), count++; });
+	            return total.replace(/^\,/,"");
+	        },
+			"++parseFloat":function(value,padRight){
+				var numberInfo = this.divideNumber(value);
+	            var floatValue = 
+	                (typeof padRight == "number") ?
+	                (("." + numberInfo[1]).substr(0,padRight+1)) :
+	                ("." + numberInfo[1]);
+	            return (numberInfo[0] + floatValue)*1;
+			},
+			"++padRightNumber":function(value,padRight){
+	            if(typeof padRight == "number") {
+	                var dInfo = this.divideNumber(value);
+	                var iVal  = dInfo[0];
+        
+	                if(Math.floor(padRight) === 0) return dInfo[0] + "";
+        
+	                var fStr = (dInfo[1]+"").substr(0,padRight);
+        
+	                for(var i=0,l=padRight - fStr.length;i<l;fStr += "0",i++);
+	                return iVal+"."+fStr;                
+	            } else {
+	                return this.parseFloat(value)+"";
+	            }
+	        },
+	        "++parseInt":function(value){
+	            return this.divideNumber(value)[0];
+	        },
 			// number core
 			// spot 1:prefix 2:integer 3:floatValue 4:suffix
 			isNotANumber:function(){ if((new StringNumberInfo(this.Source)).get("number").length) return true; return false; },
 			isANumber   :function(){ return !this.isNotANumber(); },
-			getNumberInfo : function(spot){
+			numberInfo : function(spot){
 				//getInfo
 				var info = new StringNumberInfo(this.Source);
 				info.fixNumberInfo();
@@ -2102,7 +2202,7 @@
 				return info;
 			},
 			setNumberInfo : function(value,position){
-				var i = this.getNumberInfo();
+				var i = this.numberInfo();
 				switch(position){
 					case 1: case "prefix"     : i["prefix"]     = value; break;
 					case 4: case "suffix"     : i["suffix"]     = value; break;
@@ -2114,12 +2214,12 @@
 				this.Source = i.prefix + (parseInt(i.integer) + parseFloat(i.floatValue)) + i.suffix;
 			},
 			// getter // setter
-			getInteger     : function()  { return this.getNumberInfo(2); },
-			getFloat       : function()  { return this.getNumberInfo(3); },
-			getFloatNumber : function()  { return this.getNumberInfo(3).replace(/^0\./,''); },
-			getNumber      : function()  { return this.getNumberInfo(5); },
-			getPrefix      : function()  { return this.getNumberInfo(1); }, 
-			getSuffix      : function()  { return this.getNumberInfo(4); },
+			getInteger     : function()  { return this.numberInfo(2); },
+			getFloat       : function()  { return this.numberInfo(3); },
+			getFloatNumber : function()  { return this.numberInfo(3).replace(/^0\./,''); },
+			getNumber      : function()  { return this.numberInfo(5); },
+			getPrefix      : function()  { return this.numberInfo(1); }, 
+			getSuffix      : function()  { return this.numberInfo(4); },
 			integer        : function() { return this.getInteger()*1;},
 			floatNumber    : function() { return this.getFloatNumber()*1;},
 			floatValue     : function() { return this.getFloat()*1;},
@@ -2272,45 +2372,25 @@
 	            if (maskLen === valLen + 1 && !this.defaultTranslation[lastMaskCharDigit]) { buf.push(lastMaskCharDigit); }
 	            return buf.join("");
 			},
-			getNumberFormat : function(mask,reverse){
+			numberFormat : function(mask,reverse){
 				if(this.getNumber().indexOf("-") == 0){
 					return "-" + this.__Format(this.getNumber().substr(1),mask,reverse);
 				} else {
 					return this.__Format(this.getNumber(),mask,reverse);
 				}
 			},
-			numberFormat    : function(){ this.Source = this.getFormat.apply(this,arguments); return this; },
-			getNumberText       : function(v) { return this.Source.replace(/\D/gi,""); },
-			getNumberTextFormat : function(mask,reverse){ return this.__Format(this.getNumberText(),mask,reverse); },
-			numberTextFormat    : function(){ this.Source = this.getFormat.apply(this,arguments); return this; },
-			//format getter
-			getPhoneNumber : function(){
-				return this.getNumberTextFormat(function(number){
-					if( /^02/.test(number) == true ) {
-						if(number.length < 10){
-							return "(00)000-00000";
-						} else {
-							return "(00)0000-0000";
-						}
-					} else if(/^1/.test(number) == true){
-						return "0000-0000";
-					} else {
-						if(number.length < 11) {
-							return "(000)000-00000";
-						} else {
-							return "(000)0000-0000";
-						}
-					}
-				});
-			},
-			getDecimal:function(p,s){ return  N._String(this.getNumberFormat("#,##0",true)).getFix(p,s);  },
+			setNumberFormat    : function(){ this.Source = this.getFormat.apply(this,arguments); return this; },
+			numberText       : function(v) { return this.Source.replace(/\D/gi,""); },
+			numberTextFormat : function(mask,reverse){ return this.__Format(this.numberText(),mask,reverse); },
+			setNumberTextFormat    : function(){ this.Source = this.getFormat.apply(this,arguments); return this; },
+			decimal:function(p,s){ return  (new N.String(this.numberFormat("#,##0",true))).fixString(p,s);  },
 			// calc line
-			getPercentOf : function(maxValue,minValue) { 
+			percentOf : function(maxValue,minValue) { 
 				maxValue = N.toNumber(maxValue);
 				minValue = N.toNumber(minValue);
 				return ((this.number()-minValue)/(maxValue-minValue))*100;},
-			getPointOf   : function(lengthValue)  { return lengthValue?lengthValue:0/this.integer()*100;  },
-			getLengthOf  : function(percentValue) { return this.integer()*percentValue?percentValue:0/100 },
+			pointOf   : function(lengthValue)  { return lengthValue?lengthValue:0/this.integer()*100;  },
+			lengthOf  : function(percentValue) { return this.integer()*percentValue?percentValue:0/100 },
 			getGCD:function(value){
 				function gcd(p, q){
 				    if(q==0)return p;
@@ -2318,41 +2398,12 @@
 				    return gcd(q, r);
 				}
 				return gcd(this.integer(),value);
-			},
-			// P1 전체 그룹의 갯수
-			// P2 전체 그룹의 current는 몇번째 그룹인지
-			getGroupsCount:function(groupLength,current){
-				if(typeof current === "undefined") return Math.ceil(this.integer() / groupLength);
-				return Math.floor(current / groupLength);
-			},
-			getTurning:function(cIndex){
-				var integer = this.integer();
-				if(cIndex<0){var abs=Math.abs(cIndex);cIndex=integer-(abs>integer?abs%integer:abs); };
-				return (integer>cIndex)?cIndex:cIndex%integer();
-			},
-			getTurningInfo:function(cIndex){
-				return {
-					"turning" : this.getTurning(cIndex),
-					"group"   : Math.floor(cIndex/this.Source)
-				}
 			}
 		});
 	
 		var util_unique_random_key = [];
 	
 		N.SINGLETON("Util",{
-			encodeString:function(v){ return N.toString(v,99,true); },
-			decodeString:function(v){ 
-				if(typeof v === "string") { 
-					if( v.charAt(0)=="\"" && v.charAt(v.length-1)=="\"" ){
-						return v.substr(1,v.length-2);
-					} else {
-						return eval("(" + v + ")");
-					}
-					console.error("decodeString::디코딩실패 ->",v,"<-");throw e;
-				}
-				return v; 
-			},
 			//random
 			base64Token  : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
 			base64Random : function(length,codeAt,codeLength){
@@ -2483,10 +2534,10 @@
 			setLocalData:function(k,v){
 				if(this.agent("adobeair")){
 					 var utf8v = new air.ByteArray();
-					 utf8v.writeUTFBytes(N.Util.encodeString(v));
+					 utf8v.writeUTFBytes(N.toDataString(v));
 					 air.EncryptedLocalStore.setItem(k,utf8v);
 				} else {
-					return this.setCookie(k,N.Util.encodeString(v));
+					return this.setCookie(k,N.toDataString(v));
 				}
 			},
 			isEventSupport:function(eventName,tagName){
@@ -2498,16 +2549,16 @@
 				}
 				return isSupport;
 			},
-			getLocalData:function(k){
+			localData:function(k){
 				if(this.agent("adobeair")){
 					var bi = air.EncryptedLocalStore.getItem(k);
 					if(bi==null){
 						return undefined;
 					} else {
-						return N.Util.decodeString(bi.readUTFBytes(bi.bytesAvailable));
+						return N.fromDataString(bi.readUTFBytes(bi.bytesAvailable));
 					}
 				} else {
-					return N.Util.decodeString(this.getCookie(k));
+					return N.fromDataString(this.getCookie(k));
 				}
 			},
 			usingLocalData:function(k){
@@ -2564,10 +2615,7 @@
 			        clip.setData(trans,null,clipid.kGlobalClipboard);      
 			    }
 			},
-			getNodePoint:function(node){
-			    for (var lx=0, ly=0; node != null; lx += node.offsetLeft, ly += node.offsetTop, node = node.offsetParent); return {x: lx,y: ly};
-			},
-			getCursorPoint:function(e) {
+			cursorPoint:function(e) {
 			    e = e || window.event; 
 				var cursor = { x: 0, y: 0 };
 			
@@ -2588,30 +2636,6 @@
 			        document.documentElement.clientTop;
 			    }
 			    return cursor;
-			},
-			getWindowsVersion:function(){
-				return ( navigator.appVersion.indexOf("MSIE") === -1 ) ? -1 : parseInt( /MSIE\s([0-9]+)/.exec(navigator.appVersion)[1] );
-			},
-			getNTVersion:function(){
-				//nt == 6 => vista, 7, 8
-				//nt == 5 => xp
-				//nt == 4 => old windows
-				//nt == -1 => other os
-				var version = navigator.appVersion;
-				var nt = -1;
-				if( version.indexOf("NT") != -1 ){
-					try       { return parseInt( /NT\s([0-9]+)/.exec(version)[1] ); } 
-					catch (e) { return 4; }
-				}
-		    if(version.indexOf("9x 4.90") != -1) return 0;
-		    if(version.indexOf("98") != -1)      return 0;
-		    if(version.indexOf("95") != -1)      return 0;
-		    if(version.indexOf("Win16") != -1)   return 0;
-		    if(version.indexOf("Windows") != -1) return 0;
-			   return -1;
-			},
-			getIEVersion:function(){
-				return (navigator.appVersion.indexOf("MSIE") === -1) ? -1 : parseInt( /MSIE\s([0-9]+)/.exec(navigator.appVersion)[1] );
 			},
 			//flash version check
 			getFlashVersion:function(){
@@ -2696,7 +2720,7 @@
 				var _toKeys = new N.Array(toKeys);
 			
 				if (_keys.length == _toKeys.length) {
-					var orientation = _keys.getMap(function(key){
+					var orientation = _keys.map(function(key){
 						return meta.getProp(key);
 					});
 					_keys.each(function(key){
@@ -2980,25 +3004,41 @@
 			
 				return result;
 			},
+			"pushCSSExpression":function(node,expression){
+				if(N.isNode(node)){
+					var attrs = (typeof expression === "string") ? N.selectorInfo(expression) :
+								(typeof expression === "object") ? expression :
+								undefined;
+					if(typeof attrs === "object"){
+						for(var key in attrs)switch(key){
+							case ":" :case "::":case "tagName": /*skip*/ break;
+							default:
+								if(attrs[key] === null || attrs[key] === undefined){
+									node.setAttribute(key,"");
+								} else {
+									node.setAttribute(key,attrs[key]);
+								}
+								break;
+						}
+					}
+				}
+				return node;
+			},
 			//css스타일 태그를 html스타일 태그로 바꿉니다.
 			"parseTag" : N.CONTINUE_FUNCTION(function(tagProperty,attrValue){
-			
 				if(typeof tagProperty === "object"){
 					var tagText = [];
 					N.dataEach(tagProperty,function(tag){ if(N.isNode(tag)) tagText.push(tag.outerHTML); });
 					return tagText.join('');
 				}
-			
 				//TAG중첩을 지원하기 위한 것
 				if((arguments.length > 1) && (typeof attrValue === "string" || typeof attrValue === "number")) {
 					var newValue = "";
 					for(var i=1,l=arguments.length;i<l;i++) if(typeof arguments[i] !== "undefined") newValue += arguments[i];
 					attrValue = newValue;
 				} 
-			
 				//캐쉬를 이용해 잦은 표현에 대한 오버해드를 줄입니다.
 				var tagInfo,cacheName,enableCache = (typeof attrValue === "string" || typeof attrValue === "undefined") ? true : false;
-			
 				if(enableCache){
 					cacheName = tagProperty;
 					//캐쉬가 존재하면 바로 리턴
@@ -3043,7 +3083,6 @@
 					cachePrefix = name + '>';
 					cacheSuffix = '</' + tagInfo.tagName + '>';
 				}
-			
 				if(cacheName) N.cache.set("N.parseTag",cacheName,[cachePrefix,cacheSuffix]);
 			
 			
@@ -3105,6 +3144,11 @@
 				}
 				return node;
 			},
+			"root":function(node){
+				if(!N.isNode(node)) return;
+				var findWhile = function(node){ node.parentElement ? findWhile(node.parentElement) : node ; };
+				return findWhile(node);
+			},
 			"parents":function(node){
 				if(!N.isNode(node)) return;
 				var finded = [];
@@ -3157,13 +3201,70 @@
 					var childs = N.toArray(findChild.call(feeder,feeder));
 					for(var i=0,l=childs.length;i<l;i++) N.NodeUtil.feedDownWhile(childs[i],stopFilter,findChild);
 				}
-			}
+			},
+			//도큐먼트상의 엘리먼트 포지션을 반환합니다.
+	        position:function(element){
+	            if(!element) return null;
+	            var xPosition = 0, yPosition = 0;
+	            while(element){
+	                xPosition += (element.offsetLeft - element.scrollLeft + element.clientLeft);
+	                yPosition += (element.offsetTop  - element.scrollTop  + element.clientTop );
+	                element = element.offsetParent;
+	            }
+	            return {x:xPosition,y:yPosition};
+	        },
+	        //어떤 이벤트에 대한 마우스의 위치를 추적합니다.
+	        mousePosition:function(e,root){
+	            root = !root ? document.documentElement : root;
+	            var pos = this.position(root);
+	            pos.x = e.clientX - pos.x, pos.y = e.clientY - pos.y;
+	            return pos;
+	        },
+			//터치이벤트가 마우스이벤트와 똑같이 동작하도록 합니다.
+	        bindTouchEventForMouseEvent:function(target, touchname){
+            
+	            //check touch device (require mordernizr)
+	            if($("html").is(".no-touch")) return;
+            
+	            var mousename = touchname === "touchstart" ? "mousedown" :
+	                            touchname === "touchend"   ? "mouseup"   :
+	                            touchname === "touchmove"  ? "mousemove" :
+	                            touchname === "touchleave" ? "mouseout"  : null;
+            
+	            if(!!mousename) console.log("bindTouchEventForMouseEvent - not support touch event",touchname);
+            
+	            if(target && mousename && touchname ) {
+	                target.addEventListener(touchname,function(event){
+                    
+	                    //1개의 터치만 지원
+	                    if(event.touches.length > 1 || event.type == "touchend" && event.touches.length > 0 )
+	                    {return;}
+                    
+	                    var newEvent      = document.createEvent("MouseEvents");
+	                    var changedTouche = event.changedTouches[0];
+                    
+	                    newEvent.initMouseEvent(
+	                        mousename,
+	                        true,
+	                        true,
+	                        null,
+	                        null,
+	                        changedTouche.screenX,
+	                        changedTouche.screenY,
+	                        changedTouche.clientX,
+	                        changedTouche.clientY
+	                    );
+                    
+	                    target.dispatchEvent(newEvent);
+	                });
+	            }
+	        }
 		});
 	
 	
 		N.SINGLETON("Finder",{
-			//배열이든 뭐든 노드로만 반환
-			"findOne":function(find){
+			//루트노드 없이 검색
+			"findLite":function(find){
 				if( typeof find === 'string' ){
 					// [string,null]
 					return N.NodeUtil.query(find);
@@ -3182,7 +3283,7 @@
 							// [array][node]
 							fc.push(find[i]);
 						} else if(N.isArray(find[i])){
-							var fa = N.findOne(find[i]);
+							var fa = N.findLite(find[i]);
 							if(fa.length) fc = fc.concat( fa );
 						}
 					}
@@ -3190,8 +3291,8 @@
 				}
 				return [];
 			},
-			//하나의 루트노드만 허용
-			"findDouble":function(findse,rootNode){
+			//여러개의 셀럭터와 하나의 루트노드만 허용
+			"findWithOnePlace":function(findse,rootNode){
 				if(typeof findse === 'string') return N.NodeUtil.query(findse,rootNode);
 				if( N.isNode(findse) ) {
 					var fs = N.NodeUtil.query(N.$trace(findse),rootNode);
@@ -3200,38 +3301,41 @@
 				if( N.isArray(findse) ) {
 					var result = [];
 					for(var i=0,l=findse.length;i<l;i++) {
-						var fd = N.findDouble(findse[i],rootNode);
+						var fd = N.findWithOnePlace(findse[i],rootNode);
 						if( fd.length ) result = result.concat(fd);
 					}				
 					return N.dataUnique(result);
 				}
 				return [];
 			},
-			//다수의 노드들을 받고 출력
-			"findAdvence":function(find,root){
-				if(arguments.length === 1) return N.findOne(find);
-				var targetRoots = N.findOne(root);
+			//다수의 로트와 샐렉터를 받고 출력
+			"findWithSeveralPlaces":function(find,root){
+				// 
+				if(arguments.length === 1 || typeof root === 'undefined' || root === null || root === W.document ) return N.findLite(find);
+				// find root
+				var targetRoots = N.findLite(root);
 				if(targetRoots.length === 0) {
-					if(typeof root !== 'undefined' || root === null) return [];
-					return N.findOne(find);
-				} 
+					return N.findLite(find);
+				}
+				//
 				var findes = N.toArray(find);
 				var result = [];
 				for(var i=0,l=targetRoots.length;i<l;i++) {
 					for(var fi=0,fl=findes.length;fi<fl;fi++) {
-						var fdr = N.findDouble(findes[fi],targetRoots[i]);
+						var fdr = N.findWithOnePlace(findes[fi],targetRoots[i]);
 						if( fdr.length ) result = result.concat(fdr);
 					}
 				}
 				return N.dataUnique(result);
 			},
+			//최적화 분기하여 샐랙터를 실행시킴
 			"find" : N.CONTINUE_FUNCTION(function(find,root,eq){
-				return (typeof root === "number") ? N.findOne(find)[root] :
-					   (typeof eq === "number")   ? N.findAdvence(find,root)[eq] :
-					   N.findAdvence(find,root);
+				return (typeof root === "number") ? N.findLite(find)[root] :
+					   (typeof eq === "number")   ? N.findWithSeveralPlaces(find,root)[eq] :
+					   N.findWithSeveralPlaces(find,root);
 			}),
 			"findMember":function(sel,offset){
-				var target = N.findOne(sel)[0];
+				var target = N.findLite(sel)[0];
 				if(!N.isNode(target)) return;
 				if(typeof offset !== "number") return N.toArray(target.parentElement.children);
 				var currentIndex = -1;
@@ -3240,13 +3344,13 @@
 			},
 			// 하위루트의 모든 노드를 검색함 (Continutiltiy에서 중요함)
 			"findIn" : N.CONTINUE_FUNCTION(function(root,find,index){
-				return (typeof index === 'number') ? N.findAdvence(find || '*',N.dataMap(N.findAdvence(root),function(node){ return node.children },N.dataFlatten))[index] :
-					   (typeof find  === 'number') ? N.findAdvence('*',N.dataMap(N.findAdvence(root),function(node){ return node.children },N.dataFlatten))[find]   :
-													 N.findAdvence(find || '*',N.dataMap(N.findAdvence(root),function(node){ return node.children },N.dataFlatten)) ;
+				return (typeof index === 'number') ? N.findWithSeveralPlaces(find || '*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten))[index] :
+					   (typeof find  === 'number') ? N.findWithSeveralPlaces('*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten))[find]   :
+													 N.findWithSeveralPlaces(find || '*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten)) ;
 			},2),
 			// 자식루트의 노드를 검색함
 			"findOn": N.CONTINUE_FUNCTION(function(root,find){
-				var finds = N.dataMap(N.findAdvence(root),function(node){ return node.children; },N.dataFlatten);
+				var finds = N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children; },N.argumentsFlatten);
 				switch(typeof find){
 					case "number": return [finds[find]]; break;
 					case "string": return N.dataFilter(finds,function(node){ return N.NodeUtil.is(node,find); }); break;
@@ -3256,16 +3360,19 @@
 			"findParents":N.CONTINUE_FUNCTION(function(el,require,index){ 
 				if(typeof require === 'string') {
 					return (typeof index === 'number') ?
-					N.dataFilter(N.NodeUtil.parents(N.findAdvence(el)[0]),function(el){ return N.$is(el,require); })[index]:
-					N.dataFilter(N.NodeUtil.parents(N.findAdvence(el)[0]),function(el){ return N.$is(el,require); });
+					N.dataFilter(N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0]),function(el){ return N.$is(el,require); })[index]:
+					N.dataFilter(N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0]),function(el){ return N.$is(el,require); });
 				} else if(typeof require === 'number') {
-					return N.NodeUtil.parents(N.findAdvence(el)[0])[require];
+					return N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0])[require];
 				} else {
-					return N.NodeUtil.parents(N.findAdvence(el)[0]);
+					return N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0]);
 				}
 			},1),
+			"findRoot":N.CONTINUE_FUNCTION(function(el){ 
+				return N.NodeUtil.root(N.find(el,0));
+			},1),
 			"findBefore":N.CONTINUE_FUNCTION(function(node,filter){ 
-				node = N.findOne(node)[0];
+				node = N.findLite(node)[0];
 				var index = N.$index(node); 
 				var result = []; 
 				if(typeof index === "number") {
@@ -3287,7 +3394,7 @@
 				return result; 
 			},1),
 			"findAfter":N.CONTINUE_FUNCTION(function(node,filter){ 
-				node = N.findOne(node)[0];
+				node = N.findLite(node)[0];
 				var index = N.$index(node); 
 				var result = []; 
 				if(typeof index === "number") {
@@ -3310,7 +3417,7 @@
 			},1),
 			"findParent" :N.CONTINUE_FUNCTION(function(el,require,index){
 				if( (typeof require === 'number') || ((typeof require === 'string') && (typeof index === 'number')) ) return N.dataFirst(N.findParents(el,require,index));
-				var node = N.findOne(el)[0];
+				var node = N.findLite(el)[0];
 				if(node) {
 					if(typeof require === "string"){
 						var parents = N.NodeUtil.parents(node);
@@ -3322,7 +3429,7 @@
 				return undefined;
 			},1),
 			"findDocument":N.CONTINUE_FUNCTION(function(iframeNode){
-				var iframe = N.findOne(iframeNode)[0];
+				var iframe = N.findLite(iframeNode)[0];
 				if(iframe) {
 					if(iframe.tagName == "IFRAME") return iframe.contentDocument || iframe.contentWindow.document;
 					if(N.isDocument(iframe)) return iframe;
@@ -3330,9 +3437,9 @@
 					console.warn('iframe을 찾을 수 없습니다.',iframeNode);
 				}
 			},1),
-			//deprecated?
+			//
 			"findTree":N.CONTINUE_FUNCTION(function(node,stringify){
-				var treeNode = N.findOne(node)[0];
+				var treeNode = N.findLite(node)[0];
 				if(!treeNode) return [];
 			
 				var tree = N.findParents(treeNode,N.dataMap,function(){ return (stringify === true ? N.$trace(this) : this ); });
@@ -3341,10 +3448,10 @@
 				return tree;
 			},1),
 			"findOffset" :function(node,target,debug){
-				var node = N.findOne(node)[0];
+				var node = N.findLite(node)[0];
 				if(node) {
 					var l=t=0,w=node.offsetWidth,h=node.offsetHeight;
-					target = N.findOne(target)[0] || document.body;
+					target = N.findLite(target)[0] || document.body;
 					do {
 						l += node.offsetLeft;
 						t += node.offsetTop;
@@ -3446,7 +3553,7 @@
 				}			
 			
 				//부모에게 어팬딩함
-				parent = N.findOne(parent)[0];
+				parent = N.findLite(parent)[0];
 				if(parent){
 					if(parent==W.document) parent = W.document.getElementsByTagName("body")[0];
 					parent.appendChild(element);
@@ -3458,21 +3565,19 @@
 			"make":N.CONTINUE_FUNCTION(function(name,attr,third){
 				if ( N.isArray(attr) || N.isNode(attr) || N.isTextNode(attr) ) {
 					var createNode = N.create(name);
-					N.$append(createNode,new N.Array(arguments).subarr(1).flatten().toArray());
+					N.$append(createNode,new N.Array(arguments).setSubarr(1).setFlatten().toArray());
 					return createNode;
 				} else if(N.isNode(third) || N.isTextNode(third)){
 					var createNode = N.create(name, attr);
-					N.$append(createNode,new N.Array(arguments).subarr(2).flatten().toArray());
+					N.$append(createNode,new N.Array(arguments).setSubarr(2).setFlatten().toArray());
 					return createNode;
 				} else {
 					return N.create(name, attr);
 				}	
 			},1),
 			"makes":N.CONTINUE_FUNCTION(function(fulltag,root){
-				var makeRoot   = N.find(root,0);
-				var incomeRoot = !!makeRoot;
-				if(!incomeRoot) makeRoot = N.make('div');
-			
+				var makeRoot    = N.make('div');
+				var hasTemplate = (fulltag.toLowerCase().indexOf("template") > -1)?true:false;
 				var divideIndex = fulltag.indexOf(">");
 			
 				if(divideIndex>0) {
@@ -3499,9 +3604,8 @@
 			
 				var multiMake    = currentTag.split(/\+|\,/);
 				var multiMakeEnd = currentTag.split(/\+|\,/).length-1;
-			
-			
-				N.dataEach(multiMake,function(eachtag,eachtagIndex){
+				
+				N.dataEach(multiMake,function(eachtag,eachTagIndex){
 					///////////////
 					var repeat = 1;
 					//repeat
@@ -3509,14 +3613,13 @@
 						repeat = parseInt(s.substr(1)); return "";
 					});
 					//generate
-					var findroot = N.findOne(root)[0];
 					N.times(repeat,function(i){
 						var rtag     = eachtag.replace("$",i+1);
 						var rtagNode = N.make(rtag);
 					
 						makeRoot.appendChild(rtagNode);
 					
-						if(eachtagIndex == multiMakeEnd) {
+						if(eachTagIndex == multiMakeEnd) {
 							if(nextTag.length > 0) N.makes(nextTag,rtagNode);
 							if(nextCursor){
 								var findRoot = makeRoot;
@@ -3532,7 +3635,24 @@
 						}
 					});
 				});
-				return N.toArray(makeRoot.children);
+				
+				var makes = N.toArray(makeRoot.children);
+				
+				if(hasTemplate){
+					N.dataEach(N.find("template",makeRoot),function(template){
+						if(!("content" in template)) template.content = document.createDocumentFragment();
+						N.dataEach(N.toArray(template.childNodes),function(childNode){
+							template.content.appendChild(childNode);
+						});
+					});
+				}
+				
+				if(root){
+					var targetRoot = N.findLite(root)[0];
+					if(targetRoot) for(var i=0,l=makes.length;i<l;i++) targetRoot.appendChild(makes[i]);
+				}
+				
+				return makes;
 			},1),
 			// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 			"makeCol":function(){ 
@@ -3597,29 +3717,48 @@
 			},
 			//노드 배열을 복사함
 			"cloneNodes":function(node){
-				return N.dataMap(N.findOne(node),function(findNode){ return findNode.cloneNode(findNode,true); });
+				return N.dataMap(N.findLite(node),function(findNode){ return findNode.cloneNode(findNode,true); });
 			},
-			//하위의 노드를 모두 복사함
-			"importNode":function(node,parent){
-				node = N.findOne(node);
-				if( node.length === 0) return undefined;
-				if( node.length !== 1 ) console.warn("N.importNode:: 한개의 노드만 복사할수 있습니다.",node);
-				node = N.dataFirst(node);
-			
-				var result;
-				if('content' in node){
-					result = N.find(document.importNode(node.content,true).childNodes);
-				} else {
-					result = N.cloneNodes(node.children);
+			"importNodes":function(node){
+				if(typeof node === "string") {
+					node = node.trim();
+					if(/^<.+>$/.test(node)){
+						node = N.parseHTML(node);
+					} else if(/^\#[\w\-]+$/.test(node)) {
+						node = N.findLite(node);
+					} else {
+						node = N.makes(node);
+					}
 				}
-			
-				if(parent){
-					parent = N.findOne(parent)[0];
-					if(parent) N.$append(parent,result);
+				var result=[], targetNodes=N.findLite(node);
+				if( targetNodes.length === 0){
+					console.warn("importNodes::복사할 노드를 찾을 수 없습니다.",node);
+					return result;
 				}
-			
-				return result;
-			
+				N.dataEach(targetNodes,function(target){
+					if('content' in target) {
+						N.dataEach( document.importNode(target.content,true).childNodes, function(oneNode){
+							result.push(oneNode); 
+						});
+					} else {
+						result.push(target.cloneNode(true));
+					}
+				});
+				return N.findLite(result);
+			},
+			"makeSampleNode":function(node,rootExp){
+				var result, importSample = N.importNodes(node);
+				if(importSample.length === 1){
+					result = importSample[0];
+				} else if(importSample.length > 1) {
+					var newRoot = N.make(rootExp);
+					for(var i=0,l=importSample.length;i<l;i++) newRoot.appendChild(importSample[i]);
+					result = newRoot;
+				}
+				return result ? (typeof rootExp === "string") ? 
+							    N.pushCSSExpression(result,rootExp) : 
+							    result : 
+				console.warn("makeSampleNode::no result from",node) ;
 			},
 			"cloneObject":function(inv){ 
 				if(typeof inv === "object"){ var result = {}; for(var k in inv) result[k] = inv[k]; return result; } return N.toObject(inv); 
@@ -3660,16 +3799,17 @@
 	
 		N.SINGLETON("$",{
 			//포커스 상태인지 검사합니다.
-			"hasFocus":function(sel){ return document.activeElement == N.findOne(sel)[0]; },
+			"hasFocus":function(sel){ return document.activeElement == N.findLite(sel)[0]; },
 			//케럿을 움직일수 있는 상태인지 검새합니다.
-			"caretPossible":function(sel){ var node = N.findOne(sel)[0]; if( N.$hasFocus(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
+			"caretPossible":function(sel){ var node = N.findLite(sel)[0]; if( N.$hasFocus(node) == true) if(node.contentEditable == true || window.getSelection || document.selection) return true; return false; },
+			"caretPosition":function(e){ var t,n,a,o,r,c=0,l=0;return"number"==typeof e.selectionStart&&"number"==typeof e.selectionEnd?(c=e.selectionStart,l=e.selectionEnd):(n=document.selection.createRange(),n&&n.parentElement()==e&&(o=e.value.length,t=e.value.replace(/\r\n/g,"\n"),a=e.createTextRange(),a.moveToBookmark(n.getBookmark()),r=e.createTextRange(),r.collapse(!1),a.compareEndPoints("StartToEnd",r)>-1?c=l=o:(c=-a.moveStart("character",-o),c+=t.slice(0,c).split("\n").length-1,a.compareEndPoints("EndToEnd",r)>-1?l=o:(l=-a.moveEnd("character",-o),l+=t.slice(0,l).split("\n").length-1)))),{start:c,end:l}},
 			//어트리뷰트값을 읽거나 변경합니다.
-			"attr":function(sel,v1,v2){ var node = N.findOne(sel)[0]; if(node) return N.NodeUtil.attr.apply(undefined,Array.prototype.slice.call(arguments)); },
+			"attr":function(sel,v1,v2){ var node = N.findLite(sel)[0]; if(node) return N.NodeUtil.attr.apply(undefined,Array.prototype.slice.call(arguments)); },
 			//css스타일로 el의 상태를 확인합니다.
-			"is":function(sel,value){ var node = N.findOne(sel)[0]; if(node)return N.NodeUtil.is(node,value); },
+			"is":function(sel,value){ var node = N.findLite(sel)[0]; if(node)return N.NodeUtil.is(node,value); },
 			//선택한 element중 대상만 남깁니다.
 			"filter":function(sel,filter){
-				var targets = N.findOne(sel);
+				var targets = N.findLite(sel);
 				if(typeof filter !== "string") {
 					console.warn("N.$filter는 string filter만 대응합니다.");
 					return targets;
@@ -3680,7 +3820,7 @@
 				}
 			},
 			"content":function(node,setValue){
-				var node = N.findOne(node)[0];
+				var node = N.findLite(node)[0];
 				if(node) {
 					if(typeof setValue === 'undefined') return node.textContent || node.innerText;
 					//set
@@ -3690,8 +3830,8 @@
 				return node;
 			},
 			//el의 중요값을 찾거나 변경합니다.
-			"value":function(aNode,value){
-				var node,nodes = N.findOne(aNode);
+			"value":function(aNode,value,htmlContent){
+				var node,nodes = N.findLite(aNode);
 				if(nodes.length == 0){
 					return;
 				} else if(nodes.length > 1){
@@ -3714,8 +3854,19 @@
 				node     = N.dataFirst(nodes);
 				nodeName = node.tagName.toLowerCase();
 				switch(nodeName){
-					case "img" :case "script": if(arguments.length < 2) return node.src; node.src = value; return node; break;
+					
+					case "img" :if(arguments.length < 2) return node.src; node.src = value; return node; break;
 					case "link":if(arguments.length < 2) return node.rel; node.rel = value; return node; break;
+					case "script":
+						var type = node.getAttribute("type");
+						//json data
+						if(typeof type === "string") if(type.indexOf("json") > -1) {
+							if(arguments.length < 2) 
+								return N.toObject(N.$content(node)); 
+							return N.$content(node,N.toString(value));
+						}
+						if(arguments.length < 2) return node.src; node.src = value; return node;
+						break;
 					case "input": case "option": case "textarea":
 						//get
 						if(nodeName == "option"){
@@ -3727,17 +3878,19 @@
 						}
 						//set
 						var setVal = value+"";
-			
-						if(N.$caretPossible(node)){
-							var gap = node.value.length - value.length;
-							var cur = ELCARET(node);
+						
+						// todo
+						//if( N.$.caretPossible(node) ) {
+						//	var gap = node.value.length - value.length;
+						//	var cur = N.$.caretPosition(node).start;
+						//	node.value = value;
+						//	ELCARET(node,cur-gap)
+						//	return node;
+						//} else {
+							// alt
 							node.value = value;
-							ELCARET(node,cur-gap)
 							return node;
-						} else {
-							node.value = value;
-							return node;
-						}
+						//}
 						break;
 					case "select":
 						if(typeof value === "undefined") return node.value;
@@ -3751,19 +3904,24 @@
 						break;
 					default :
 						//elcontent에서 자동을 getset을 실행함
-						return N.$content(node,value);
+						if(htmlContent === true){
+							node.innerHTML = value;
+							return node;
+						} else {
+							return N.$content(node,value);
+						}						
 					break;
 				}
 				return node;
 			},
 			"hasAttr":function(sel,name,hideConsole){
-				var node = N.findOne(sel)[0];
+				var node = N.findLite(sel)[0];
 				if(node) { return N.$attr(sel,name) == null ? false : true; }
 				if(hideConsole !== true) console.error("$.hasAttr:: 알수없는 node값 입니다. => " + N.tos(node) );
 				return false;
 			},
 			"unique":function(sel){
-				var node = N.findOne(sel)[0];
+				var node = N.findLite(sel)[0];
 				if(node) { if(!N.$hasAttr(node,"id")) node.setAttribute("id",N.Util.base26UniqueRandom(8,'uq')) }
 				return node;
 			},
@@ -3773,7 +3931,7 @@
 			},
 			//get css style tag info
 			"trace"   :function(target,detail){
-				var t = N.findOne(target)[0];
+				var t = N.findLite(target)[0];
 				if( t ){
 					var tag = t.tagName.toLowerCase();
 					var tid = tclass = tname = tattr = tvalue = '';
@@ -3805,14 +3963,14 @@
 				}
 			},
 			"index":function(el){
-				var node = N.findOne(el)[0];
+				var node = N.findLite(el)[0];
 				var parent = N.findParent(node);
 				if(parent) return N.dataIndex(parent.children,node);
 			},
 			"append":function(parentIn,childs){
-				var parent = N.findOne(parentIn)[0];
+				var parent = N.findLite(parentIn)[0];
 				if(!N.isNode(parent)) return parentIn;
-				var appendTarget  = N.findOne(childs);
+				var appendTarget  = N.findLite(childs);
 				var parentTagName = parent.tagName.toLowerCase();
 				for(var i=0,l=appendTarget.length;i<l;i++)
 					if (N.isNode(appendTarget[i])) {
@@ -3880,8 +4038,8 @@
 				return parent;
 			},
 			"prepend":function(parentIn,childs){
-				var parent = N.findOne(parentIn)[0];
-				var appendTarget = N.findOne(childs);
+				var parent = N.findLite(parentIn)[0];
+				var appendTarget = N.findLite(childs);
 				if(N.isOk(parent),N.isOk(appendTarget)){
 					N.$append(parent,appendTarget);
 					var newParent = N.findParent(appendTarget[0]);
@@ -3892,15 +4050,35 @@
 					}
 				}
 			},
-			"appendTo":function(targets,parentEL){ return N.$append(N.findOne(parentEL)[0],targets); },
+			"appendTo":function(targets,parentEL){ return N.$append(N.findLite(parentEL)[0],targets); },
+			"prependTo":function(targets,parentEL){ return N.$prepend(N.findLite(parentEL)[0],targets); },
+			"require":function(parent,target){
+				var parent = N.findLite(parent);
+				if(parent.length == 0) return undefined;
+				if(parent.length  > 1) console.warn('require::parent must be single');
+				parent = parent[0];
+				var findTargets = N.find(target,parent);
+				if(findTargets.length > 1) console.warn('require::require target must be single, please more specific select');
+				if(findTargets.length > 0) return findTargets[0];
+				var makeTarget = N.make(target);
+				N.$append(makeTarget);
+				return makeTarget;
+			},
+			"cssexp":function(sel,exp){
+				if(!sel || typeof exp !== "string") return N.find(sel);
+				return N.find(sel,N.dataEach,function(node){
+					N.pushCSSExpression(node,exp);
+				});
+				
+			},
 			"put":function(sel){
-				var node = N.findOne(sel)[0];
+				var node = N.findLite(sel)[0];
 				if(!N.isNode(node)) return console.warn("N.$put:: node를 찾을수 없습니다. => 들어온값" + N.tos(node));
 				N.$empty(node);
 				var newContents = [];
 				var params = Array.prototype.slice.call(arguments);
 				params.shift();
-				N.dataEach( N.dataFlatten(params) ,function(content){
+				N.dataEach( N.argumentsFlatten(params) ,function(content){
 					if(N.isNode(content)){
 						newContents.push(content);
 					} else {
@@ -3923,10 +4101,10 @@
 			},
 			//이전 엘리먼트를 찾습니다.
 			"before":N.CONTINUE_FUNCTION(function(node,appendNodes){ 
-				var target = N.findOne(node)[0];
+				var target = N.findLite(node)[0];
 				if(!N.isNode(target)) return node;
 				if(arguments.length < 2) return N.findMember(target,-1);
-				var appendTarget = N.findOne(appendNodes);
+				var appendTarget = N.findLite(appendNodes);
 				if(appendTarget.length > 0){
 					for(var i=0,l=appendTarget.length;i<l;i++) target.parentNode.insertBefore(appendTarget[i],target); 
 				}
@@ -3935,10 +4113,10 @@
 		
 			//이후 엘리먼트를 찾습니다.
 			"after" :N.CONTINUE_FUNCTION(function(target,appendNodes){ 
-				target = N.findOne(target)[0];
+				target = N.findLite(target)[0];
 				if(!N.isNode(target))    return target; 
 				if(arguments.length < 2) return N.findMember(target,1);
-				var appendTarget = N.findOne(appendNodes);
+				var appendTarget = N.findLite(appendNodes);
 				if(appendTarget.length > 0){
 					var afterElement = N.findMember(target,1);
 					if( N.isNode(afterElement) ){
@@ -3949,9 +4127,21 @@
 				}
 				return target;
 			},1),
+			//
+			"wrap":N.CONTINUE_FUNCTION(function(target,wrapper){
+				wrapper = N.findLite(wrapper);
+				target  = N.findLite(target);
+				if(!wrapper.length) return undefined;
+				if(wrapper.length > 1) console.warn('wrapTo::wrapper select is mustbe one',wrapper);
+				wrapper = wrapper[0];
+				if(target[0].parentElement) N.$before(target[0],wrapper);				
+				N.$append(wrapper,target);
+				return wrapper;
+			},1),
+			//대상과 대상의 엘리먼트를 바꿔치기함
 			"change":N.CONTINUE_FUNCTION(function(left,right){
-				left  = N.findOne(left)[0];
-				right = N.findOne(right)[0];
+				left  = N.findLite(left)[0];
+				right = N.findLite(right)[0];
 				if(left && right ){
 					var lp = left.parentNode;
 					var rp = right.parentNode;
@@ -3974,7 +4164,7 @@
 				return [left,right];
 			},1),
 			"replace":function(target,replaceNode){
-				var replaceTarget = N.findOne(replaceNode)[0];
+				var replaceTarget = N.findLite(replaceNode)[0];
 				N.$after(target,replaceTarget);
 				N.$remove(target);
 				return replaceTarget;
@@ -3985,7 +4175,7 @@
 			"down" : function(target){if(!N.isNode(target))return target;var parent=target.parentNode;if(!N.isNode(parent))return target;var next=target.nextSibling;if(!N.isNode(next))return target;N.$after(next,target);},
 			//스타일을 얻어냅니다.
 			"style": function(target,styleName,value){
-				var target = N.findOne(target)[0];
+				var target = N.findLite(target)[0];
 				if(N.isNode(target)){
 					if(typeof styleName === "undefined") return ENV.supportComputedStyle ? window.getComputedStyle(target,null) : target.currentStyle;
 					if(typeof styleName === "string"){
@@ -4013,11 +4203,11 @@
 			//내무의 내용을 지웁니다.
 			"empty"  : function(target){ return N.find(target,N.dataMap,function(node){ if("innerHTML" in node) node.innerHTML = ""; return node; }); },
 			//대상 객체를 제거합니다.
-			"remove" : function(node,childs){ var target = N.findOne(node)[0]; if(!N.isNode(target)) return target; if(!N.isNode(target.parentNode)) return target; target.parentNode.removeChild(target); return target; },
+			"remove" : function(node,childs){ var target = N.findLite(node)[0]; if(!N.isNode(target)) return target; if(!N.isNode(target.parentNode)) return target; target.parentNode.removeChild(target); return target; },
 			//케럿의 위치를 찾습니다.
 			"CARET":function(select,pos){
 				//
-				var node = N.findOne(select)[0];
+				var node = N.findLite(select)[0];
 				var editable = node.contentEditable === 'true';
 				var r1,r2,ran;
 				//get
@@ -4091,7 +4281,7 @@
 				if(N.isWindow(node)){
 					node = W;
 				} else {
-					node = N.findOne(node)[0];
+					node = N.findLite(node)[0];
 					if(N.isNothing(node)) throw new Error("N.$trigger는 element를 찾을수 없습니다. => 들어온값" + N.tos(node));
 				}
 				var e;
@@ -4106,18 +4296,42 @@
 				return node;
 			},
 			//이벤트 등록이 가능한 타겟을 찾아냅니다.
-			"onTarget":function(node){ return (N.isWindow(node) || N.isDocument(node)) ? node : N.findOne(node); },
+			"onTarget":function(node){ return (N.isWindow(node) || N.isDocument(node)) ? node : N.findLite(node); },
 			//중복이벤트 등록 가능
 			"on":function(node, eventName, eventHandler, useCapture){
-				if((typeof eventName !== "string") || (typeof eventHandler !== "function")) return console.erro("N.$on 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요",node, eventName, eventHandler);
 				var nodes  = N.$onTarget(node);
 				var events = eventName.split(" ");
-			
-				N.dataEach(nodes,function(eventNode){
-					N.dataEach(events,function(event){
-						eventNode.addEventListener(event, eventHandler, useCapture==true ? true : false); 
+				
+				if(typeof arguments[1] === "string" && typeof arguments[2] === "function"){
+					//direct event
+					N.dataEach(nodes,function(eventNode){
+						N.dataEach(events,function(event){
+							eventNode.addEventListener(event, eventHandler, useCapture==true ? true : false); 
+						});
 					});
-				});
+				} else if(typeof arguments[1] === "string" && typeof arguments[2] === "string" && typeof arguments[3] === "function"){
+					var delegateTarget = arguments[2],
+						eventHandler   = arguments[3],
+						useCapture     = arguments[4];
+					//delegate event
+					N.dataEach(nodes,function(eventNode){
+						N.dataEach(events,function(event){
+							eventNode.addEventListener(event, function(e){
+								var matchingNode = N.dataMatching(
+									N.find(delegateTarget,node),
+									N.NodeUtil.is(e.target,delegateTarget) ? [e.target].concat(N.findParents(e.target,delegateTarget)) : N.findParents(e.target,delegateTarget)
+								);
+								if(matchingNode) return eventHandler.call(matchingNode,e);
+							}, useCapture==true ? true : false); 
+						});
+					});
+				} else {
+					//error
+					if((typeof eventName !== "string") || (typeof eventHandler !== "function")){
+						console.error("N.$on 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요");
+						console.error("N.$on ::",arguments);
+					} 
+				}
 				return nodes;
 			},
 			"off":function(node, eventName, eventHandler, useCapture){
@@ -4152,7 +4366,7 @@
 				return node;
 			},
 			"data":function(node,key,value){
-				var nodes = N.findOne(node);
+				var nodes = N.findLite(node);
 				if(nodes.length == 0) return;
 				if(arguments.length == 1) return N.clone(N.dataFirst(nodes).dataset);
 				if(arguments.length == 2) return N.dataFirst(nodes).dataset[key];
@@ -4160,7 +4374,7 @@
 			},
 			//Disabled
 			"disabled":function(node,status){
-				var elf = new N.Array(N.findOne(node));
+				var elf = new N.Array(N.findLite(node));
 				if( elf.isNone() ){
 					console.error("N.$disabled:: node를 찾을수 없습니다. => 들어온값" + N.tos(node));
 				} else {
@@ -4181,7 +4395,7 @@
 			},
 			//Readonly
 			"readOnly":function(node,status){
-				var elf = new N.Array(N.findOne(node));
+				var elf = new N.Array(N.findLite(node));
 				if( elf.isNone() ){
 					console.error("N.$readOnly:: node를 찾을수 없습니다. => 들어온값" + N.tos(node));
 				} else {
@@ -4202,13 +4416,13 @@
 			},
 			"CommonString":new N.String(),
 			"addClass":function(node,addClass){	
-				var findNodes = N.findOne(node);
+				var findNodes = N.findLite(node);
 				if(typeof addClass !== "string") return findNodes;
-				for(var i=0,l=findNodes.length;i<l;i++) findNodes[i].setAttribute("class",N.$.CommonString.set(findNodes[i].getAttribute("class")).getAddModel(addClass));
+				for(var i=0,l=findNodes.length;i<l;i++) findNodes[i].setAttribute("class",N.$.CommonString.set(findNodes[i].getAttribute("class")).addModel(addClass));
 				return findNodes;
 			},
 			"hasClass":function(node,hasClass){
-				var findNodes = N.findOne(node);
+				var findNodes = N.findLite(node);
 				if(typeof hasClass !== "string") return false;
 				for(var i=0,l=findNodes.length;i<l;i++) if( !N.$.CommonString.set(findNodes[i].getAttribute("class")).hasModel(hasClass) ) {
 					return false;
@@ -4216,10 +4430,10 @@
 				return true;
 			},
 			"removeClass":function(node,removeClass){
-				var findNodes = N.findOne(node);
+				var findNodes = N.findLite(node);
 				if(typeof removeClass !== "string") return findNodes;
 				for(var i=0,l=findNodes.length;i<l;i++) {
-					var didRemoveClassText = N.$.CommonString.set(findNodes[i].getAttribute("class")).getRemoveModel(removeClass).trim();
+					var didRemoveClassText = N.$.CommonString.set(findNodes[i].getAttribute("class")).setRemoveModel(removeClass).trim();
 					if( !didRemoveClassText.length ) {
 						findNodes[i].removeAttribute("class");
 					} else {
@@ -4228,17 +4442,19 @@
 				} 
 				return findNodes;
 			},
-			"switchClass":function(el,switchClass){
-				if(typeof switchClass==='string'){
-					var nodes = N.findOne(el);
-					N.dataEach(nodes,function(node){
-						N.$hasClass(node,switchClass) ? N.$removeClass(node,switchClass) : N.$addClass(node,switchClass);
+			"toggleClass":function(el,toggleName,flag){
+				var nodes = N.findLite(el);
+				if(typeof toggleName !== 'string') return nodes;
+				if(flag===undefined) {
+					return N.dataEach(nodes,function(node){
+						N.$hasClass(node,toggleName) ? N.$removeClass(node,toggleName) : N.$addClass(node,toggleName);
 					});
-					return nodes;
+				} else {
+					return flag ? N.$addClass(el,toggleName) : N.$removeClass(el,toggleName);
 				}
 			},
 			"coords":function(nodes,coordinate,insertAbsolute,offsetX,offsetY,scale){
-				var findNode = N.findOne(nodes,0);
+				var findNode = N.findLite(nodes,0);
 				if(findNode && (typeof coordinate == "string")) {
 					scale = (typeof scale === 'number') ? scale : 1;
 				
@@ -4275,8 +4491,8 @@
 		});
 		N.$.EACH_TO_METHOD_WITH_PREFIX();
 	
-		N.EXTEND_MODULE("Array","Query",{
-			find:function(selector,i){ return new N.Query(selector,this,i); },
+		N.EXTEND_MODULE("Array","NodeQuery",{
+			find:function(selector,i){ return new N.NodeQuery(selector,this,i); },
 			hasFocus:function(){ return N.$hasFocus(this); },
 			caretPossible:function(){ return N.$caretPossible(this); },
 			attr:function(name){ 
@@ -4288,11 +4504,12 @@
 					return N.CALL(N.$attr,undefined,this,name);
 				}
 			},
-			hasAttr:function(){ return N.FLATTENCALL(N.$attr,N.$,this,arguments); },
-			addClass:function(name){ return N.CALL(N.$.addClass,N.$,this,name) },
-			hasClass:function(name){ return N.CALL(N.$.hasClass,N.$,this,name) },
-			removeClass:function(name){ return N.CALL(N.$.removeClass,N.$,this,name) },
-			is     :function(){ return N.FLATTENCALL(N.$is,N.$,this,arguments); },
+			hasAttr:function(){ N.FLATTENCALL(N.$attr,N.$,this,arguments);return this; },
+			addClass:function(className){ N.CALL(N.$.addClass,N.$,this,className);return this; },
+			hasClass:function(className){ N.CALL(N.$.hasClass,N.$,this,className);return this; },
+			removeClass:function(className){ N.CALL(N.$.removeClass,N.$,this,className);return this; },
+			toggleClass:function(className,toggle){ N.CALL(N.$.toggleClass,N.$,this,className,toggle); return this; },
+			is     :function(exp){ return N.$.is(this,exp); },
 			filter :function(){ this.replace(N.FLATTENCALL(N.$filter,N.$,this,arguments)); return this; },
 			value  :function(name){ 
 				if(arguments.length > 0){
@@ -4305,8 +4522,8 @@
 			trace    :function(){ return N.FLATTENCALL(N.$.trace,N.$,this,arguments); },
 			//index
 			currentIndex:function(){ return N.FLATTENCALL(N.$.index,N.$,this,arguments); },
-			append   :function(){ N.FLATTENCALL(N.$.append,N.$,this,arguments);    return this; },
-			prepend  :function(){ N.FLATTENCALL(N.$.prepend,N.$,this,arguments);   return this; },
+			append   :function(targets){ N.$.append(this,targets);return this; },
+			prepend  :function(targets){ N.$.prepend(this,targets);return this; },
 			appendTo :function(target){ N.CALL(N.$.appendTo,N.$,this,target); return this; },
 			prependTo:function(target){ N.CALL(N.$.prependTo,N.$,this,target);return this; },
 			put      :function(){ N.FLATTENCALL(N.$.put,N.$,this,arguments); return this;},
@@ -4345,8 +4562,8 @@
 			remove :function(){ N.CALL(N.$.remove,N.$,this); return this; },
 			caret  :function(){ N.FLATTENCALL(N.$.caret,N.$,this,arguments); },
 			trigger:function(name){ N.CALL(N.$.trigger,N.$,this,name); return this; },
-			on     :function(){ N.FLATTENCALL(N.$.on,N.$,this,arguments); return this; },
-			off    :function(){ N.FLATTENCALL(N.$.off,N.$,this,arguments); return this; },
+			on     :function(e,h,c,x){ N.$.on.call(undefined,this,e,h,c,x); return this; },
+			off    :function(e,h,c,x){ N.$.off.call(undefined,this,e,h,c,x); return this; },
 			onetime:function(){ N.FLATTENCALL(N.$.onetime,N.$,this,arguments); return this; },
 			data   :function(name){
 				if(arguments.length > 1){
@@ -4363,15 +4580,15 @@
 			this.setSource(N.find(select,parent,i));
 		});
 	
-		N.EXTEND_MODULE("Query","Make",{},function(node,attr,parent){
+		N.EXTEND_MODULE("NodeQuery","Make",{},function(node,attr,parent){
 			this.setSource(N.Element.create(node,attr,parent));
 		});
 	
-		N.EXTEND_MODULE("Query","Template",{
+		N.EXTEND_MODULE("NodeQuery","Template",{
 			clone    : function(nodeData,dataFilter){ 
-				return new N.Template(this.TemplateNode,nodeData,(dataFilter || this._persistantDataFilter),true); 
+				return new N.Template(this.initNode,nodeData,(dataFilter || this._persistantDataFilter),true); 
 			},
-			cloneMap:function(nodeDatas,dataFilter){
+			clones:function(nodeDatas,dataFilter){
 				nodeDatas  = N.toArray(nodeDatas);
 				var result = [];
 				for(var i=0,l=nodeDatas.length;i<l;i++) result.push( this.clone(nodeDatas[i],dataFilter) );
@@ -4380,21 +4597,20 @@
 			render:function(nodeData,dataFilter){
 				return this.clone(nodeData,dataFilter).get();
 			},
-			renderMap:function(nodeDatas,dataFilter){
-				return N.dataMap(this.cloneMap( N.toArray(nodeDatas) ,dataFilter ),function(template){
+			renders:function(nodeDatas,dataFilter){
+				return N.dataMap(this.clones( N.toArray(nodeDatas) ,dataFilter ),function(template){
 					return template.get();
 				});
 			},
 			renderTo:function(appendTo,nodeDatas,dataFilter){
-				var at = N.findOne(appendTo)[0];
-				var rr = this.renderMap( (typeof nodeDatas !== 'object') ? [{}] : nodeDatas, dataFilter );
+				var at = N.findLite(appendTo)[0];
+				var rr = this.renders( (typeof nodeDatas !== 'object') ? [{}] : nodeDatas, dataFilter );
 				if(at) N.$append(at,rr);
 				return rr;
 			},
 			renderAfterQuery:function(){
-				return new N.Query(this.render.apply(this,Array.prototype.slice.call(arguments)));
+				return new N.NodeQuery(this.render.apply(this,Array.prototype.slice.call(arguments)));
 			},
-		
 			// 키를 지우면서
 			partialAttr:function(attrKey,callback){
 				this.find("["+attrKey+"]").each(function(node){
@@ -4406,8 +4622,8 @@
 			},
 			partialNodeProps:function(propKeys,callback,presets){
 				var keys  = propKeys;
-				var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new N.Array(keys)).getMap(function(key){ return 'nd-'+key; });
-				var sKeys = (presets && presets.sKeys) ? presets.sKeys : (new N.Array(pKeys)).getMap(function(pkey){ return '['+ pkey +']'; });
+				var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new N.Array(keys)).map(function(key){ return 'nd-'+key; });
+				var sKeys = (presets && presets.sKeys) ? presets.sKeys : (new N.Array(pKeys)).map(function(pkey){ return '['+ pkey +']'; });
 				var pNodes = this.find(sKeys.join(','));
 				for(var i=0,l=pNodes.length;i<l;i++){
 					for(var si=0,sl=sKeys.length;si<sl;si++){
@@ -4419,9 +4635,9 @@
 				}
 			},
 			//성능의 가속을 위해 존재하는 값들입니다. 이것을 건드리면 엄청난 문제를 초례할 가능성이 있습니다.
-			__nodeDataDefaultKeys:['value','class','dataset','href','append','prepend','put','display','custom'],
-			__nodeDataAttrKeys:["nd-value", "nd-class", "nd-dataset", "nd-href", "nd-append", "nd-prepend", "nd-put", "nd-display", "nd-custom"],
-			__nodeDataSelectKeys:["[nd-value]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-append]", "[nd-prepend]", "[nd-put]", "[nd-display]", "[nd-custom]"],	
+			__nodeDataDefaultKeys:['value','html','class','dataset','href','append','prepend','put','display','custom'],
+			__nodeDataAttrKeys:["nd-value", 'nd-html', "nd-class", "nd-dataset", "nd-href", "nd-append", "nd-prepend", "nd-put", "nd-display", "nd-custom"],
+			__nodeDataSelectKeys:["[nd-value]", "[nd-html]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-append]", "[nd-prepend]", "[nd-put]", "[nd-display]", "[nd-custom]"],	
 			//
 			setNodeData:function(refData,dataFilter){
 				if(!this.TemplatePartials) this.TemplatePartials = {};
@@ -4454,7 +4670,6 @@
 						}
 					});
 				}
-			
 				// 파셜 데이터 입력
 				//퍼포먼스 중심 코딩
 				for(var partialCase in dataPointer) {
@@ -4465,6 +4680,7 @@
 								var node = nodelist[i];
 								switch(partialCase){
 									case "value":N.$value(node,data[attrValue]);break;
+									case "html":node.innerHTML = data[attrValue];break;
 									case "href" :node.setAttribute("href",data[attrValue]);break;
 									case "class":N.$addClass(node,data[attrValue]);break;
 									case "put"    : N.$empty(node);
@@ -4483,31 +4699,41 @@
 			setDataFilter:function(dataFilter){ if(typeof dataFilter === 'object') this._persistantDataFilter = dataFilter; return this; },
 			removeDataFilter:function(){ delete this['_persistantDataFilter']; return this; },
 			//name base form data
-			getFormData:function(){ return N.inject(this,function(inj,node){ N.extend(inj,(new N.Form(node)).getFormData()) }); },
-			setFormData:function(data){ if(typeof data === 'object') this.each(function(node){ (new N.Form(node)).setFormData(data); }); return this; },
+			getFormData:function(){ 
+				return N.inject(this,function(inj,node){
+					N.extend(inj,(new N.Form(node)).getFormData()); 
+				}); 
+			},
+			setFormData:function(data){ 
+				if(typeof data === 'object') this.each(function(node){ (new N.Form(node)).setFormData(data); }); return this; 
+			},
 			reset : function(nodeData,dataFilter){
-				if (this.TemplateNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
-				if (this.TemplateNode.length > 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
-				this.setSource(N.importNode(this.TemplateNode));
+				if (this.initNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
+				if (this.initNode.length > 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
+				this.setSource(N.cloneNodes(this.initNode));
 				if(typeof nodeData == "object") this.setNodeData(nodeData,dataFilter);
 				return this;
 			}
 		},function(node,nodeData,dataFilter,beRender){
-			this.initNode      = node;
-			this.TemplateNode  = (typeof node === "string")?/^<.+>$/.test(node)?[N.makeTemplate(node)]:N.findOne(node):N.findOne(node);
-			if (!this.TemplateNode) {
-				console.error("template init falid!");
-			} else {
+			this.initNode = N.makeSampleNode(node);
+			
+			if(this.initNode){
 				if(dataFilter) this.setDataFilter(dataFilter);
-				if(nodeData === true || dataFilter === true || beRender === true) this.reset(nodeData,dataFilter);
+				this.reset(nodeData,dataFilter);
+				if(nodeData === true || dataFilter === true || beRender === true) this.setNodeData(nodeData,dataFilter);
 			}
 		},function(multiNodes){
 			//get 함수입니다. Template모듈은 배열이나 노드를 반환합니다.
-			var fs = N.findOne(this);
+			var fs = N.findLite(this);
 			return (fs.length === 1) ? fs[0] : fs;
 		});
-		N.METHOD('ZTEMP',function(temp,data,filter){ return (new N.Template(temp)).renderMap(data,filter); });
-		N.METHOD('$Q',function(s,p,i)  { return new N.Query(s,p,i);});
+		
+		N.EXTEND_MODULE("Template","ExpTemplate",{},function(exp,nodeData,dataFilter,beRender){
+			this._super(nd.makes(exp),nodeData,dataFilter,beRender);
+		});
+		
+		N.METHOD('ZTEMP',function(temp,data,filter){ return (new N.Template(temp)).renders(data,filter); });
+		N.METHOD('$Q',function(s,p,i)  { return new N.NodeQuery(s,p,i);});
 		N.METHOD('$M',function(n,a,p)  { return new N.Make(n,a,p); });
 		N.METHOD('$T',function(n,d,f,c){ return new N.Template(n,d,f,c); });
 	
@@ -4521,7 +4747,7 @@
 			find:function(f){ if(f) return N.find(f,this.Source); return []; },
 			statusFunction:function(f,param,filter,requireElement){
 				var fe = filter ? function(node){ return N.$is(node,filter)?f(node, param):undefined } : function(node){ return f(node, param); };
-				var r  = new N.Array(this.getSelects()).map( fe ).filter();
+				var r  = new N.Array(this.getSelects()).setMap( fe ).setFilter();
 				return (requireElement == true) ? r.toArray() : this;
 			},
 			disabled:function(status,filter){ return this.statusFunction(N.$disabled,(status !== false ? true : false),filter); },
@@ -4533,7 +4759,7 @@
 				var r = this.statusFunction(function(node,param){
 					var classes = N.$attr(node,"class");
 					if(typeof classes === "string"){
-						classes = N._String(classes).getRemoveModel(eval("/^"+param+"/"));
+						classes = (new N.String(classes)).setRemoveModel(eval("/^"+param+"/"));
 						N.$attr(node,"class",classes);
 						return node;
 					}
@@ -4544,7 +4770,7 @@
 			changePartClass:function(selClass,toClass,filter){
 				new N.Array(this.removePartClass(selClass,filter,true)).each(function(node){
 					var classes = N.$attr(node,"class");
-					N.$attr(node,"class",N._String(classes).getAddModel(selClass+toClass));
+					N.$attr(node,"class",(new N.String(classes)).addModel(selClass+toClass));
 				});
 				return this;
 			}
@@ -4558,16 +4784,16 @@
 			isValid        :function(f){ if(typeof f === "function") return f.call(this); return N.isNode(this.Source); },
 			getSelects     :function(){ return N.find(this.SelectRule,this.Source); },
 			getSelectTokens:function(){
-				return new N.Array(this.SelectRule.split(",")).map(function(selString){
+				return new N.Array(this.SelectRule.split(",")).setMap(function(selString){
 					var execResult = /\[([a-zA-Z0-9\-]+)(.*)\]/.exec(selString);
 					if( execResult === null) return ;
 					return execResult[1];
-				}).filter().toArray();
+				}).setFilter().toArray();
 			
 			},
 			//체크아웃 대상 (key와 무관)
 			getCheckoutElement:function(){
-				return N.find(new N.Array(this.getSelectTokens()).map(function(s){ return "["+s+"]"; }).join(","), this.Source);
+				return N.find(new N.Array(this.getSelectTokens()).setMap(function(s){ return "["+s+"]"; }).join(","), this.Source);
 			},
 			//체크아웃 대상 (key가 존재하는 것만)
 			getCheckoutElementsWithToken:function(){
@@ -4589,7 +4815,7 @@
 			checkoutFilter:function(o){ this.FrameCheckoutFilter = o; },
 			checkinFilter:function(o){ this.FrameCheckinFilter = o; },
 			checkout:function(){
-				return new N.Object(this.getCheckoutElementsWithToken()).map(function(node,key){
+				return new N.Object(this.getCheckoutElementsWithToken()).setMap(function(node,key){
 					var value = N.$value(node);
 					return value == null ? "" : value;
 				}).get();
@@ -4623,7 +4849,7 @@
 				return this.checkout();
 			}
 		},function(context,selectRule){
-			this.Source = N.findOne(context)[0];
+			this.Source = N.findLite(context)[0];
 			this.form   = this.Source;
 			if( !N.isNode(this.Source) ) { console.error( "Frame::Context를 처리할 수 없습니다. => ",this.Source," <= ", context); }
 		
@@ -4645,49 +4871,75 @@
 			whenDidActive      :function(n,m){ this.StatusEvents.StatusDidActive[n] = m; },
 			whenWillInactive   :function(n,m){ this.StatusEvents.StatusWillInactive[n] = m; },
 			whenDidInactive    :function(n,m){ this.StatusEvents.StatusDidInactive[n] = m; },
-			setInactiveStatus  :function(status,param,owner){
+			whenActive         :function(n,m){ this.StatusEvents.StatusActive[n] = m; },
+			whenInactive       :function(n,m){ this.StatusEvents.StatusInactive[n] = m; },
+			inactiveStatusTo   :function(status,param,owner,react){
+				owner = owner ? owner : this;
+				param = N.toArray(param);
+				if( !this.StatusEvents.StatusInactive[status] ) return console.warn('존재하지 않는 키값을 호출하였습니다.',status);
 				if( this.ActiveKeys.has(status) ){
 					if(this.ActiveKeys.length === 1 && !this.AllowInactive) return;
 					if( N.APPLY(this.StatusEvents.AnyWillInactive          ,owner,param) !== false &&
 						N.CALL(this.StatusEvents.StatusWillInactive[status],owner,param) !== false )
 					{
-						this.ActiveKeys.remove(status);
+						if( N.APPLY(this.StatusEvents.StatusInactive[status],owner,param) == false ) return;
+						this.ActiveKeys.setRemove(status);
 						N.CALL(this.StatusEvents.AnyDidInactive           ,owner,param);
 						N.CALL(this.StatusEvents.StatusDidInactive[status],owner,param);
 						if( this.ActiveKeys.length === 0 ) N.CALL(this.StatusEvents.AnyActive);
 					}
 				}
 			},
-			setActiveStatus:function(status,param,owner){
-				var _ = this;
+			activeStatusTo:function(status,param,owner,react){
+				owner = owner ? owner : this;
 				param = N.toArray(param);
-				if( !this.ActiveKeys.has(status) ){
-					if( this.AllowMultiStatus || (this.ActiveKeys.length === 0) ) {
+				// 존재하지 않는 스테이터스 이거나 리액트
+				if( !this.StatusEvents.StatusActive[status] ){
+					return console.warn('존재하지 않는 키값을 호출하였습니다.',status,this.StatusEvents.StatusActive);
+				} 
+				if( !this.ActiveKeys.has(status) || (react == true) ){
+					// 멀티가 가능하거나 아무것도 없을땐
+					if( this.AllowMultiStatus || 
+						(this.ActiveKeys.length === 0) || 
+						(react == true && this.ActiveKeys.length === 1 && this.ActiveKeys[0] === status)) 
+					{
 						if( N.APPLY(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
 							N.APPLY(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
 						{
-							this.ActiveKeys.push(status);
+							if( N.APPLY(this.StatusEvents.StatusActive[status],owner,param) == false ) return;
+							this.ActiveKeys.add(status);
 							N.APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
 							N.APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
-							if( this.ActiveKeys.length === N.propsLength(this.Source) ) 
-								N.APPLY(this.AllActive,owner,param);
+							if( this.ActiveKeys.length === N.propsLength(this.Source) ) N.APPLY(this.AllActive,owner,param);
 						}
 					} else  {
 						if( N.APPLY(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
 							N.APPLY(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
 						{
-							this.ActiveKeys.each(function(key){ _.setInactiveStatus(key,param,owner); })
-							this.ActiveKeys.push(status);
+							if( N.APPLY(this.StatusEvents.StatusActive[status],owner,param) == false ) return;
+							this.ActiveKeys.each(function(key){ _.inactiveStatusTo(key,param,owner); })
+							this.ActiveKeys.add(status);
 							N.APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
 							N.APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
-							if( this.ActiveKeys.length === N.propsLength(this.Source) ) 
-								N.APPLY(this.AllActive,owner,param);
+							if( this.ActiveKeys.length === N.propsLength(this.Source) ) N.APPLY(this.AllActive,owner,param);
 						}
 					}
 				}
 			},
+			activeTo:function(status){
+				return this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this,false);
+			},
+			inactTo:function(status){
+				return this.inactiveStatusTo(status,Array.prototype.slice.call(arguments,1),this,false);
+			},
+			reactTo:function(status){
+				return this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this,true);
+			},
 			getActiveStatus:function(){
 				return this.ActiveKeys.join(" ");
+			},
+			isActiveStatus:function(k){
+				return this.ActiveKeys.has(k);
 			}
 		},function(allowMulti,allowInactive){
 			lastll = this;
@@ -4700,6 +4952,8 @@
 				"AnyDidInactive":undefined,
 				"AllActive":undefined,
 				"AllInactive":undefined,
+				"StatusActive":{},
+				"StatusInactive":{},
 				"StatusWillActive":{},
 				"StatusDidActive":{},
 				"StatusWillInactive":{},
@@ -4707,72 +4961,132 @@
 			}
 			this.ActiveKeys = new N.Array();
 		});
-	
-		N.EXTEND_MODULE("ActiveStatus","FormController",{
-			isStatus:function(k){
-				return this.ActiveKeys.has(k);
-			},
-			statusReset:function(status){
-				if(typeof name === 'string'){
-					this.ActiveKeys.remove(name);
-					this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
+		
+		N.EXTEND_MODULE("ActiveStatus","ViewAndMode",{
+			addViewStatus:function(statusName,active,inactive){
+				if(typeof statusName === 'string'){
+					if(typeof active === 'function'){
+						this.whenActive(statusName,active);
+					}
+					if(typeof inactive === 'function'){
+						this.whenInactive(statusName,inactive);
+					}
 				}
 			},
-			statusTo:function(status){
-				if(typeof name === 'string') 
-					this.setActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
+			viewStatusTo:function(status){
+				if(typeof name === 'string') this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this);
 			},
-			addStatus:function(key,val){
-				if(!key)return;
-				if(typeof key !== 'object') return this.whenDidActive(key,val);
-				for(var k in key) this.addStatus(k,key[k]);
+			node:function(innerKey,wrapper){
+				if(arguments.length === 0) return (wrapper ? wrapper : N._NodeQuery)(this.view);
+				if(!(innerKey in this)) return console.warn(innerKey,"인스턴스의 속성을 찾을수 없습니다.",this); 
+				return (wrapper ? wrapper : N._NodeQuery)(this[innerKey]);
 			},
+			find:function(findKeyword){
+				return findKeyword ? N.find(findKeyword,this.view) : [];
+			}
+		},function(findView,allowMulti,allowInactive){			
+			this.view = N.findLite(findView)[0];
+			
+			if(!this.view) return console.error("ViewAndMode::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",findView);
+			this._super(allowMulti,allowInactive);
+			return true;
+		});
+		
+		
+		N.EXTEND_MODULE("ViewAndMode","FormController",{
 			setFormData:function(data,v2){
 				return this.FormControl.checkin(data,v2);
 			},
 			getFormData:function(){
 				return this.FormControl.checkout();
 			},
-			find:function(){
+			getFormControl:function(){
 				return this.FormControl.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
 			}
-		},function(context,statusProp,helper){
-			this.view = N.findOne(context)[0];
-			if(this.view){
+		},function(targetForm,statusProp,helper){
+			if( this._super(targetForm,false,true) === true ) {
 				this.FormControl = N._Form(this.view);
-				this._super(false,true);
-				if(statusProp) this.addStatus(statusProp);
-			
+				if(statusProp) this.addActiveStatus(statusProp);
+		
 				if(typeof helper === 'function') helper = {init:helper};
 				var _ = this;
 				N.propsEach(helper,function(fn,key){
 					if(!(key in _.constructor.prototype)) {
 						if(key === 'init') {
-							if(typeof fn === 'function') {
-								fn.apply(_,Array.prototype.slice.call(arguments));
-							}
+							if(typeof fn === 'function') fn.apply(_,Array.prototype.slice.call(arguments));
 						} else {
-							if(typeof fn === 'function') {
-								_[key] = function(){fn.apply(_,Array.prototype.slice.call(arguments));};
-							} else {
-								_[key] = fn;
-							}
+							_[key] = (typeof fn === 'function') ? function(){fn.apply(_,Array.prototype.slice.call(arguments));} : fn;
 						}
-					
 					}
 				});
-			} else {
-				console.warn('FormController에 view를 정상적으로 로드할수 없었습니다.',context,this.view);
+			}
+		});
+		
+		N.EXTEND_MODULE("ViewAndMode","RoleController",{
+			"++findRole":function(findwhere,rolename){
+				var activeRolename,findwhere=findwhere?N.find(findwhere):undefined,_prototype=this.prototype;
+				//rolename
+				if(typeof rolename === "string") activeRolename = rolename;
+				if (!activeRolename) {
+					var nativeName   = _prototype.__NativeHistroy__[_prototype.__NativeHistroy__.length-1];
+					var nativePrefix = /^[A-Z]+/.exec(nativeName), nativePrefix = (nativePrefix) ? nativePrefix[0] : null;
+					activeRolename = nativePrefix ? 
+					(nativePrefix[nativePrefix.length-1] + nativeName.substr(nativePrefix.length)).toLowerCase() :
+					nativeName.toLowerCase();
+				}
+				return N.find("[role~="+activeRolename+"]",findwhere);
+			},
+			"++findRoleAndActive":function(findwhere,props,data,rolename){
+				var _self=this;
+				var findedRoles = this.findRole(findwhere,rolename),resultController = [];
+				for(var i=0,l=findedRoles.length;i<l;i++) resultController.push(new _self(findedRoles[i],props,data));
+				return resultController;
+			},
+			prop:function(key,value){
+				if(typeof value === "function" && typeof key === "string") return value.call(this,this._prop[key]);
+				if(typeof key === "string") return this._prop[key];
+				return this._hash;
+			},
+			data:function(){
+				return this._data;
+			},
+			roleFind:function(find,proc){
+				if(!find) return console.error(find,"에 값은 반드시 유효한 값이 들어와야합니다.");
+				var finded = N.find(find);
+				if(finded.length === 0) return console.error(find,"에 해당하는 노드를 찾을 수 없습니다.");
+				var selectedRoles = [];
+				N.dataEach(finded,function(roleNode){
+					if(typeof roleNode.roleController === "object") selectedRoles.push(roleNode.roleController);
+				});
+				if(typeof proc === "function"){
+					var _self = this;
+					N.dataEach(selectedRoles,function(roleController){ proc.call(_self,roleController); });
+				}
+				return selectedRoles;
+			}
+		},function(targetRole,props,data){
+			
+			if( this._super(targetRole,true,true) === true ) {
+				
+				this._prop = new N.Object(props);
+				this._data = new N.Array(data);
+				
+				var _self = this;
+				N.find('script[type*=json]', this.view ,N.dataEach ,function(scriptTag){
+					var jsonData = N.$value(scriptTag);
+					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self._data.append(jsonData) : N.extend(_self._prop,jsonData);
+					N.$remove(scriptTag);
+				});
+				this.view.roleController = this;
 			}
 		});
 	
 		// 컨텍스트 컨트롤러
 		N.MODULE("Contexts",{
 			getContexts:function(){ 
-				return N.findOne(this.initCall[0]); 
+				return N.findLite(this.initCall[0]); 
 			},
 			getSelects:function(ignorePool){
-			
 				if(ignorePool !== true && this._selectPoolCount > 0) { 
 					return N.cloneArray(this._selectPoolList);
 				}
@@ -4815,7 +5129,7 @@
 					});
 				}
 			},
-			getTargets:function()  { return N.dataFlatten(this.getGroups());  },
+			getTargets:function()  { return N.argumentsFlatten(this.getGroups());  },
 			getContext:function(eq){ return this.getContexts()[eq]; },
 			getSelect :function(eq){ return this.getSelects()[eq]; },
 			getTarget :function(eq){ return this.getTargets()[eq]; },
@@ -4917,7 +5231,7 @@
 				});
 			}
 		},function(cSel,sSel,tSel){
-			if(N.isNothing(N.findOne(cSel))) console.warn("Contexts::init::error 첫번째 파라메터의 값을 현재 찾을 수 없습니다. 들어온값", cSel,sSel,tSel);
+			if(N.isNothing(N.findLite(cSel))) console.warn("Contexts::init::error 첫번째 파라메터의 값을 현재 찾을 수 없습니다. 들어온값", cSel,sSel,tSel);
 			this.initCall = [cSel,sSel,tSel];
 		});
 	
@@ -5045,7 +5359,7 @@
 					this.selectPoolStart();
 					var activeIndexes = new N.Array(this.getActiveIndexes()) ;
 					if( N.dataHas(activeIndexes,index) ) {
-						activeIndexes.remove(index);
+						activeIndexes.setRemove(index);
 						this.setActiveIndexes(activeIndexes,withEvent);
 					}
 					this.selectPoolEnd();
@@ -5156,7 +5470,7 @@
 					} else {
 						//다중 Active를 허용하지 않는 경우
 						//인액티브 대상을 찾아 인액티브 시킵니다.
-						(new N.Array(currentSelects)).remove(this).each(function(node){
+						(new N.Array(currentSelects)).setRemove(this).each(function(node){
 							if(_.allowAutoActive) {
 								N.$removeClass(node,"active");
 								if(yesEvent) N.CALL(_.ContextsEvents.didInactive,node);
@@ -5188,12 +5502,12 @@
 				if(selectSource) return selectSource.getActiveIndexes();return [];
 			},
 			setActiveIndexes:function(indexes,withEvent,sender){
-				_Array(this.Source).remove(sender).each(function(ac, i){ 
+				(new N.Array(this.Source)).setRemove(sender).each(function(ac, i){ 
 					ac.setActiveIndexes( indexes, (i === 0) ? (withEvent && true) : false ); });
 				return this;
 			},
 			shouldInactive:function(index,withEvent,sender){
-				_Array(this.Source).remove(sender).each(function(ac, i){
+				(new N.Array(this.Source)).setRemove(sender).each(function(ac, i){
 					//첫번째만 무조건 이벤트 발생
 					ac.shouldInactive( index, (i === 0) ? (withEvent && true) : false ); 
 				});
@@ -5481,8 +5795,8 @@
 				var newRequest = this.getRequestObject();
 		
 				//data 처리
-				var requestData   = new N.Object((typeof this.moduleOption.constData === "object") ? new N.Object(this.moduleOption.constData).concat(this.option.data) : this.option.data);
-				var requestString = new N.Object(requestData.getEncodeObject()).join("=","&");
+				var requestData   = new N.Object((typeof this.moduleOption.constData === "object") ? new N.Object(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
+				var requestString = new N.Object(requestData.encodeObject()).join("=","&");
 			
 				// request params (기록용)
 			
@@ -5550,7 +5864,7 @@
 				var _ = this;
 			
 				requestFrame.onload = function(){
-					dummyRequstObject.responseText = Array.prototype.slice.call(IFRAMEDOCUMENT(requestFrame).body.children);
+					dummyRequstObject.responseText = Array.prototype.slice.call(N.findDocument(requestFrame).body.children);
 					_.onStateChangeWithRequest(dummyRequstObject);
 				}
 				requestFrame.onerror = function(){
@@ -5657,7 +5971,7 @@
 						break;
 					case "object":	
 						//엘리먼트 배열로 들어올경우
-						var doms = N.findOne(loadPath);
+						var doms = N.findLite(loadPath);
 					
 						//loadPath가 빈 배열이라면 정상적인 처리로 간주합니다.
 						if( doms.length < 1 && !N.isArray(loadPath) ){
@@ -5689,7 +6003,7 @@
 			},
 			//
 			addContainer:function(container,key){
-				var findContainer = N.findOne(container)[0];
+				var findContainer = N.findLite(container)[0];
 				if(!findContainer) return console.warn(key,"의 컨테이너를 찾을 수 없습니다.");
 				this.ContainerPlaceholder[key] = findContainer;
 				return this;
@@ -5788,7 +6102,7 @@
 			},
 			inactive:function(name){
 				if( this.ContainerActiveKeys.has(name)) {
-					this.ContainerActiveKeys.remove(name);
+					this.ContainerActiveKeys.setRemove(name);
 					this._triggeringInactiveEvents(this.ContainerPlaceholder[name],name);
 				}
 			},
@@ -5868,7 +6182,7 @@
 				});
 			}
 		},function(container,baseParam){
-			var _container = N.findOne(container)[0],_ = this;
+			var _container = N.findLite(container)[0],_ = this;
 			if (_container){
 				this._super(baseParam,function(){
 					//defaultContainer를 보존합니다.
@@ -5935,7 +6249,7 @@
 			needFormController:function(target){
 				if(!target || typeof target === 'object') {
 					if(!this._globalFormController) this._globalFormController = new N.FormController(this.view);
-					this._globalFormController.addStatus(target);
+					this._globalFormController.addViewStatus(target);
 					return this._globalFormController;
 				}
 				if(!(typeof target === 'string' || typeof target === 'number')) return console.error('문자열 타겟이 아니면 폼컨트롤러를 반환할수 없습니다.');
@@ -5945,7 +6259,7 @@
 				return this._viewsFormController[target];
 			}
 		},function(container,baseParam){
-			this.view = N.findOne(container)[0], _ = this;
+			this.view = N.findLite(container)[0], _ = this;
 		
 			if (this.view){
 				//베이스 파라메터가 존재하지 않으면 현재 컨테이너의 컨텐츠를 기본 파라메터로 봄
@@ -6045,7 +6359,7 @@
 					result.push( keyPath );
 				});
 			
-				result.remove("");
+				result.setRemove("");
 				return result;
 			},
 			// 글자로된 패스를 반환한다.
@@ -6062,7 +6376,7 @@
 					if(N.isArray(data)) {
 						return {};
 					} else {
-						return new N.Object(data).remove(this.SourceChildrenKey).get();
+						return new N.Object(data).setRemove(this.SourceChildrenKey).get();
 					}
 				}
 			},
@@ -6098,17 +6412,17 @@
 									// 아무것도 하지 않음
 									break;
 								case "*":
-									selectData = new N.Array(selectData).getMap(function(data){
+									selectData = new N.Array(selectData).map(function(data){
 										if (N.isArray(data)){
 											return data;
 										} else {
 											return owner.Source[owner.SourceChildrenKey];
 										}
-									}).flatten().remove(undefined);
+									}).setFlatten().setRemove(undefined);
 									break;
 							}
 						} else if(typeof pathKey === "number") {
-							selectData = new N.Array(selectData).getMap(function(data){
+							selectData = new N.Array(selectData).map(function(data){
 								if (N.isArray(data)){
 									return data[pathKey];
 								} else {
@@ -6117,7 +6431,7 @@
 										return sourceChildren[pathKey];
 									}
 								}
-							}).remove(undefined);
+							}).setRemove(undefined);
 						}
 					});
 					return selectData;
@@ -6159,13 +6473,13 @@
 				for(var key in mdata.Source) prop.push( '\"' + key + '\":\"' + mdata.Source[key] + '\"' );
 				if(mdata.Child.length > 0) prop.push( 
 					(ra ? '' : '\"'+this.SourceChildrenKey + '\":[' ) + 
-					mdata.Child.getMap( function(managedData){ return owner.trace(managedData); } ).join(", ") + 
+					mdata.Child.map( function(managedData){ return owner.trace(managedData); } ).join(", ") + 
 					(ra ? "" : "]")
 				);
 				return rs + prop.join(", ") + re;
 			},
-			getJSONString:function(){ return this.trace(); },
-			getJSONObject:function(){ return JSON.parse(this.getJSONString()); },
+			JSONString:function(){ return this.trace(); },
+			JSONObject:function(){ return JSON.parse(this.JSONString()); },
 		
 			// path로 메니지드 데이터를 얻습니다.
 			getManagedData:function(path,withChildren){
@@ -6305,11 +6619,11 @@
 			clone:function(){
 				var init = this.Source.clone();
 				for(var i=0,l=arguments.length;i<l;i++) if( arguments[i] ) init[i] = arguments[i];
-				return _ViewModel.apply(undefined,init.toArray());
+				return N._ViewModel.apply(undefined,init.toArray());
 			}
 		},function(renderDepth){
 			//tempate 타겟을 설정
-			this.Source = new N.Array(Array.prototype.slice.call(arguments)).getMap(function(a){ 
+			this.Source = new N.Array(Array.prototype.slice.call(arguments)).map(function(a){ 
 				if(typeof a === "string"){
 					return new N.Template(a);
 				}
@@ -6328,7 +6642,7 @@
 			},
 			removeFromParent:function(){
 				if(this.Parent){
-					this.Parent.Child.remove(this);
+					this.Parent.Child.setRemove(this);
 					this.Parent = undefined;
 				}
 			},
@@ -6639,7 +6953,7 @@
 					});
 				
 					removeBindNodeTarget.each(function(bindNode){
-						owner.bindValueNodes.remove(bindNode);
+						owner.bindValueNodes.setRemove(bindNode);
 					});
 				
 					//스트럭쳐 노드 삭제
@@ -6894,10 +7208,10 @@
 		
 			"+dataDidChange":undefined
 		},function(view,managedData,viewModel,needDisplay){
-			this.view = N.findOne(view)[0];
+			this.view = N.findLite(view)[0];
 			if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
 			if(managedData)this.setManagedData(managedData);
-			this.viewModel     = viewModel ? N.isArray(viewModel) ? _ViewModel.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
+			this.viewModel     = viewModel ? N.isArray(viewModel) ? N._ViewModel.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
 		
 			//바인딩 관련 인자
 			this.bindValueNodes = [];
@@ -7001,6 +7315,227 @@
 			this.setRate(rate);
 			if(finish === true || ms === true || rate === true || now === true) { this.start(ms,counting,finish) }
 		});
+		
+		N.MODULE("Binder",{
+			shouldSetFromListenersInfo:function(listeners,setValue,dataName){
+				var beforeValue = this.beforeProperty.prop(dataName);
+				//set send
+				this.protectProperty.add(dataName);
+				(new N.Array(listeners)).each(function(listenerInfo){
+					listenerInfo.proc.call(listenerInfo.listener,setValue,beforeValue);
+				});
+				this.beforeProperty.prop(dataName,setValue);
+				this.protectProperty.setRemove(dataName);
+			},
+			getListenerInfo:function(listener,propertyName){
+				if(!listener) return this.Source.get();
+				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
+				return this.Source.filter(function(listenerInfo){
+					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName);
+				});
+			},
+			send:function(sender,setValue,dataName,forceLevel){
+				if(this.protectProperty.has(dataName)){
+					if(this.trace) console.info(sender,"was make duplicate send (",dataName,") is still processing");
+					return;
+				}
+				//duplicate send protect
+				var beforeValue = this.beforeProperty.prop(dataName);
+				if(setValue === beforeValue){
+					if(this.trace) console.info(sender,"send is same from before value.");
+					return;
+				}
+				var sendTargets = this.Source.filter(function(listenerInfo){
+					return (sender !== listenerInfo.sender && dataName === listenerInfo.propertyName) ? true : false;
+				});
+				//allow inspect
+				var allowProc    = true
+				var forceLevel   = (typeof forceLevel === "number") ? forceLevel : 0;
+				var _self        = this;
+				sendTargets.each(function(listenerInfo){
+					if(listenerInfo.allowProc){
+						if( listenerInfo.allowProc(setValue,beforeValue) === false ){
+							if(listenerInfo.protectLevel >= forceLevel) {
+								//transaction
+								_self.shouldSetFromListenersInfo(_self.getListenerInfo(sender,dataName),beforeValue,dataName);
+								return allowProc = false;
+							}
+						}
+					}
+				});
+				//set data
+				if(allowProc === true) this.shouldSetFromListenersInfo(sendTargets,setValue,dataName);
+			},
+			//custom send
+			setValue:function(setValue,propertyName,forceLevel){
+				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
+				this.send(null,setValue,propertyName,forceLevel);
+			},
+			getValue:function(propertyName){
+				return this.beforeProperty.prop(propertyName);
+			},
+			listen:function(listener,propertyName,proc,allowProc,protectLevel){
+				//value inspect
+				if(typeof listener !== "object" || typeof propertyName !== "string" || typeof proc !== "function"){
+					return console.error("BindAdapter::listen arguments must be (listener,propertyName,proc)(object,string,fucntion)");
+				}
+				//duplicate listen & property inspect
+				if(this.Source.isAny(function(listenerInfo){
+					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName);
+				})){
+					return console.error("BindAdapter:: already set listener & property");
+				}
+				var listenerInfo = {
+					listener:listener,
+					propertyName:propertyName,
+					proc:proc,
+					allowProc:allowProc,
+					protectLevel:(typeof protectLevel === "number") ? protectLevel : 0
+				};
+				this.Source.push(listenerInfo);
+				
+				//beforeProperty set
+				if(this.beforeProperty.has(propertyName)) 
+					this.shouldSetFromListenersInfo(listenerInfo,this.beforeProperty.prop(propertyName),propertyName);
+			},
+			inspect:function(allowProc,propertyName,protectLevel){
+				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
+				if(typeof allowProc !== "function"){
+					return console.error("BindAdapter::inspect arguments must be (inspectProc,propertyName)(string,fucntion)");
+				}
+				this.listen(this,propertyName,function(){},allowProc,protectLevel);
+			},
+			bindNode:function(node,propName,setThisNodeValue){
+				var listener = N.find(node,0);
+				if(listener) {
+					var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
+					
+					if(listener.tagName == "INPUT") {
+						var binder = this;
+						N.$on(listener,"change",function(){
+							binder.send(listener,listener.value,propertyName);
+						});
+					}
+					this.listen(listener,propertyName,function(value){
+						N.$value(listener,value);
+					});
+				}
+			},
+			getListeners:function(){
+				return this.Source.map(function(listenerInfo){ listenerInfo.listener }).setUnique();
+			},
+			getProperties:function(){
+				return this.Source.map(function(listenerInfo){ listenerInfo.propertyName }).setUnique();
+			},
+			removeListener:function(listener){
+				this.Source.setFilter(function(listenerInfo){
+					return (listenerInfo.listener === listener) ? false : true;
+				});
+			},
+			removeListen:function(listener,propertyName){
+				this.Source.setFilter(function(listenerInfo){
+					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName) ? false : true;
+				});
+			},
+			removeProperty:function(propertyName){
+				this.Source.setFilter(function(listenerInfo){
+					return (listenerInfo.propertyName === propertyName) ? false : true;
+				});
+			}
+		},function(defaultData,trace,defaultKey){ 
+			//console trace
+			this.trace           = true;
+			this.Source          = new N.Array();
+			this.defaultKey      = (typeof defaultKey === "string") ? defaultKey : "default"
+			//dobule set protect
+			this.protectProperty = new N.Array();
+			if(!N.isNil(defaultData) && typeof defaultData !== "object"){
+				var redefine = {};
+				redefine[this.defaultKey] = defaultData;
+				defaultData = redefine;
+			}
+			this.beforeProperty  = new N.Object(defaultData);
+			// { listener:Object , listen:"name" ,proc: }
+		});
+		
+		N.MODULE("Timeline",{
+			push:function(){
+				
+			},
+			getTimeProperties:function(){
+				
+			},
+			currentValues:function(){
+				
+			},
+			timestamp:function(){
+				
+			},
+			percent:function(){
+				
+			},
+			//속도
+			rate:function(){
+				
+			},
+			setFPS:function(fps){
+				this._fps = (typeof fps === "number") ? fps : 30;
+				this._fpm = N.Number.parseInt(1000 / this._fps);
+				this._currentTime = 0;
+			}
+		},function(fps){
+			if(typeof fps === "number") this.setFPS(fps);
+		});
+		
+		N.MODULE("TimeProperties",{
+			insertTimeProperty:function(time,data){
+				console.log("insert",time,data);
+				if(typeof time !== "number" || typeof data !== "object"){
+					return console.error("addTimeProperty:: must be argument type (number, object)");
+				} 
+				var insertAt = 0;
+				this.Source.reverseEach(function(props,index){
+					if(this.time < props.time){
+						insertAt = index+1;
+						return false;
+					} 
+				});
+				this.Source.insert({
+					time:time,
+					props:data
+				},insertAt);
+			},
+			push:function(){
+				var _self = this;
+				N.dataFlatten(arguments,N.dataEach,function(pushData){
+					if(typeof pushData !== "object"){
+						var alchemy = {};
+						alchemy[_self.defaultKey] = pushData;
+						pushData = alchemy;
+					}
+					var pushTime = _self.defaultStartTime + (_self.defaultInertval * _self.Source.length);
+					_self.insertTimeProperty(pushTime,pushData);
+				});
+			},
+			timeStart:function(){
+				var timeProps = this.Source.first();
+				return timeProps ? timeProps.time : null;
+			},
+			timeEnd:function(){
+				var timeProps = this.Source.last();
+				return timeProps ? timeProps.time : null;
+			},
+			timeLength:function(){
+				return this.Source.isNone() ? null :
+						this.Source.isOne() ? 0 :
+						this.timeStart() - this.timeEnd();
+			}
+		},function(startTime,interval,defaultKey){
+			this.Source     = new N.Array();
+			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "default"
+			this.defaultStartTime = startTime ? N.timeStampExp(startTime): N.timeStampExp();
+			this.defaultInertval  = interval  ? N.timeScaleExp(interval) : N.timeScaleExp("1h");
+		});
 	
 		N.EXTEND_MODULE("Counter","BezierCounter",{
 			setCubicBezier:function(x1,x2,y1,y2){
@@ -7081,7 +7616,7 @@
 			},
 			destroy:function(){ N.$off(window,'resize',this.Handler); }
 		},function(target,triggeringMethod,firstTriggering,delay){
-			this.Source = N.findOne(target)[0];
+			this.Source = N.findLite(target)[0];
 			this.TriggeringMethod = triggeringMethod;
 			this.Delay          = N.toNumber(delay);
 		
@@ -7128,584 +7663,6 @@
 			
 				N.$on(window,'resize',this.Handler);
 			}
-		});
-	
-	
-	
-		N.MODULE("Touch",{
-			getPinchDistance:function(fx1,fy1,fx2,fy2){
-				return Math.sqrt(
-					Math.pow((fx1-fx2),2),
-					Math.pow((fy1-fy2),2)
-				)
-			},
-			setAllowVirtureTouch:function(flag,scaleWheel){
-				if(!this.AllowVirtureTouch && flag) {
-					this.AllowVirtureTouch = true;
-					var wasStart = false;
-					var startSource = this.Source;
-					var endSource   = this.AllowOuterEvent ? document.body : this.Source;
-					N.$on(startSource,"mousedown",function(e){
-						wasStart = true;
-						e.preventDefault();
-						N.$trigger(startSource,"touchstart",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
-					})
-					N.$on(endSource,"mousemove",function(e){
-						if(wasStart) {
-							e.preventDefault();
-							N.$trigger(endSource,"touchmove",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
-						}
-					});
-					N.$on(endSource,"mouseup",function(e){
-						wasStart = false;
-						e.preventDefault();
-						N.$trigger(endSource,"touchend",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
-					});
-					if(this.AllowOuterEvent == false) {
-						N.$on(startSource,"mouseout",function(e){
-							if(e.target == e.currentTarget) {
-								wasStart = false;
-								e.preventDefault();
-								N.$trigger(startSource,"touchend",{touches:[{pageX:e.pageX,pageY:e.pageY}]});
-							}
-						});
-					}
-					this.AllowVirtureTouchScale = !!scaleWheel;
-					if(this.AllowVirtureTouchScale) {
-						var _ = this;
-						N.$on(startSource,'mousewheel',function(e){
-							e.preventDefault();
-							N.CALL(_.GestureListener["pinch"],this,e.wheelDelta/1500);
-						});
-					}
-				}
-			},
-			applyTouchEvent:function(flag){
-				if(typeof flag !== "boolean") return;
-				if(typeof this._applyTouchEvent === "undefined") {
-					var _ = this;
-					//touch start
-					this._currentTouchStartEvent = function(e){
-					
-						if (_.GestureListener["pinch"] && (e.touches.length === 2)) {
-							e.stopPropagation();
-							e.preventDefault();
-							_.StartPinchValue = _.getPinchDistance(
-								 e.touches[0].pageX,
-								 e.touches[0].pageY,
-								 e.touches[1].pageX,
-								 e.touches[1].pageY
-							);
-							N.CALL(_.GestureListener["pinchStart"],_.Source,e);
-							return;
-						}
-						if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
-							e.stopPropagation();
-							_.StartTouchMoveX = _.TouchMoveX = e.touches[0].pageX;
-							_.StartTouchMoveY = _.TouchMoveY = e.touches[0].pageY;
-						}
-						if (_.GestureListener["touchStart"] && (e.touches.length === 1)) {
-							e.stopPropagation();
-							N.CALL(_.GestureListener["touchStart"],_.Source,e.touches[0].pageX,e.touches[0].pageY,e);
-						}
-					
-					};
-					//touch move
-					this._currentTouchMoveEvent = function(e){
-						//2 _
-						if(_.GestureListener["pinch"] && _.StartPinchValue && (e.touches.length === 2)){
-							if(!_.AllowPinch) return;
-							e.stopPropagation();
-							e.preventDefault();
-							var currentDistance = _.getPinchDistance(
-								 e.touches[0].pageX,
-								 e.touches[0].pageY,
-								 e.touches[1].pageX,
-								 e.touches[1].pageY
-							);
-							N.CALL(_.GestureListener["pinch"],_.Source,-((_.StartPinchValue / currentDistance) - 1))
-						}
-						//핀치시에는 이벤트를 초기화함
-						if(_.StartPinchValue) {
-							_.StartTouchMoveX = _.TouchMoveX = undefined;
-							_.StartTouchMoveY = _.TouchMoveY = undefined;
-							return;
-						}
-					
-						//1 _
-						if (_.GestureListener["touchMove"] && (e.touches.length === 1)) {
-							//시작한 터치무브가 존재하지 않을경우에는 작동되지 않음 (바깥쪽 이벤트가 Touch끼리 서로 섞이지 않게 하기 위함)
-							if(_.StartTouchMoveX === undefined) return;
-						
-							var moveX = e.touches[0].pageX - _.TouchMoveX;
-							var moveY = e.touches[0].pageY - _.TouchMoveY;
-							_.TouchMoveX = e.touches[0].pageX;
-							_.TouchMoveY = e.touches[0].pageY;
-						
-							//N.CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e);
-							if(N.CALL(_.GestureListener["touchMove"],_.Source,moveX,moveY,e) !== false){
-								e.stopPropagation();
-								e.preventDefault();
-							} else {
-								_._currentTouchStartEvent(e);
-							}
-						}
-					};
-					//touch end
-					this._currentTouchEndEvent = function(e){
-						e.stopPropagation();
-						_.StartTouchMoveX = _.TouchMoveX = undefined;
-						_.StartTouchMoveY = _.TouchMoveY = undefined;
-						_.StartPinchValue = undefined;
-						N.CALL(_.GestureListener["touchEnd"],e);
-					};
-				
-					this._applyTouchEvent = false;
-				} 
-			
-				if(this._applyTouchEvent !== flag) {
-					var moveReciveTarget = this.AllowOuterEvent ? document.body : this.Source;
-					if(flag){
-						N.$on(this.Source,"touchstart",this._currentTouchStartEvent);
-						N.$on(moveReciveTarget,"touchmove",this._currentTouchMoveEvent);
-						N.$on(moveReciveTarget,"touchend",this._currentTouchEndEvent);
-					} else {
-						N.$off(this.Source,"touchstart",this._currentTouchStartEvent);
-						N.$off(moveReciveTarget,"touchmove",this._currentTouchMoveEvent);
-						N.$off(moveReciveTarget,"touchend",this._currentTouchEndEvent);
-					}
-					this._applyTouchEvent = flag;
-				}
-			},
-			getGestureX:function(){ return this.TouchMoveX - this.StartTouchMoveX; },
-			getGestureY:function(){ return this.TouchMoveY - this.StartTouchMoveY; },
-			whenPinchStart:function(method){ this.GestureListener["pinchStart"] = method; },
-			whenPinch:function(method){ this.GestureListener["pinch"] = method; },
-			whenTouchStart:function(method){ this.GestureListener["touchStart"] = method; },
-			whenTouchBegin:function(method){ this.GestureListener["touchBegin"] = method; },
-			whenTouchMove:function(method){ this.GestureListener["touchMove"] = method; },
-			whenTouchEnd:function(method){ this.GestureListener["touchEnd"] = method; },
-			destroy:function(){ this.applyTouchEvent(false); }
-		},function(gestureView,allowOuterMove,allowVitureTouch){
-			this.Source = N.findOne(gestureView)[0];
-			this.GestureListener = {};
-			this.StartPinchValue;
-			this.StartTouchMoveX;
-			this.StartTouchMoveY;
-			this.TouchMoveX;
-			this.TouchMoveY;
-			this.AllowOuterEvent = !!(allowOuterMove === true);
-			this.AllowPinch = true;
-			var finger = this;
-		
-			if(this.Source) this.applyTouchEvent(true);
-			if(allowVitureTouch === true) this.setAllowVirtureTouch(true);
-		});
-	
-		N.MODULE("ScrollBox",{
-			needScrollingOffsetX:function(offset){
-				if(!this.allowScrollX || offset == 0 || (typeof offset !== 'number') ) return false;
-				var needTo = this.Source.scrollLeft + (-offset);
-				if (needTo < 0) { needTo = 0; }
-				if (needTo > this.Source.scrollWidth) needTo = this.Source.scrollWidth;
-				if (this.Source.scrollLeft != needTo) {
-					this.Source.scrollLeft = needTo;
-					return true;
-				}  else {
-					return false;
-				}
-			},
-			needScrollingOffsetY:function(offset){
-				if(!this.allowScrollY || offset == 0 || (typeof offset !== 'number') ) return false;
-			
-				var needTo = this.Source.scrollTop + (-offset);
-
-				if (needTo < 0) {
-					this.needNegativeDrawItem();
-				
-					needTo = this.Source.scrollTop + (-offset);
-					if(needTo < 0) needTo = 0;
-				}
-				if (needTo > this.Source.scrollHeight - this.Source.offsetHeight){
-					this.needPositiveDrawItem();
-				
-					if(needTo > this.Source.scrollHeight){
-						needTo = this.Source.scrollHeight;
-					} 
-				}
-				if (this.Source.scrollTop !== needTo) {
-					this.Source.scrollTop = needTo;
-					return true;
-				}
-				return false;
-			},
-			needScrollingToX:function(needTo){
-				return this.needScrollingOffsetX( this.Source.scrollLeft - needTo );
-			},
-			needScrollingToY:function(needTo){
-				return this.needScrollingOffsetY( this.Source.scrollTop - needTo );
-			},
-			needScrollingTo:function(needX,needY){
-				return (this.needScrollingToX(needX),this.needScrollingToY(needY));
-			},
-			needScrollingPercentY:function(per){
-				if(typeof per === 'number'){
-					if(per < 0) { per = 0; }
-					if(per > 100) { per = 100; }
-					var scrollTarget = ((this.Source.scrollHeight - this.Source.offsetHeight) / 100) * per;
-					this.Source.scrollTop = scrollTarget;
-				}
-			},
-			// var _drawAxisYItem
-			drawAxisYItem:function(rend){
-				this._drawAxisYItem = rend;
-			},
-			// true == infinite
-			setAllowMakeAxisYItem:function(positive,negative){
-				if (typeof positive === "boolean") {
-					this.axisYPositiveLength = positive ? 100 : 0;
-				} else if(typeof positive === "number") {
-					this.axisYPositiveLength = positive;
-				}
-			
-				if (typeof negative === "boolean") {
-					this.axisYNegativeLength = negative ? 100 : 0;
-				} else if(typeof negative === "number") {
-					this.axisYNegativeLength = negative;
-				}
-				this.needPositiveDrawItem();
-			},
-			focusTo:function(s){
-				var select = N.find(s,this.Source,0);
-				if(select) {
-					var offset = N.findOffset(select,this.ClipView);
-					if(offset) {
-						this.needScrollingToX(offset.x + (offset.width / 2) - (this.Source.offsetWidth / 2) );
-						this.needScrollingToY(offset.y + (offset.height / 2) - (this.Source.offsetHeight / 2) );
-						return select;
-					}
-				}
-				return false;
-			},
-			needPositiveDrawItem:function(){
-				if(typeof this._drawAxisYItem === "function"){
-					for(var i=this.axisYPositiveItems.length,l=this.axisYPositiveLength;i<l;i++){
-						var node = this._drawAxisYItem(i);
-					
-						if( N.isNode(node) ) {
-							this.axisYPositiveItems.push(node);
-							N.$append(this.ClipView,node);
-							//정지할지 확인
-							if(this.Source.offsetHeight < (this.ClipView.offsetHeight - this.Source.offsetTop)) break;
-						} else {
-							console.warn("needPositiveDrawItem::렌더링 에러 더이상 드로잉 할수 없습니다.");
-						}
-					}
-				}
-			},
-			needNegativeDrawItem:function(){
-				if(typeof this._drawAxisYItem === "function"){
-					if(this.axisYNegativeItems.length < this.axisYNegativeLength){
-						var i = ((this.axisYNegativeItems.length * -1) -1);
-						var node = this._drawAxisYItem(i);
-						if( N.isNode(node) ) {
-							this.axisYNegativeItems.push(node);
-							N.$prepend(this.ClipView,node);
-							this.Source.scrollTop = this.Source.scrollTop + node.offsetHeight;
-						} else {
-							return console.warn("drawAxisYItem의 값이 잘못되었습니다 노드를 반환해주세요",node);
-						}
-					}
-				}
-			},
-			restUp:function(){
-				return this.Source.scrollTop;
-			},
-			restDown:function(){
-				return this.Source.scrollHeight - this.Source.offsetHeight - this.Source.scrollTop;
-			},
-			restYSpace:function(){
-				var u = this.Source.scrollTop , d = (this.Source.scrollHeight - this.Source.offsetHeight - this.Source.scrollTop);	
-				return (u < d)?u:d;
-			},
-			setAllowVirtureTouch:function(flag){ this.Touch.setAllowVirtureTouch(true); },
-			//scroll event
-			whenScroll            :function(m){ 
-				this.ScrollEvent.Scroll = (!m) ? undefined : N.BIND_FUNCTION(this.ScrollEvent.Scroll,m);
-			},
-			applyScrollEvent:function(flag){
-				if(typeof flag !== "boolean") return;
-				if(typeof this._applyScrollEvent === "undefined") {
-					var _ = this;
-					if(!this._currentMouseWheelEvent) {
-						this._currentMouseWheelEvent = function(e){
-							if(e.wheelDeltaY) {
-								if( (e.wheelDeltaY !== 0) && (_.needScrollingOffsetY(e.wheelDeltaY/3) == true) && (_.restYSpace() !== 0) ) {
-									e.stopPropagation();
-									e.preventDefault();
-								}
-								if( (e.wheelDeltaX !== 0) && (_.needScrollingOffsetX(e.wheelDeltaX/3) == true) ) {
-									e.stopPropagation();
-									e.preventDefault();
-								}
-							} else if(e.wheelDelta) {
-								if( (e.wheelDelta !== 0) && (_.needScrollingOffsetY(e.wheelDelta/3) !== false) && (_.restYSpace() !== 0) ) {
-									e.stopPropagation();
-									e.preventDefault();
-								}
-							}
-						};
-					}
-				
-					if(!this._currentScrollEvent) {
-						this._currentScrollEvent = function(e){
-							e.stopPropagation();
-							e.preventDefault();
-							return N.CALL(_.ScrollEvent.Scroll,_,e);
-						};
-					}
-				
-					this._applyScrollEvent = false;
-				}
-				if(this._applyScrollEvent !== flag) {
-					if(flag){
-						N.$on(this.Source,"mousewheel",this._currentMouseWheelEvent);
-						N.$on(this.Source,"scroll",this._currentScrollEvent);
-						this.Touch.applyTouchEvent(true);
-					} else {
-						N.$off(this.Source,"mousewheel",this._currentMouseWheelEvent);
-						N.$off(this.Source,"scroll",this._currentScrollEvent);
-						this.Touch.applyTouchEvent(false);
-					}
-					this._applyScrollEvent = flag;
-				}
-			},
-			getBoundsInfo:function(){
-				return  {
-					frame:{
-						width:this.Source.offsetWidth,
-						height:this.Source.offsetHeight,
-					},
-					clipview:{
-						x:this.Source.scrollLeft,
-						y:this.Source.scrollTop,
-						width:this.ClipView.offsetWidth ,
-						//test
-						height:this.ClipView.offsetHeight || this.Source.offsetHeight
-					},
-					contents:{
-						width:this.Source.scrollWidth,
-						height:this.Source.scrollHeight
-					}
-				}
-			}
-		},function(node,direction,virtureTouch){
-			this.Source = N.findOne(node)[0];
-			this.isMoving = false;
-			if(this.Source){
-			
-				this.axisYPositiveLength = 0;
-				this.axisYNegativeLength = 0;
-				this.axisYPositiveItems = [];
-				this.axisYNegativeItems = [];
-			
-				this.ClipView = N.make("div.nody-scroll-box-clip-view[style=min-height:100%]");
-				N.$style(this.ClipView,"transform","matrix(1,0,0,1,0,0)");
-				N.$style(this.ClipView,"position","relative");
-			
-				N.$append(this.ClipView,this.Source.childNodes);
-				N.$append(this.Source,this.ClipView);
-			
-				//
-				this.ScrollEvent = {};
-			
-				this.Touch = new N.Touch(this.Source);
-			
-				switch(direction) {
-					case 'horizontal':
-						this.allowScrollX = true;
-						this.allowScrollY = false;
-						break;
-					case 'vertical':
-						this.allowScrollX = false;
-						this.allowScrollY = true;
-						break;
-					default :
-						if(direction !== undefined) console.warn('ScrollBox :: direction 파라메터 영역에 알수없는 커멘드가 들어왔습니다.',direction)
-						this.allowScrollX = true;
-						this.allowScrollY = true;
-						break;
-				}
-			
-				N.$style(this.Source,"overflow","hidden");
-				N.$style(this.Source,"position","relative");
-			
-				var _ = this;
-				//
-				this.Touch.whenTouchMove(function(offsetX,offsetY,e){
-					var result = false;
-					if( (offsetY !== 0) && (_.needScrollingOffsetY(offsetY) == true) && (_.restYSpace() !== 0) ) result = true;
-					if( (offsetX !== 0) && (_.needScrollingOffsetX(offsetX) == true) ) result = true;
-					if(result) _.isMoving = true;
-					return result;
-				});
-				this.Touch.whenTouchEnd(function(){
-					var t = setTimeout(function(){
-						_.isMoving = false;
-						clearTimeout(t);
-					},10);
-				});
-				this.applyScrollEvent(true);
-			
-				if(virtureTouch === true) this.setAllowVirtureTouch(true);
-			} else {
-				console.warn("ScrollBox제대로 불러오지 못했습니다.",node);
-			}
-		});
-	
-		N.EXTEND_MODULE("ScrollBox","ZoomBox",{
-			needZoom:function(needTo){
-				needTo = N.toNumber(needTo);
-				if(needTo < this.zoomMin) needTo = this.zoomMin;
-				if(needTo > this.zoomMax) needTo = this.zoomMax;
-			
-				if(needTo === this.ZoomValue) return false;
-			
-				var offsetWidth  = Math.floor(((this.ClipView.offsetWidth  * needTo) - this.ClipView.offsetWidth) / 2);
-				var offsetHeight = Math.floor(((this.ClipView.offsetHeight * needTo) - this.ClipView.offsetHeight) / 2);
-			
-				var zoomOffset = this.ZoomValue - needTo;
-				if( zoomOffset !== 0) {
-					this.needScrollingOffsetX( (this.Source.offsetWidth  * zoomOffset) / 2 );
-					this.needScrollingOffsetY( (this.Source.offsetHeight * zoomOffset) / 2 );
-				}
-			
-				N.$style(this.ClipView,"transform","matrix("+needTo+",0,0,"+needTo+","+offsetWidth+","+offsetHeight+")");
-			
-				var _ = this;
-			
-				if( !this.wasClipTimeout ) clearTimeout(this.wasClipTimeout);
-				this.wasClipTimeout = setTimeout(function(){ N.CALL(_.ZoomEvent,_); },305);
-			
-				N.CALL(this.ZoomEvent,this);
-				this.ZoomValue = needTo;
-			
-				return true;
-			},
-			needZoomWithOffset:function(offset){ 
-				return this.needZoom(this.ZoomValue + offset);
-			},
-			whenZoom:function(event){ this.ZoomEvent = event; },
-			resizeFix:function(){
-				this.nzClipWidth  = this.Source.scrollWidth;
-				this.nzClipHeigth = this.Source.scrollHeight;
-			},
-			getBoundsInfo:function(){
-				var bi = this._super();
-				bi.clipview.zoom     = this.ZoomValue;
-				bi.contents.nzWidth  = this.nzClipWidth;
-				bi.contents.nsHeight = this.nzClipHeigth;
-				return bi;
-			},
-			setAllowZoom:function(flag){
-				this.Touch.allowPinch = !!flag;
-				this._allowZoom        = !!flag;
-				return this;
-			}
-		},function(mainNode,initZoom){
-			//scrollbox이벤트의 휠 이벤트를 변경
-			var _ = this;
-			this._currentMouseWheelEvent = function(e){
-				e.preventDefault();
-				if(_._allowZoom) if(e.wheelDelta) _.needZoomWithOffset(e.wheelDelta/1500)
-			}
-		
-			this._super(mainNode);
-			this.ZoomValue = 1.0
-			this.zoomMin   = 1.0;
-			this.zoomMax   = 3.0;
-			this.ZoomEvent;
-			this.resizeFix();
-			this._allowZoom = true;
-			this.Touch.whenPinch(function(zoomOffset,e){ 
-				if(_._allowZoom) _.needZoomWithOffset(zoomOffset/30); 
-			});
-			this.setAllowVirtureTouch(true);
-		
-			if(typeof initZoom == "number") this.needZoom(initZoom);
-		});
-	
-		N.MODULE("ScrollTrack",{		
-			resizeFix:function(){
-				if(this._autoScrollTrackHeight && this._autoScrollBoxSync){
-					var scrollBox = this._autoScrollBoxSync;
-					var lengthPer = ((100 / scrollBox.Source.scrollHeight) * scrollBox.Source.offsetHeight)/100;
-					N.$style(this.ScrollHanlde,'height',N.toPx(this.ScrollTrack.offsetHeight * lengthPer));
-				
-				}
-				this.scrollLength = this.ScrollTrack.offsetHeight - this.ScrollHanlde.offsetHeight;
-				if( (typeof this.scrollPoint) !== 'number') this.scrollPoint = 0;
-			},
-			needScrollOffset:function(y){
-				var needTo = this.scrollPoint + y;
-	
-				if(needTo < 0) {
-					this.scrollPoint = 0;
-				} else if(needTo > this.scrollLength) {
-					this.scrollPoint = this.scrollLength;
-				} else {
-					this.scrollPoint = needTo;
-				}
-				N.$style(this.ScrollHanlde,'top',N.toPx(this.scrollPoint));
-				N.CALL(this._whenScroll);
-			},
-			needScrollPercent:function(per){
-				N.$style(this.ScrollHanlde,'top',N.toPx((this.scrollLength / 100) * per));
-			},
-			whenScroll:function(m){
-				var _ = this;
-				if(typeof m === 'function') this._whenScroll = function(){ m.call(_,(100 / _.scrollLength ) * _.scrollPoint)};
-			},
-			syncWithScrollBox:function(scrollBox){
-				if(typeof scrollBox === 'object' && 'needScrollingPercentY' in scrollBox) {
-					var _ = this;
-					this.whenScroll(function(per){
-						scrollBox.needScrollingPercentY(per);
-					});
-					scrollBox.whenScroll(function(a,b,c){
-						_.needScrollPercent( (100 / (scrollBox.Source.scrollHeight - scrollBox.Source.offsetHeight)) * scrollBox.Source.scrollTop );
-					});
-					this._autoScrollBoxSync = scrollBox;
-					this.resizeFix();
-				}
-			}
-		},function(scrollContainer,direction,autoResizeFix,autoScrollTrackHeight){
-			this.Source      = N.findOne(scrollContainer)[0];
-		
-			if(!this.Source) {
-				return console.warn('스크롤바 초기화 실패하였습니다.');
-			}
-
-			this.ScrollHanlde = N.make('div.nody-scroll-handle',{style:'position:relative;'});
-			this.ScrollTrack  = N.make('div.nody-scroll-track',{style:'position:absolute;'},this.ScrollHanlde);
-
-			N.$put(this.Source,this.ScrollTrack);
-
-			this.Touch = new N.Touch(this.ScrollHanlde,true);
-			this.Touch.setAllowVirtureTouch(true);
-			var _ = this;
-			this.Touch.whenTouchMove(function(x,y){
-				if( _.ScrollTrack.offsetHeight - _.ScrollHanlde.offsetHeight > 0) _.needScrollOffset(y);
-			});
-		
-			if(autoResizeFix !== false) {
-				N.$on(window,'resize',function(){
-					_.resizeFix();
-				});
-			}
-			this._autoScrollTrackHeight = autoScrollTrackHeight;
-		
-			this.resizeFix();
 		});
 	})(window,N,N.ENV);
 })();
