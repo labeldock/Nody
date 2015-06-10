@@ -79,6 +79,24 @@ binder.bindNode("#bind2","bind2");
 binder.bindNode("#bind2-1","bind2");
 ```
 
+
+#### Example of bind value inspect
+```html
+	<input id="bind1">
+	<p>
+		First input value is <span id="bind2"></span>
+	</p>
+```
+```javascript
+var binder = new nd.Binder(10); // initial value
+binder.bindNode("#bind1");
+binder.bindNode("#bind2");
+binder.inspect(function(value){
+	//if input is empty then transaction execute with return false;
+	if(value === ""){ return false; }
+});
+```
+
 #### Example of template
 ```javascript
 nd.makes('ul#ul','body');
