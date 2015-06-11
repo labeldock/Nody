@@ -5,14 +5,14 @@
  */
 
 (function(){
-	var N={};
+	var N=(function(){return N.API.apply(window,Array.prototype.slice.call(arguments))});
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.26.0", N.BUILD = "1152";
+		N.VERSION = "0.26.1", N.BUILD = "1154";
 	
 		// Core verison
-		N.CORE_VERSION = "1.9.5", N.CORE_BUILD = "84";
+		N.CORE_VERSION = "2.0.0", N.CORE_BUILD = "85";
   
 		// Pollyfill : console object
 		if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(N.toString(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
@@ -31,11 +31,44 @@
 	
 		// BrowserFix : IE8 Success fix
 		if (typeof W.success === "function"){W.success = "success";}
-	
+		
+		var IS_MODULE = function(obj,moduleName){
+			if(arguments.length == 1){
+				if(typeof obj === "object" && ("__NativeHistroy__" in obj)){
+					return true;
+				}
+			} else {
+				if(typeof obj === "object" && obj !== null && (typeof moduleName === "string") && ("__NativeHistroy__" in obj)){
+					for(var i=obj["__NativeHistroy__"].length-1;i>-1;i--){
+						if(obj["__NativeHistroy__"][i] === moduleName) return true;
+					}
+				}
+			}
+			return false;
+		};
+		
 		//NativeCore console trace
-		var traceNativeModule = function(name){ if (NModules[name]) { var result = name + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype["set"])+"") )[1] + ")"; var i2 = 0; for(var protoName in NModules[name].prototype ) switch(protoName){ case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__NativeInitializer__": break; default: if(typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype[protoName])+"") )[1] + ")" ; i2++; break; } return result; } else { return name + " module is not found."; } };
-		N.API = traceNativeModule;
-		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n MODULE(" + i + ") ::" + traceNativeModule(key); i++; } logText.push(moduleText); return logText.join("\n"); };
+		N.API = function(name) {
+			if(arguments.length === 0){
+				return "Nody "+N.VERSION+" ("+N.BUILD+")";
+			}
+			if(typeof name === "string"){
+			    if (NModules[name]) {
+			        var result = name + "(" + /\(([^\)]*)\)/.exec(((NModules[name].prototype["set"]) + ""))[1] + ")";
+			        var i2 = 0;
+			        for (var protoName in NModules[name].prototype)
+			            switch (protoName) {
+						case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__NativeInitializer__": break; default:
+			                    if (typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec(((NModules[name].prototype[protoName]) + ""))[1] + ")";
+			                    i2++;
+			                    break;
+			            }
+			        return result;
+			    }
+			}
+			return name + "is not found";
+		};
+		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n MODULE(" + i + ") ::" + N.API(key); i++; } logText.push(moduleText); return logText.join("\n"); };
 	
 	
 		//NativeCore Start
@@ -878,20 +911,7 @@
 				}
 				return target;
 			},
-			"isModule":function(obj,moduleName){
-				if(arguments.length == 1){
-					if(typeof obj === "object" && ("__NativeHistroy__" in obj)){
-						return true;
-					}
-				} else {
-					if(typeof obj === "object" && (typeof moduleName === "string") && ("__NativeHistroy__" in obj)){
-						for(var i=obj["__NativeHistroy__"].length-1;i>-1;i--){
-							if(obj["__NativeHistroy__"][i] === moduleName) return true;
-						}
-					}
-				}
-				return false;
-			},
+			"isModule":IS_MODULE,
 			// 참고! : human readable month
 			"dateExp":function(dv,format,pad){
 				if(N.isArray(dv)) dv = dv.join(' ');
@@ -933,7 +953,7 @@
 				}
 				return 0;
 			},
-			"timeScaleExp":function(exp){
+			"timescaleExp":function(exp){
 				var scale = 0;
 				if(typeof exp === "number") {
 					return exp;
@@ -7347,58 +7367,53 @@
 				var beforeValue = this.beforeProperty.prop(dataName);
 				//set send
 				this.protectProperty.add(dataName);
-				(new N.Array(listeners)).each(function(listenerInfo){
-					listenerInfo.proc.call(listenerInfo.listener,setValue,beforeValue);
+				(new N.Array(listeners)).each(function(listenInfo){
+					listenInfo.proc.call(listenInfo.listener,setValue,beforeValue);
 				});
 				this.beforeProperty.prop(dataName,setValue);
 				this.protectProperty.remove(dataName);
 			},
-			getListenerInfo:function(listener,propertyName){
+			getListenInfo:function(listener,propertyName){
 				if(!listener) return this.Source.get();
 				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
-				return this.Source.filter(function(listenerInfo){
-					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName);
+				return this.Source.filter(function(listenInfo){
+					return (listenInfo.listener === listener && listenInfo.propertyName === propertyName);
 				});
 			},
-			send:function(sender,setValue,dataName,forceLevel){
+			send:function(setValue,dataName,sender,forceLevel){
+				
 				if(this.protectProperty.has(dataName)){
 					if(this.trace) console.info(sender,"was make duplicate send (",dataName,") is still processing");
 					return;
 				}
+
 				//duplicate send protect
 				var beforeValue = this.beforeProperty.prop(dataName);
 				if(setValue === beforeValue){
 					if(this.trace) console.info(sender,"send is same from before value.");
 					return;
 				}
-				var sendTargets = this.Source.filter(function(listenerInfo){
-					return (sender !== listenerInfo.sender && dataName === listenerInfo.propertyName) ? true : false;
+				var sendTargets = this.Source.filter(function(listenInfo){
+					return (sender !== listenInfo.sender && dataName === listenInfo.propertyName) ? true : false;
 				});
 				//allow inspect
 				var allowProc    = true
 				var forceLevel   = (typeof forceLevel === "number") ? forceLevel : 0;
 				var _self        = this;
-				sendTargets.each(function(listenerInfo){
-					if(listenerInfo.allowProc){
-						if( listenerInfo.allowProc(setValue,beforeValue) === false ){
-							if(listenerInfo.protectLevel >= forceLevel) {
+				sendTargets.each(function(listenInfo){
+					if(listenInfo.allowProc){
+						if( listenInfo.allowProc(setValue,beforeValue) === false ){
+							if(listenInfo.protectLevel >= forceLevel) {
 								//transaction
-								_self.shouldSetFromListenersInfo(_self.getListenerInfo(sender,dataName),beforeValue,dataName);
+								_self.shouldSetFromListenersInfo(_self.getListenInfo(sender,dataName),beforeValue,dataName);
 								return allowProc = false;
 							}
 						}
 					}
 				});
+				
 				//set data
 				if(allowProc === true) this.shouldSetFromListenersInfo(sendTargets,setValue,dataName);
-			},
-			//custom send
-			setValue:function(setValue,propertyName,forceLevel){
-				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
-				this.send(null,setValue,propertyName,forceLevel);
-			},
-			getValue:function(propertyName){
-				return this.beforeProperty.prop(propertyName);
 			},
 			listen:function(listener,propertyName,proc,allowProc,protectLevel){
 				//value inspect
@@ -7406,23 +7421,29 @@
 					return console.error("BindAdapter::listen arguments must be (listener,propertyName,proc)(object,string,fucntion)");
 				}
 				//duplicate listen & property inspect
-				if(this.Source.isAny(function(listenerInfo){
-					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName);
+				if(this.Source.isAny(function(listenInfo){
+					return (listenInfo.listener === listener && listenInfo.propertyName === propertyName);
 				})){
 					return console.error("BindAdapter:: already set listener & property");
 				}
-				var listenerInfo = {
+				
+				var listenInfo = {
 					listener:listener,
 					propertyName:propertyName,
 					proc:proc,
 					allowProc:allowProc,
 					protectLevel:(typeof protectLevel === "number") ? protectLevel : 0
 				};
-				this.Source.push(listenerInfo);
+				
+				this.Source.push(listenInfo);
 				
 				//beforeProperty set
 				if(this.beforeProperty.has(propertyName)) 
-					this.shouldSetFromListenersInfo(listenerInfo,this.beforeProperty.prop(propertyName),propertyName);
+					this.shouldSetFromListenersInfo(listenInfo,this.beforeProperty.prop(propertyName),propertyName);
+			},
+			//custom send
+			getValue:function(propertyName){
+				return this.beforeProperty.prop(propertyName);
 			},
 			inspect:function(allowProc,propertyName,protectLevel){
 				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
@@ -7431,7 +7452,7 @@
 				}
 				this.listen(this,propertyName,function(){},allowProc,protectLevel);
 			},
-			bindNode:function(node,propName,setThisNodeValue){
+			bindNode:function(node,propertyName,propFilter){
 				var listener = N.find(node,0);
 				if(listener) {
 					var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
@@ -7439,33 +7460,41 @@
 					if(listener.tagName == "INPUT") {
 						var binder = this;
 						N.$on(listener,"change",function(){
-							binder.send(listener,listener.value,propertyName);
+							binder.send(listener.value,propertyName,listener);
 						});
 					}
 					this.listen(listener,propertyName,function(value){
+						if(typeof propFilter === "function"){ 
+							value = propFilter(value);
+							if(typeof value === "object" && listener.tagName !== "input"){
+								var nodes = N.find(value);
+								if(nodes.length) return N.$put(listener,nodes);
+							}
+						}
+						
 						N.$value(listener,value);
 					});
 				}
 			},
 			getListeners:function(){
-				return this.Source.map(function(listenerInfo){ listenerInfo.listener }).setUnique();
+				return this.Source.map(function(listenInfo){ listenInfo.listener }).setUnique();
 			},
 			getProperties:function(){
-				return this.Source.map(function(listenerInfo){ listenerInfo.propertyName }).setUnique();
+				return this.Source.map(function(listenInfo){ listenInfo.propertyName }).setUnique();
 			},
 			removeListener:function(listener){
-				this.Source.setFilter(function(listenerInfo){
-					return (listenerInfo.listener === listener) ? false : true;
+				this.Source.setFilter(function(listenInfo){
+					return (listenInfo.listener === listener) ? false : true;
 				});
 			},
 			removeListen:function(listener,propertyName){
-				this.Source.setFilter(function(listenerInfo){
-					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName) ? false : true;
+				this.Source.setFilter(function(listenInfo){
+					return (listenInfo.listener === listener && listenInfo.propertyName === propertyName) ? false : true;
 				});
 			},
 			removeProperty:function(propertyName){
-				this.Source.setFilter(function(listenerInfo){
-					return (listenerInfo.propertyName === propertyName) ? false : true;
+				this.Source.setFilter(function(listenInfo){
+					return (listenInfo.propertyName === propertyName) ? false : true;
 				});
 			}
 		},function(defaultData,trace,defaultKey){ 
@@ -7561,26 +7590,29 @@
 					this._tick = se[1];
 				}
 			},
-			push:function(pushProperties){
-				if( N.isModule(pushProperties,"TimeProperties") ){
-					this.Source.add(pushProperties);
+			append:function(){
+				var _self = this;
+				N.dataFlatten(arguments,N.dataEach,function(pushProperties,i){
+					if( N.isModule(pushProperties,"TimeProperties") ){
+						_self.Source.add(pushProperties);
 					
-					var ts = pushProperties.timeStart();
-					var te = pushProperties.timeEnd();
+						var ts = pushProperties.timeStart();
+						var te = pushProperties.timeEnd();
 					
-					if(this.Source.length === 1) {
-						this.Status.pushKeyValue("timeStart",ts,"timeEnd",te);
-					} else if(this.Source.length > 1) {
-						var se = this.Status.values("timeStart","timeEnd");
-						if(se[0] > ts){
-							this.Status.pushKeyValue("timeStart",ts);
+						if(_self.Source.length === 1) {
+							_self.Status.pushKeyValue("timeStart",ts,"timeEnd",te);
+						} else if(_self.Source.length > 1) {
+							var se = _self.Status.values("timeStart","timeEnd");
+							if(se[0] > ts){
+								_self.Status.pushKeyValue("timeStart",ts);
+							}
+							if(se[1] < te){
+								_self.Status.pushKeyValue("timeEnd",te);
+							}
 						}
-						if(se[1] < te){
-							this.Status.pushKeyValue("timeEnd",te);
-						}
+						_self.updateFix();
 					}
-					this.updateFix();
-				}
+				});
 			},
 			stop:function(){
 				this._rate = 0;
@@ -7618,7 +7650,7 @@
 				this.move(this._tick + offset);
 			},
 			offsetExp:function(exp){
-				this.move(this._tick + N.timeScaleExp(exp));
+				this.move(this._tick + N.timescaleExp(exp));
 			},
 			//속도 1은 1초 양음수 가능
 			rate:function(rate){
@@ -7642,16 +7674,21 @@
 					wheelProc();
 				}
 			},
-			rateWithTimeScale:function(exp){
-				return this.rate(N.timeScaleExp(exp) / 1000);
+			rateWithTimescale:function(exp){
+				return this.rate(N.timescaleExp(exp) / 1000);
 			},
 			timestamp:function(){
 				return this._tick;
 			},
-			timeScale:function(){
+			timescale:function(){
 				return this.Status.values("timeEnd","timeStart",function(e,s){ return e-s; });
 			},
-			restTimeScale:function(){
+			runTimescale:function(){
+				if(this._rightDirection)
+					return (this._tick - this.Status.get("timeStart"));
+				return (this.Status.get("timeEnd") - this._tick);
+			},
+			restTimescale:function(){
 				if(this._rightDirection)
 					return (this.Status.get("timeEnd") - this._tick);
 				return (this._tick - this.Status.get("timeStart"));
@@ -7668,11 +7705,22 @@
 					return timeProperties.getVectorPropWithTime(currentTime);
 				});
 			},
+			getTimeProperties:function(index){
+				return (arguments.length) ? this.Source[index] : this.Source.clone();
+			},
+			getAttributeOfTimeProperties:function(index){
+				if(arguments.length){
+					return this.Source[index] && this.Source[index].Attribute;
+				}
+				return this.Source.map(function(timeProperties){
+					return timeProperties.Attribute;
+				});
+			},
 			progress:function(){
-				return 100 - (100 / this.timeScale()) * this.restTimeScale();
+				return 100 - (100 / this.timescale()) * this.restTimescale();
 			},
 			restProgress:function(){
-				return (100 / this.timeScale()) * this.restTimeScale();
+				return (100 / this.timescale()) * this.restTimescale();
 			},
 			setFPS:function(fps){
 				this._fps      = (typeof fps === "number") ? fps : 30;
@@ -7709,6 +7757,7 @@
 					time:time,
 					props:data
 				},insertAt);
+				return this;
 			},
 			push:function(){
 				var _self = this;
@@ -7721,6 +7770,7 @@
 					var pushTime = _self.defaultStartTime + (_self.defaultInertval * _self.Source.length);
 					_self.insertTimeProperty(pushTime,pushData);
 				});
+				return this;
 			},
 			getAroundPropWithTime:function(time){
 				if(typeof time !== "number") console.error("getAroundPropWithTime:: arg must be number");
@@ -7758,15 +7808,15 @@
 				var aroundData = this.getAroundPropWithTime(time);
 				
 				if(typeof aroundData[1] === "undefined"){
-					return N.clone(aroundData[0]);
+					return aroundData[0];
 				} else {
-					return N.clone( (aroundData[2] < 0.5) ? aroundData[0] : aroundData[1] );
+					return (aroundData[2] < 0.5)?aroundData[0]:aroundData[1];
 				}
 			},
 			getVectorPropWithTime:function(time){
 				var aroundData = this.getAroundPropWithTime(time);
 				if(typeof aroundData[1] === "undefined"){
-					return N.clone(aroundData[0]);
+					return this._gto,aroundData[0];
 				} else {
 					var dataProps = new N.Manage();
 					dataProps.arrangementObjectsDataProp(aroundData[0],aroundData[1]);
@@ -7785,6 +7835,7 @@
 					}).get();
 				}
 			},
+			
 			timeStart:function(){
 				var timeProps = this.Source.first();
 				return timeProps ? timeProps.time : null;
@@ -7798,11 +7849,12 @@
 						this.Source.isOne() ? 0 :
 						this.timeStart() - this.timeEnd();
 			}
-		},function(startTime,interval,defaultKey){
-			this.Source     = new N.Array();
+		},function(attr,startTime,interval,defaultKey){
+			this.Source    = new N.Array();
+			this.Attribute = (new N.Manage(attr)).get();
 			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "value"
 			this.defaultStartTime = startTime ? N.timeStampExp(startTime): N.timeStampExp();
-			this.defaultInertval  = interval  ? N.timeScaleExp(interval) : N.timeScaleExp("2s");
+			this.defaultInertval  = interval  ? N.timescaleExp(interval) : N.timescaleExp("2s");
 		});
 	
 		N.EXTEND_MODULE("Counter","BezierCounter",{
