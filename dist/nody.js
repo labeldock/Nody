@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.25.8", N.BUILD = "1145";
+		N.VERSION = "0.26.0", N.BUILD = "1152";
 	
 		// Core verison
 		N.CORE_VERSION = "1.9.5", N.CORE_BUILD = "84";
@@ -35,7 +35,7 @@
 		//NativeCore console trace
 		var traceNativeModule = function(name){ if (NModules[name]) { var result = name + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype["set"])+"") )[1] + ")"; var i2 = 0; for(var protoName in NModules[name].prototype ) switch(protoName){ case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__NativeInitializer__": break; default: if(typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype[protoName])+"") )[1] + ")" ; i2++; break; } return result; } else { return name + " module is not found."; } };
 		N.API = traceNativeModule;
-		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n " + i + " : " + traceNativeModule(key); i++; } logText.push(moduleText); return logText.join("\n"); };
+		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n MODULE(" + i + ") ::" + traceNativeModule(key); i++; } logText.push(moduleText); return logText.join("\n"); };
 	
 	
 		//NativeCore Start
@@ -75,6 +75,9 @@
 				};
 			
 				NModules[name]               = nativeConstructor;
+				NModules[name]["new"]        = (function(module){
+					return function(){ return new (Function.prototype.bind.apply(module,[module].concat(Array.prototype.slice.call(arguments)))); };
+				}(NModules[name]));
 				NModules[name].prototype     = nativeProto;
 				NModules[name].prototype.set = setter;
 				NModules[name].prototype.get = getter;
@@ -174,9 +177,8 @@
 		var NativeFactoryDeploy = function(name){
 			if(name in NModules) {
 				(function(module){
-					var newInit = function(){ return new (Function.prototype.bind.apply(module,[module].concat(Array.prototype.slice.call(arguments)))); };
 					nody[name] = module;
-					nody["_"+name] = module.prototype.__NativeInitializer__ = newInit;
+					module.prototype.__NativeInitializer__ = module.new;
 				}(NModules[name]));
 			}
 		};
@@ -724,6 +726,17 @@
 			"propsMap":N.CONTINUE_FUNCTION(function(v,f){ var result = {}; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result[k] = f(v[k],k); return result; } return result;},2),
 			//오브젝트의 key value값을 Array 맵으로 구한다.
 			"propsData" :N.CONTINUE_FUNCTION(function(v,f){ var result = []; if(typeof f !== "function") f = function(v){ return v; }; if(typeof v === "object"){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
+			"propsKey"  :N.CONTINUE_FUNCTION(function(obj,rule){
+				var r = [];
+				if(typeof rule === "string"){
+					N.propsEach(obj,function(v,k){ if(k.indexOf(rule) > -1){ r.push(k); }});
+				} else if(rule instanceof RegExp) {
+					N.propsEach(obj,function(v,k){ if(rule.test(k)){ r.push(k) }});
+				} else {
+					N.propsEach(obj,function(v,k){ r.push(k); });
+				}
+				return r;
+			},1),
 			//
 			"propsLength":function(data){ var l = 0; if(typeof data === "object" || typeof data === "function") for(var key in data) l++; return l; },
 			//새로운 객체를 만들어 복사
@@ -865,24 +878,19 @@
 				}
 				return target;
 			},
-			//inspect type
-			"isType":function(t,v) {
-				if(typeof v === 'string'){
-					//tName
-					var vn = ((typeof v === "function") ? v["__NatvieContstructorName__"] : v);
-					//inspect
-					if( (typeof t=="object") && (typeof vn=="string") ) if("__NativeHistroy__" in t) {
-						var his = t["__NativeHistroy__"];
-				
-						for(var i=0,l=his.length;i<l;i++){
-							if(his[i] == vn) return true;
+			"isModule":function(obj,moduleName){
+				if(arguments.length == 1){
+					if(typeof obj === "object" && ("__NativeHistroy__" in obj)){
+						return true;
+					}
+				} else {
+					if(typeof obj === "object" && (typeof moduleName === "string") && ("__NativeHistroy__" in obj)){
+						for(var i=obj["__NativeHistroy__"].length-1;i>-1;i--){
+							if(obj["__NativeHistroy__"][i] === moduleName) return true;
 						}
 					}
-					return false;
-				} else if(typeof v === 'function') {
-					//javascript instance
-					if(t instanceof v) return true; return false;
 				}
+				return false;
 			},
 			// 참고! : human readable month
 			"dateExp":function(dv,format,pad){
@@ -1569,21 +1577,6 @@
 			seed:function(seed){ this.seed = N.toNumber(seed);return this.getter; }
 		});
 	
-		// 키를 찾는 함수입니다.
-		var objectCommonInterface = {
-			"keys":function(rule){
-				var r = [];
-				if(typeof rule === "string"){
-					this.each(function(v,k){ if(k.indexOf(rule) > -1){ r.push(k); }});
-				} else if(rule instanceof RegExp) {
-					this.each(function(v,k){ if(rule.test(k)){ r.push(k) }});
-				} else {
-					this.each(function(v,k){ r.push(k); });
-				}
-				return r;
-			}
-		}
-	
 		//******************
 		// NodyArray
 		N.ARRAY_MODULE("Array",{
@@ -1592,7 +1585,7 @@
 			// each의 반대 동작
 			reverseEach : function(block) { for ( var i=this.length-1;i>-1;i--) { if( block(this[i],i) == false ) break; } return this; },
 			// key배열 습득
-			keys  : objectCommonInterface.keys,
+			keys  : function(rule){ return N.propsKey(this,rule); },
 			//첫번째 요소 반환.
 			zero  :function(){ return N.dataFirst(this); },
 			first :function(){ return N.dataFirst(this); },
@@ -1604,6 +1597,11 @@
 			push : function(v,i){ switch(typeof i){ case "string": case "number": this[i] = v; break; default: Array.prototype.push.call(this,v); break; } return this; },
 			// 존재하지 않는 값만 추가한다
 			add :function(v,i){ if( !this.has(v) ) this.push(v,i); return this; },
+			marge:function(array){
+				var _self = this;
+				N.dataEach(array,function(v){ _self.add(v); });
+				return this;
+			},
 			//해당 값을 당 배열로 바꾼다
 			setSource : function(v){
 				if( N.isArray(v) ) {
@@ -1637,7 +1635,7 @@
 			//원하는 위치에 대상을 삽입합니다.
 			insert: function(v,a){ this.min(a); var pull=[],a=a?a:0; for(var i=a,l=this.length;i<l;i++)pull.push(this[i]); return this.max(a).push(v).setConcat(pull); },
 			// 순수 Array로 반환
-			toArray  : function()  { return Array.prototype.slice.call(this); },
+			toArray  : function() { return Array.prototype.slice.call(this); },
 			//내부요소 모두 지우기
 			clear   : function() { this.splice(0,this.length); return this; },
 			clone:function(){ return new N.Array(this);},
@@ -1751,8 +1749,8 @@
 			drop:function(index){ index=index?index:0;return this.subarray(index).concat(this.subarr(index+1)); },
 			setDrop:function(index) { return this.setSource(this.drop(index)); },
 			// 인수와 같은 요소를 제거한다.
-			remove:function(target) { return this.filter(function(t){ if(t == target) return false; return true; }); },
-			setRemove:function(target) { return this.setSource(this.remove(target)); },
+			getRemove:function(target) { return this.filter(function(t){ if(t == target) return false; return true; }); },
+			remove:function(target) { return this.setSource(this.getRemove(target)); },
 			// 요소중의 중복된 값을 지운다.
 			unique:function(){var result=new N.Array();this.each(function(selfObject){if(result.isAll(function(target){return selfObject!=target;}))result.push(selfObject);});return result;},
 			setUnique:function(){return this.setSource(this.unique());},
@@ -1775,7 +1773,7 @@
 				
 			},
 			//요소안의 string까지 split하여 flaatten을 실행
-			stringFlatten:function(){ return this.save().setMap(function(t){ if(typeof t === "string") return t.split(" "); if(N.isArray(t)) return new N.Array(t).setFlatten().setFilter(function(v){ return N.is(v,"string")}); }).setRemove(undefined).setFlatten(); },
+			stringFlatten:function(){ return this.save().setMap(function(t){ if(typeof t === "string") return t.split(" "); if(N.isArray(t)) return new N.Array(t).setFlatten().setFilter(function(v){ return N.is(v,"string")}); }).remove(undefined).setFlatten(); },
 			setStringFlatten:function(){ return this.setSource( this.stringFlatten() ); },
 			//그룹 지어줌
 			groupWithLength:function(length,reverse){
@@ -1809,6 +1807,7 @@
 				return r;
 			}
 		});
+		
 		N.MODULE_PROPERTY("Array","split",function(text,s){
 			if( N.isArray(text) ) return new N.Array(text);
 			if(typeof text === "string"){
@@ -1827,25 +1826,52 @@
 		});
 	
 		//******************
-		//Object
-		N.MODULE("Object",{
-			//each
-			each:function(f){ for(key in this.Source){ var r = f(this.Source[key],key); if(typeof r == false) {break;} } return this; },
-			keys:objectCommonInterface.keys,
-			reverseEach:function(method){ var keys = this.keys(); for ( var i = keys.length - 1 ; i > -1 ; i--) { if( method(keys[i],i) == false ) break; } return this; },
-			//첫번째 요소 반환.
-			zero:function(){ for(var k in this.Source) return this.Source[k]; },
-			//마지막 요소 반환.
-			last:function(){ var keys = this.keys(); return this.Source[keys[keys.length-1]];},
-			// 값을 추가한다
-			push:function(value,key){ if( typeof key === "string" || typeof key === "number" ){ this.Source[key] = value; } else { var i = 0; var ex = true; do { if(i in this.Source){ i++; } else { ex = false; this.Source[i] = value; } } while (ex); } return this; },
+		//Manage Javascript Object
+		N.MODULE("Manage",{
 			setSource:function(obj,k){ 
-				obj = N.toObject(obj,k); if(typeof obj === "object"){ for(var key in this.Source) delete this.Source[key]; for(var k in obj) this.Source[k] = obj[k]; } return this; 
+				obj = N.toObject(obj,k);
+				if(typeof obj === "object"){ 
+					for(var key in this.Source) delete this.Source[key]; 
+					for(var k in obj) this.Source[k] = obj[k]; 
+				} 
+				return this; 
 			},
+			keys:function(rule){ return N.propsKey(this.Source,rule); },
+			values:function(){ 
+				var result = [];
+				if(arguments.length){
+					for(var i=0,l=arguments.length;i<l;i++){
+						if(typeof arguments[i] === "function") {
+							return arguments[i].apply(undefined,result);
+						} else {
+							result.push(this.Source[arguments[i]]);
+						}
+					}
+				} else {
+					for (key in this.Source) result.push(this.Source[key]);
+				}
+				return result;
+			},
+			each:function(f){ for(key in this.Source){ var r = f(this.Source[key],key); if(typeof r == false) {break;} } return this; },
+			reverseEach:function(method){ var keys = this.keys(); for ( var i = keys.length - 1 ; i > -1 ; i--) { if( method(keys[i],i) == false ) break; } return this; },
 			count:function(){return N.propsLength(this.Source); },
 			clone:function(){return N.clone(this.Source); },
 			save:function() {return this.__NativeInitializer__(N.clone(this.Source)); },
 			//key value get setter
+			pushKeyValue:function(){
+				for(var i=0,l=Math.ceil(arguments.length/2);i<l;i++){
+					this.Source[arguments[i*2]] = arguments[i*2+1];
+				}
+				return this;
+			},
+			//존재하지 않는 키
+			safePushKeyValue:function(){
+				for(var i=0,l=Math.ceil(arguments.length/2);i<l;i++){
+					var key = this.Source[arguments[i*2]];
+					if(key in this.Source) this.Source[key] = arguments[i*2+1];
+				}
+				return this;
+			},
 			prop:function(k,v){
 				if(N.asString(k) && arguments.length > 1){
 					this.Source[k] = v;
@@ -1863,13 +1889,80 @@
 			propIs    :function(key,test,t,f) { return N.is(this.Source[key],test,t,f); },
 			propLike  :function(key,test,t,f) { return N.like(this.Source[key],test,t,f); },
 			//오브젝트에 키를 가지고 있는지 확인
-			has:function(key){ return key in this.Source; },
+			has:function(key,value){ 
+				return (arguments.length === 2) ? (key in this.Source) ? (this.Source[key] === value) : false : (key in this.Source);
+			},
 			//그러한 value가 존재하는지 확인
 			hasValue:function(value){
 				var result = false;
 				this.each(function(v,k){ if(value == v){ result = true; return false; } });
 				return result;
 				return key in this.Source; 
+			},
+			//배열기반 키벨류 관리
+			touchDataProp:function(keyName){
+				if(typeof keyName === "string"){
+					//arrayModule
+					if( !N.isModule(this.Source[keyName],"Array") ){
+						this.Source[keyName] = new N.Array(this.Source[keyName]);
+					}
+					return this.Source[keyName];
+				} else {
+					console.warn('Manage::touchDataProp parameter is must be string',keyName);
+				}
+				return this;
+			},
+			defineDataProp:function(){
+				var args = N.argumentsFlatten(arguments);
+				for(var i=0,l=args.length;i<l;i++) this.touchDataProp(args[i]);
+				return this;
+			},
+			dataProp:function(k,v,unique){
+				var data = this.touchDataProp(k);
+				if(arguments.length === 1){
+					return data;
+				} else if(arguments.length > 1){
+					data[unique?"add":"push"](v);
+					return this;
+				} else {
+					return (new N.Array(this.values())).filter(function(propValue){ return isModule(propValue,"Array"); });
+				}
+			},
+			//.arrangementObjectsDataProp({a:2,b:3,c:4},{b:4,d:4},{a:1,d:5})
+			//"{"a":[2,null,1],"b":[3,4,null],"c":[4,null,null],"d":[null,4,5]}"
+			arrangementObjectsDataProp:function(data){
+				var arrangementKeys = new N.Array(this.keys());
+				var args  = Array.prototype.slice.call(arguments);
+				var _self = this;
+				for(var i=0,l=arguments.length;i<l;i++){
+					if(typeof args[i] === "object"){
+						arrangementKeys.marge(N.propsKey(args[i]));
+					}
+				}
+				
+				for(var i=0,l=args.length;i<l;i++){
+					arrangementKeys.each(function(key){
+						_self.dataProp(key,args[i][key]);
+					});
+					
+				}
+				
+				return this;
+			},
+			setDataPropFix:function(){
+				for(var key in this.Source) if(N.isModule(this.Source[key],"Array")) this.Source[key] = this.Source[key].toArray();
+				return this;
+			},
+			getDataPropFix:function(){
+				var cloneSource = {};
+				for(var key in this.Source) {
+					if(N.isModule(this.Source[key],"Array")){
+						cloneSource[key] = this.Source[key].toArray();
+					}  else {
+						cloneSource[key] = this.Source[key];
+					}
+				}
+				return cloneSource;
 			},
 			//map
 			map:function(f,ksel){ 
@@ -1882,62 +1975,54 @@
 					return N.clone(this.Source);
 				} 
 			},
-			setMap:function() { return this.setSource( this.map.apply(this,arguments) ); },
+			setMap:function() { 
+				return this.setSource( this.map.apply(this,arguments) ); 
+			},
 			//inject 
 			inject:function(o,f,ksel){ if(typeof f === "function") { this.map(function(v,k){ var or = f(v,o,k); if(typeof or !== "undefined") { o=or; } },ksel); return o; } },
-			//key getter
-			data:function(k,v){
-				if(typeof v !== "function" && typeof v !== "undefined") { throw new Error("Object::data 메서드는 setter가 아닙니다."); };
-				if (typeof k === "string"){
-					if(typeof v === "function"){
-						return v(this.Source[k]);
-					} else {
-						return this.Source[k];
-					}
-				} else if(k instanceof RegExp || N.isArray(k)){
-					var keys   = this.keys(rule),result = {};
-					for(var key in keys) result[key] = keys[key];
-					return result;
-				} else {
-					return this.Source; 
-				};
-			},
-			//inspect key value
-			isSame:function(obj){ var originObject = this.Source; var judgement = true; new N.Object(obj).each(function(v,k){ if( !(k in originObject) || originObject[k] !== v){ judgement = false; return false; } }); return judgement; },
-			isEqual:function(obj){ var _obj = new N.Object(obj); var oObj = this.Source; var iObj = _obj.get(); var oKeys = this.keys().sort(); var iKeys = _obj.keys().sort(); if(oKeys.length !== iKeys.length) return false; for(var i=0,l=oKeys.length;i<l;i++){ if(oKeys[i] !== iKeys[i]) return false; if(oObj[oKeys[i]] !== iObj[iKeys[i]]) return false; } return true; },
-			//오브젝트를 배열로 반환함
-			hashes:function(key,val){ key = typeof key !== "string" ? "key" : key; val = typeof val !== "string" ? "value" : val; var r=[]; for(var k in this.Source){ var o = {}; o[key] = k; o[val] = this.Source[k]; r.push(o); } return r; },
+			
 			//
 			join:function(a,b){ a = typeof a === "string" ? a : ":"; b = typeof b === "string" ? b : ","; return this.inject([],function(v,i,k){ i.push(k+a+N.toString(v)); }).join(b); },
+			
 			//toParam
-			encodeObject : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : (new N.String(key)).encode()) ] = (useEncode == false ? val : (new N.String(val)).encode()); }); },
-			setEncodeObject : function(){ return this.setSource(this.encodeObject.apply(this,arguments)); },
+			toParameter : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : (new N.String(key)).encode()) ] = (useEncode == false ? val : (new N.String(val)).encode()); }); },
+			
 			//jsonString으로 반환
-			stringify:function(){ return JSON.stringify(this.Source); },
+			stringify:function(){ return JSON.stringify(this.getDataPropFix()); },
+			//jsonString으로 반환
+			toString:function(){ return JSON.stringify(this.getDataPropFix()); },
 			//키이름을 변경
 			change:function(original, change){ if(typeof original === "string" && typeof change === "string") { this.Source[change] = this.Source[original]; delete this.Source[original]; } return this.Source; },
-			//String의 순차적으로 오브젝트 반환  "1 2 3 4" => {"1":"2","3":"4"}
-			getKvo:function(arg,split){ split = typeof split === "string" ? split : " "; arg = arg.split(split); var source = N.clone(this.Source); var keyName = undefined; new N.Array(arg).turning(2,function(value,i){ if(i == 0) { keyName = value; } else if(i == 1) { if(typeof keyName !== "undefined") { switch(value){ case "''": case '""': case "'": case '"': source[keyName] = ""; break; default : source[keyName] = value; break ; } } keyName = undefined; } }); return source; },
-			kvo:function(arg){ return this.setSource(this.getKvo.call(this,arg)); },
 			//오브젝트의 키를 지우고자 할때
 			removeAll:function(){ for( var key in this.Source ) delete this.Source[key]; return this.Source; },
-			remove:function(){ var source = this.Source; new N.Array(arguments).setStringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
-			setRemove:function(key){ delete this.Source[key]; return this; },
-			//존재하지 않는 키벨류값을 적용함;
-			touch:function(key,value){ var m = N.clone(this.Source);new N.Array(key).setStringFlatten().each(function(key){ if(!(key in m)) m[key] = value; }); return m; },
-			setTouch:function(key,value){ return this.setSource( this.touch.apply(this,arguments) ); },
-			//키의 배열을 받는다
-			keys:function(){ var result = []; for (key in this.Source) result.push(key); return result; },
-			//값의 배열을 받는다
-			values:function(){ var result = []; for (key in this.Source) result.push(this.Source[key]); return result; },
-			getValue:function(key){ return this.Source[key]; },
+			getRemove:function(){ var source = this.Source; new N.Array(arguments).setStringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
+			remove:function(key){ delete this.Source[key]; return this; },
 			//다른 오브젝트와 함칠때
-			concat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Object(arguments[i]).each(function(v,k){ result[k] = v; }); }; return result; },
-			setConcat:function(){ this.setSource(this.concat.apply(this,arguments)); return this; },
+			concat:function(){ 
+				var result = this.clone(); 
+				for(var i=0,l=arguments.length;i<l;i++){ 
+					new N.Manage(arguments[i]).each(function(v,k){ result[k] = v; });
+				}; 
+				return result; 
+			},
+			setConcat:function(){ 
+				this.setSource(this.concat.apply(this,arguments)); 
+				return this; 
+			},
 			//다른 오브젝트와 함칠때 이미 있는 값은 오버라이드 하지 않음
 			//todo:marge extend 확인
-			safeConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Object(arguments[i]).each(function(v,k){ if( (k in result) == false) result[k] = v; }); } return result; },
-			setSafeConcat:function(){ this.setSource(this.getSafeConcat.apply(this,arguments)); return this; }
+			safeConcat:function(){ 
+				var result = this.clone(); 
+				for(var i=0,l=arguments.length;i<l;i++){ 
+					new N.Manage(arguments[i]).each(function(v,k){ 
+						if( (k in result) == false) result[k] = v; 
+					});
+				} 
+				return result; 
+			},
+			setSafeConcat:function(){ 
+				this.setSource(this.getSafeConcat.apply(this,arguments)); return this; 
+			}
 		}, function(p,n,s){
 			if(typeof s === "string"){
 				this.Source = {};
@@ -1945,6 +2030,9 @@
 			} else {
 				this.Source = N.toObject(p,n);
 			}
+		}, function(k){
+			this.setDataPropFix();
+			return (arguments.length == 0) ? this.Source : this.Source[k];
 		});
 	
 		//******************
@@ -2085,14 +2173,14 @@
 			reverse : function() { return this.Source.split("").reverse().join(""); },
 			setReverse    : function()   { this.Source = this.reverse(); return this; },
 			//remove
-			remove:function(target){
+			getRemove:function(target){
 				var index = this.Source.indexOf(target);
 				if(index < 0)return this.Source;
 				var targetLength = target.length;
 				return this.Source.substr(0,index) + this.Source.substr(index + targetLength,this.Source.length);
 			},
-			setRemove:function(target){
-				this.Source = this.remove(target);
+			remove:function(target){
+				this.Source = this.getRemove(target);
 				return this;
 			},
 			//model
@@ -2643,8 +2731,8 @@
 			        // specify the data we wish to handle. Plaintext in this case.
 			        trans.addDataFlavor('text/unicode');
 			        // To get the data from the transferable we need two new objects
-			        var str = new N.Object();
-			        var len = new N.Object();
+			        var str = new N.Manage();
+			        var len = new N.Manage();
 			        var str = Components.classes["@mozilla.org/supports-string;[[[[1]]]]"].createInstance(Components.interfaces.nsISupportsString);
 			        var copytext=meintext;
 			        str.data=copytext;
@@ -4711,10 +4799,6 @@
 			return (fs.length === 1) ? fs[0] : fs;
 		});
 		
-		N.EXTEND_MODULE("Template","ExpTemplate",{},function(exp,nodeData,dataFilter,beRender){
-			this._super(nd.makes(exp),nodeData,dataFilter,beRender);
-		});
-		
 		N.METHOD('ZTEMP',function(temp,data,filter){ return (new N.Template(temp)).renders(data,filter); });
 		N.METHOD('$Q',function(s,p,i)  { return new N.NodeQuery(s,p,i);});
 		N.METHOD('$M',function(n,a,p)  { return new N.Make(n,a,p); });
@@ -4798,7 +4882,7 @@
 			checkoutFilter:function(o){ this.FrameCheckoutFilter = o; },
 			checkinFilter:function(o){ this.FrameCheckinFilter = o; },
 			checkout:function(){
-				return new N.Object(this.getCheckoutElementsWithToken()).setMap(function(node,key){
+				return new N.Manage(this.getCheckoutElementsWithToken()).setMap(function(node,key){
 					var value = N.$value(node);
 					return value == null ? "" : value;
 				}).get();
@@ -4866,7 +4950,7 @@
 						N.CALL(this.StatusEvents.StatusWillInactive[status],owner,param) !== false )
 					{
 						if( N.APPLY(this.StatusEvents.StatusInactive[status],owner,param) == false ) return;
-						this.ActiveKeys.setRemove(status);
+						this.ActiveKeys.remove(status);
 						N.CALL(this.StatusEvents.AnyDidInactive           ,owner,param);
 						N.CALL(this.StatusEvents.StatusDidInactive[status],owner,param);
 						if( this.ActiveKeys.length === 0 ) N.CALL(this.StatusEvents.AnyActive);
@@ -4945,7 +5029,7 @@
 			this.ActiveKeys = new N.Array();
 		});
 		
-		N.EXTEND_MODULE("ActiveStatus","ViewAndMode",{
+		N.EXTEND_MODULE("ActiveStatus","ViewAndStatus",{
 			addViewStatus:function(statusName,active,inactive){
 				if(typeof statusName === 'string'){
 					if(typeof active === 'function'){
@@ -4960,23 +5044,22 @@
 				if(typeof name === 'string') this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this);
 			},
 			node:function(innerKey,wrapper){
-				if(arguments.length === 0) return (wrapper ? wrapper : N._NodeQuery)(this.view);
+				if(arguments.length === 0) return (wrapper ? wrapper : N.NodeQuery.new)(this.view);
 				if(!(innerKey in this)) return console.warn(innerKey,"인스턴스의 속성을 찾을수 없습니다.",this); 
-				return (wrapper ? wrapper : N._NodeQuery)(this[innerKey]);
+				return (wrapper ? wrapper : N.NodeQuery.new)(this[innerKey]);
 			},
 			find:function(findKeyword){
 				return findKeyword ? N.find(findKeyword,this.view) : [];
 			}
 		},function(findView,allowMulti,allowInactive){			
 			this.view = N.findLite(findView)[0];
-			
-			if(!this.view) return console.error("ViewAndMode::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",findView);
+			if(!this.view) return console.error("ViewAndStatus::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",findView);
 			this._super(allowMulti,allowInactive);
 			return true;
 		});
 		
 		
-		N.EXTEND_MODULE("ViewAndMode","FormController",{
+		N.EXTEND_MODULE("ViewAndStatus","FormController",{
 			setFormData:function(data,v2){
 				return this.FormControl.checkin(data,v2);
 			},
@@ -4988,7 +5071,7 @@
 			}
 		},function(targetForm,statusProp,helper){
 			if( this._super(targetForm,false,true) === true ) {
-				this.FormControl = N._Form(this.view);
+				this.FormControl = new N.Form(this.view);
 				if(statusProp) this.addActiveStatus(statusProp);
 		
 				if(typeof helper === 'function') helper = {init:helper};
@@ -5005,7 +5088,7 @@
 			}
 		});
 		
-		N.EXTEND_MODULE("ViewAndMode","RoleController",{
+		N.EXTEND_MODULE("ViewAndStatus","RoleController",{
 			"++findRole":function(findwhere,rolename){
 				var activeRolename,findwhere=findwhere?N.find(findwhere):undefined,_prototype=this.prototype;
 				//rolename
@@ -5051,7 +5134,7 @@
 			
 			if( this._super(targetRole,true,true) === true ) {
 				
-				this._prop = new N.Object(props);
+				this._prop = new N.Manage(props);
 				this._data = new N.Array(data);
 				
 				var _self = this;
@@ -5342,7 +5425,7 @@
 					this.selectPoolStart();
 					var activeIndexes = new N.Array(this.getActiveIndexes()) ;
 					if( N.dataHas(activeIndexes,index) ) {
-						activeIndexes.setRemove(index);
+						activeIndexes.remove(index);
 						this.setActiveIndexes(activeIndexes,withEvent);
 					}
 					this.selectPoolEnd();
@@ -5453,7 +5536,7 @@
 					} else {
 						//다중 Active를 허용하지 않는 경우
 						//인액티브 대상을 찾아 인액티브 시킵니다.
-						(new N.Array(currentSelects)).setRemove(this).each(function(node){
+						(new N.Array(currentSelects)).remove(this).each(function(node){
 							if(_.allowAutoActive) {
 								N.$removeClass(node,"active");
 								if(yesEvent) N.CALL(_.ContextsEvents.didInactive,node);
@@ -5485,12 +5568,12 @@
 				if(selectSource) return selectSource.getActiveIndexes();return [];
 			},
 			setActiveIndexes:function(indexes,withEvent,sender){
-				(new N.Array(this.Source)).setRemove(sender).each(function(ac, i){ 
+				(new N.Array(this.Source)).remove(sender).each(function(ac, i){ 
 					ac.setActiveIndexes( indexes, (i === 0) ? (withEvent && true) : false ); });
 				return this;
 			},
 			shouldInactive:function(index,withEvent,sender){
-				(new N.Array(this.Source)).setRemove(sender).each(function(ac, i){
+				(new N.Array(this.Source)).remove(sender).each(function(ac, i){
 					//첫번째만 무조건 이벤트 발생
 					ac.shouldInactive( index, (i === 0) ? (withEvent && true) : false ); 
 				});
@@ -5607,7 +5690,8 @@
 					new N.Array(this.Source).each(function(data,index){ return N.CALL(f,own,data,index,touchLiteral); }); 
 				} else { 
 					console.warn("Fire::조건이 충족되지 못해 fire를 실행하지 못하였습니다. source=> ",this.Source,"each f=>",f); 
-				} return this; 
+				}
+				return this; 
 			}
 		},function(number,fireFunction){
 			//array
@@ -5721,7 +5805,7 @@
 										response = requestObject.responseText;
 										break;
 								}
-								this.onSuccess(response, N._Meta(requestObject).lastProp("requestParam") ,this.moduleOption, requestObject);
+								this.onSuccess(response, (new N.Meta(requestObject)).lastProp("requestParam") ,this.moduleOption, requestObject);
 								break;
 							default:
 								if( this.moduleOption.debug == true ) switch(requestObject.status) {
@@ -5732,7 +5816,7 @@
 										console.info("Request:: 500 응답서버 내부오류");
 										break;
 								}
-								this.onError(response, N._Meta(requestObject).lastProp("requestParam") ,this.moduleOption, requestObject);
+								this.onError(response, (new N.Meta(requestObject)).lastProp("requestParam") ,this.moduleOption, requestObject);
 								break;
 						};
 						break;
@@ -5778,12 +5862,12 @@
 				var newRequest = this.getRequestObject();
 		
 				//data 처리
-				var requestData   = new N.Object((typeof this.moduleOption.constData === "object") ? new N.Object(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
-				var requestString = new N.Object(requestData.encodeObject()).join("=","&");
+				var requestData   = new N.Manage((typeof this.moduleOption.constData === "object") ? new N.Manage(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
+				var requestString = new N.Manage(requestData.toParameter()).join("=","&");
 			
 				// request params (기록용)
 			
-				N._Meta(newRequest).setProp("requestParam",requestData.get());
+				(new N.Meta(newRequest)).setProp("requestParam",requestData.get());
 				N.TRY_CATCH(function(){
 					if( this.option.method.toLowerCase() == "post" ){
 						newRequest.open("POST", this.url, true );
@@ -5842,7 +5926,7 @@
 					"responseText":""
 				}
 			
-				N._Meta(dummyRequstObject).setProp("requestParam",{});
+				(new N.Meta(dummyRequstObject)).setProp("requestParam",{});
 			
 				var _ = this;
 			
@@ -5993,7 +6077,7 @@
 			},
 			needActiveController:function(){
 			
-				this._ActiveController = N.APPLY(N._ActiveController,undefined,arguments);
+				this._ActiveController = N.APPLY(N.ActiveController.new,undefined,arguments);
 				return this._ActiveController;
 			},
 			currentActiveController:function(){
@@ -6085,7 +6169,7 @@
 			},
 			inactive:function(name){
 				if( this.ContainerActiveKeys.has(name)) {
-					this.ContainerActiveKeys.setRemove(name);
+					this.ContainerActiveKeys.remove(name);
 					this._triggeringInactiveEvents(this.ContainerPlaceholder[name],name);
 				}
 			},
@@ -6342,7 +6426,7 @@
 					result.push( keyPath );
 				});
 			
-				result.setRemove("");
+				result.remove("");
 				return result;
 			},
 			// 글자로된 패스를 반환한다.
@@ -6359,7 +6443,7 @@
 					if(N.isArray(data)) {
 						return {};
 					} else {
-						return new N.Object(data).setRemove(this.SourceChildrenKey).get();
+						return new N.Manage(data).remove(this.SourceChildrenKey).get();
 					}
 				}
 			},
@@ -6401,7 +6485,7 @@
 										} else {
 											return owner.Source[owner.SourceChildrenKey];
 										}
-									}).setFlatten().setRemove(undefined);
+									}).setFlatten().remove(undefined);
 									break;
 							}
 						} else if(typeof pathKey === "number") {
@@ -6414,7 +6498,7 @@
 										return sourceChildren[pathKey];
 									}
 								}
-							}).setRemove(undefined);
+							}).remove(undefined);
 						}
 					});
 					return selectData;
@@ -6584,7 +6668,7 @@
 	
 		N.MODULE("ViewModel",{
 			needRenderView:function(depth,managedData,feedViews,viewController){
-				var renderResult = (N.isType(this.Source[depth],"Template") == true) ? managedData.template(this.Source[depth]) : this.Source[depth].call(managedData,managedData,feedViews);
+				var renderResult = (N.isModule(this.Source[depth],"Template") == true) ? managedData.template(this.Source[depth]) : this.Source[depth].call(managedData,managedData,feedViews);
 			
 				if( renderResult !== false) if(typeof renderResult === 'object' && 'nodeName' in renderResult ) {
 					return renderResult;
@@ -6602,7 +6686,7 @@
 			clone:function(){
 				var init = this.Source.clone();
 				for(var i=0,l=arguments.length;i<l;i++) if( arguments[i] ) init[i] = arguments[i];
-				return N._ViewModel.apply(undefined,init.toArray());
+				return N.ViewModel.new.apply(undefined,init.toArray());
 			}
 		},function(renderDepth){
 			//tempate 타겟을 설정
@@ -6625,7 +6709,7 @@
 			},
 			removeFromParent:function(){
 				if(this.Parent){
-					this.Parent.Child.setRemove(this);
+					this.Parent.Child.remove(this);
 					this.Parent = undefined;
 				}
 			},
@@ -6674,7 +6758,7 @@
 				}
 			},
 			replaceValue:function(data,rerender){
-				if( N.isType(data,'ManagedData') ) data = data.value();
+				if( N.isModule(data,'ManagedData') ) data = data.value();
 				if( typeof data === 'object' ) this.Source = N.clone(data);
 				if( rerender === true ) this.rerender();
 			},
@@ -6936,7 +7020,7 @@
 					});
 				
 					removeBindNodeTarget.each(function(bindNode){
-						owner.bindValueNodes.setRemove(bindNode);
+						owner.bindValueNodes.remove(bindNode);
 					});
 				
 					//스트럭쳐 노드 삭제
@@ -7048,8 +7132,8 @@
 				});
 			},
 			setManagedData:function(managedData){
-				if(N.isType(managedData,"DataContext")) managedData = managedData.getRootManagedData();
-				if(N.isType(managedData,"ManagedData")) {
+				if(N.isModule(managedData,"DataContext")) managedData = managedData.getRootManagedData();
+				if(N.isModule(managedData,"ManagedData")) {
 					this.managedData = managedData;
 					N.CALL(this.dataDidChange,this);
 					return true;
@@ -7194,7 +7278,7 @@
 			this.view = N.findLite(view)[0];
 			if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
 			if(managedData)this.setManagedData(managedData);
-			this.viewModel     = viewModel ? N.isArray(viewModel) ? N._ViewModel.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
+			this.viewModel     = viewModel ? N.isArray(viewModel) ? N.ViewModel.new.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
 		
 			//바인딩 관련 인자
 			this.bindValueNodes = [];
@@ -7258,47 +7342,6 @@
 				};
 		});
 	
-		N.MODULE("Counter",{
-			timeoutHandler:function(){
-				if(this._timeout)clearTimeout(this._timeout);
-				var now = (+(new Date()));
-				if( this._moveEnd > now ) {
-					this._countProcesser ?
-						N.CALL(this._whenCounting,this,this._countProcesser(1-(this._moveEnd-now)/this.duration)) :
-						N.CALL(this._whenCounting,this,1-(this._moveEnd-now)/this.duration);
-					var _ = this;
-					this._timeout = setTimeout(function(){ _.timeoutHandler.call(_) },this.rate);
-				} else {
-					this.moveStart = null;
-					this.moveEnd   = null;
-					N.CALL(this._whenCounting,this,1);
-					N.CALL(this._whenCountFinish,this,1);
-				}
-			},
-			whenCountStart :function(m){ this._whenCountStart = m; },
-			whenCount      :function(m){ this._whenCounting = m; },
-			whenCountFinish:function(m){ this._whenCountFinish = m; },
-			setCountProcessor:function(m){
-				if(typeof m === "function") this._countProcesser = m;
-			},
-			setRate:function(rate){
-				this.rate = typeof rate === 'number' ? rate : 20;
-			},
-			start:function(ms,counting,finish){
-				this.duration = typeof ms   === 'number' ? ms : 300;
-				if(counting)this.whenCount(counting);
-				if(finish)this.whenCountFinish(finish);
-			
-				var _ = this;
-				this._moveStart = (+(new Date()));
-				this._moveEnd   = this._moveStart + this.duration;
-				this.timeoutHandler();
-			}
-		},function(ms,counting,finish,rate,now){
-			this.setRate(rate);
-			if(finish === true || ms === true || rate === true || now === true) { this.start(ms,counting,finish) }
-		});
-		
 		N.MODULE("Binder",{
 			shouldSetFromListenersInfo:function(listeners,setValue,dataName){
 				var beforeValue = this.beforeProperty.prop(dataName);
@@ -7308,7 +7351,7 @@
 					listenerInfo.proc.call(listenerInfo.listener,setValue,beforeValue);
 				});
 				this.beforeProperty.prop(dataName,setValue);
-				this.protectProperty.setRemove(dataName);
+				this.protectProperty.remove(dataName);
 			},
 			getListenerInfo:function(listener,propertyName){
 				if(!listener) return this.Source.get();
@@ -7437,48 +7480,227 @@
 				redefine[this.defaultKey] = defaultData;
 				defaultData = redefine;
 			}
-			this.beforeProperty  = new N.Object(defaultData);
+			this.beforeProperty  = new N.Manage(defaultData);
 			// { listener:Object , listen:"name" ,proc: }
 		});
+	
+		N.MODULE("Counter",{
+			timeoutHandler:function(){
+				if(this._timeout)clearTimeout(this._timeout);
+				var now = (+(new Date()));
+				if( this._moveEnd > now ) {
+					this._countProcesser ?
+						N.CALL(this._whenCounting,this,this._countProcesser(1-(this._moveEnd-now)/this.duration)) :
+						N.CALL(this._whenCounting,this,1-(this._moveEnd-now)/this.duration);
+					var _ = this;
+					this._timeout = setTimeout(function(){ _.timeoutHandler.call(_) },this.rate);
+				} else {
+					this.moveStart = null;
+					this.moveEnd   = null;
+					N.CALL(this._whenCounting,this,1);
+					N.CALL(this._whenCountFinish,this,1);
+				}
+			},
+			whenCountStart :function(m){ this._whenCountStart = m; },
+			whenCount      :function(m){ this._whenCounting = m; },
+			whenCountFinish:function(m){ this._whenCountFinish = m; },
+			setCountProcessor:function(m){
+				if(typeof m === "function") this._countProcesser = m;
+			},
+			setRate:function(rate){
+				this.rate = typeof rate === 'number' ? rate : 20;
+			},
+			start:function(ms,counting,finish){
+				this.duration = typeof ms   === 'number' ? ms : 300;
+				if(counting)this.whenCount(counting);
+				if(finish)this.whenCountFinish(finish);
+			
+				var _ = this;
+				this._moveStart = (+(new Date()));
+				this._moveEnd   = this._moveStart + this.duration;
+				this.timeoutHandler();
+			}
+		},function(ms,counting,finish,rate,now){
+			this.setRate(rate);
+			if(finish === true || ms === true || rate === true || now === true) { this.start(ms,counting,finish) }
+		});
 		
+		N.MODULE("ModuleEventManager",{
+			trigger:function(triggerName){
+				var cont = this.Controller, args = Array.prototype.slice.call(arguments,1);
+				this.Source.dataProp(triggerName).each(function(handler){
+					handler.apply(cont,args);
+				});
+			},
+			listen:function(triggerName,proc){
+				this.Source.dataProp(triggerName,proc,true);
+			},
+			defineEvent:function(eventName){
+				if(typeof eventName == "string"){
+					var registName = "when" + eventName[0].toUpperCase() + eventName.substr(1), _self = this;
+					this.Source.touchDataProp(eventName);
+					this.Controller[registName] = function(proc){
+						_self.listen(eventName,proc);
+					}
+				}
+			}
+		},function(controller,events){
+			if(!N.isModule(controller)) console.error("ModuleEventManager:: manage object is must be nody module");
+			this.Controller = controller;
+			this.Source     = new N.Manage();
+			var _self = this;
+			N.dataEach(events,function(v){ _self.defineEvent(v); });
+		});
 		N.MODULE("Timeline",{
-			push:function(){
-				
+			updateFix:function(){
+				var se = this.Status.values("timeStart","timeEnd");
+				if(se[0] > this._tick){
+					this._tick = se[0];
+				}
+				if(se[1] < this._tick){
+					this._tick = se[1];
+				}
 			},
-			getTimeProperties:function(){
-				
+			push:function(pushProperties){
+				if( N.isModule(pushProperties,"TimeProperties") ){
+					this.Source.add(pushProperties);
+					
+					var ts = pushProperties.timeStart();
+					var te = pushProperties.timeEnd();
+					
+					if(this.Source.length === 1) {
+						this.Status.pushKeyValue("timeStart",ts,"timeEnd",te);
+					} else if(this.Source.length > 1) {
+						var se = this.Status.values("timeStart","timeEnd");
+						if(se[0] > ts){
+							this.Status.pushKeyValue("timeStart",ts);
+						}
+						if(se[1] < te){
+							this.Status.pushKeyValue("timeEnd",te);
+						}
+					}
+					this.updateFix();
+				}
 			},
-			currentValues:function(){
-				
+			stop:function(){
+				this._rate = 0;
+				this._spot = null;
+				if(this._wheel) this._wheel = clearInterval(this._wheel);
+				return this;
+			},
+			move:function(timestamp,safeRate){
+				//정방향일때와 아닐때
+				var finished;
+				if(this._rightDirection){
+					var timeEnd = this.Status.get("timeEnd");
+					if( timestamp > timeEnd ){
+						this._tick = timeEnd;
+						finished = true;
+					}
+				} else {
+					var timeStart = this.Status.get("timeStart")
+					if( timestamp < timeStart ){
+						this._tick = timeStart;
+						finished = true;
+					}
+				}
+				if(finished === true){
+					this.stop();
+					this.EventManager.trigger("timeMove");
+					this.EventManager.trigger("timeFinish");
+				} else {
+					this._tick = timestamp;
+					this.EventManager.trigger("timeMove");
+					N.CALL(this._onTimeMove,this._tick);
+				}
+			},
+			offset:function(offset){
+				this.move(this._tick + offset);
+			},
+			offsetExp:function(exp){
+				this.move(this._tick + N.timeScaleExp(exp));
+			},
+			//속도 1은 1초 양음수 가능
+			rate:function(rate){
+				if(typeof rate !== "number") return console.error("Timeline::rate is must be number");
+				if(this._wheel) clearInterval(this._wheel);
+				if(rate !== 0) {
+					var _timeline  = this;
+					this._rate = rate;
+					this._spot = (+new Date());
+					this._rightDirection = (rate > 0);
+					
+					var wheelProc = function(){
+						if(_timeline._rate === 0) return _timeline.stop();
+						var newSpot   = (+new Date())
+						var realScale = newSpot - _timeline._spot;
+						var wheelSpot = (_timeline._tick + realScale) * _timeline._rate;
+						_timeline.move(wheelSpot,true);
+						_timeline._spot = newSpot;
+					}
+					this._wheel = setInterval(wheelProc,this._interval);
+					wheelProc();
+				}
+			},
+			rateWithTimeScale:function(exp){
+				return this.rate(N.timeScaleExp(exp) / 1000);
 			},
 			timestamp:function(){
-				
+				return this._tick;
 			},
-			percent:function(){
-				
+			timeScale:function(){
+				return this.Status.values("timeEnd","timeStart",function(e,s){ return e-s; });
 			},
-			//속도
-			rate:function(){
-				
+			restTimeScale:function(){
+				if(this._rightDirection)
+					return (this.Status.get("timeEnd") - this._tick);
+				return (this._tick - this.Status.get("timeStart"));
+			},
+			getCurrentPropData:function(){
+				var currentTime = this._tick;
+				return this.Source.map(function(timeProperties){
+					return timeProperties.getPropWithTime(currentTime);
+				});
+			},
+			getCurrentVectorData:function(){
+				var currentTime = this._tick;
+				return this.Source.map(function(timeProperties){
+					return timeProperties.getVectorPropWithTime(currentTime);
+				});
+			},
+			progress:function(){
+				return 100 - (100 / this.timeScale()) * this.restTimeScale();
+			},
+			restProgress:function(){
+				return (100 / this.timeScale()) * this.restTimeScale();
 			},
 			setFPS:function(fps){
-				this._fps = (typeof fps === "number") ? fps : 30;
-				this._fpm = N.Number.parseInt(1000 / this._fps);
-				this._currentTime = 0;
+				this._fps      = (typeof fps === "number") ? fps : 30;
+				this._interval = N.Number.parseInt(1000 / this._fps);
 			}
 		},function(fps){
+			this.Source = new N.Array();
+			this.Status = new N.Manage({
+				timeStart:0,
+				timeEnd  :0
+			});
+			this._tick  = 0;
+			this._rate  = 0;
+			this._wheel = null;
+			this._rightDirection = true;
 			if(typeof fps === "number") this.setFPS(fps);
+			
+			this.EventManager = new N.ModuleEventManager(this,["timeMove","timeFinish"]);
 		});
 		
 		N.MODULE("TimeProperties",{
 			insertTimeProperty:function(time,data){
-				console.log("insert",time,data);
 				if(typeof time !== "number" || typeof data !== "object"){
 					return console.error("addTimeProperty:: must be argument type (number, object)");
 				} 
-				var insertAt = 0;
-				this.Source.reverseEach(function(props,index){
-					if(this.time < props.time){
+				var insertAt = 0, sourceLength = this.Source.length;
+				this.Source.reverseEach(function(sourceProps,index){
+					if(time > sourceProps.time){
 						insertAt = index+1;
 						return false;
 					} 
@@ -7500,6 +7722,69 @@
 					_self.insertTimeProperty(pushTime,pushData);
 				});
 			},
+			getAroundPropWithTime:function(time){
+				if(typeof time !== "number") console.error("getAroundPropWithTime:: arg must be number");
+				if(!this.Source.length) return {};
+				if(this.Source.length === 1 || this.Source.first().time > time) { return [this.Source[0].props,undefined,0]; }
+				if(this.Source.last().time < time) { return [this.Source.last().props,undefined,0]; }
+				
+				
+				
+				//if length 2
+				var selectSource,selectSourceIndex;
+				
+				this.Source.each(function(source,index){
+					if(source.time > time){
+						selectSourceIndex = index - 1;
+						return false;
+					}
+				});
+				
+				selectSource = this.Source[selectSourceIndex];
+				
+				//select last prop
+				if(!selectSource){
+					selectSource      = this.Source.last();
+					selectSourceIndex = this.Source.length - 1;
+					var beforeSource = this.Source[selectSourceIndex-1];
+					return [beforeSource.props,selectSource.props,(1/(selectSource.time - beforeSource.time)) * (time - beforeSource.time)];
+				}
+				//other
+				var afterSource = this.Source[selectSourceIndex+1];
+				return [selectSource.props,afterSource.props,(1/(afterSource.time - selectSource.time)) * (time - selectSource.time)];
+				
+			},
+			getPropWithTime:function(time){
+				var aroundData = this.getAroundPropWithTime(time);
+				
+				if(typeof aroundData[1] === "undefined"){
+					return N.clone(aroundData[0]);
+				} else {
+					return N.clone( (aroundData[2] < 0.5) ? aroundData[0] : aroundData[1] );
+				}
+			},
+			getVectorPropWithTime:function(time){
+				var aroundData = this.getAroundPropWithTime(time);
+				if(typeof aroundData[1] === "undefined"){
+					return N.clone(aroundData[0]);
+				} else {
+					var dataProps = new N.Manage();
+					dataProps.arrangementObjectsDataProp(aroundData[0],aroundData[1]);
+					return dataProps.setMap(function(arrange){
+						var a0n = typeof arrange[0] === "number";
+						var a1n = typeof arrange[1] === "number";
+						if(a0n && a1n){
+							return arrange[0] + ( (arrange[1] - arrange[0]) * aroundData[2] );
+						} else if(a0n) {
+							return arrange[0];
+						} else if(a1n) {
+							return arrange[1];
+						} else {
+							return arrange[0] && arrange[1];
+						}
+					}).get();
+				}
+			},
 			timeStart:function(){
 				var timeProps = this.Source.first();
 				return timeProps ? timeProps.time : null;
@@ -7515,9 +7800,9 @@
 			}
 		},function(startTime,interval,defaultKey){
 			this.Source     = new N.Array();
-			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "default"
+			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "value"
 			this.defaultStartTime = startTime ? N.timeStampExp(startTime): N.timeStampExp();
-			this.defaultInertval  = interval  ? N.timeScaleExp(interval) : N.timeScaleExp("1h");
+			this.defaultInertval  = interval  ? N.timeScaleExp(interval) : N.timeScaleExp("2s");
 		});
 	
 		N.EXTEND_MODULE("Counter","BezierCounter",{

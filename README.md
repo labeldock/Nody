@@ -142,22 +142,25 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   
   
 ## Nody 0.24 ~ 0.30 TODO #
-Nody는 AMD로 지원을 전환하면서부터 0.26까지는 매우 불안정 할 예정입니다.
+Nody는 AMD로 지원을 전환하면서부터 0.26까지는 불안정할 예정입니다.
 0.27부터는 안정화 되면서 api변경이 줄것으로 예상됩니다.
 
 #### 0.26 업데이트 예정
   - [x] TimeProps 모듈 추가
-  - [ ] Timeline 모듈 추가
+  - [x] Timeline 모듈 추가
+  - [ ] 시간과 관련된 모든 모듈들은 Timeline에 기반하도록 한다.
+  - [ ] 모듈의 모든 이벤트는 ModuleEventManager를 통하여 이벤트를 관리하도록 변경 예정
   - [ ] MVVM그룹과 Binder모듈을 통합
+  - [ ] Manage모듈의 컨샙을 명확하게 변경
+  - [ ] TimeProperties 모듈에서 Cubicbezior 공식이 도입될수 있도록 반영.
   - [ ] 데이터와 연동이 자연스럽게 연결되는 ActiveController 업데이트
   - [ ] ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
-  - [ ] 새로운 스타일시트 헬퍼 codykit적용
+  - [ ] 테스트코드에서 새로운 스타일시트 헬퍼 codykit적용
   - [ ] Form모듈 강화 (리모트폼 구현)
-  - [ ] Touch모듈이 Pointer이벤트 모델과 비슷하게 재설계
   - [ ] ContentLoader의 하위모듈(3개)의 통일성이 떨어져 재설계
   - [ ] 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
   - [ ] 통신모듈의 재설계
-
+  - (\[source:+7kB(309)\] \[min:+4kB(181)\])
 #### 0.25.x 업데이트
   - [x] dateExp, timeStampExp, timeScaleExp 업데이트 및 추가
   - [x] Binder모듈 디자인골 달성

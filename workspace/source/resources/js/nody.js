@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.25.9", N.BUILD = "1148";
+		N.VERSION = "0.26.0", N.BUILD = "1152";
 	
 		// Core verison
 		N.CORE_VERSION = "1.9.5", N.CORE_BUILD = "84";
@@ -35,7 +35,7 @@
 		//NativeCore console trace
 		var traceNativeModule = function(name){ if (NModules[name]) { var result = name + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype["set"])+"") )[1] + ")"; var i2 = 0; for(var protoName in NModules[name].prototype ) switch(protoName){ case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__NativeInitializer__": break; default: if(typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype[protoName])+"") )[1] + ")" ; i2++; break; } return result; } else { return name + " module is not found."; } };
 		N.API = traceNativeModule;
-		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n " + i + " : " + traceNativeModule(key); i++; } logText.push(moduleText); return logText.join("\n"); };
+		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n MODULE(" + i + ") ::" + traceNativeModule(key); i++; } logText.push(moduleText); return logText.join("\n"); };
 	
 	
 		//NativeCore Start
@@ -726,6 +726,17 @@
 			"propsMap":N.CONTINUE_FUNCTION(function(v,f){ var result = {}; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result[k] = f(v[k],k); return result; } return result;},2),
 			//오브젝트의 key value값을 Array 맵으로 구한다.
 			"propsData" :N.CONTINUE_FUNCTION(function(v,f){ var result = []; if(typeof f !== "function") f = function(v){ return v; }; if(typeof v === "object"){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
+			"propsKey"  :N.CONTINUE_FUNCTION(function(obj,rule){
+				var r = [];
+				if(typeof rule === "string"){
+					N.propsEach(obj,function(v,k){ if(k.indexOf(rule) > -1){ r.push(k); }});
+				} else if(rule instanceof RegExp) {
+					N.propsEach(obj,function(v,k){ if(rule.test(k)){ r.push(k) }});
+				} else {
+					N.propsEach(obj,function(v,k){ r.push(k); });
+				}
+				return r;
+			},1),
 			//
 			"propsLength":function(data){ var l = 0; if(typeof data === "object" || typeof data === "function") for(var key in data) l++; return l; },
 			//새로운 객체를 만들어 복사
@@ -874,9 +885,8 @@
 					}
 				} else {
 					if(typeof obj === "object" && (typeof moduleName === "string") && ("__NativeHistroy__" in obj)){
-						var history = obj["__NativeHistroy__"];
-						for(var i=history.length-1;i>-1;i--){
-							if(history[i] === moduleName) return true;
+						for(var i=obj["__NativeHistroy__"].length-1;i>-1;i--){
+							if(obj["__NativeHistroy__"][i] === moduleName) return true;
 						}
 					}
 				}
@@ -1567,21 +1577,6 @@
 			seed:function(seed){ this.seed = N.toNumber(seed);return this.getter; }
 		});
 	
-		// 키를 찾는 함수입니다.
-		var COMMON_KEYS_METHOD = {
-			"keys":function(rule){
-				var r = [];
-				if(typeof rule === "string"){
-					this.each(function(v,k){ if(k.indexOf(rule) > -1){ r.push(k); }});
-				} else if(rule instanceof RegExp) {
-					this.each(function(v,k){ if(rule.test(k)){ r.push(k) }});
-				} else {
-					this.each(function(v,k){ r.push(k); });
-				}
-				return r;
-			}
-		}
-	
 		//******************
 		// NodyArray
 		N.ARRAY_MODULE("Array",{
@@ -1590,7 +1585,7 @@
 			// each의 반대 동작
 			reverseEach : function(block) { for ( var i=this.length-1;i>-1;i--) { if( block(this[i],i) == false ) break; } return this; },
 			// key배열 습득
-			keys  : COMMON_KEYS_METHOD.keys,
+			keys  : function(rule){ return N.propsKey(this,rule); },
 			//첫번째 요소 반환.
 			zero  :function(){ return N.dataFirst(this); },
 			first :function(){ return N.dataFirst(this); },
@@ -1602,6 +1597,11 @@
 			push : function(v,i){ switch(typeof i){ case "string": case "number": this[i] = v; break; default: Array.prototype.push.call(this,v); break; } return this; },
 			// 존재하지 않는 값만 추가한다
 			add :function(v,i){ if( !this.has(v) ) this.push(v,i); return this; },
+			marge:function(array){
+				var _self = this;
+				N.dataEach(array,function(v){ _self.add(v); });
+				return this;
+			},
 			//해당 값을 당 배열로 바꾼다
 			setSource : function(v){
 				if( N.isArray(v) ) {
@@ -1635,7 +1635,7 @@
 			//원하는 위치에 대상을 삽입합니다.
 			insert: function(v,a){ this.min(a); var pull=[],a=a?a:0; for(var i=a,l=this.length;i<l;i++)pull.push(this[i]); return this.max(a).push(v).setConcat(pull); },
 			// 순수 Array로 반환
-			toArray  : function()  { return Array.prototype.slice.call(this); },
+			toArray  : function() { return Array.prototype.slice.call(this); },
 			//내부요소 모두 지우기
 			clear   : function() { this.splice(0,this.length); return this; },
 			clone:function(){ return new N.Array(this);},
@@ -1836,12 +1836,16 @@
 				} 
 				return this; 
 			},
-			keys:COMMON_KEYS_METHOD.keys,
+			keys:function(rule){ return N.propsKey(this.Source,rule); },
 			values:function(){ 
 				var result = [];
 				if(arguments.length){
 					for(var i=0,l=arguments.length;i<l;i++){
-						result.push(this.Source[arguments[i]]);
+						if(typeof arguments[i] === "function") {
+							return arguments[i].apply(undefined,result);
+						} else {
+							result.push(this.Source[arguments[i]]);
+						}
 					}
 				} else {
 					for (key in this.Source) result.push(this.Source[key]);
@@ -1861,7 +1865,7 @@
 				return this;
 			},
 			//존재하지 않는 키
-			pushDefaultKeyValue:function(){
+			safePushKeyValue:function(){
 				for(var i=0,l=Math.ceil(arguments.length/2);i<l;i++){
 					var key = this.Source[arguments[i*2]];
 					if(key in this.Source) this.Source[key] = arguments[i*2+1];
@@ -1895,6 +1899,71 @@
 				return result;
 				return key in this.Source; 
 			},
+			//배열기반 키벨류 관리
+			touchDataProp:function(keyName){
+				if(typeof keyName === "string"){
+					//arrayModule
+					if( !N.isModule(this.Source[keyName],"Array") ){
+						this.Source[keyName] = new N.Array(this.Source[keyName]);
+					}
+					return this.Source[keyName];
+				} else {
+					console.warn('Manage::touchDataProp parameter is must be string',keyName);
+				}
+				return this;
+			},
+			defineDataProp:function(){
+				var args = N.argumentsFlatten(arguments);
+				for(var i=0,l=args.length;i<l;i++) this.touchDataProp(args[i]);
+				return this;
+			},
+			dataProp:function(k,v,unique){
+				var data = this.touchDataProp(k);
+				if(arguments.length === 1){
+					return data;
+				} else if(arguments.length > 1){
+					data[unique?"add":"push"](v);
+					return this;
+				} else {
+					return (new N.Array(this.values())).filter(function(propValue){ return isModule(propValue,"Array"); });
+				}
+			},
+			//.arrangementObjectsDataProp({a:2,b:3,c:4},{b:4,d:4},{a:1,d:5})
+			//"{"a":[2,null,1],"b":[3,4,null],"c":[4,null,null],"d":[null,4,5]}"
+			arrangementObjectsDataProp:function(data){
+				var arrangementKeys = new N.Array(this.keys());
+				var args  = Array.prototype.slice.call(arguments);
+				var _self = this;
+				for(var i=0,l=arguments.length;i<l;i++){
+					if(typeof args[i] === "object"){
+						arrangementKeys.marge(N.propsKey(args[i]));
+					}
+				}
+				
+				for(var i=0,l=args.length;i<l;i++){
+					arrangementKeys.each(function(key){
+						_self.dataProp(key,args[i][key]);
+					});
+					
+				}
+				
+				return this;
+			},
+			setDataPropFix:function(){
+				for(var key in this.Source) if(N.isModule(this.Source[key],"Array")) this.Source[key] = this.Source[key].toArray();
+				return this;
+			},
+			getDataPropFix:function(){
+				var cloneSource = {};
+				for(var key in this.Source) {
+					if(N.isModule(this.Source[key],"Array")){
+						cloneSource[key] = this.Source[key].toArray();
+					}  else {
+						cloneSource[key] = this.Source[key];
+					}
+				}
+				return cloneSource;
+			},
 			//map
 			map:function(f,ksel){ 
 				if(typeof f === "function"){
@@ -1906,55 +1975,54 @@
 					return N.clone(this.Source);
 				} 
 			},
-			setMap:function() { return this.setSource( this.map.apply(this,arguments) ); },
+			setMap:function() { 
+				return this.setSource( this.map.apply(this,arguments) ); 
+			},
 			//inject 
 			inject:function(o,f,ksel){ if(typeof f === "function") { this.map(function(v,k){ var or = f(v,o,k); if(typeof or !== "undefined") { o=or; } },ksel); return o; } },
-			//key getter
-			data:function(k,v){
-				if(typeof v !== "function" && typeof v !== "undefined") { throw new Error("Object::data 메서드는 setter가 아닙니다."); };
-				if (typeof k === "string"){
-					if(typeof v === "function"){
-						return v(this.Source[k]);
-					} else {
-						return this.Source[k];
-					}
-				} else if(k instanceof RegExp || N.isArray(k)){
-					var keys   = this.keys(rule),result = {};
-					for(var key in keys) result[key] = keys[key];
-					return result;
-				} else {
-					return this.Source; 
-				};
-			},
-			//inspect key value
-			isSame:function(obj){ var originObject = this.Source; var judgement = true; new N.Manage(obj).each(function(v,k){ if( !(k in originObject) || originObject[k] !== v){ judgement = false; return false; } }); return judgement; },
-			isEqual:function(obj){ var _obj = new N.Manage(obj); var oObj = this.Source; var iObj = _obj.get(); var oKeys = this.keys().sort(); var iKeys = _obj.keys().sort(); if(oKeys.length !== iKeys.length) return false; for(var i=0,l=oKeys.length;i<l;i++){ if(oKeys[i] !== iKeys[i]) return false; if(oObj[oKeys[i]] !== iObj[iKeys[i]]) return false; } return true; },
-			//오브젝트를 배열로 반환함
-			hashes:function(key,val){ key = typeof key !== "string" ? "key" : key; val = typeof val !== "string" ? "value" : val; var r=[]; for(var k in this.Source){ var o = {}; o[key] = k; o[val] = this.Source[k]; r.push(o); } return r; },
+			
 			//
 			join:function(a,b){ a = typeof a === "string" ? a : ":"; b = typeof b === "string" ? b : ","; return this.inject([],function(v,i,k){ i.push(k+a+N.toString(v)); }).join(b); },
+			
 			//toParam
-			encodeObject : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : (new N.String(key)).encode()) ] = (useEncode == false ? val : (new N.String(val)).encode()); }); },
-			setEncodeObject : function(){ return this.setSource(this.encodeObject.apply(this,arguments)); },
+			toParameter : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : (new N.String(key)).encode()) ] = (useEncode == false ? val : (new N.String(val)).encode()); }); },
+			
 			//jsonString으로 반환
-			stringify:function(){ return JSON.stringify(this.Source); },
+			stringify:function(){ return JSON.stringify(this.getDataPropFix()); },
+			//jsonString으로 반환
+			toString:function(){ return JSON.stringify(this.getDataPropFix()); },
 			//키이름을 변경
 			change:function(original, change){ if(typeof original === "string" && typeof change === "string") { this.Source[change] = this.Source[original]; delete this.Source[original]; } return this.Source; },
-			//String의 순차적으로 오브젝트 반환  "1 2 3 4" => {"1":"2","3":"4"}
-			getKvo:function(arg,split){ split = typeof split === "string" ? split : " "; arg = arg.split(split); var source = N.clone(this.Source); var keyName = undefined; new N.Array(arg).turning(2,function(value,i){ if(i == 0) { keyName = value; } else if(i == 1) { if(typeof keyName !== "undefined") { switch(value){ case "''": case '""': case "'": case '"': source[keyName] = ""; break; default : source[keyName] = value; break ; } } keyName = undefined; } }); return source; },
-			kvo:function(arg){ return this.setSource(this.getKvo.call(this,arg)); },
 			//오브젝트의 키를 지우고자 할때
 			removeAll:function(){ for( var key in this.Source ) delete this.Source[key]; return this.Source; },
 			getRemove:function(){ var source = this.Source; new N.Array(arguments).setStringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
 			remove:function(key){ delete this.Source[key]; return this; },
-			getValue:function(key){ return this.Source[key]; },
 			//다른 오브젝트와 함칠때
-			concat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Manage(arguments[i]).each(function(v,k){ result[k] = v; }); }; return result; },
-			setConcat:function(){ this.setSource(this.concat.apply(this,arguments)); return this; },
+			concat:function(){ 
+				var result = this.clone(); 
+				for(var i=0,l=arguments.length;i<l;i++){ 
+					new N.Manage(arguments[i]).each(function(v,k){ result[k] = v; });
+				}; 
+				return result; 
+			},
+			setConcat:function(){ 
+				this.setSource(this.concat.apply(this,arguments)); 
+				return this; 
+			},
 			//다른 오브젝트와 함칠때 이미 있는 값은 오버라이드 하지 않음
 			//todo:marge extend 확인
-			safeConcat:function(){ var result = this.clone(); for(var i=0,l=arguments.length;i<l;i++){ new N.Manage(arguments[i]).each(function(v,k){ if( (k in result) == false) result[k] = v; }); } return result; },
-			setSafeConcat:function(){ this.setSource(this.getSafeConcat.apply(this,arguments)); return this; }
+			safeConcat:function(){ 
+				var result = this.clone(); 
+				for(var i=0,l=arguments.length;i<l;i++){ 
+					new N.Manage(arguments[i]).each(function(v,k){ 
+						if( (k in result) == false) result[k] = v; 
+					});
+				} 
+				return result; 
+			},
+			setSafeConcat:function(){ 
+				this.setSource(this.getSafeConcat.apply(this,arguments)); return this; 
+			}
 		}, function(p,n,s){
 			if(typeof s === "string"){
 				this.Source = {};
@@ -1963,6 +2031,7 @@
 				this.Source = N.toObject(p,n);
 			}
 		}, function(k){
+			this.setDataPropFix();
 			return (arguments.length == 0) ? this.Source : this.Source[k];
 		});
 	
@@ -4730,10 +4799,6 @@
 			return (fs.length === 1) ? fs[0] : fs;
 		});
 		
-		N.EXTEND_MODULE("Template","ExpTemplate",{},function(exp,nodeData,dataFilter,beRender){
-			this._super(nd.makes(exp),nodeData,dataFilter,beRender);
-		});
-		
 		N.METHOD('ZTEMP',function(temp,data,filter){ return (new N.Template(temp)).renders(data,filter); });
 		N.METHOD('$Q',function(s,p,i)  { return new N.NodeQuery(s,p,i);});
 		N.METHOD('$M',function(n,a,p)  { return new N.Make(n,a,p); });
@@ -4964,7 +5029,7 @@
 			this.ActiveKeys = new N.Array();
 		});
 		
-		N.EXTEND_MODULE("ActiveStatus","ViewAndMode",{
+		N.EXTEND_MODULE("ActiveStatus","ViewAndStatus",{
 			addViewStatus:function(statusName,active,inactive){
 				if(typeof statusName === 'string'){
 					if(typeof active === 'function'){
@@ -4988,13 +5053,13 @@
 			}
 		},function(findView,allowMulti,allowInactive){			
 			this.view = N.findLite(findView)[0];
-			if(!this.view) return console.error("ViewAndMode::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",findView);
+			if(!this.view) return console.error("ViewAndStatus::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",findView);
 			this._super(allowMulti,allowInactive);
 			return true;
 		});
 		
 		
-		N.EXTEND_MODULE("ViewAndMode","FormController",{
+		N.EXTEND_MODULE("ViewAndStatus","FormController",{
 			setFormData:function(data,v2){
 				return this.FormControl.checkin(data,v2);
 			},
@@ -5023,7 +5088,7 @@
 			}
 		});
 		
-		N.EXTEND_MODULE("ViewAndMode","RoleController",{
+		N.EXTEND_MODULE("ViewAndStatus","RoleController",{
 			"++findRole":function(findwhere,rolename){
 				var activeRolename,findwhere=findwhere?N.find(findwhere):undefined,_prototype=this.prototype;
 				//rolename
@@ -5625,7 +5690,8 @@
 					new N.Array(this.Source).each(function(data,index){ return N.CALL(f,own,data,index,touchLiteral); }); 
 				} else { 
 					console.warn("Fire::조건이 충족되지 못해 fire를 실행하지 못하였습니다. source=> ",this.Source,"each f=>",f); 
-				} return this; 
+				}
+				return this; 
 			}
 		},function(number,fireFunction){
 			//array
@@ -5797,7 +5863,7 @@
 		
 				//data 처리
 				var requestData   = new N.Manage((typeof this.moduleOption.constData === "object") ? new N.Manage(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
-				var requestString = new N.Manage(requestData.encodeObject()).join("=","&");
+				var requestString = new N.Manage(requestData.toParameter()).join("=","&");
 			
 				// request params (기록용)
 			
@@ -7459,7 +7525,42 @@
 			if(finish === true || ms === true || rate === true || now === true) { this.start(ms,counting,finish) }
 		});
 		
+		N.MODULE("ModuleEventManager",{
+			trigger:function(triggerName){
+				var cont = this.Controller, args = Array.prototype.slice.call(arguments,1);
+				this.Source.dataProp(triggerName).each(function(handler){
+					handler.apply(cont,args);
+				});
+			},
+			listen:function(triggerName,proc){
+				this.Source.dataProp(triggerName,proc,true);
+			},
+			defineEvent:function(eventName){
+				if(typeof eventName == "string"){
+					var registName = "when" + eventName[0].toUpperCase() + eventName.substr(1), _self = this;
+					this.Source.touchDataProp(eventName);
+					this.Controller[registName] = function(proc){
+						_self.listen(eventName,proc);
+					}
+				}
+			}
+		},function(controller,events){
+			if(!N.isModule(controller)) console.error("ModuleEventManager:: manage object is must be nody module");
+			this.Controller = controller;
+			this.Source     = new N.Manage();
+			var _self = this;
+			N.dataEach(events,function(v){ _self.defineEvent(v); });
+		});
 		N.MODULE("Timeline",{
+			updateFix:function(){
+				var se = this.Status.values("timeStart","timeEnd");
+				if(se[0] > this._tick){
+					this._tick = se[0];
+				}
+				if(se[1] < this._tick){
+					this._tick = se[1];
+				}
+			},
 			push:function(pushProperties){
 				if( N.isModule(pushProperties,"TimeProperties") ){
 					this.Source.add(pushProperties);
@@ -7478,25 +7579,104 @@
 							this.Status.pushKeyValue("timeEnd",te);
 						}
 					}
+					this.updateFix();
 				}
 			},
-			currentValues:function(){
-				
+			stop:function(){
+				this._rate = 0;
+				this._spot = null;
+				if(this._wheel) this._wheel = clearInterval(this._wheel);
+				return this;
+			},
+			move:function(timestamp,safeRate){
+				//정방향일때와 아닐때
+				var finished;
+				if(this._rightDirection){
+					var timeEnd = this.Status.get("timeEnd");
+					if( timestamp > timeEnd ){
+						this._tick = timeEnd;
+						finished = true;
+					}
+				} else {
+					var timeStart = this.Status.get("timeStart")
+					if( timestamp < timeStart ){
+						this._tick = timeStart;
+						finished = true;
+					}
+				}
+				if(finished === true){
+					this.stop();
+					this.EventManager.trigger("timeMove");
+					this.EventManager.trigger("timeFinish");
+				} else {
+					this._tick = timestamp;
+					this.EventManager.trigger("timeMove");
+					N.CALL(this._onTimeMove,this._tick);
+				}
+			},
+			offset:function(offset){
+				this.move(this._tick + offset);
+			},
+			offsetExp:function(exp){
+				this.move(this._tick + N.timeScaleExp(exp));
+			},
+			//속도 1은 1초 양음수 가능
+			rate:function(rate){
+				if(typeof rate !== "number") return console.error("Timeline::rate is must be number");
+				if(this._wheel) clearInterval(this._wheel);
+				if(rate !== 0) {
+					var _timeline  = this;
+					this._rate = rate;
+					this._spot = (+new Date());
+					this._rightDirection = (rate > 0);
+					
+					var wheelProc = function(){
+						if(_timeline._rate === 0) return _timeline.stop();
+						var newSpot   = (+new Date())
+						var realScale = newSpot - _timeline._spot;
+						var wheelSpot = (_timeline._tick + realScale) * _timeline._rate;
+						_timeline.move(wheelSpot,true);
+						_timeline._spot = newSpot;
+					}
+					this._wheel = setInterval(wheelProc,this._interval);
+					wheelProc();
+				}
+			},
+			rateWithTimeScale:function(exp){
+				return this.rate(N.timeScaleExp(exp) / 1000);
 			},
 			timestamp:function(){
-				
+				return this._tick;
 			},
-			percent:function(){
-				
+			timeScale:function(){
+				return this.Status.values("timeEnd","timeStart",function(e,s){ return e-s; });
 			},
-			//속도
-			rate:function(){
-				
+			restTimeScale:function(){
+				if(this._rightDirection)
+					return (this.Status.get("timeEnd") - this._tick);
+				return (this._tick - this.Status.get("timeStart"));
+			},
+			getCurrentPropData:function(){
+				var currentTime = this._tick;
+				return this.Source.map(function(timeProperties){
+					return timeProperties.getPropWithTime(currentTime);
+				});
+			},
+			getCurrentVectorData:function(){
+				var currentTime = this._tick;
+				return this.Source.map(function(timeProperties){
+					return timeProperties.getVectorPropWithTime(currentTime);
+				});
+			},
+			progress:function(){
+				return 100 - (100 / this.timeScale()) * this.restTimeScale();
+			},
+			restProgress:function(){
+				return (100 / this.timeScale()) * this.restTimeScale();
 			},
 			setFPS:function(fps){
-				this._fps       = (typeof fps === "number") ? fps : 30;
-				this._wheelTime = N.Number.parseInt(1000 / this._fps);
-				this._currentTime = 0;
+				this._fps      = (typeof fps === "number") ? fps : 30;
+				this._interval = N.Number.parseInt(1000 / this._fps);
 			}
 		},function(fps){
 			this.Source = new N.Array();
@@ -7504,7 +7684,13 @@
 				timeStart:0,
 				timeEnd  :0
 			});
+			this._tick  = 0;
+			this._rate  = 0;
+			this._wheel = null;
+			this._rightDirection = true;
 			if(typeof fps === "number") this.setFPS(fps);
+			
+			this.EventManager = new N.ModuleEventManager(this,["timeMove","timeFinish"]);
 		});
 		
 		N.MODULE("TimeProperties",{
@@ -7512,9 +7698,9 @@
 				if(typeof time !== "number" || typeof data !== "object"){
 					return console.error("addTimeProperty:: must be argument type (number, object)");
 				} 
-				var insertAt = 0;
-				this.Source.reverseEach(function(props,index){
-					if(this.time < props.time){
+				var insertAt = 0, sourceLength = this.Source.length;
+				this.Source.reverseEach(function(sourceProps,index){
+					if(time > sourceProps.time){
 						insertAt = index+1;
 						return false;
 					} 
@@ -7536,6 +7722,69 @@
 					_self.insertTimeProperty(pushTime,pushData);
 				});
 			},
+			getAroundPropWithTime:function(time){
+				if(typeof time !== "number") console.error("getAroundPropWithTime:: arg must be number");
+				if(!this.Source.length) return {};
+				if(this.Source.length === 1 || this.Source.first().time > time) { return [this.Source[0].props,undefined,0]; }
+				if(this.Source.last().time < time) { return [this.Source.last().props,undefined,0]; }
+				
+				
+				
+				//if length 2
+				var selectSource,selectSourceIndex;
+				
+				this.Source.each(function(source,index){
+					if(source.time > time){
+						selectSourceIndex = index - 1;
+						return false;
+					}
+				});
+				
+				selectSource = this.Source[selectSourceIndex];
+				
+				//select last prop
+				if(!selectSource){
+					selectSource      = this.Source.last();
+					selectSourceIndex = this.Source.length - 1;
+					var beforeSource = this.Source[selectSourceIndex-1];
+					return [beforeSource.props,selectSource.props,(1/(selectSource.time - beforeSource.time)) * (time - beforeSource.time)];
+				}
+				//other
+				var afterSource = this.Source[selectSourceIndex+1];
+				return [selectSource.props,afterSource.props,(1/(afterSource.time - selectSource.time)) * (time - selectSource.time)];
+				
+			},
+			getPropWithTime:function(time){
+				var aroundData = this.getAroundPropWithTime(time);
+				
+				if(typeof aroundData[1] === "undefined"){
+					return N.clone(aroundData[0]);
+				} else {
+					return N.clone( (aroundData[2] < 0.5) ? aroundData[0] : aroundData[1] );
+				}
+			},
+			getVectorPropWithTime:function(time){
+				var aroundData = this.getAroundPropWithTime(time);
+				if(typeof aroundData[1] === "undefined"){
+					return N.clone(aroundData[0]);
+				} else {
+					var dataProps = new N.Manage();
+					dataProps.arrangementObjectsDataProp(aroundData[0],aroundData[1]);
+					return dataProps.setMap(function(arrange){
+						var a0n = typeof arrange[0] === "number";
+						var a1n = typeof arrange[1] === "number";
+						if(a0n && a1n){
+							return arrange[0] + ( (arrange[1] - arrange[0]) * aroundData[2] );
+						} else if(a0n) {
+							return arrange[0];
+						} else if(a1n) {
+							return arrange[1];
+						} else {
+							return arrange[0] && arrange[1];
+						}
+					}).get();
+				}
+			},
 			timeStart:function(){
 				var timeProps = this.Source.first();
 				return timeProps ? timeProps.time : null;
@@ -7551,9 +7800,9 @@
 			}
 		},function(startTime,interval,defaultKey){
 			this.Source     = new N.Array();
-			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "default"
+			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "value"
 			this.defaultStartTime = startTime ? N.timeStampExp(startTime): N.timeStampExp();
-			this.defaultInertval  = interval  ? N.timeScaleExp(interval) : N.timeScaleExp("1h");
+			this.defaultInertval  = interval  ? N.timeScaleExp(interval) : N.timeScaleExp("2s");
 		});
 	
 		N.EXTEND_MODULE("Counter","BezierCounter",{
