@@ -161,6 +161,7 @@ Nody는 AMD로 지원을 전환하면서부터 0.26까지는 불안정할 예정
   - [ ] 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
   - [ ] 통신모듈의 재설계
   - (\[source:+7kB(309)\] \[min:+4kB(181)\])
+  
 #### 0.25.x 업데이트
   - [x] dateExp, timeStampExp, timeScaleExp 업데이트 및 추가
   - [x] Binder모듈 디자인골 달성
