@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.26.1", N.BUILD = "1154";
+		N.VERSION = "0.26.2", N.BUILD = "1155";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.0", N.CORE_BUILD = "85";
@@ -1372,16 +1372,16 @@
 					return N.safeSplitIndexes(c,splitIndexes,safe);
 				}
 			},
-			//Helper of PASCAL,CAMEL,SNAKE,KEBAB
-			"CASEARRAY":function(s,c){ if(typeof c === "string") return s.split(c) ; if(typeof s !== "string")return console.error("CASEARRAY::첫번째 파라메터는 반드시 String이여야 합니다. // s =>",s); s = s.replace(/^\#/,""); /*kebab*/ var k = s.split("-"); if(k.length > 1) return k; /*snake*/ var _ = s.split("_"); if(_.length > 1) return _; /*Cap*/ return s.replace(/[A-Z][a-z]/g,function(s){return "%@"+s;}).replace(/^\%\@/,"").split("%@"); },
+			//Helper of pascalCase,camelCase,snakeCase,kebabCase
+			"CASE_SPLIT":function(s,c){ if(typeof c === "string") return s.split(c) ; if(typeof s !== "string")return console.error("CASE_SPLIT::첫번째 파라메터는 반드시 String이여야 합니다. // s =>",s); s = s.replace(/^\#/,""); /*kebab*/ var k = s.split("-"); if(k.length > 1) return k; /*snake*/ var _ = s.split("_"); if(_.length > 1) return _; /*Cap*/ return s.replace(/[A-Z][a-z]/g,function(s){return "%@"+s;}).replace(/^\%\@/,"").split("%@"); },
 			//to PascalCase
-			"PASCAL":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); return words.join(""); },
+			"pascalCase":function(s){ var words = N.CASE_SPLIT(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); return words.join(""); },
 			//to camelCase
-			"CAMEL":function(s){ var words = CASEARRAY(s); for(var i=1,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); words[0] = words[0].toLowerCase(); return words.join(""); },
+			"camelCase":function(s){ var words = N.CASE_SPLIT(s); for(var i=1,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); words[0] = words[0].toLowerCase(); return words.join(""); },
 			//to snake_case
-			"SNAKE":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("_"); },
+			"snakeCase":function(s){ var words = N.CASE_SPLIT(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("_"); },
 			//to kebab-case
-			"KEBAB":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("-"); },
+			"kebabCase":function(s){ var words = N.CASE_SPLIT(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("-"); },
 			//길이만큼 늘립니다.
 			"dataClip":N.CONTINUE_FUNCTION(function(v,l,ex){
 				var d = N.cloneArray(v);
@@ -3310,45 +3310,6 @@
 	            var pos = this.position(root);
 	            pos.x = e.clientX - pos.x, pos.y = e.clientY - pos.y;
 	            return pos;
-	        },
-			//터치이벤트가 마우스이벤트와 똑같이 동작하도록 합니다.
-	        bindTouchEventForMouseEvent:function(target, touchname){
-            
-	            //check touch device (require mordernizr)
-	            if($("html").is(".no-touch")) return;
-            
-	            var mousename = touchname === "touchstart" ? "mousedown" :
-	                            touchname === "touchend"   ? "mouseup"   :
-	                            touchname === "touchmove"  ? "mousemove" :
-	                            touchname === "touchleave" ? "mouseout"  : null;
-            
-	            if(!!mousename) console.log("bindTouchEventForMouseEvent - not support touch event",touchname);
-            
-	            if(target && mousename && touchname ) {
-	                target.addEventListener(touchname,function(event){
-                    
-	                    //1개의 터치만 지원
-	                    if(event.touches.length > 1 || event.type == "touchend" && event.touches.length > 0 )
-	                    {return;}
-                    
-	                    var newEvent      = document.createEvent("MouseEvents");
-	                    var changedTouche = event.changedTouches[0];
-                    
-	                    newEvent.initMouseEvent(
-	                        mousename,
-	                        true,
-	                        true,
-	                        null,
-	                        null,
-	                        changedTouche.screenX,
-	                        changedTouche.screenY,
-	                        changedTouche.clientX,
-	                        changedTouche.clientY
-	                    );
-                    
-	                    target.dispatchEvent(newEvent);
-	                });
-	            }
 	        }
 		});
 	
@@ -4274,7 +4235,7 @@
 						var prefixedName = ENV.getCSSName(styleName);
 						//get
 						if(typeof value === "undefined") 
-							return ENV.supportComputedStyle ? window.getComputedStyle(target,null).getPropertyValue(prefixedName) : target.currentStyle[CAMEL(prefixedName)];
+							return ENV.supportComputedStyle ? window.getComputedStyle(target,null).getPropertyValue(prefixedName) : target.currentStyle[camelCase(prefixedName)];
 					
 						//set
 						var wasStyle = N.$attr(target,"style") || "";
@@ -4388,7 +4349,7 @@
 			},
 			//이벤트 등록이 가능한 타겟을 찾아냅니다.
 			"onTarget":function(node){ return (N.isWindow(node) || N.isDocument(node)) ? node : N.findLite(node); },
-			//중복이벤트 등록 가능
+			//add event like jquery 
 			"on":function(node, eventName, eventHandler, useCapture){
 				var nodes  = N.$onTarget(node);
 				var events = eventName.split(" ");
@@ -4424,6 +4385,48 @@
 					} 
 				}
 				return nodes;
+			},
+			//auto with touch event
+			"bind":function(node, eventName){
+				var onTargets = N.$onTarget(node);
+				N.$on.apply(N.$,[onTargets].concat(Array.prototype.slice.call(arguments,1)));
+				//not test
+				if('ontouchend' in document && onTargets.length){
+					N.dataEach(eventName.split(" "),function(mousename){
+						var touchname = mousename === "mousedown" ? "touchstart" :
+										mousename === "mouseup"   ? "touchend"   :
+										mousename === "mousemove" ? "touchmove"  :
+										mousename === "mouseout"  ? "touchleave" : null;
+						
+						if(touchname) {
+							console.log("bind start",target,mousename,touchname);
+							N.dataEach(onTargets,function(target){
+				                target.addEventListener(touchname,function(event){
+				                    //1개의 터치만 지원
+				                    if(event.touches.length > 1 || event.type == "touchend" && event.touches.length > 0 )
+				                    {return;}
+                    
+				                    var newEvent      = document.createEvent("MouseEvents");
+				                    var changedTouche = event.changedTouches[0];
+                    
+				                    newEvent.initMouseEvent(
+				                        mousename,
+				                        true,
+				                        true,
+				                        null,
+				                        null,
+				                        changedTouche.screenX,
+				                        changedTouche.screenY,
+				                        changedTouche.clientX,
+				                        changedTouche.clientY
+				                    );
+                    
+				                    target.dispatchEvent(newEvent);
+				                });
+							});
+						}
+					});
+				}
 			},
 			"off":function(node, eventName, eventHandler, useCapture){
 				if((typeof eventName !== "string") || (typeof eventHandler !== "function")) return console.erro("N.$on 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요",node, eventName, eventHandler);
@@ -5071,9 +5074,9 @@
 			find:function(findKeyword){
 				return findKeyword ? N.find(findKeyword,this.view) : [];
 			}
-		},function(findView,allowMulti,allowInactive){			
-			this.view = N.findLite(findView)[0];
-			if(!this.view) return console.error("ViewAndStatus::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",findView);
+		},function(targetView,allowMulti,allowInactive){			
+			this.view = N.findLite(targetView)[0];
+			if(!this.view) return console.error("ViewAndStatus::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",targetView);
 			this._super(allowMulti,allowInactive);
 			return true;
 		});
@@ -5108,6 +5111,56 @@
 			}
 		});
 		
+		N.MODULE("ModuleEventManager",{
+			trigger:function(triggerName){
+				var cont = this._manageModule, args = Array.prototype.slice.call(arguments,1);
+				return this._manageModuleEvents.dataProp(triggerName).map(function(handler){
+					return handler.apply(cont,args);
+				});
+				console.log("trigger");
+			},
+			listen:function(triggerName,proc){
+				this._manageModuleEvents.dataProp(triggerName,proc,true);
+			},
+			defineEvent:function(eventName,withHandler){
+				if(typeof eventName == "string"){
+					var upperCaseName = eventName[0].toUpperCase() + eventName.substr(1);
+					var onCaseName = "on"+upperCaseName;
+					var _self = this;
+					
+					this._manageModuleEvents.touchDataProp(eventName);
+					if(withHandler === true){
+						var willCaseName = "will"+upperCaseName;
+						var didCaseName  = "did"+upperCaseName
+						this._manageModuleEvents.touchDataProp(willCaseName);
+						this._manageModuleEvents.touchDataProp(didCaseName);
+						this._manageModule[willCaseName] = function(proc){ return _self.listen(willCaseName,proc); }
+						this._manageModule[didCaseName] = function(proc){ return _self.listen(didCaseName,proc); }
+						this._manageModule[onCaseName] = function(proc){
+							return _self.listen(onCaseName,function(){
+								if( !N.dataHas(_self.trigger(willCaseName),false) ){
+									proc.call()
+									_self.trigger(didCaseName);
+								}
+							});
+						}
+						_self.listen(eventName,proc);
+					} else {
+						this._manageModule[onCaseName] = function(proc){
+							_self.listen(eventName,proc);
+						}
+					}
+					
+				}
+			}
+		},function(module,events){
+			if(!N.isModule(module)) console.error("ModuleEventManager:: manage object is must be nody module");
+			this._manageModule       = module;
+			this._manageModuleEvents = new N.Manage();
+			var _self = this;
+			N.dataEach(events,function(v){ _self.defineEvent(v); });
+		});
+		
 		N.EXTEND_MODULE("ViewAndStatus","RoleController",{
 			"++findRole":function(findwhere,rolename){
 				var activeRolename,findwhere=findwhere?N.find(findwhere):undefined,_prototype=this.prototype;
@@ -5115,12 +5168,10 @@
 				if(typeof rolename === "string") activeRolename = rolename;
 				if (!activeRolename) {
 					var nativeName   = _prototype.__NativeHistroy__[_prototype.__NativeHistroy__.length-1];
-					var nativePrefix = /^[A-Z]+/.exec(nativeName), nativePrefix = (nativePrefix) ? nativePrefix[0] : null;
-					activeRolename = nativePrefix ? 
-					(nativePrefix[nativePrefix.length-1] + nativeName.substr(nativePrefix.length)).toLowerCase() :
-					nativeName.toLowerCase();
+					activeRolename = N.kebabCase(nativeName);
 				}
-				return N.find("[role~="+activeRolename+"]",findwhere);
+				console.log("activeRolename",activeRolename);
+				return N.find("[data-role~="+activeRolename+"]",findwhere);
 			},
 			"++findRoleAndActive":function(findwhere,props,data,rolename){
 				var _self=this;
@@ -5129,12 +5180,16 @@
 				return resultController;
 			},
 			prop:function(key,value){
-				if(typeof value === "function" && typeof key === "string") return value.call(this,this._prop[key]);
-				if(typeof key === "string") return this._prop[key];
-				return this._hash;
+				if(typeof key === "string"){
+					if(typeof value === "function"){
+						return value.call(this,this._manageProp.prop(key));
+					}
+					return this._manageProp.prop(key);
+				}
+				return this._manageProp.get();
 			},
 			data:function(){
-				return this._data;
+				return this._manageData;
 			},
 			roleFind:function(find,proc){
 				if(!find) return console.error(find,"에 값은 반드시 유효한 값이 들어와야합니다.");
@@ -5150,17 +5205,18 @@
 				}
 				return selectedRoles;
 			}
-		},function(targetRole,props,data){
+		},function(targetRole,props,data,moduleEvent){
 			
 			if( this._super(targetRole,true,true) === true ) {
 				
-				this._prop = new N.Manage(props);
-				this._data = new N.Array(data);
+				this._manageProp  = new N.Manage(props);
+				this._manageData  = new N.Array(data);
+				this._manageEvent = new N.ModuleEventManager(this,moduleEvent);
 				
 				var _self = this;
 				N.find('script[type*=json]', this.view ,N.dataEach ,function(scriptTag){
 					var jsonData = N.$value(scriptTag);
-					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self._data.append(jsonData) : N.extend(_self._prop,jsonData);
+					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self._manageData.append(jsonData) : N.extend(_self._manageProp,jsonData);
 					N.$remove(scriptTag);
 				});
 				this.view.roleController = this;
@@ -7380,7 +7436,7 @@
 					return (listenInfo.listener === listener && listenInfo.propertyName === propertyName);
 				});
 			},
-			send:function(setValue,dataName,sender,forceLevel){
+			send:function(sender,dataName,setValue,forceLevel){
 				
 				if(this.protectProperty.has(dataName)){
 					if(this.trace) console.info(sender,"was make duplicate send (",dataName,") is still processing");
@@ -7441,6 +7497,12 @@
 				if(this.beforeProperty.has(propertyName)) 
 					this.shouldSetFromListenersInfo(listenInfo,this.beforeProperty.prop(propertyName),propertyName);
 			},
+			selfSend:function(setValues,dataName,forceLevel){
+				return this.send(this,propertyName,proc,allowProc,protectLevel);
+			},
+			selfListen:function(propertyName,proc,allowProc,protectLevel){
+				return this.listen(this,propertyName,proc,allowProc,protectLevel);
+			},
 			//custom send
 			getValue:function(propertyName){
 				return this.beforeProperty.prop(propertyName);
@@ -7460,7 +7522,7 @@
 					if(listener.tagName == "INPUT") {
 						var binder = this;
 						N.$on(listener,"change",function(){
-							binder.send(listener.value,propertyName,listener);
+							binder.send(listener,propertyName,listener.value);
 						});
 					}
 					this.listen(listener,propertyName,function(value){
@@ -7554,32 +7616,6 @@
 			if(finish === true || ms === true || rate === true || now === true) { this.start(ms,counting,finish) }
 		});
 		
-		N.MODULE("ModuleEventManager",{
-			trigger:function(triggerName){
-				var cont = this.Controller, args = Array.prototype.slice.call(arguments,1);
-				this.Source.dataProp(triggerName).each(function(handler){
-					handler.apply(cont,args);
-				});
-			},
-			listen:function(triggerName,proc){
-				this.Source.dataProp(triggerName,proc,true);
-			},
-			defineEvent:function(eventName){
-				if(typeof eventName == "string"){
-					var registName = "when" + eventName[0].toUpperCase() + eventName.substr(1), _self = this;
-					this.Source.touchDataProp(eventName);
-					this.Controller[registName] = function(proc){
-						_self.listen(eventName,proc);
-					}
-				}
-			}
-		},function(controller,events){
-			if(!N.isModule(controller)) console.error("ModuleEventManager:: manage object is must be nody module");
-			this.Controller = controller;
-			this.Source     = new N.Manage();
-			var _self = this;
-			N.dataEach(events,function(v){ _self.defineEvent(v); });
-		});
 		N.MODULE("Timeline",{
 			updateFix:function(){
 				var se = this.Status.values("timeStart","timeEnd");
@@ -7682,6 +7718,12 @@
 			},
 			timescale:function(){
 				return this.Status.values("timeEnd","timeStart",function(e,s){ return e-s; });
+			},
+			getTimeStart:function(){
+				return this.Status.get("timeStart");
+			},
+			getTimeEnd:function(){
+				return this.Status.get("timeEnd");
 			},
 			runTimescale:function(){
 				if(this._rightDirection)
