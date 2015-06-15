@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.26.2", N.BUILD = "1155";
+		N.VERSION = "0.26.3", N.BUILD = "1157";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.0", N.CORE_BUILD = "85";
@@ -1846,7 +1846,6 @@
 		});
 	
 		//******************
-		//Manage Javascript Object
 		N.MODULE("Manage",{
 			setSource:function(obj,k){ 
 				obj = N.toObject(obj,k);
@@ -1892,18 +1891,22 @@
 				}
 				return this;
 			},
-			prop:function(k,v){
-				if(N.asString(k) && arguments.length > 1){
-					this.Source[k] = v;
-					return this;
-				} else if (N.asString(k)) { 
-					return this.Source[k];
-				} else if(typeof k === "object"){
-					for(var kk in key) this.prop(kk,key[kk]);
-					return this;
+			prop:function(k,filter){
+				if(arguments.length === 0){
+					return this.Source;
 				} else {
-					return this.Source; 
-				};
+					return (typeof filter === "function") ? filter.call(this,this.Source[k],(k in this.Source)) : this.Source[k];
+				}
+			},
+			setProp:function(k,v){
+				if(arguments.length < 2){
+					console.warn('arguments length must be gt 2');
+				} else if(N.asString(k)) {
+					this.Source[k] = v;
+				} else if(typeof k === "object") {
+					for(var kk in key) this.setProp(kk,key[kk]);
+				} 
+				return this;
 			},
 			//키값판별
 			propIs    :function(key,test,t,f) { return N.is(this.Source[key],test,t,f); },
@@ -1920,12 +1923,15 @@
 				return key in this.Source; 
 			},
 			//배열기반 키벨류 관리
-			touchDataProp:function(keyName){
+			hasDataProp:function(keyName){
+				return N.isModule(this.Source[keyName],"Array");
+			},
+			touchDataProp:function(keyName,autoReplace){
 				if(typeof keyName === "string"){
 					//arrayModule
-					if( !N.isModule(this.Source[keyName],"Array") ){
-						this.Source[keyName] = new N.Array(this.Source[keyName]);
-					}
+					return this.hasDataProp(keyName) ? this.Source[keyName] :
+					       (autoReplace === false) ? new N.Array(this.Source[keyName]) : 
+							this.Source[keyName] = new N.Array(this.Source[keyName]);
 					return this.Source[keyName];
 				} else {
 					console.warn('Manage::touchDataProp parameter is must be string',keyName);
@@ -1937,17 +1943,19 @@
 				for(var i=0,l=args.length;i<l;i++) this.touchDataProp(args[i]);
 				return this;
 			},
-			dataProp:function(k,v,unique){
-				var data = this.touchDataProp(k);
-				if(arguments.length === 1){
-					return data;
-				} else if(arguments.length > 1){
-					data[unique?"add":"push"](v);
-					return this;
-				} else {
-					return (new N.Array(this.values())).filter(function(propValue){ return isModule(propValue,"Array"); });
-				}
+			dataProp:function(k,filter){
+				var data = this.touchDataProp(k,false);
+				if(typeof filter === "function")
+					return data.map(filter);
+				return data;
 			},
+			pushDataProp:function(k,v,unique){
+				var data = this.touchDataProp(k);
+				if(arguments.length < 2) return console.warn("setDataProp is must be length gt 1");
+				data[unique?"add":"push"](v);
+				return this
+			},
+			
 			//.arrangementObjectsDataProp({a:2,b:3,c:4},{b:4,d:4},{a:1,d:5})
 			//"{"a":[2,null,1],"b":[3,4,null],"c":[4,null,null],"d":[null,4,5]}"
 			arrangementObjectsDataProp:function(data){
@@ -1959,14 +1967,12 @@
 						arrangementKeys.marge(N.propsKey(args[i]));
 					}
 				}
-				
 				for(var i=0,l=args.length;i<l;i++){
 					arrangementKeys.each(function(key){
-						_self.dataProp(key,args[i][key]);
+						_self.pushDataProp(key,args[i][key]);
 					});
 					
 				}
-				
 				return this;
 			},
 			setDataPropFix:function(){
@@ -5113,52 +5119,80 @@
 		
 		N.MODULE("ModuleEventManager",{
 			trigger:function(triggerName){
-				var cont = this._manageModule, args = Array.prototype.slice.call(arguments,1);
-				return this._manageModuleEvents.dataProp(triggerName).map(function(handler){
+				var cont = this._manageModule;
+				var args = Array.prototype.slice.call(arguments,1);
+				var arounds = this._manageModuleAroundEvents.prop(triggerName);
+				if(arounds){
+					var beforeHandlers = arounds.prop("before");
+					if(beforeHandlers && beforeHandlers.isAny(function(beforeCallback){
+						return beforeCallback.apply(cont,args) == false;
+					})) {
+						return false;
+					}
+				}
+				var results = this._manageModuleEvents.dataProp(triggerName).map(function(handler){
 					return handler.apply(cont,args);
 				});
-				console.log("trigger");
+				if(arounds){
+					var afterHandlers = arounds.prop("after");
+					afterHandlers && afterHandlers.each(function(afterCallback){
+						return afterCallback.apply(cont,args);
+					});
+				}
+				return results;
+			},
+			listenBefore:function(triggerName,proc){
+				if(!this._manageModuleAroundEvents.has(triggerName)){
+					this._manageModuleAroundEvents.setProp(triggerName,new N.Manage());
+				}
+				this._manageModuleAroundEvents.getProp(triggerName).pushDataProp("before",proc);
+			},
+			listenAfter:function(triggerName,proc){
+				if(!this._manageModuleAroundEvents.has(triggerName)){
+					this._manageModuleAroundEvents.setProp(triggerName,new N.Manage());
+				}
+				this._manageModuleAroundEvents.getProp(triggerName).pushDataProp("after",proc);
 			},
 			listen:function(triggerName,proc){
-				this._manageModuleEvents.dataProp(triggerName,proc,true);
+				this._manageModuleEvents.pushDataProp(triggerName,proc,true);
 			},
-			defineEvent:function(eventName,withHandler){
+			addModuleEvent:function(eventName,withAroundCallback){
+				var _self = this;
 				if(typeof eventName == "string"){
 					var upperCaseName = eventName[0].toUpperCase() + eventName.substr(1);
 					var onCaseName = "on"+upperCaseName;
-					var _self = this;
 					
 					this._manageModuleEvents.touchDataProp(eventName);
-					if(withHandler === true){
-						var willCaseName = "will"+upperCaseName;
-						var didCaseName  = "did"+upperCaseName
-						this._manageModuleEvents.touchDataProp(willCaseName);
-						this._manageModuleEvents.touchDataProp(didCaseName);
-						this._manageModule[willCaseName] = function(proc){ return _self.listen(willCaseName,proc); }
-						this._manageModule[didCaseName] = function(proc){ return _self.listen(didCaseName,proc); }
-						this._manageModule[onCaseName] = function(proc){
-							return _self.listen(onCaseName,function(){
-								if( !N.dataHas(_self.trigger(willCaseName),false) ){
-									proc.call()
-									_self.trigger(didCaseName);
-								}
-							});
-						}
-						_self.listen(eventName,proc);
-					} else {
-						this._manageModule[onCaseName] = function(proc){
-							_self.listen(eventName,proc);
-						}
+					if(withAroundCallback === true){
+						var willUpperCase = "will"+upperCaseName;
+						var didUpperCase  = "did"+upperCaseName; 
+						this._manageModule[willUpperCase] = function(proc){
+							if(typeof proc !== "function") return console.error("missing method from",willUpperCase);
+							_self.listenBefore(eventName,proc);
+						};
+						this._manageModule[didUpperCase] = function(proc){
+							if(typeof proc !== "function") return console.error("missing method from",didUpperCase);
+							_self.listenAfter(eventName,proc);
+						};
 					}
-					
+					this._manageModule[onCaseName] = function(proc){
+						if(typeof proc !== "function") return console.error("missing method from",onCaseName);
+						_self.listen(eventName,proc);
+					};
+				} else {
+					N.dataEach(eventName,function(name){
+						(typeof name === "string") && _self.addModuleEvent(name,withAroundCallback);
+					});
 				}
 			}
-		},function(module,events){
+		},function(module){
 			if(!N.isModule(module)) console.error("ModuleEventManager:: manage object is must be nody module");
 			this._manageModule       = module;
+			//{eventName:[handers...]}
 			this._manageModuleEvents = new N.Manage();
+			//{eventName:{aroundName:[handlers..]}}
+			this._manageModuleAroundEvents = new N.Manage();
 			var _self = this;
-			N.dataEach(events,function(v){ _self.defineEvent(v); });
 		});
 		
 		N.EXTEND_MODULE("ViewAndStatus","RoleController",{
@@ -5170,7 +5204,6 @@
 					var nativeName   = _prototype.__NativeHistroy__[_prototype.__NativeHistroy__.length-1];
 					activeRolename = N.kebabCase(nativeName);
 				}
-				console.log("activeRolename",activeRolename);
 				return N.find("[data-role~="+activeRolename+"]",findwhere);
 			},
 			"++findRoleAndActive":function(findwhere,props,data,rolename){
@@ -5179,20 +5212,26 @@
 				for(var i=0,l=findedRoles.length;i<l;i++) resultController.push(new _self(findedRoles[i],props,data));
 				return resultController;
 			},
-			prop:function(key,value){
-				if(typeof key === "string"){
-					if(typeof value === "function"){
-						return value.call(this,this._manageProp.prop(key));
-					}
-					return this._manageProp.prop(key);
+			prop:function(key,filter){
+				if(arguments.length === 0){
+					return this._manageProp.get();
+				} else {
+					return this._manageProp.prop(key,filter);
 				}
-				return this._manageProp.get();
+			},
+			setProp:function(key,value){
+				this._manageProp.setProp(key,value);
+				return this;
 			},
 			data:function(){
 				return this._manageData;
 			},
+			pushData:function(v){
+				this._manageData.push(v);
+				return this;
+			},
 			roleFind:function(find,proc){
-				if(!find) return console.error(find,"에 값은 반드시 유효한 값이 들어와야합니다.");
+				if(!find) return console.error("roleFind",find,"에 값은 반드시 유효한 값이 들어와야합니다.");
 				var finded = N.find(find);
 				if(finded.length === 0) return console.error(find,"에 해당하는 노드를 찾을 수 없습니다.");
 				var selectedRoles = [];
@@ -5206,12 +5245,11 @@
 				return selectedRoles;
 			}
 		},function(targetRole,props,data,moduleEvent){
-			
 			if( this._super(targetRole,true,true) === true ) {
-				
 				this._manageProp  = new N.Manage(props);
 				this._manageData  = new N.Array(data);
-				this._manageEvent = new N.ModuleEventManager(this,moduleEvent);
+				this._manageEvent = new N.ModuleEventManager(this);
+				this._manageEvent.addModuleEvent(moduleEvent);
 				
 				var _self = this;
 				N.find('script[type*=json]', this.view ,N.dataEach ,function(scriptTag){
@@ -7419,14 +7457,14 @@
 		});
 	
 		N.MODULE("Binder",{
-			shouldSetFromListenersInfo:function(listeners,setValue,dataName){
+			shouldSetValueForListenersInfo:function(listeners,setValue,dataName){
 				var beforeValue = this.beforeProperty.prop(dataName);
 				//set send
 				this.protectProperty.add(dataName);
 				(new N.Array(listeners)).each(function(listenInfo){
 					listenInfo.proc.call(listenInfo.listener,setValue,beforeValue);
 				});
-				this.beforeProperty.prop(dataName,setValue);
+				this.beforeProperty.setProp(dataName,setValue);
 				this.protectProperty.remove(dataName);
 			},
 			getListenInfo:function(listener,propertyName){
@@ -7437,17 +7475,15 @@
 				});
 			},
 			send:function(sender,dataName,setValue,forceLevel){
-				
 				if(this.protectProperty.has(dataName)){
-					if(this.trace) console.info(sender,"was make duplicate send (",dataName,") is still processing");
-					return;
+					this.trace && console.info(sender,"was make duplicate send (",dataName,") is still processing => ", setValue);
+					return false;
 				}
-
 				//duplicate send protect
 				var beforeValue = this.beforeProperty.prop(dataName);
 				if(setValue === beforeValue){
-					if(this.trace) console.info(sender,"send is same from before value.");
-					return;
+					this.trace && console.info(sender,"send is same from before value.");
+					return false;
 				}
 				var sendTargets = this.Source.filter(function(listenInfo){
 					return (sender !== listenInfo.sender && dataName === listenInfo.propertyName) ? true : false;
@@ -7461,15 +7497,14 @@
 						if( listenInfo.allowProc(setValue,beforeValue) === false ){
 							if(listenInfo.protectLevel >= forceLevel) {
 								//transaction
-								_self.shouldSetFromListenersInfo(_self.getListenInfo(sender,dataName),beforeValue,dataName);
+								_self.shouldSetValueForListenersInfo(_self.getListenInfo(sender,dataName),beforeValue,dataName);
 								return allowProc = false;
 							}
 						}
 					}
 				});
-				
 				//set data
-				if(allowProc === true) this.shouldSetFromListenersInfo(sendTargets,setValue,dataName);
+				if(allowProc === true) this.shouldSetValueForListenersInfo(sendTargets,setValue,dataName);
 			},
 			listen:function(listener,propertyName,proc,allowProc,protectLevel){
 				//value inspect
@@ -7495,7 +7530,7 @@
 				
 				//beforeProperty set
 				if(this.beforeProperty.has(propertyName)) 
-					this.shouldSetFromListenersInfo(listenInfo,this.beforeProperty.prop(propertyName),propertyName);
+					this.shouldSetValueForListenersInfo(listenInfo,this.beforeProperty.prop(propertyName),propertyName);
 			},
 			selfSend:function(setValues,dataName,forceLevel){
 				return this.send(this,propertyName,proc,allowProc,protectLevel);
@@ -7559,9 +7594,9 @@
 					return (listenInfo.propertyName === propertyName) ? false : true;
 				});
 			}
-		},function(defaultData,trace,defaultKey){ 
+		},function(defaultData,defaultKey,trace){ 
 			//console trace
-			this.trace           = true;
+			this.trace           = trace;
 			this.Source          = new N.Array();
 			this.defaultKey      = (typeof defaultKey === "string") ? defaultKey : "default"
 			//dobule set protect
@@ -7735,7 +7770,7 @@
 					return (this.Status.get("timeEnd") - this._tick);
 				return (this._tick - this.Status.get("timeStart"));
 			},
-			getCurrentPropData:function(){
+			getCurrentData:function(){
 				var currentTime = this._tick;
 				return this.Source.map(function(timeProperties){
 					return timeProperties.getPropWithTime(currentTime);
@@ -7780,7 +7815,8 @@
 			this._rightDirection = true;
 			if(typeof fps === "number") this.setFPS(fps);
 			
-			this.EventManager = new N.ModuleEventManager(this,["timeMove","timeFinish"]);
+			this.EventManager = new N.ModuleEventManager(this);
+			this.EventManager.addModuleEvent(["timeMove","timeFinish"]);
 		});
 		
 		N.MODULE("TimeProperties",{
