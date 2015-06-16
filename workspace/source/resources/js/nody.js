@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.26.4", N.BUILD = "1171";
+		N.VERSION = "0.26.5", N.BUILD = "1172";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.2", N.CORE_BUILD = "88";
@@ -3686,20 +3686,26 @@
 					var currentTag  = fulltag
 					var nextTag     = ''
 				}
-			
-				var multiMake    = currentTag.split(/\+|\,/);
-				var multiMakeEnd = currentTag.split(/\+|\,/).length-1;
+				
+				var multiMake    = N.safeSplit(currentTag,"+","{}");
+				var multiMakeEnd = multiMake.length-1;
 				
 				N.dataEach(multiMake,function(eachtag,eachTagIndex){
 					///////////////
 					var repeat = 1;
-					//repeat
+					//get repeat value
 					eachtag = eachtag.replace(/\*[\d]+$/,function(s){
 						repeat = parseInt(s.substr(1)); return "";
 					});
+					
+					//get $value
+					eachtag = (eachtag+" ").replace(/\$[^i]/,function(s){ return "\\{$i+1}"; });
+					
+					//var nodyExp = eachtag
+					var hasExp = (eachtag.indexOf("\\{") > -1) ? true : false;
 					//generate
 					N.times(repeat,function(i){
-						var rtag     = eachtag.replace("$",i+1);
+						var rtag     = hasExp ? N.exp.seed(i)(eachtag) : eachtag;
 						var rtagNode = N.make(rtag);
 					
 						makeRoot.appendChild(rtagNode);
