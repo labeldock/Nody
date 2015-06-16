@@ -1,12 +1,9 @@
-//
-console.log(window.nody);
-
 var GNBNFContentLoader = new nd.ContentLoader("main",function(){	
 	//active event controller
 	return this.needActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
 		return GNBNFContentLoader.active((this.textContent || this.innerText).toLowerCase());
-	},1).injectSelects(function(accessData,node){
+	},0).injectSelects(function(accessData,node){
 		//navigation data
 		var name = (node.textContent || node.innerText).toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
@@ -402,24 +399,24 @@ GNBNFContentLoader.whenLoad("speedtest2",function(){
 });
 
 GNBNFContentLoader.whenLoad('formcontroller',function(){
-	var plainNFFormController = new nd.FormController('.plain-form-area',null,{
+	var plainNFFormController = new nd.FormController('.plain-form-area',{
 		normal:function(){
-			this.controls(function(){
+			this.controlEach(function(){
 				$(this).css('color','inherit');
 			},'.em-target');
 		},
 		disabled:function(){
-			this.controls(function(){
+			this.controlEach(function(){
 				$(this).css('color','red');
 			},'.em-target');	
 		}
 	});
 	var realNFFormController  = new nd.FormController('.real-form-area',{
 		normal:function(){
-			this.FormControl.disabled(false);
+			this.Form.disabled(false);
 		},
 		disabled:function(){
-			this.FormControl.disabled(true,'.disabled-target');
+			this.Form.disabled(true,'.disabled-target');
 		}
 	});
 	
@@ -442,12 +439,12 @@ GNBNFContentLoader.whenLoad('formcontroller',function(){
 	});
 	
 	$(".form-status-1").on('click',function(){
-		plainNFFormController.statusTo('normal');
-		realNFFormController.statusTo('normal');
+		plainNFFormController.activeTo('normal');
+		realNFFormController.activeTo('normal');
 	});
 	$(".form-status-2").on('click',function(){
-		plainNFFormController.statusTo('disabled');
-		realNFFormController.statusTo('disabled');
+		plainNFFormController.activeTo('disabled');
+		realNFFormController.activeTo('disabled');
 	});
 	
 	$('.getdata-action').on('click',function(){

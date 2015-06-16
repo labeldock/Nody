@@ -5,14 +5,14 @@
  */
 
 (function(){
-	var N={};
+	var N=(function(){return N.API.apply(window,Array.prototype.slice.call(arguments))});
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.26.0", N.BUILD = "1152";
+		N.VERSION = "0.26.4", N.BUILD = "1171";
 	
 		// Core verison
-		N.CORE_VERSION = "1.9.5", N.CORE_BUILD = "84";
+		N.CORE_VERSION = "2.0.2", N.CORE_BUILD = "88";
   
 		// Pollyfill : console object
 		if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(N.toString(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
@@ -31,17 +31,50 @@
 	
 		// BrowserFix : IE8 Success fix
 		if (typeof W.success === "function"){W.success = "success";}
-	
+		
+		var IS_MODULE = function(obj,moduleName){
+			if(arguments.length == 1){
+				if(typeof obj === "object" && ("__NativeHistroy__" in obj)){
+					return true;
+				}
+			} else {
+				if(typeof obj === "object" && obj !== null && (typeof moduleName === "string") && ("__NativeHistroy__" in obj)){
+					for(var i=obj["__NativeHistroy__"].length-1;i>-1;i--){
+						if(obj["__NativeHistroy__"][i] === moduleName) return true;
+					}
+				}
+			}
+			return false;
+		};
+		
 		//NativeCore console trace
-		var traceNativeModule = function(name){ if (NModules[name]) { var result = name + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype["set"])+"") )[1] + ")"; var i2 = 0; for(var protoName in NModules[name].prototype ) switch(protoName){ case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__NativeInitializer__": break; default: if(typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec( ((NModules[name].prototype[protoName])+"") )[1] + ")" ; i2++; break; } return result; } else { return name + " module is not found."; } };
-		N.API = traceNativeModule;
-		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n MODULE(" + i + ") ::" + traceNativeModule(key); i++; } logText.push(moduleText); return logText.join("\n"); };
+		N.API = function(name) {
+			if(arguments.length === 0){
+				return "Nody "+N.VERSION+" ("+N.BUILD+")";
+			}
+			if(typeof name === "string"){
+			    if (NModules[name]) {
+			        var result = name + "(" + /\(([^\)]*)\)/.exec(((NModules[name].prototype["set"]) + ""))[1] + ")";
+			        var i2 = 0;
+			        for (var protoName in NModules[name].prototype)
+			            switch (protoName) {
+						case "set": case "get": case "__NativeType__": case "__NativeHistroy__": case "__NativeHistroy__": case "constructor": case "__NativeClass__": case "_super": case "__NativeInitializer__": break; default:
+			                    if (typeof NModules[name].prototype[protoName] === "function") result += "\n " + i2 + " : " + protoName + "(" + /\(([^\)]*)\)/.exec(((NModules[name].prototype[protoName]) + ""))[1] + ")";
+			                    i2++;
+			                    break;
+			            }
+			        return result;
+			    }
+			}
+			return name + "is not found";
+		};
+		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n MODULE(" + i + ") ::" + N.API(key); i++; } logText.push(moduleText); return logText.join("\n"); };
 	
 	
 		//NativeCore Start
 		var NativeFactoryObject = function(type,name,sm,gm){
 			if( !(name in NModules) ){
-				var nativeProto,setter,getter;
+				var nativeProto,setter,getter,nodyModule;
 				//console.log(name,type);
 				switch(type){
 					case "object":
@@ -50,6 +83,19 @@
 									  function(){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : 
 									  function(v){ this.Source = v; return this; };
 						getter      = gm?gm:function(){return this.Source;};
+						var nodyObject = function(){ 
+							if(typeof this.set === "function"){ 
+								for(var protoKey in NModules[name].prototype) {
+									//init inital variable
+									if(/^\+[^+]+/.test(protoKey)) {
+										this[protoKey.substr(1)] = NModules[name].prototype[protoKey];
+									}
+								}
+								//set apppy
+								this.set.apply(this,Array.prototype.slice.apply(arguments)); 
+							} 
+						};
+						nodyModule = nodyObject;
 						break;
 					case "array":
 						nativeProto = [];
@@ -57,24 +103,24 @@
 									  sm : 
 									  function(v){ return this.setSource(v); };
 						getter      = function(){ return this.toArray.apply(this,arguments); };
+						var nodyArray = function(){ 
+							if(typeof this.set === "function"){ 
+								for(var protoKey in NModules[name].prototype) {
+									//init inital variable
+									if(/^\+[^+]+/.test(protoKey)) {
+										this[protoKey.substr(1)] = NModules[name].prototype[protoKey];
+									}
+								}
+								//set apppy
+								this.set.apply(this,Array.prototype.slice.apply(arguments)); 
+							} 
+						};
+						nodyModule = nodyArray;
 						break;
 					default: throw new Error("NativeFactoryObject :: 옳지않은 타입이 이니셜라이징 되고 있습니다. => " + type);
 				}
-				
-				var nativeConstructor = function(){ 
-					if(typeof this.set === "function"){ 
-						for(var protoKey in NModules[name].prototype) {
-							//init inital variable
-							if(/^\+[^+]+/.test(protoKey)) {
-								this[protoKey.substr(1)] = NModules[name].prototype[protoKey];
-							}
-						}
-						//set apppy
-						this.set.apply(this,Array.prototype.slice.apply(arguments)); 
-					} 
-				};
 			
-				NModules[name]               = nativeConstructor;
+				NModules[name]               = nodyModule;
 				NModules[name]["new"]        = (function(module){
 					return function(){ return new (Function.prototype.bind.apply(module,[module].concat(Array.prototype.slice.call(arguments)))); };
 				}(NModules[name]));
@@ -86,8 +132,8 @@
 				NModules[name].prototype.__NativeHistroy__     = [name];
 				NModules[name].prototype.__NativeClass__       = function(n){ return this.__NativeHistroy__[this.__NativeHistroy__.length - 1] == n };
 				//
-				NModules[name].prototype.constructor = nativeConstructor;
-				NModules[name].prototype._super = function(){
+				NModules[name].prototype.constructor = nodyModule;
+				NModules[name].prototype._super = function(a){
 					//scope start
 					var currentScopeDepth,
 						currentScopeModuleName,
@@ -408,7 +454,8 @@
 			"asNumber" : function (t) {return (typeof t === "number") ? true : ((typeof t === "string") ? (parseFloat(t)+"") == (t+"") : false );},
 		
 			"isJquery"   : function(o){ return (typeof o === "object" && o !== null ) ? ("jquery" in o) ? true : false : false; },
-			"isArray"    : function(a){ return (typeof a === "object") ? ( a !== null && ((a instanceof Array || a instanceof NodeList || N.isJquery(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) && !(a instanceof Window) ) ? true : false) : false; },
+			"isArray"    : function(a){ return (typeof a === "object" && a !== null ) ? (((a instanceof Array || a instanceof NodeList || N.isJquery(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) && !(a instanceof Window) ) ? true : false) : false; },
+			"isArguments": function(a){ return (typeof a === "object" && a !== null) ? ("callee" in a) ? true : false : false; },
 			"isEmail"    : function(t){ return N.asString(t) ? /^[\w]+\@[\w]+\.[\.\w]+/.test(t) : false;},
 			"isAscii"    : function(t){ return N.asString(t) ? /^[\x00-\x7F]*$/.test(t)         : false;},
 			"isTrue"     : function(t){ return !!t ? true : false;},
@@ -589,9 +636,11 @@
 				return 0;
 			},
 			"toObject":function(param,es,kv){
-				if(typeof param=="object") return param;
+				if(typeof param==="object"){
+					return param ? param : {}; //null filter
+				} 
 				if(kv == true && ( typeof param === "string" || typeof es === "string")){ var r = {}; r[es] = param; return r; }
-				if(typeof param=="string" || typeof param=="boolean") {
+				if(typeof param==="string" || typeof param==="boolean") {
 					var c = N.TRY_CATCH(function(){
 						if(JSON == aJSON) throw new Error("not json supported browser");
 						var jp = JSON.parse(param);
@@ -781,15 +830,14 @@
 				} 
 				return N.extend.apply(undefined,[N.clone(data,true)].concat(Array.prototype.slice.call(arguments,1)));
 			},
+			//fill은 존재하지 않는 키값에 대해서만 적용함
 			//첫번째 소스에 두번째 부터 시작하는 소스를 반영
 			"extendFill":function(data,fillData,forceFill){
 				if(typeof data !== "object") {
 					if(data === undefined) data = {};
 					else data = {data:data};
 				}
-			
 				if(forceFill !== true) forceFill = N.toArray(forceFill);
-			
 				if (forceFill.length || forceFill === true) {
 					for(var key in fillData)  {
 						if( !(key in data) ) data[key] = fillData[key];
@@ -878,20 +926,7 @@
 				}
 				return target;
 			},
-			"isModule":function(obj,moduleName){
-				if(arguments.length == 1){
-					if(typeof obj === "object" && ("__NativeHistroy__" in obj)){
-						return true;
-					}
-				} else {
-					if(typeof obj === "object" && (typeof moduleName === "string") && ("__NativeHistroy__" in obj)){
-						for(var i=obj["__NativeHistroy__"].length-1;i>-1;i--){
-							if(obj["__NativeHistroy__"][i] === moduleName) return true;
-						}
-					}
-				}
-				return false;
-			},
+			"isModule":IS_MODULE,
 			// 참고! : human readable month
 			"dateExp":function(dv,format,pad){
 				if(N.isArray(dv)) dv = dv.join(' ');
@@ -933,7 +968,7 @@
 				}
 				return 0;
 			},
-			"timeScaleExp":function(exp){
+			"timescaleExp":function(exp){
 				var scale = 0;
 				if(typeof exp === "number") {
 					return exp;
@@ -1352,16 +1387,16 @@
 					return N.safeSplitIndexes(c,splitIndexes,safe);
 				}
 			},
-			//Helper of PASCAL,CAMEL,SNAKE,KEBAB
-			"CASEARRAY":function(s,c){ if(typeof c === "string") return s.split(c) ; if(typeof s !== "string")return console.error("CASEARRAY::첫번째 파라메터는 반드시 String이여야 합니다. // s =>",s); s = s.replace(/^\#/,""); /*kebab*/ var k = s.split("-"); if(k.length > 1) return k; /*snake*/ var _ = s.split("_"); if(_.length > 1) return _; /*Cap*/ return s.replace(/[A-Z][a-z]/g,function(s){return "%@"+s;}).replace(/^\%\@/,"").split("%@"); },
+			//Helper of pascalCase,camelCase,snakeCase,kebabCase
+			"CASE_SPLIT":function(s,c){ if(typeof c === "string") return s.split(c) ; if(typeof s !== "string")return console.error("CASE_SPLIT::첫번째 파라메터는 반드시 String이여야 합니다. // s =>",s); s = s.replace(/^\#/,""); /*kebab*/ var k = s.split("-"); if(k.length > 1) return k; /*snake*/ var _ = s.split("_"); if(_.length > 1) return _; /*Cap*/ return s.replace(/[A-Z][a-z]/g,function(s){return "%@"+s;}).replace(/^\%\@/,"").split("%@"); },
 			//to PascalCase
-			"PASCAL":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); return words.join(""); },
+			"pascalCase":function(s){ var words = N.CASE_SPLIT(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); return words.join(""); },
 			//to camelCase
-			"CAMEL":function(s){ var words = CASEARRAY(s); for(var i=1,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); words[0] = words[0].toLowerCase(); return words.join(""); },
+			"camelCase":function(s){ var words = N.CASE_SPLIT(s); for(var i=1,l=words.length;i<l;i++) words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1).toLowerCase(); words[0] = words[0].toLowerCase(); return words.join(""); },
 			//to snake_case
-			"SNAKE":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("_"); },
+			"snakeCase":function(s){ var words = N.CASE_SPLIT(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("_"); },
 			//to kebab-case
-			"KEBAB":function(s){ var words = CASEARRAY(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("-"); },
+			"kebabCase":function(s){ var words = N.CASE_SPLIT(s); for(var i=0,l=words.length;i<l;i++) words[i] = words[i].toLowerCase(); return words.join("-"); },
 			//길이만큼 늘립니다.
 			"dataClip":N.CONTINUE_FUNCTION(function(v,l,ex){
 				var d = N.cloneArray(v);
@@ -1826,7 +1861,6 @@
 		});
 	
 		//******************
-		//Manage Javascript Object
 		N.MODULE("Manage",{
 			setSource:function(obj,k){ 
 				obj = N.toObject(obj,k);
@@ -1872,18 +1906,31 @@
 				}
 				return this;
 			},
-			prop:function(k,v){
-				if(N.asString(k) && arguments.length > 1){
-					this.Source[k] = v;
-					return this;
-				} else if (N.asString(k)) { 
-					return this.Source[k];
-				} else if(typeof k === "object"){
-					for(var kk in key) this.prop(kk,key[kk]);
-					return this;
+			prop:function(k,filter){
+				if(arguments.length === 0){
+					return this.Source;
 				} else {
-					return this.Source; 
-				};
+					if(typeof k === "string"){
+						return (typeof filter === "function") ? filter.call(this,this.Source[k],(k in this.Source)) : this.Source[k];
+					} else {
+						var _self = this;
+						if(typeof filter === "function") {
+							return N.dataMap(k,function(key){ return filter.call(_self,_self.Source[key],(key in _self.Source)); });
+						} else {
+							return N.dataMap(k,function(key){ return _self.Source[key]; });
+						}
+					}
+				}
+			},
+			setProp:function(k,v){
+				if(arguments.length < 2){
+					console.warn('arguments length must be gt 2');
+				} else if(N.asString(k)) {
+					this.Source[k] = v;
+				} else if(typeof k === "object") {
+					for(var kk in key) this.setProp(kk,key[kk]);
+				} 
+				return this;
 			},
 			//키값판별
 			propIs    :function(key,test,t,f) { return N.is(this.Source[key],test,t,f); },
@@ -1900,12 +1947,15 @@
 				return key in this.Source; 
 			},
 			//배열기반 키벨류 관리
-			touchDataProp:function(keyName){
+			hasDataProp:function(keyName){
+				return N.isModule(this.Source[keyName],"Array");
+			},
+			touchDataProp:function(keyName,autoReplace){
 				if(typeof keyName === "string"){
 					//arrayModule
-					if( !N.isModule(this.Source[keyName],"Array") ){
-						this.Source[keyName] = new N.Array(this.Source[keyName]);
-					}
+					return this.hasDataProp(keyName) ? this.Source[keyName] :
+					       (autoReplace === false) ? new N.Array(this.Source[keyName]) : 
+							this.Source[keyName] = new N.Array(this.Source[keyName]);
 					return this.Source[keyName];
 				} else {
 					console.warn('Manage::touchDataProp parameter is must be string',keyName);
@@ -1917,17 +1967,22 @@
 				for(var i=0,l=args.length;i<l;i++) this.touchDataProp(args[i]);
 				return this;
 			},
-			dataProp:function(k,v,unique){
-				var data = this.touchDataProp(k);
-				if(arguments.length === 1){
-					return data;
-				} else if(arguments.length > 1){
-					data[unique?"add":"push"](v);
-					return this;
-				} else {
-					return (new N.Array(this.values())).filter(function(propValue){ return isModule(propValue,"Array"); });
-				}
+			dataProp:function(k,filter){
+				var data = this.touchDataProp(k,false);
+				if(typeof filter === "function")
+					return data.map(filter);
+				return data;
 			},
+			pushDataProp:function(k,v,unique){
+				var data = this.touchDataProp(k);
+				if(arguments.length < 2) return console.warn("setDataProp is must be length gt 1");
+				data[unique?"add":"push"](v);
+				return this
+			},
+			extend:function(o){ N.extend(this.Source,o); return this; },
+			marge:function(o){ return N.marge(this.Source,o); },
+			extendFill:function(o){ N.extendFill(this.Source,o); return this; },
+			margeFill:function(o){ return N.margeFill(this.Source,o); },
 			//.arrangementObjectsDataProp({a:2,b:3,c:4},{b:4,d:4},{a:1,d:5})
 			//"{"a":[2,null,1],"b":[3,4,null],"c":[4,null,null],"d":[null,4,5]}"
 			arrangementObjectsDataProp:function(data){
@@ -1939,14 +1994,12 @@
 						arrangementKeys.marge(N.propsKey(args[i]));
 					}
 				}
-				
 				for(var i=0,l=args.length;i<l;i++){
 					arrangementKeys.each(function(key){
-						_self.dataProp(key,args[i][key]);
+						_self.pushDataProp(key,args[i][key]);
 					});
 					
 				}
-				
 				return this;
 			},
 			setDataPropFix:function(){
@@ -3290,45 +3343,6 @@
 	            var pos = this.position(root);
 	            pos.x = e.clientX - pos.x, pos.y = e.clientY - pos.y;
 	            return pos;
-	        },
-			//터치이벤트가 마우스이벤트와 똑같이 동작하도록 합니다.
-	        bindTouchEventForMouseEvent:function(target, touchname){
-            
-	            //check touch device (require mordernizr)
-	            if($("html").is(".no-touch")) return;
-            
-	            var mousename = touchname === "touchstart" ? "mousedown" :
-	                            touchname === "touchend"   ? "mouseup"   :
-	                            touchname === "touchmove"  ? "mousemove" :
-	                            touchname === "touchleave" ? "mouseout"  : null;
-            
-	            if(!!mousename) console.log("bindTouchEventForMouseEvent - not support touch event",touchname);
-            
-	            if(target && mousename && touchname ) {
-	                target.addEventListener(touchname,function(event){
-                    
-	                    //1개의 터치만 지원
-	                    if(event.touches.length > 1 || event.type == "touchend" && event.touches.length > 0 )
-	                    {return;}
-                    
-	                    var newEvent      = document.createEvent("MouseEvents");
-	                    var changedTouche = event.changedTouches[0];
-                    
-	                    newEvent.initMouseEvent(
-	                        mousename,
-	                        true,
-	                        true,
-	                        null,
-	                        null,
-	                        changedTouche.screenX,
-	                        changedTouche.screenY,
-	                        changedTouche.clientX,
-	                        changedTouche.clientY
-	                    );
-                    
-	                    target.dispatchEvent(newEvent);
-	                });
-	            }
 	        }
 		});
 	
@@ -4254,7 +4268,7 @@
 						var prefixedName = ENV.getCSSName(styleName);
 						//get
 						if(typeof value === "undefined") 
-							return ENV.supportComputedStyle ? window.getComputedStyle(target,null).getPropertyValue(prefixedName) : target.currentStyle[CAMEL(prefixedName)];
+							return ENV.supportComputedStyle ? window.getComputedStyle(target,null).getPropertyValue(prefixedName) : target.currentStyle[camelCase(prefixedName)];
 					
 						//set
 						var wasStyle = N.$attr(target,"style") || "";
@@ -4368,7 +4382,7 @@
 			},
 			//이벤트 등록이 가능한 타겟을 찾아냅니다.
 			"onTarget":function(node){ return (N.isWindow(node) || N.isDocument(node)) ? node : N.findLite(node); },
-			//중복이벤트 등록 가능
+			//add event like jquery 
 			"on":function(node, eventName, eventHandler, useCapture){
 				var nodes  = N.$onTarget(node);
 				var events = eventName.split(" ");
@@ -4404,6 +4418,48 @@
 					} 
 				}
 				return nodes;
+			},
+			//auto with touch event
+			"bind":function(node, eventName){
+				var onTargets = N.$onTarget(node);
+				N.$on.apply(N.$,[onTargets].concat(Array.prototype.slice.call(arguments,1)));
+				//not test
+				if('ontouchend' in document && onTargets.length){
+					N.dataEach(eventName.split(" "),function(mousename){
+						var touchname = mousename === "mousedown" ? "touchstart" :
+										mousename === "mouseup"   ? "touchend"   :
+										mousename === "mousemove" ? "touchmove"  :
+										mousename === "mouseout"  ? "touchleave" : null;
+						
+						if(touchname) {
+							console.log("bind start",target,mousename,touchname);
+							N.dataEach(onTargets,function(target){
+				                target.addEventListener(touchname,function(event){
+				                    //1개의 터치만 지원
+				                    if(event.touches.length > 1 || event.type == "touchend" && event.touches.length > 0 )
+				                    {return;}
+                    
+				                    var newEvent      = document.createEvent("MouseEvents");
+				                    var changedTouche = event.changedTouches[0];
+                    
+				                    newEvent.initMouseEvent(
+				                        mousename,
+				                        true,
+				                        true,
+				                        null,
+				                        null,
+				                        changedTouche.screenX,
+				                        changedTouche.screenY,
+				                        changedTouche.clientX,
+				                        changedTouche.clientY
+				                    );
+                    
+				                    target.dispatchEvent(newEvent);
+				                });
+							});
+						}
+					});
+				}
 			},
 			"off":function(node, eventName, eventHandler, useCapture){
 				if((typeof eventName !== "string") || (typeof eventHandler !== "function")) return console.erro("N.$on 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요",node, eventName, eventHandler);
@@ -4821,7 +4877,7 @@
 			readonly:function(status,filter){ return this.statusFunction(N.$readOnly,(status !== false ? true : false),filter); },
 			empty   :function(filter)       { filter = filter?filter+",:not(button):not(select)":":not(button):not(select)"; return this.statusFunction(N.$value   ,"",filter); },
 			map     :function(mapf,filter)  { return this.statusFunction(function(node){ var r = mapf(node); if(N.asString(r)){ N.$value(node,r); } },"",filter); },
-			controls:function(eachf,filter) { return this.statusFunction(function(node){ var r = eachf.call(node,node); },"",filter); },
+			selectEach:function(eachf,filter) { return this.statusFunction(function(node){ var r = eachf.call(node,node); },"",filter); },
 			removePartClass:function(rmClass,filter,req){
 				var r = this.statusFunction(function(node,param){
 					var classes = N.$attr(node,"class");
@@ -4940,12 +4996,21 @@
 			whenDidInactive    :function(n,m){ this.StatusEvents.StatusDidInactive[n] = m; },
 			whenActive         :function(n,m){ this.StatusEvents.StatusActive[n] = m; },
 			whenInactive       :function(n,m){ this.StatusEvents.StatusInactive[n] = m; },
-			inactiveStatusTo   :function(status,param,owner,react){
+			toggleInactiveStatus   :function(status,param,owner,react){
 				owner = owner ? owner : this;
 				param = N.toArray(param);
-				if( !this.StatusEvents.StatusInactive[status] ) return console.warn('존재하지 않는 키값을 호출하였습니다.',status);
+				
 				if( this.ActiveKeys.has(status) ){
-					if(this.ActiveKeys.length === 1 && !this.AllowInactive) return;
+					//헨들은 없고 키는 제거해야할때
+					if( !this.StatusEvents.StatusInactive[status] ){
+						this.ActiveKeys.remove(status);
+						return true;
+					}
+					//모든 인액트를 허용하지 않을때
+					if(this.ActiveKeys.length === 1 && !this.AllowInactive){
+						return false;
+					}
+					//핸들 스타트
 					if( N.APPLY(this.StatusEvents.AnyWillInactive          ,owner,param) !== false &&
 						N.CALL(this.StatusEvents.StatusWillInactive[status],owner,param) !== false )
 					{
@@ -4957,12 +5022,12 @@
 					}
 				}
 			},
-			activeStatusTo:function(status,param,owner,react){
+			toggleActiveStatus:function(status,param,owner,react){
 				owner = owner ? owner : this;
 				param = N.toArray(param);
 				// 존재하지 않는 스테이터스 이거나 리액트
 				if( !this.StatusEvents.StatusActive[status] ){
-					return console.warn('존재하지 않는 키값을 호출하였습니다.',status,this.StatusEvents.StatusActive);
+					return console.warn(this,'에 존재하지 않는 키값을 호출하였습니다.',status,this.StatusEvents.StatusActive);
 				} 
 				if( !this.ActiveKeys.has(status) || (react == true) ){
 					// 멀티가 가능하거나 아무것도 없을땐
@@ -4984,7 +5049,8 @@
 							N.APPLY(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
 						{
 							if( N.APPLY(this.StatusEvents.StatusActive[status],owner,param) == false ) return;
-							this.ActiveKeys.each(function(key){ _.inactiveStatusTo(key,param,owner); })
+							var _self=this;
+							this.ActiveKeys.each(function(key){ _self.toggleInactiveStatus(key,param,owner); })
 							this.ActiveKeys.add(status);
 							N.APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
 							N.APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
@@ -4994,13 +5060,13 @@
 				}
 			},
 			activeTo:function(status){
-				return this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this,false);
+				return this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this,false);
 			},
 			inactTo:function(status){
-				return this.inactiveStatusTo(status,Array.prototype.slice.call(arguments,1),this,false);
+				return this.toggleInactiveStatus(status,Array.prototype.slice.call(arguments,1),this,false);
 			},
 			reactTo:function(status){
-				return this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this,true);
+				return this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this,true);
 			},
 			getActiveStatus:function(){
 				return this.ActiveKeys.join(" ");
@@ -5041,7 +5107,7 @@
 				}
 			},
 			viewStatusTo:function(status){
-				if(typeof name === 'string') this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this);
+				if(typeof name === 'string') this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
 			},
 			node:function(innerKey,wrapper){
 				if(arguments.length === 0) return (wrapper ? wrapper : N.NodeQuery.new)(this.view);
@@ -5051,9 +5117,9 @@
 			find:function(findKeyword){
 				return findKeyword ? N.find(findKeyword,this.view) : [];
 			}
-		},function(findView,allowMulti,allowInactive){			
-			this.view = N.findLite(findView)[0];
-			if(!this.view) return console.error("ViewAndStatus::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",findView);
+		},function(targetView,allowMulti,allowInactive){			
+			this.view = N.findLite(targetView)[0];
+			if(!this.view) return console.error("ViewAndStatus::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",targetView);
 			this._super(allowMulti,allowInactive);
 			return true;
 		});
@@ -5061,31 +5127,119 @@
 		
 		N.EXTEND_MODULE("ViewAndStatus","FormController",{
 			setFormData:function(data,v2){
-				return this.FormControl.checkin(data,v2);
+				return this.Form.checkin(data,v2);
 			},
 			getFormData:function(){
-				return this.FormControl.checkout();
+				return this.Form.checkout();
+			},
+			controlEach:function(h,f){
+				this.Form.selectEach(h,f);
 			},
 			getFormControl:function(){
-				return this.FormControl.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
+				return this.Form.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
 			}
-		},function(targetForm,statusProp,helper){
+		},function(targetForm,viewStatus,methodHelper){
 			if( this._super(targetForm,false,true) === true ) {
-				this.FormControl = new N.Form(this.view);
-				if(statusProp) this.addActiveStatus(statusProp);
-		
-				if(typeof helper === 'function') helper = {init:helper};
-				var _ = this;
-				N.propsEach(helper,function(fn,key){
-					if(!(key in _.constructor.prototype)) {
+				this.Form = new N.Form(this.view);
+				
+				var _self = this;
+				
+				if(viewStatus && (typeof viewStatus === "object")) {
+					N.propsEach(viewStatus,function(handle,key){
+						_self.addViewStatus(key,handle);
+					});
+				};
+				
+				if(typeof methodHelper === 'function') methodHelper = {init:methodHelper};
+				
+				N.propsEach(methodHelper,function(fn,key){
+					if(!(key in _self.constructor.prototype)) {
 						if(key === 'init') {
-							if(typeof fn === 'function') fn.apply(_,Array.prototype.slice.call(arguments));
+							if(typeof fn === 'function') fn.apply(_self,Array.prototype.slice.call(arguments));
 						} else {
-							_[key] = (typeof fn === 'function') ? function(){fn.apply(_,Array.prototype.slice.call(arguments));} : fn;
+							_self[key] = (typeof fn === 'function') ? function(){fn.apply(_self,Array.prototype.slice.call(arguments));} : fn;
 						}
 					}
 				});
 			}
+		});
+		
+		N.MODULE("ModuleEventManager",{
+			trigger:function(triggerName){
+				var cont = this._manageModule;
+				var args = Array.prototype.slice.call(arguments,1);
+				var arounds = this._manageModuleAroundEvents.prop(triggerName);
+				if(arounds){
+					var beforeHandlers = arounds.prop("before");
+					if(beforeHandlers && beforeHandlers.isAny(function(beforeCallback){
+						return beforeCallback.apply(cont,args) == false;
+					})) {
+						return false;
+					}
+				}
+				var results = this._manageModuleEvents.dataProp(triggerName).map(function(handler){
+					return handler.apply(cont,args);
+				});
+				if(arounds){
+					var afterHandlers = arounds.prop("after");
+					afterHandlers && afterHandlers.each(function(afterCallback){
+						return afterCallback.apply(cont,args);
+					});
+				}
+				return results;
+			},
+			listenBefore:function(triggerName,proc){
+				if(!this._manageModuleAroundEvents.has(triggerName)){
+					this._manageModuleAroundEvents.setProp(triggerName,new N.Manage());
+				}
+				this._manageModuleAroundEvents.getProp(triggerName).pushDataProp("before",proc);
+			},
+			listenAfter:function(triggerName,proc){
+				if(!this._manageModuleAroundEvents.has(triggerName)){
+					this._manageModuleAroundEvents.setProp(triggerName,new N.Manage());
+				}
+				this._manageModuleAroundEvents.getProp(triggerName).pushDataProp("after",proc);
+			},
+			listen:function(triggerName,proc){
+				this._manageModuleEvents.pushDataProp(triggerName,proc,true);
+			},
+			addModuleEvent:function(eventName,withAroundCallback){
+				var _self = this;
+				if(typeof eventName == "string"){
+					var upperCaseName = eventName[0].toUpperCase() + eventName.substr(1);
+					var onCaseName = "on"+upperCaseName;
+					
+					this._manageModuleEvents.touchDataProp(eventName);
+					if(withAroundCallback === true){
+						var willUpperCase = "will"+upperCaseName;
+						var didUpperCase  = "did"+upperCaseName; 
+						this._manageModule[willUpperCase] = function(proc){
+							if(typeof proc !== "function") return console.error("missing method from",willUpperCase);
+							_self.listenBefore(eventName,proc);
+						};
+						this._manageModule[didUpperCase] = function(proc){
+							if(typeof proc !== "function") return console.error("missing method from",didUpperCase);
+							_self.listenAfter(eventName,proc);
+						};
+					}
+					this._manageModule[onCaseName] = function(proc){
+						if(typeof proc !== "function") return console.error("missing method from",onCaseName);
+						_self.listen(eventName,proc);
+					};
+				} else {
+					N.dataEach(eventName,function(name){
+						(typeof name === "string") && _self.addModuleEvent(name,withAroundCallback);
+					});
+				}
+			}
+		},function(module){
+			if(!N.isModule(module)) console.error("ModuleEventManager:: manage object is must be nody module");
+			this._manageModule       = module;
+			//{eventName:[handers...]}
+			this._manageModuleEvents = new N.Manage();
+			//{eventName:{aroundName:[handlers..]}}
+			this._manageModuleAroundEvents = new N.Manage();
+			var _self = this;
 		});
 		
 		N.EXTEND_MODULE("ViewAndStatus","RoleController",{
@@ -5095,12 +5249,9 @@
 				if(typeof rolename === "string") activeRolename = rolename;
 				if (!activeRolename) {
 					var nativeName   = _prototype.__NativeHistroy__[_prototype.__NativeHistroy__.length-1];
-					var nativePrefix = /^[A-Z]+/.exec(nativeName), nativePrefix = (nativePrefix) ? nativePrefix[0] : null;
-					activeRolename = nativePrefix ? 
-					(nativePrefix[nativePrefix.length-1] + nativeName.substr(nativePrefix.length)).toLowerCase() :
-					nativeName.toLowerCase();
+					activeRolename = N.kebabCase(nativeName);
 				}
-				return N.find("[role~="+activeRolename+"]",findwhere);
+				return N.find("[data-role~="+activeRolename+"]",findwhere);
 			},
 			"++findRoleAndActive":function(findwhere,props,data,rolename){
 				var _self=this;
@@ -5108,18 +5259,27 @@
 				for(var i=0,l=findedRoles.length;i<l;i++) resultController.push(new _self(findedRoles[i],props,data));
 				return resultController;
 			},
-			prop:function(key,value){
-				if(typeof value === "function" && typeof key === "string") return value.call(this,this._prop[key]);
-				if(typeof key === "string") return this._prop[key];
-				return this._hash;
+			prop:function(key,filter){
+				if(arguments.length === 0){
+					return this._manageProp.get();
+				} else {
+					return this._manageProp.prop(key,filter);
+				}
+			},
+			setProp:function(key,value){
+				this._manageProp.setProp(key,value);
+				return this;
 			},
 			data:function(){
-				return this._data;
+				return this._manageData;
+			},
+			pushData:function(v){
+				this._manageData.push(v);
+				return this;
 			},
 			roleFind:function(find,proc){
-				if(!find) return console.error(find,"에 값은 반드시 유효한 값이 들어와야합니다.");
 				var finded = N.find(find);
-				if(finded.length === 0) return console.error(find,"에 해당하는 노드를 찾을 수 없습니다.");
+				if(finded.length === 0) return console.warn(find,"에 해당하는 노드를 찾을 수 없습니다.");
 				var selectedRoles = [];
 				N.dataEach(finded,function(roleNode){
 					if(typeof roleNode.roleController === "object") selectedRoles.push(roleNode.roleController);
@@ -5130,17 +5290,17 @@
 				}
 				return selectedRoles;
 			}
-		},function(targetRole,props,data){
-			
+		},function(targetRole,props,data,moduleEvent){
 			if( this._super(targetRole,true,true) === true ) {
-				
-				this._prop = new N.Manage(props);
-				this._data = new N.Array(data);
+				this._manageProp  = new N.Manage(props);
+				this._manageData  = new N.Array(data);
+				this._manageEvent = new N.ModuleEventManager(this);
+				this._manageEvent.addModuleEvent(moduleEvent);
 				
 				var _self = this;
 				N.find('script[type*=json]', this.view ,N.dataEach ,function(scriptTag){
 					var jsonData = N.$value(scriptTag);
-					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self._data.append(jsonData) : N.extend(_self._prop,jsonData);
+					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self._manageData.append(jsonData) : _self._manageProp.extend(jsonData);
 					N.$remove(scriptTag);
 				});
 				this.view.roleController = this;
@@ -7343,62 +7503,54 @@
 		});
 	
 		N.MODULE("Binder",{
-			shouldSetFromListenersInfo:function(listeners,setValue,dataName){
+			shouldSetValueForListenersInfo:function(listeners,setValue,dataName){
 				var beforeValue = this.beforeProperty.prop(dataName);
 				//set send
 				this.protectProperty.add(dataName);
-				(new N.Array(listeners)).each(function(listenerInfo){
-					listenerInfo.proc.call(listenerInfo.listener,setValue,beforeValue);
+				(new N.Array(listeners)).each(function(listenInfo){
+					listenInfo.proc.call(listenInfo.listener,setValue,beforeValue);
 				});
-				this.beforeProperty.prop(dataName,setValue);
+				this.beforeProperty.setProp(dataName,setValue);
 				this.protectProperty.remove(dataName);
 			},
-			getListenerInfo:function(listener,propertyName){
+			getListenInfo:function(listener,propertyName){
 				if(!listener) return this.Source.get();
 				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
-				return this.Source.filter(function(listenerInfo){
-					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName);
+				return this.Source.filter(function(listenInfo){
+					return (listenInfo.listener === listener && listenInfo.propertyName === propertyName);
 				});
 			},
-			send:function(sender,setValue,dataName,forceLevel){
+			send:function(sender,dataName,setValue,forceLevel){
 				if(this.protectProperty.has(dataName)){
-					if(this.trace) console.info(sender,"was make duplicate send (",dataName,") is still processing");
-					return;
+					this.trace && console.info(sender,"was make duplicate send (",dataName,") is still processing => ", setValue);
+					return false;
 				}
 				//duplicate send protect
 				var beforeValue = this.beforeProperty.prop(dataName);
 				if(setValue === beforeValue){
-					if(this.trace) console.info(sender,"send is same from before value.");
-					return;
+					this.trace && console.info(sender,"send is same from before value.");
+					return false;
 				}
-				var sendTargets = this.Source.filter(function(listenerInfo){
-					return (sender !== listenerInfo.sender && dataName === listenerInfo.propertyName) ? true : false;
+				var sendTargets = this.Source.filter(function(listenInfo){
+					return (sender !== listenInfo.sender && dataName === listenInfo.propertyName) ? true : false;
 				});
 				//allow inspect
 				var allowProc    = true
 				var forceLevel   = (typeof forceLevel === "number") ? forceLevel : 0;
 				var _self        = this;
-				sendTargets.each(function(listenerInfo){
-					if(listenerInfo.allowProc){
-						if( listenerInfo.allowProc(setValue,beforeValue) === false ){
-							if(listenerInfo.protectLevel >= forceLevel) {
+				sendTargets.each(function(listenInfo){
+					if(listenInfo.allowProc){
+						if( listenInfo.allowProc(setValue,beforeValue) === false ){
+							if(listenInfo.protectLevel >= forceLevel) {
 								//transaction
-								_self.shouldSetFromListenersInfo(_self.getListenerInfo(sender,dataName),beforeValue,dataName);
+								_self.shouldSetValueForListenersInfo(_self.getListenInfo(sender,dataName),beforeValue,dataName);
 								return allowProc = false;
 							}
 						}
 					}
 				});
 				//set data
-				if(allowProc === true) this.shouldSetFromListenersInfo(sendTargets,setValue,dataName);
-			},
-			//custom send
-			setValue:function(setValue,propertyName,forceLevel){
-				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
-				this.send(null,setValue,propertyName,forceLevel);
-			},
-			getValue:function(propertyName){
-				return this.beforeProperty.prop(propertyName);
+				if(allowProc === true) this.shouldSetValueForListenersInfo(sendTargets,setValue,dataName);
 			},
 			listen:function(listener,propertyName,proc,allowProc,protectLevel){
 				//value inspect
@@ -7406,23 +7558,35 @@
 					return console.error("BindAdapter::listen arguments must be (listener,propertyName,proc)(object,string,fucntion)");
 				}
 				//duplicate listen & property inspect
-				if(this.Source.isAny(function(listenerInfo){
-					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName);
+				if(this.Source.isAny(function(listenInfo){
+					return (listenInfo.listener === listener && listenInfo.propertyName === propertyName);
 				})){
 					return console.error("BindAdapter:: already set listener & property");
 				}
-				var listenerInfo = {
+				
+				var listenInfo = {
 					listener:listener,
 					propertyName:propertyName,
 					proc:proc,
 					allowProc:allowProc,
 					protectLevel:(typeof protectLevel === "number") ? protectLevel : 0
 				};
-				this.Source.push(listenerInfo);
+				
+				this.Source.push(listenInfo);
 				
 				//beforeProperty set
 				if(this.beforeProperty.has(propertyName)) 
-					this.shouldSetFromListenersInfo(listenerInfo,this.beforeProperty.prop(propertyName),propertyName);
+					this.shouldSetValueForListenersInfo(listenInfo,this.beforeProperty.prop(propertyName),propertyName);
+			},
+			selfSend:function(setValues,dataName,forceLevel){
+				return this.send(this,propertyName,proc,allowProc,protectLevel);
+			},
+			selfListen:function(propertyName,proc,allowProc,protectLevel){
+				return this.listen(this,propertyName,proc,allowProc,protectLevel);
+			},
+			//custom send
+			getValue:function(propertyName){
+				return this.beforeProperty.prop(propertyName);
 			},
 			inspect:function(allowProc,propertyName,protectLevel){
 				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
@@ -7431,7 +7595,7 @@
 				}
 				this.listen(this,propertyName,function(){},allowProc,protectLevel);
 			},
-			bindNode:function(node,propName,setThisNodeValue){
+			bindNode:function(node,propertyName,propFilter){
 				var listener = N.find(node,0);
 				if(listener) {
 					var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
@@ -7439,38 +7603,46 @@
 					if(listener.tagName == "INPUT") {
 						var binder = this;
 						N.$on(listener,"change",function(){
-							binder.send(listener,listener.value,propertyName);
+							binder.send(listener,propertyName,listener.value);
 						});
 					}
 					this.listen(listener,propertyName,function(value){
+						if(typeof propFilter === "function"){ 
+							value = propFilter(value);
+							if(typeof value === "object" && listener.tagName !== "input"){
+								var nodes = N.find(value);
+								if(nodes.length) return N.$put(listener,nodes);
+							}
+						}
+						
 						N.$value(listener,value);
 					});
 				}
 			},
 			getListeners:function(){
-				return this.Source.map(function(listenerInfo){ listenerInfo.listener }).setUnique();
+				return this.Source.map(function(listenInfo){ listenInfo.listener }).setUnique();
 			},
 			getProperties:function(){
-				return this.Source.map(function(listenerInfo){ listenerInfo.propertyName }).setUnique();
+				return this.Source.map(function(listenInfo){ listenInfo.propertyName }).setUnique();
 			},
 			removeListener:function(listener){
-				this.Source.setFilter(function(listenerInfo){
-					return (listenerInfo.listener === listener) ? false : true;
+				this.Source.setFilter(function(listenInfo){
+					return (listenInfo.listener === listener) ? false : true;
 				});
 			},
 			removeListen:function(listener,propertyName){
-				this.Source.setFilter(function(listenerInfo){
-					return (listenerInfo.listener === listener && listenerInfo.propertyName === propertyName) ? false : true;
+				this.Source.setFilter(function(listenInfo){
+					return (listenInfo.listener === listener && listenInfo.propertyName === propertyName) ? false : true;
 				});
 			},
 			removeProperty:function(propertyName){
-				this.Source.setFilter(function(listenerInfo){
-					return (listenerInfo.propertyName === propertyName) ? false : true;
+				this.Source.setFilter(function(listenInfo){
+					return (listenInfo.propertyName === propertyName) ? false : true;
 				});
 			}
-		},function(defaultData,trace,defaultKey){ 
+		},function(defaultData,defaultKey,trace){ 
 			//console trace
-			this.trace           = true;
+			this.trace           = trace;
 			this.Source          = new N.Array();
 			this.defaultKey      = (typeof defaultKey === "string") ? defaultKey : "default"
 			//dobule set protect
@@ -7525,32 +7697,6 @@
 			if(finish === true || ms === true || rate === true || now === true) { this.start(ms,counting,finish) }
 		});
 		
-		N.MODULE("ModuleEventManager",{
-			trigger:function(triggerName){
-				var cont = this.Controller, args = Array.prototype.slice.call(arguments,1);
-				this.Source.dataProp(triggerName).each(function(handler){
-					handler.apply(cont,args);
-				});
-			},
-			listen:function(triggerName,proc){
-				this.Source.dataProp(triggerName,proc,true);
-			},
-			defineEvent:function(eventName){
-				if(typeof eventName == "string"){
-					var registName = "when" + eventName[0].toUpperCase() + eventName.substr(1), _self = this;
-					this.Source.touchDataProp(eventName);
-					this.Controller[registName] = function(proc){
-						_self.listen(eventName,proc);
-					}
-				}
-			}
-		},function(controller,events){
-			if(!N.isModule(controller)) console.error("ModuleEventManager:: manage object is must be nody module");
-			this.Controller = controller;
-			this.Source     = new N.Manage();
-			var _self = this;
-			N.dataEach(events,function(v){ _self.defineEvent(v); });
-		});
 		N.MODULE("Timeline",{
 			updateFix:function(){
 				var se = this.Status.values("timeStart","timeEnd");
@@ -7561,26 +7707,29 @@
 					this._tick = se[1];
 				}
 			},
-			push:function(pushProperties){
-				if( N.isModule(pushProperties,"TimeProperties") ){
-					this.Source.add(pushProperties);
+			append:function(){
+				var _self = this;
+				N.dataFlatten(arguments,N.dataEach,function(pushProperties,i){
+					if( N.isModule(pushProperties,"TimeProperties") ){
+						_self.Source.add(pushProperties);
 					
-					var ts = pushProperties.timeStart();
-					var te = pushProperties.timeEnd();
+						var ts = pushProperties.timeStart();
+						var te = pushProperties.timeEnd();
 					
-					if(this.Source.length === 1) {
-						this.Status.pushKeyValue("timeStart",ts,"timeEnd",te);
-					} else if(this.Source.length > 1) {
-						var se = this.Status.values("timeStart","timeEnd");
-						if(se[0] > ts){
-							this.Status.pushKeyValue("timeStart",ts);
+						if(_self.Source.length === 1) {
+							_self.Status.pushKeyValue("timeStart",ts,"timeEnd",te);
+						} else if(_self.Source.length > 1) {
+							var se = _self.Status.values("timeStart","timeEnd");
+							if(se[0] > ts){
+								_self.Status.pushKeyValue("timeStart",ts);
+							}
+							if(se[1] < te){
+								_self.Status.pushKeyValue("timeEnd",te);
+							}
 						}
-						if(se[1] < te){
-							this.Status.pushKeyValue("timeEnd",te);
-						}
+						_self.updateFix();
 					}
-					this.updateFix();
-				}
+				});
 			},
 			stop:function(){
 				this._rate = 0;
@@ -7618,7 +7767,7 @@
 				this.move(this._tick + offset);
 			},
 			offsetExp:function(exp){
-				this.move(this._tick + N.timeScaleExp(exp));
+				this.move(this._tick + N.timescaleExp(exp));
 			},
 			//속도 1은 1초 양음수 가능
 			rate:function(rate){
@@ -7642,21 +7791,32 @@
 					wheelProc();
 				}
 			},
-			rateWithTimeScale:function(exp){
-				return this.rate(N.timeScaleExp(exp) / 1000);
+			rateWithTimescale:function(exp){
+				return this.rate(N.timescaleExp(exp) / 1000);
 			},
 			timestamp:function(){
 				return this._tick;
 			},
-			timeScale:function(){
+			timescale:function(){
 				return this.Status.values("timeEnd","timeStart",function(e,s){ return e-s; });
 			},
-			restTimeScale:function(){
+			getTimeStart:function(){
+				return this.Status.get("timeStart");
+			},
+			getTimeEnd:function(){
+				return this.Status.get("timeEnd");
+			},
+			runTimescale:function(){
+				if(this._rightDirection)
+					return (this._tick - this.Status.get("timeStart"));
+				return (this.Status.get("timeEnd") - this._tick);
+			},
+			restTimescale:function(){
 				if(this._rightDirection)
 					return (this.Status.get("timeEnd") - this._tick);
 				return (this._tick - this.Status.get("timeStart"));
 			},
-			getCurrentPropData:function(){
+			getCurrentData:function(){
 				var currentTime = this._tick;
 				return this.Source.map(function(timeProperties){
 					return timeProperties.getPropWithTime(currentTime);
@@ -7668,11 +7828,22 @@
 					return timeProperties.getVectorPropWithTime(currentTime);
 				});
 			},
+			getTimeProperties:function(index){
+				return (arguments.length) ? this.Source[index] : this.Source.clone();
+			},
+			getAttributeOfTimeProperties:function(index){
+				if(arguments.length){
+					return this.Source[index] && this.Source[index].Attribute;
+				}
+				return this.Source.map(function(timeProperties){
+					return timeProperties.Attribute;
+				});
+			},
 			progress:function(){
-				return 100 - (100 / this.timeScale()) * this.restTimeScale();
+				return 100 - (100 / this.timescale()) * this.restTimescale();
 			},
 			restProgress:function(){
-				return (100 / this.timeScale()) * this.restTimeScale();
+				return (100 / this.timescale()) * this.restTimescale();
 			},
 			setFPS:function(fps){
 				this._fps      = (typeof fps === "number") ? fps : 30;
@@ -7690,7 +7861,8 @@
 			this._rightDirection = true;
 			if(typeof fps === "number") this.setFPS(fps);
 			
-			this.EventManager = new N.ModuleEventManager(this,["timeMove","timeFinish"]);
+			this.EventManager = new N.ModuleEventManager(this);
+			this.EventManager.addModuleEvent(["timeMove","timeFinish"]);
 		});
 		
 		N.MODULE("TimeProperties",{
@@ -7709,6 +7881,7 @@
 					time:time,
 					props:data
 				},insertAt);
+				return this;
 			},
 			push:function(){
 				var _self = this;
@@ -7721,6 +7894,7 @@
 					var pushTime = _self.defaultStartTime + (_self.defaultInertval * _self.Source.length);
 					_self.insertTimeProperty(pushTime,pushData);
 				});
+				return this;
 			},
 			getAroundPropWithTime:function(time){
 				if(typeof time !== "number") console.error("getAroundPropWithTime:: arg must be number");
@@ -7758,15 +7932,15 @@
 				var aroundData = this.getAroundPropWithTime(time);
 				
 				if(typeof aroundData[1] === "undefined"){
-					return N.clone(aroundData[0]);
+					return aroundData[0];
 				} else {
-					return N.clone( (aroundData[2] < 0.5) ? aroundData[0] : aroundData[1] );
+					return (aroundData[2] < 0.5)?aroundData[0]:aroundData[1];
 				}
 			},
 			getVectorPropWithTime:function(time){
 				var aroundData = this.getAroundPropWithTime(time);
 				if(typeof aroundData[1] === "undefined"){
-					return N.clone(aroundData[0]);
+					return this._gto,aroundData[0];
 				} else {
 					var dataProps = new N.Manage();
 					dataProps.arrangementObjectsDataProp(aroundData[0],aroundData[1]);
@@ -7785,6 +7959,7 @@
 					}).get();
 				}
 			},
+			
 			timeStart:function(){
 				var timeProps = this.Source.first();
 				return timeProps ? timeProps.time : null;
@@ -7798,11 +7973,12 @@
 						this.Source.isOne() ? 0 :
 						this.timeStart() - this.timeEnd();
 			}
-		},function(startTime,interval,defaultKey){
-			this.Source     = new N.Array();
+		},function(attr,startTime,interval,defaultKey){
+			this.Source    = new N.Array();
+			this.Attribute = (new N.Manage(attr)).get();
 			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "value"
 			this.defaultStartTime = startTime ? N.timeStampExp(startTime): N.timeStampExp();
-			this.defaultInertval  = interval  ? N.timeScaleExp(interval) : N.timeScaleExp("2s");
+			this.defaultInertval  = interval  ? N.timescaleExp(interval) : N.timescaleExp("2s");
 		});
 	
 		N.EXTEND_MODULE("Counter","BezierCounter",{

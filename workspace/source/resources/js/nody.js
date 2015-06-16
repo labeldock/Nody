@@ -9,10 +9,10 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.26.3", N.BUILD = "1157";
+		N.VERSION = "0.26.4", N.BUILD = "1171";
 	
 		// Core verison
-		N.CORE_VERSION = "2.0.0", N.CORE_BUILD = "85";
+		N.CORE_VERSION = "2.0.2", N.CORE_BUILD = "88";
   
 		// Pollyfill : console object
 		if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(N.toString(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
@@ -74,7 +74,7 @@
 		//NativeCore Start
 		var NativeFactoryObject = function(type,name,sm,gm){
 			if( !(name in NModules) ){
-				var nativeProto,setter,getter;
+				var nativeProto,setter,getter,nodyModule;
 				//console.log(name,type);
 				switch(type){
 					case "object":
@@ -83,6 +83,19 @@
 									  function(){ sm.apply(this,Array.prototype.slice.call(arguments)); return this; } : 
 									  function(v){ this.Source = v; return this; };
 						getter      = gm?gm:function(){return this.Source;};
+						var nodyObject = function(){ 
+							if(typeof this.set === "function"){ 
+								for(var protoKey in NModules[name].prototype) {
+									//init inital variable
+									if(/^\+[^+]+/.test(protoKey)) {
+										this[protoKey.substr(1)] = NModules[name].prototype[protoKey];
+									}
+								}
+								//set apppy
+								this.set.apply(this,Array.prototype.slice.apply(arguments)); 
+							} 
+						};
+						nodyModule = nodyObject;
 						break;
 					case "array":
 						nativeProto = [];
@@ -90,24 +103,24 @@
 									  sm : 
 									  function(v){ return this.setSource(v); };
 						getter      = function(){ return this.toArray.apply(this,arguments); };
+						var nodyArray = function(){ 
+							if(typeof this.set === "function"){ 
+								for(var protoKey in NModules[name].prototype) {
+									//init inital variable
+									if(/^\+[^+]+/.test(protoKey)) {
+										this[protoKey.substr(1)] = NModules[name].prototype[protoKey];
+									}
+								}
+								//set apppy
+								this.set.apply(this,Array.prototype.slice.apply(arguments)); 
+							} 
+						};
+						nodyModule = nodyArray;
 						break;
 					default: throw new Error("NativeFactoryObject :: 옳지않은 타입이 이니셜라이징 되고 있습니다. => " + type);
 				}
-				
-				var nativeConstructor = function(){ 
-					if(typeof this.set === "function"){ 
-						for(var protoKey in NModules[name].prototype) {
-							//init inital variable
-							if(/^\+[^+]+/.test(protoKey)) {
-								this[protoKey.substr(1)] = NModules[name].prototype[protoKey];
-							}
-						}
-						//set apppy
-						this.set.apply(this,Array.prototype.slice.apply(arguments)); 
-					} 
-				};
 			
-				NModules[name]               = nativeConstructor;
+				NModules[name]               = nodyModule;
 				NModules[name]["new"]        = (function(module){
 					return function(){ return new (Function.prototype.bind.apply(module,[module].concat(Array.prototype.slice.call(arguments)))); };
 				}(NModules[name]));
@@ -119,8 +132,8 @@
 				NModules[name].prototype.__NativeHistroy__     = [name];
 				NModules[name].prototype.__NativeClass__       = function(n){ return this.__NativeHistroy__[this.__NativeHistroy__.length - 1] == n };
 				//
-				NModules[name].prototype.constructor = nativeConstructor;
-				NModules[name].prototype._super = function(){
+				NModules[name].prototype.constructor = nodyModule;
+				NModules[name].prototype._super = function(a){
 					//scope start
 					var currentScopeDepth,
 						currentScopeModuleName,
@@ -441,7 +454,8 @@
 			"asNumber" : function (t) {return (typeof t === "number") ? true : ((typeof t === "string") ? (parseFloat(t)+"") == (t+"") : false );},
 		
 			"isJquery"   : function(o){ return (typeof o === "object" && o !== null ) ? ("jquery" in o) ? true : false : false; },
-			"isArray"    : function(a){ return (typeof a === "object") ? ( a !== null && ((a instanceof Array || a instanceof NodeList || N.isJquery(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) && !(a instanceof Window) ) ? true : false) : false; },
+			"isArray"    : function(a){ return (typeof a === "object" && a !== null ) ? (((a instanceof Array || a instanceof NodeList || N.isJquery(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) && !(a instanceof Window) ) ? true : false) : false; },
+			"isArguments": function(a){ return (typeof a === "object" && a !== null) ? ("callee" in a) ? true : false : false; },
 			"isEmail"    : function(t){ return N.asString(t) ? /^[\w]+\@[\w]+\.[\.\w]+/.test(t) : false;},
 			"isAscii"    : function(t){ return N.asString(t) ? /^[\x00-\x7F]*$/.test(t)         : false;},
 			"isTrue"     : function(t){ return !!t ? true : false;},
@@ -622,9 +636,11 @@
 				return 0;
 			},
 			"toObject":function(param,es,kv){
-				if(typeof param=="object") return param;
+				if(typeof param==="object"){
+					return param ? param : {}; //null filter
+				} 
 				if(kv == true && ( typeof param === "string" || typeof es === "string")){ var r = {}; r[es] = param; return r; }
-				if(typeof param=="string" || typeof param=="boolean") {
+				if(typeof param==="string" || typeof param==="boolean") {
 					var c = N.TRY_CATCH(function(){
 						if(JSON == aJSON) throw new Error("not json supported browser");
 						var jp = JSON.parse(param);
@@ -814,15 +830,14 @@
 				} 
 				return N.extend.apply(undefined,[N.clone(data,true)].concat(Array.prototype.slice.call(arguments,1)));
 			},
+			//fill은 존재하지 않는 키값에 대해서만 적용함
 			//첫번째 소스에 두번째 부터 시작하는 소스를 반영
 			"extendFill":function(data,fillData,forceFill){
 				if(typeof data !== "object") {
 					if(data === undefined) data = {};
 					else data = {data:data};
 				}
-			
 				if(forceFill !== true) forceFill = N.toArray(forceFill);
-			
 				if (forceFill.length || forceFill === true) {
 					for(var key in fillData)  {
 						if( !(key in data) ) data[key] = fillData[key];
@@ -1895,7 +1910,16 @@
 				if(arguments.length === 0){
 					return this.Source;
 				} else {
-					return (typeof filter === "function") ? filter.call(this,this.Source[k],(k in this.Source)) : this.Source[k];
+					if(typeof k === "string"){
+						return (typeof filter === "function") ? filter.call(this,this.Source[k],(k in this.Source)) : this.Source[k];
+					} else {
+						var _self = this;
+						if(typeof filter === "function") {
+							return N.dataMap(k,function(key){ return filter.call(_self,_self.Source[key],(key in _self.Source)); });
+						} else {
+							return N.dataMap(k,function(key){ return _self.Source[key]; });
+						}
+					}
 				}
 			},
 			setProp:function(k,v){
@@ -1955,7 +1979,10 @@
 				data[unique?"add":"push"](v);
 				return this
 			},
-			
+			extend:function(o){ N.extend(this.Source,o); return this; },
+			marge:function(o){ return N.marge(this.Source,o); },
+			extendFill:function(o){ N.extendFill(this.Source,o); return this; },
+			margeFill:function(o){ return N.margeFill(this.Source,o); },
 			//.arrangementObjectsDataProp({a:2,b:3,c:4},{b:4,d:4},{a:1,d:5})
 			//"{"a":[2,null,1],"b":[3,4,null],"c":[4,null,null],"d":[null,4,5]}"
 			arrangementObjectsDataProp:function(data){
@@ -4850,7 +4877,7 @@
 			readonly:function(status,filter){ return this.statusFunction(N.$readOnly,(status !== false ? true : false),filter); },
 			empty   :function(filter)       { filter = filter?filter+",:not(button):not(select)":":not(button):not(select)"; return this.statusFunction(N.$value   ,"",filter); },
 			map     :function(mapf,filter)  { return this.statusFunction(function(node){ var r = mapf(node); if(N.asString(r)){ N.$value(node,r); } },"",filter); },
-			controls:function(eachf,filter) { return this.statusFunction(function(node){ var r = eachf.call(node,node); },"",filter); },
+			selectEach:function(eachf,filter) { return this.statusFunction(function(node){ var r = eachf.call(node,node); },"",filter); },
 			removePartClass:function(rmClass,filter,req){
 				var r = this.statusFunction(function(node,param){
 					var classes = N.$attr(node,"class");
@@ -4969,12 +4996,21 @@
 			whenDidInactive    :function(n,m){ this.StatusEvents.StatusDidInactive[n] = m; },
 			whenActive         :function(n,m){ this.StatusEvents.StatusActive[n] = m; },
 			whenInactive       :function(n,m){ this.StatusEvents.StatusInactive[n] = m; },
-			inactiveStatusTo   :function(status,param,owner,react){
+			toggleInactiveStatus   :function(status,param,owner,react){
 				owner = owner ? owner : this;
 				param = N.toArray(param);
-				if( !this.StatusEvents.StatusInactive[status] ) return console.warn('존재하지 않는 키값을 호출하였습니다.',status);
+				
 				if( this.ActiveKeys.has(status) ){
-					if(this.ActiveKeys.length === 1 && !this.AllowInactive) return;
+					//헨들은 없고 키는 제거해야할때
+					if( !this.StatusEvents.StatusInactive[status] ){
+						this.ActiveKeys.remove(status);
+						return true;
+					}
+					//모든 인액트를 허용하지 않을때
+					if(this.ActiveKeys.length === 1 && !this.AllowInactive){
+						return false;
+					}
+					//핸들 스타트
 					if( N.APPLY(this.StatusEvents.AnyWillInactive          ,owner,param) !== false &&
 						N.CALL(this.StatusEvents.StatusWillInactive[status],owner,param) !== false )
 					{
@@ -4986,12 +5022,12 @@
 					}
 				}
 			},
-			activeStatusTo:function(status,param,owner,react){
+			toggleActiveStatus:function(status,param,owner,react){
 				owner = owner ? owner : this;
 				param = N.toArray(param);
 				// 존재하지 않는 스테이터스 이거나 리액트
 				if( !this.StatusEvents.StatusActive[status] ){
-					return console.warn('존재하지 않는 키값을 호출하였습니다.',status,this.StatusEvents.StatusActive);
+					return console.warn(this,'에 존재하지 않는 키값을 호출하였습니다.',status,this.StatusEvents.StatusActive);
 				} 
 				if( !this.ActiveKeys.has(status) || (react == true) ){
 					// 멀티가 가능하거나 아무것도 없을땐
@@ -5013,7 +5049,8 @@
 							N.APPLY(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
 						{
 							if( N.APPLY(this.StatusEvents.StatusActive[status],owner,param) == false ) return;
-							this.ActiveKeys.each(function(key){ _.inactiveStatusTo(key,param,owner); })
+							var _self=this;
+							this.ActiveKeys.each(function(key){ _self.toggleInactiveStatus(key,param,owner); })
 							this.ActiveKeys.add(status);
 							N.APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
 							N.APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
@@ -5023,13 +5060,13 @@
 				}
 			},
 			activeTo:function(status){
-				return this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this,false);
+				return this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this,false);
 			},
 			inactTo:function(status){
-				return this.inactiveStatusTo(status,Array.prototype.slice.call(arguments,1),this,false);
+				return this.toggleInactiveStatus(status,Array.prototype.slice.call(arguments,1),this,false);
 			},
 			reactTo:function(status){
-				return this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this,true);
+				return this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this,true);
 			},
 			getActiveStatus:function(){
 				return this.ActiveKeys.join(" ");
@@ -5070,7 +5107,7 @@
 				}
 			},
 			viewStatusTo:function(status){
-				if(typeof name === 'string') this.activeStatusTo(status,Array.prototype.slice.call(arguments,1),this);
+				if(typeof name === 'string') this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
 			},
 			node:function(innerKey,wrapper){
 				if(arguments.length === 0) return (wrapper ? wrapper : N.NodeQuery.new)(this.view);
@@ -5090,27 +5127,37 @@
 		
 		N.EXTEND_MODULE("ViewAndStatus","FormController",{
 			setFormData:function(data,v2){
-				return this.FormControl.checkin(data,v2);
+				return this.Form.checkin(data,v2);
 			},
 			getFormData:function(){
-				return this.FormControl.checkout();
+				return this.Form.checkout();
+			},
+			controlEach:function(h,f){
+				this.Form.selectEach(h,f);
 			},
 			getFormControl:function(){
-				return this.FormControl.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
+				return this.Form.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
 			}
-		},function(targetForm,statusProp,helper){
+		},function(targetForm,viewStatus,methodHelper){
 			if( this._super(targetForm,false,true) === true ) {
-				this.FormControl = new N.Form(this.view);
-				if(statusProp) this.addActiveStatus(statusProp);
-		
-				if(typeof helper === 'function') helper = {init:helper};
-				var _ = this;
-				N.propsEach(helper,function(fn,key){
-					if(!(key in _.constructor.prototype)) {
+				this.Form = new N.Form(this.view);
+				
+				var _self = this;
+				
+				if(viewStatus && (typeof viewStatus === "object")) {
+					N.propsEach(viewStatus,function(handle,key){
+						_self.addViewStatus(key,handle);
+					});
+				};
+				
+				if(typeof methodHelper === 'function') methodHelper = {init:methodHelper};
+				
+				N.propsEach(methodHelper,function(fn,key){
+					if(!(key in _self.constructor.prototype)) {
 						if(key === 'init') {
-							if(typeof fn === 'function') fn.apply(_,Array.prototype.slice.call(arguments));
+							if(typeof fn === 'function') fn.apply(_self,Array.prototype.slice.call(arguments));
 						} else {
-							_[key] = (typeof fn === 'function') ? function(){fn.apply(_,Array.prototype.slice.call(arguments));} : fn;
+							_self[key] = (typeof fn === 'function') ? function(){fn.apply(_self,Array.prototype.slice.call(arguments));} : fn;
 						}
 					}
 				});
@@ -5231,9 +5278,8 @@
 				return this;
 			},
 			roleFind:function(find,proc){
-				if(!find) return console.error("roleFind",find,"에 값은 반드시 유효한 값이 들어와야합니다.");
 				var finded = N.find(find);
-				if(finded.length === 0) return console.error(find,"에 해당하는 노드를 찾을 수 없습니다.");
+				if(finded.length === 0) return console.warn(find,"에 해당하는 노드를 찾을 수 없습니다.");
 				var selectedRoles = [];
 				N.dataEach(finded,function(roleNode){
 					if(typeof roleNode.roleController === "object") selectedRoles.push(roleNode.roleController);
@@ -5254,7 +5300,7 @@
 				var _self = this;
 				N.find('script[type*=json]', this.view ,N.dataEach ,function(scriptTag){
 					var jsonData = N.$value(scriptTag);
-					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self._manageData.append(jsonData) : N.extend(_self._manageProp,jsonData);
+					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self._manageData.append(jsonData) : _self._manageProp.extend(jsonData);
 					N.$remove(scriptTag);
 				});
 				this.view.roleController = this;
