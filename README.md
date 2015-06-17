@@ -152,6 +152,8 @@ Nody는 AMD로 지원을 전환하면서부터 0.26까지는 불안정할 예정
   - [x] makes의 표현식과 exp의 표현식을 결합함 ".list-$*4" 와 ".list-\\{$i*4}"는 같은 표현식임 ".list-\\{(($i+20)*20)-5}" 이런식으로 다양하게 숫자를 만들어낼수 있게되었음.
   - [x] FormController가 뷰상태에 초점이 맞춰졌고 초기화 순서가 변경됨
   - [x] MVVM 모듈 그룹과 Binder, ModuleEventManager, Template 모듈을 완전히 통합
+  - [x] DataContext의 데이터를 다시 데이터로 업데이트 할 수 있게 되었습니다. 이로서 렌더링 부하가 줄었습니다.
+  - [x] 이미 렌더링이 끝난 ViewModel을 다시 재활용이 가능하도록 업데이트 하였습니다.
   - [ ] 데이터와 연동이 자연스럽게 연결되는 ActiveController 업데이트
   - [ ] ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
   - [ ] ContentLoader의 하위모듈(3개)의 통일성이 떨어져 재설계
@@ -160,7 +162,7 @@ Nody는 AMD로 지원을 전환하면서부터 0.26까지는 불안정할 예정
   - [ ] 테스트코드에서 새로운 스타일시트 헬퍼 codykit적용
   - [ ] 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
   - [ ] 통신모듈의 재설계
-  - (\[source:+7kB(309)\] \[min:+4kB(181)\])
+  - (\[source:+17kB(319)\] \[min:+10kB(187)\])
   
 #### 0.25.x 업데이트
   - [x] dateExp, timeStampExp, timeScaleExp 업데이트 및 추가

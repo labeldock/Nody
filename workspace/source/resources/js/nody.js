@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.26.7", N.BUILD = "1182";
+		N.VERSION = "0.26.8", N.BUILD = "1193";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.2", N.CORE_BUILD = "88";
@@ -838,6 +838,14 @@
 					default : console.error("N.clone::copy failed : target => ",t); return t; break;
 				}
 			},
+			"diffKeys":function(a,b){
+				if(typeof a === "object" && typeof b === "object"){
+					return N.dataFilter(N.dataFlatten(N.propsKey(a),N.propsKey(b),N.dataUnique),function(key){
+						if(a[key] !== b[key]){ return true; }
+					});
+				}
+				return null;
+			},
 			//첫번째 소스에 두번째 부터 시작하는 소스를 반영
 			"extend":function(data){
 				if(typeof data !== "object") return data;
@@ -846,6 +854,7 @@
 						for(var key in arguments[i]) data[key] = arguments[i][key];
 				return data;
 			},
+			
 			//완전히 새로운 포인터 오브젝트에 다른 소스를 반영
 			"marge":function(data){
 				if(typeof data !== "object") {
@@ -1242,16 +1251,25 @@
 	(function(W,N){
 		if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
 		N.SINGLETON("PARTICU",{
+			// nd.ratio(500,10,50,100) => [31, 156, 313]
 			"ratio":function(ratioTotal){
-				var total = 0;
-				ratioTotal = N.toNumber(ratioTotal) || 100;
-				return N.dataMap(Array.prototype.slice.call(arguments,1),function(v){
+				var args = N.argumentsFlatten(arguments),total = 0;
+				ratioTotal = N.toNumber(args.shift()) || 100;
+				var resultRatio = N.dataMap(args,function(v){
 					var num = N.toNumber(v);
-					total  += num;
+					total += num;
 					return num;
 				},N.dataMap,function(num){
 					return Math.round(num / total * ratioTotal);
 				});
+				//fixresult
+				var fixResult = 0;
+				N.dataEach(resultRatio,function(n){ fixResult += n; });
+				fixResult = ratioTotal-fixResult;
+				if( fixResult !== 0){
+					resultRatio[resultRatio.length-1] += fixResult;
+				}
+				return resultRatio;
 			},
 			"toPx":function(v){ if( /(\%|px)$/.test(v) ) return v; return N.toNumber(v)+"px"; },
 			//래핑된 텍스트를 제거
@@ -1544,7 +1562,7 @@
 				if( N.isArray(value) ) return value[Math.floor(Math.random()*(value.length))];
 				var cache = N.cache.get("N.zoneChoice",value+split);
 				if(cache) return cache[Math.floor(Math.random()*(cache.length))];
-				var cachedata = value.split(typeof split === "string"?split:",");
+				var cachedata = value.split(typeof split === "string"?split:"|");
 				N.cache.set("N.zoneChoice",value+split,cachedata);
 				return cachedata[Math.floor(Math.random()*(cachedata.length))];
 			},
@@ -1556,7 +1574,7 @@
 					if(/\d\~\d/.test(command)){
 						mutableType = "range";
 						value = (type == "fixed") ? N.zoneRange(command) : command;
-					} else if( command.indexOf(",") > -1 ){
+					} else if( command.indexOf("|") > -1 ){
 						mutableType = "choice";
 						value = (type == "fixed") ? N.zoneChoice(command) : command;
 					} else {
@@ -1724,6 +1742,9 @@
 				} else {
 					return this.setSource(this.sortFilter(filter));
 				}
+			},
+			callback:function(f){
+				if(typeof f === "function"){ return f.call(this,this); }
 			},
 			//뒤로부터 원하는 위치에 대상을 삽입합니다.
 			behind: function(v,a){ return this.insert(v, this.length - (isNaN(a) ? 0 : parseInt(a)) ); },
@@ -1951,6 +1972,9 @@
 			},
 			each:function(f){ for(key in this.Source){ var r = f(this.Source[key],key); if(typeof r == false) {break;} } return this; },
 			reverseEach:function(method){ var keys = this.keys(); for ( var i = keys.length - 1 ; i > -1 ; i--) { if( method(keys[i],i) == false ) break; } return this; },
+			callback:function(f){
+				if(typeof f === "function") this.call(this,this.Source);
+			},
 			count:function(){return N.propsLength(this.Source); },
 			clone:function(){return N.clone(this.Source); },
 			save:function() {return this.__NativeInitializer__(N.clone(this.Source)); },
@@ -3388,6 +3412,36 @@
 					for(var i=0,l=childs.length;i<l;i++) N.NodeUtil.feedDownWhile(childs[i],stopFilter,findChild);
 				}
 			},
+			"style":function(node,styleName,value){
+				if(typeof styleName === "undefined"){
+					return ENV.supportComputedStyle ? window.getComputedStyle(node,null) : node.currentStyle;
+				}
+				if(typeof styleName === "string"){
+					if(typeof styleName === "string"){
+						//mordern-style-name
+						var prefixedName = ENV.getCSSName(styleName);
+						//get
+						if(typeof value === "undefined") 
+							return ENV.supportComputedStyle ? window.getComputedStyle(node,null).getPropertyValue(prefixedName) : node.currentStyle[camelCase(prefixedName)];
+					
+						//set
+						var wasStyle = N.$attr(node,"style") || "";
+						if(value === null) {
+							wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+"(.?:.?|)[^\;]+\;","g"),function(s){console.log(s); return ''});
+							N.$attr(node,"style",wasStyle);
+						} else {
+							var prefixedValue = ENV.getCSSName(value);
+							//set //with iefix
+							wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+".?:.?[^\;]+\;","g"),"");
+							N.$attr(node,"style",prefixedName+":"+prefixedValue+";"+wasStyle);
+						}
+					}
+				} else if(typeof styleName === "object") {
+					N.propsEach(styleName,function(val,name){
+						if(typeof name === "string"){ N.NodeUtil.style(node,name,val); }
+					});
+				}
+			},
 			//도큐먼트상의 엘리먼트 포지션을 반환합니다.
 	        position:function(element){
 	            if(!element) return null;
@@ -4330,31 +4384,10 @@
 			//같은 위치상의 엘리먼트를 아랠로 내립니다.
 			"down" : function(target){if(!N.isNode(target))return target;var parent=target.parentNode;if(!N.isNode(parent))return target;var next=target.nextSibling;if(!N.isNode(next))return target;N.$after(next,target);},
 			//스타일을 얻어냅니다.
-			"style": function(target,styleName,value){
-				var target = N.findLite(target)[0];
-				if(N.isNode(target)){
-					if(typeof styleName === "undefined") return ENV.supportComputedStyle ? window.getComputedStyle(target,null) : target.currentStyle;
-					if(typeof styleName === "string"){
-						//mordern-style-name
-						var prefixedName = ENV.getCSSName(styleName);
-						//get
-						if(typeof value === "undefined") 
-							return ENV.supportComputedStyle ? window.getComputedStyle(target,null).getPropertyValue(prefixedName) : target.currentStyle[camelCase(prefixedName)];
-					
-						//set
-						var wasStyle = N.$attr(target,"style") || "";
-						if(value === null) {
-							wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+"(.?:.?|)[^\;]+\;","g"),function(s){console.log(s); return ''});
-							N.$attr(target,"style",wasStyle);
-						} else {
-							var prefixedValue = ENV.getCSSName(value);
-							//set //with iefix
-							wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+".?:.?[^\;]+\;","g"),"");
-							N.$attr(target,"style",prefixedName+":"+prefixedValue+";"+wasStyle);
-						}
-					}
-				}
-				return target;
+			"style": function(targets,styleName,value){
+				return N.dataEach(N.findLite(targets),function(node){
+					N.NodeUtil.style(node,styleName,value);
+				});
 			},
 			//내무의 내용을 지웁니다.
 			"empty"  : function(target){ return N.find(target,N.dataMap,function(node){ if("innerHTML" in node) node.innerHTML = ""; return node; }); },
@@ -4833,9 +4866,9 @@
 				}
 			},
 			//성능의 가속을 위해 존재하는 값들입니다. 이것을 건드리면 엄청난 문제를 초례할 가능성이 있습니다.
-			__nodeDataDefaultKeys:['value','html','class','dataset','href','append','prepend','put','display','custom'],
-			__nodeDataAttrKeys:["nd-value", 'nd-html', "nd-class", "nd-dataset", "nd-href", "nd-append", "nd-prepend", "nd-put", "nd-display", "nd-custom"],
-			__nodeDataSelectKeys:["[nd-value]", "[nd-html]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-append]", "[nd-prepend]", "[nd-put]", "[nd-display]", "[nd-custom]"],	
+			__nodeDataDefaultKeys:['value','html','class','dataset','href','append','prepend','put','display'],
+			__nodeDataAttrKeys:["nd-value", 'nd-html', "nd-class", "nd-dataset", "nd-href", "nd-append", "nd-prepend", "nd-put", "nd-display"],
+			__nodeDataSelectKeys:["[nd-value]", "[nd-html]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-append]", "[nd-prepend]", "[nd-put]", "[nd-display]"],	
 			//
 			setNodeData:function(refData,dataFilter){
 				if(!this.TemplatePartials) this.TemplatePartials = {};
@@ -5186,7 +5219,7 @@
 				return (wrapper ? wrapper : N.NodeQuery.new)(this[innerKey]);
 			},
 			find:function(findKeyword){
-				return findKeyword ? N.find(findKeyword,this.view) : [];
+				return new N.NodeQuery(findKeyword,this.view);
 			}
 		},function(targetView,allowMulti,allowInactive){			
 			this.view = N.findLite(targetView)[0];
@@ -5295,9 +5328,6 @@
 						}
 					});
 				}
-				this._manageModule = function(){
-					this.triggerWithOwner.apply(this,[this._manageModule,triggerName].concat(Array.prototype.slice.call(arguments,1)));
-				};
 			},
 			addModuleEvent:function(eventName,withAroundCallback){
 				var _self = this;
@@ -5333,7 +5363,7 @@
 			}
 		},function(module){
 			if(!N.isModule(module)) console.error("ModuleEventManager:: manage object is must be nody module");
-			this._manageModule       = module;
+			this._manageModule = module;
 			//{eventName:[handers...]}
 			this._manageModuleEvents = new N.Manage();
 			//{eventName:{aroundName:[handlers..]}}
@@ -5379,7 +5409,7 @@
 				this._manageData.push(v);
 				return this;
 			},
-			roleFind:function(find,proc){
+			findRole:function(find,proc){
 				var finded = N.find(find);
 				if(finded.length === 0) return console.warn(find,"에 해당하는 노드를 찾을 수 없습니다.");
 				var selectedRoles = [];
@@ -5391,6 +5421,14 @@
 					N.dataEach(selectedRoles,function(roleController){ proc.call(_self,roleController); });
 				}
 				return selectedRoles;
+			},
+			findRoleById:function(id){
+				var finded = N.find("#"+id.replace("#",""),0);
+				if(finded.length === 0) return console.warn("findRoleById는 ",id,"을 찾을수 없습니다");
+				return finded.roleController;
+			},
+			findRoleByProp:function(prop,proc){
+				this.findRole(this._manageProp.prop(prop),proc);
 			}
 		},function(targetRole,props,data,moduleEvent){
 			if( this._super(targetRole,true,true) === true ) {
@@ -6658,7 +6696,7 @@
 					return result.join("/");
 				}
 			},
-			_clearData:function(data){
+			_getDataProps:function(data){
 				var data = N.clone(data);
 				if( (typeof data) === "object" ) {
 					if(N.isArray(data)) {
@@ -6668,21 +6706,22 @@
 					}
 				}
 			},
-			_childrenData:function(data){
+			_getChildData:function(data){
 				if( typeof data === "object" ) {
 					if(N.isArray(data)) {
-						return N.clone(data);
+						return N.cloneLite(data);
 					} else {
 						var childKeyData = data[this.DefaultDataKey];
 						if(typeof childKeyData === "object"){
 							if(N.isArray(childKeyData)) {
-								return N.clone(childKeyData);
+								return N.cloneLite(childKeyData);
 							} else {
-								return [N.clone(childKeyData)];
+								return [N.cloneLite(childKeyData)];
 							}
 						}
 					}
 				}
+				return [];
 			},
 			// path로 해당 위치의 데이터를 반환해줍니다.
 			getFullDataWithPath:function(path){
@@ -6727,9 +6766,10 @@
 			},
 			//자식연쇄 메니지드 데이터를 준비합니다.
 			feedDownManagedDataMake:function(data,parent){
+				
 				if( typeof data === "object" ){
-					var makeManagedData = N.isArray(data) ? new N.ManagedData(this,this._clearData(data),"array") : new N.ManagedData(this,this._clearData(data),"object");
-					var childDatas = this._childrenData(data);
+					var makeManagedData = N.isArray(data) ? new N.ManagedData(this,this._getDataProps(data),"array") : new N.ManagedData(this,this._getDataProps(data),"object");
+					var childDatas = this._getChildData(data);
 					var childrens  = [];
 					var _self      = this;
 					if(N.isArray(childDatas)){
@@ -6742,10 +6782,53 @@
 
 					return makeManagedData;
 				} else {
-					console.warn("data초기 값은 반드시 object타입이여야 합니다.");
+					console.error("data초기 값은 반드시 object타입이여야 합니다. =>",typeof data,data);
 				}
 			},
-
+			
+			update:function(data,parent,marge){
+				
+				if( typeof data === "object" ){
+					var managedData = parent || this.RootManagedData;
+					
+					//feedDownUpdate
+					var dataProp  = this._getDataProps(data);
+					var diffProps = N.diffKeys(managedData.prop(), dataProp);
+					for(var i=0,l=diffProps.length;i<l;i++){
+						if( diffProps[i] in dataProp ){
+							managedData.setProp(diffProps[i],dataProp[diffProps[i]]);
+						} else if((marge !== true) && !(diffProps[i] in dataProp)) {
+							managedData.removeProp(diffProps[i]);
+						}
+					}
+					
+					//하위데이터
+					var childData       = this._getChildData(data);
+					var childDataLength = childData.length;
+					var managedChildrens= managedData.Child.toArray();
+					var managedLength   = managedChildrens.length;
+					var removeTargets   = [];
+					for(var i=0,l=((childDataLength > managedLength) ? childDataLength : managedLength);i<l;i++){
+						if(childData[i]&&managedChildrens[i]){
+							this.update(childData[i],managedChildrens[i],marge);
+						} else if(!childData[i]&&managedChildrens[i]){
+							removeTargets.push(managedChildrens[i]);
+						} else if(childData[i]&&!managedChildrens[i]){
+							managedData.addChildData(childData[i]);
+						}
+					}
+					//데이터 지우기
+					N.dataEach(removeTargets,function(removeTarget){
+						removeTarget.removeManagedData();
+					});
+					return managedData;
+				} else {
+					console.warn("data초기 값은 반드시 object타입이여야 합니다.",typeof data,data);
+				}
+			},
+			margeUpdate:function(data){
+				this.update(data,undefined,true);
+			},
 			//managedData를 string이나 오브젝트로 뽑아넴
 			trace:function(managedData){
 				var _self = this;
@@ -7071,9 +7154,8 @@
 			},
 			response:function(responseKey,proc){
 				if(typeof responseKey !== "string" && typeof proc !== "function") console.warn("response args must be string & function => ",responseKey,proc);
-				this.DataContext.Binder.listen(this,this.DataID+"."+responseKey,function(value,beforeValue,key){
-					proc(value,key);
-				});
+				if(!this.__response__) this.__response__ = {};
+				this.DataContext.Binder.listen(this.__response__,this.DataID+"."+responseKey,function(value,beforeValue,key){ proc(value,key); });
 			},
 			revertData:function(){
 				this.DataContext.getDataWithPath(this.path);
@@ -7151,12 +7233,16 @@
 				if(onlyThis === true) {
 					this.removeFromParent();
 					this.DataContext.Binder.resend(this,"GLOBAL.ManagedDataRemoved",this);
-					this.DataContext.Binder.removeListener(this);
+					this.kill();
 				} else {
 					this.feedUpManageData(function(md){ 
 						md.removeManagedData(true);
 					});
 				}
+			},
+			kill:function(){
+				this.DataContext.Binder.removeListener(this);
+				if(this.__response__)this.DataContext.Binder.removeListener(this.__response__);
 			},
 			//하위 데이터를 추가함
 			addChildData:function(data){
@@ -7275,6 +7361,7 @@
 						this.needDisplay(rerenderManagedData);
 					}
 					this._managePresentorEvent.trigger("dataChange","rerender",rerenderManagedData,this.structureNodes[rerenderManagedData.DataID]);
+					this._managePresentorEvent.trigger("displayChange",this,this.view);
 				});
 		
 				currentBinder.listen(this,"GLOBAL.ManagedDataIndexExchange",function(changesManagedData){
@@ -7295,7 +7382,6 @@
 	
 						this._managePresentorEvent.trigger("dataChange","position",changesManagedData[0],node1);
 						this._managePresentorEvent.trigger("dataChange","position",changesManagedData[1],node2);
-						this._managePresentorEvent.trigger("displayChange",this,this.view);
 					}
 				});
 		
@@ -7321,12 +7407,12 @@
 					if(this.placeholderNodes[params.dataID]) {
 						this.needDisplay(params.newManagedData,this.placeholderNodes[params.dataID]);
 						this._managePresentorEvent.trigger("dataChange","append",params.newManagedData,this.structureNodes[params.newManagedData.DataID]);
+						this._managePresentorEvent.trigger("displayChange",this,this.view);
 					}
 				});
 				
 				currentBinder.listen(this,"GLOBAL.ManagedDataWasSetValue",function(managedData){
 					this._managePresentorEvent.trigger("dataChange","bind",managedData,this.structureNodes[managedData.DataID])
-					this._managePresentorEvent.trigger("displayChange",this,this.view);
 				});
 		
 				//end
@@ -7428,20 +7514,35 @@
 			needDisplayWithData:function(data){
 				this.setManagedData(data) ? this.needDisplay() : console.warn("데이터를 초기화하는데 실패하였습니다. 데이터의 형식이 잘못되었습니다.",data);
 			},
-			getManagedDataWithNode:function(node,strict){
+			findByManagedData:function(managedData){
+				return this.structureNodes[managedData.getDataID()];
+			},
+			findByManagedId:function(managedDataID){
+				return this.structureNodes[managedDataID];
+			},
+			findByIndex:function(){
+				var selectQuery = N.dataFilter(N.argumentsFlatten(arguments),function(v){ return (typeof v === "number" || v === "*")?true:false; },N.dataMap,function(v,i){
+					return v === "*" ? "[data-managed-depth=\""+i+"\"]" : "[data-managed-depth=\""+i+"\"]:nth-child("+(v+1)+")";
+				}).join(" ");
+				return new nd.NodeQuery(selectQuery,this.view);
+			},
+			getManagedDataByNode:function(node,strict){
 				if(strict === true) {
 					for(var key in this.structureNodes) if(this.structureNodes[key] === node) return this.managedData.getManagedDataWithID(key);
 				} else {
-					if( N.$is(node,'[data-managed-id]') ) return this.getManagedDataWithNode(node,true);
+					if( N.$is(node,'[data-managed-id]') ) return this.getManagedDataByNode(node,true);
 					var parentNode = N.findParent(node,'[data-managed-id]');
-					if(parentNode) return this.getManagedDataWithNode(parentNode,true);
+					if(parentNode) return this.getManagedDataByNode(parentNode,true);
 				}
 			},
-			findWithManagedData:function(md){
-				return this.structureNodes[md.getDataID()];
+			getRootManagedData:function(){
+				return this.managedData;
 			},
-			findWithDataID:function(dataID){
-				return this.structureNodes[dataID];
+			getManagedDataByIndex:function(){
+				var _dataContext = this.getRootManagedData();
+				return N.dataMap(this.findByIndex.apply(this,Array.prototype.slice.call(arguments)),function(node){
+					return _dataContext.getManagedDataWithID(node.dataset["managed-id"]);
+				});
 			},
 			needActiveController:function(selectPath,allowSelect,allowMultiSelect,allowInactive,firstSelect){
 				if(selectPath.indexOf('/')  >= 0) {
@@ -7450,12 +7551,12 @@
 					return new N.ActiveController(this.view,function(){
 						return N.dataMap(__.querySelectData(selectPath),function(managedData){ return _.structureNodes[managedData.DataID]; },N.dataFilter);
 					},'click',function(e){
-						return N.CALL(allowSelect,this,e,_.getManagedDataWithNode(this));
+						return N.CALL(allowSelect,this,e,_.getManagedDataByNode(this));
 					},firstSelect,allowMultiSelect,allowInactive);
 				} else {
 					var _ = this;
 					return new N.ActiveController(this.view,selectPath,'click',function(e){
-						return N.CALL(allowSelect,this,e,_.getManagedDataWithNode(this),_);
+						return N.CALL(allowSelect,this,e,_.getManagedDataByNode(this),_);
 					},firstSelect,allowMultiSelect,allowInactive);
 				}
 			}
@@ -7556,7 +7657,7 @@
 				//set send
 				this.protectProperty.add(dataName);
 				(new N.Array(listeners)).each(function(listenInfo){
-					listenInfo.proc.call(listenInfo.listener,setValue,beforeValue,listenInfo.key);
+					listenInfo.proc.call(listenInfo.listener,setValue,beforeValue,listenInfo.mutableKey);
 				});
 				this.beforeProperty.setProp(dataName,setValue);
 				this.protectProperty.remove(dataName);
@@ -7584,17 +7685,16 @@
 						if(listenInfo.prefixListen === true){
 							var prefixLength = listenInfo.propertyName.length;
 							if(dataName.substr(0,prefixLength) === listenInfo.propertyName){
-								var replaceInfo = N.cloneLite(listenInfo);
-								replaceInfo.key = dataName.substr(prefixLength);
-								return replaceInfo;
+								listenInfo.mutableKey = dataName.substr(prefixLength);
+								return listenInfo;
 							}
 						} else if(dataName === listenInfo.propertyName) {
-							var replaceInfo = N.cloneLite(listenInfo);
-							replaceInfo.key = dataName;
-							return replaceInfo;
+							listenInfo.mutableKey = dataName;
+							return listenInfo;
 						}
 					}
 				}).remove(undefined);
+				
 				//allow inspect
 				var allowProc    = true
 				var forceLevel   = (typeof forceLevel === "number") ? forceLevel : 0;
@@ -7628,21 +7728,21 @@
 				})){
 					return console.error("BindAdapter:: already set listener & property");
 				}
-				
 				var listenInfo = {
 					listener:listener,
 					propertyName:propertyName,
 					proc:proc,
 					allowProc:allowProc,
 					protectLevel:(typeof protectLevel === "number") ? protectLevel : 0,
-					prefixListen:!!prefixListen
+					prefixListen:!!prefixListen,
+					mutableKey:propertyName
 				};
-				
 				this.Source.push(listenInfo);
 				
 				//beforeProperty set
-				if(this.beforeProperty.has(propertyName)) 
+				if(this.beforeProperty.has(propertyName)){
 					this.shouldSendValueToListenersInfo(listenInfo,this.beforeProperty.prop(propertyName),propertyName);
+				}
 			},
 			prefixListen:function(listener,propertyName,proc,allowProc,protectLevel){
 				//value inspect
@@ -7690,7 +7790,6 @@
 								if(nodes.length) return N.$put(listener,nodes);
 							}
 						}
-						
 						N.$value(listener,value);
 					});
 				}
