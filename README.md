@@ -145,21 +145,19 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
 Nody는 AMD로 지원을 전환하면서부터 0.26까지는 불안정할 예정입니다.
 0.27부터는 안정화 되면서 api변경이 줄것으로 예상됩니다.
 
-#### 0.26 업데이트
+#### 0.26.x 업데이트
   - [x] TimeProps 모듈 추가
   - [x] Timeline 모듈 추가
   - [x] Manage모듈의 효과적인 사용이 가능해짐
   - [x] makes의 표현식과 exp의 표현식을 결합함 ".list-$*4" 와 ".list-\\{$i*4}"는 같은 표현식임 ".list-\\{(($i+20)*20)-5}" 이런식으로 다양하게 숫자를 만들어낼수 있게되었음.
   - [x] FormController가 뷰상태에 초점이 맞춰졌고 초기화 순서가 변경됨
-  - [ ] Form모듈의 리모트폼 구현
-  - [ ] 시간과 관련된 모든 모듈들은 Timeline에 기반하도록 한다.
-  - [ ] 모듈의 이벤트는 ModuleEventManager를 통하여 이벤트 스타일을 통일
-  - [ ] MVVM그룹과 Binder모듈을 통합
-  - [ ] TimeProperties 모듈에서 Cubicbezior 공식이 도입될수 있도록 반영.
+  - [x] MVVM 모듈 그룹과 Binder, ModuleEventManager, Template 모듈을 완전히 통합
   - [ ] 데이터와 연동이 자연스럽게 연결되는 ActiveController 업데이트
   - [ ] ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
-  - [ ] 테스트코드에서 새로운 스타일시트 헬퍼 codykit적용
   - [ ] ContentLoader의 하위모듈(3개)의 통일성이 떨어져 재설계
+  - [ ] TimeProperties 모듈에서 Cubicbezior 공식이 도입될수 있도록 반영.
+  - [ ] Form모듈의 리모트폼 구현
+  - [ ] 테스트코드에서 새로운 스타일시트 헬퍼 codykit적용
   - [ ] 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
   - [ ] 통신모듈의 재설계
   - (\[source:+7kB(309)\] \[min:+4kB(181)\])

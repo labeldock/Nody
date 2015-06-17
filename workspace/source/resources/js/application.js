@@ -3,7 +3,7 @@ var GNBNFContentLoader = new nd.ContentLoader("main",function(){
 	return this.needActiveController("#gnb menu","a","click",function(){
 		//willActive evnet
 		return GNBNFContentLoader.active((this.textContent || this.innerText).toLowerCase());
-	},0).injectSelects(function(accessData,node){
+	},1).injectSelects(function(accessData,node){
 		//navigation data
 		var name = (node.textContent || node.innerText).toLowerCase(),href = node.getAttribute("href");
 		if(name && href) accessData[name] = href;
@@ -87,11 +87,13 @@ GNBNFContentLoader.whenLoad("mvvm",function(){
 	var viewModel = new nd.ViewModel("#mvvm-ul","#mvvm-list","#mvvm-td");
 	//뷰를 그리고 이벤트를 등록함
     var listViewController = new nd.Presentor("#listContainer",dataContext.getRootManagedData(),viewModel);
-	listViewController.dataDidChange = function(){
+	listViewController.onDataChange(function(){
+		console.log("onDataChange trigger!");
 		var xmpText = dataContext.JSONString().replace(/\:\[/,":[\n\t").replace(/\}\]\}\,(\s|)/g,"}]},\n\t").replace("]}]}","]}\n]}");
 		mvvmXMP.text(xmpText);
-	}
-	listViewController.dataDidChange();
+	});
+	listViewController.triggerDataChange();
+	
     listViewController.needDisplay();
 });
 
@@ -113,14 +115,14 @@ var viewModels = {
 		return this.placeholder("ul");
 	},function(){
 		return nd.make("li.inline-box.small-box.text-center",
-			nd.make("img",{src:this.value("image")})
+			nd.make("img",{src:this.prop("image")})
 		);
 	}),
 	"large":new nd.ViewModel(function(){
 		return this.placeholder("ul");
 	},function(){
 		return nd.make("li.inline-box.text-center",
-			nd.make("img",{src:this.value("image")}),
+			nd.make("img",{src:this.prop("image")}),
 			this.bind("native","p")
 		);
 	}),
@@ -175,7 +177,7 @@ GNBNFContentLoader.whenLoad("selectbind",function(){
 		return this.placeholder("div.menu.list-group");
 	},function(){
 		return nd.make("a.list-group-item",
-			nd.make("h4.list-group-item-heading",nd.make("img",{src:this.value("image")}),nd.make("span",{html:"&nbsp;"}),this.bind("name","span")),
+			nd.make("h4.list-group-item-heading",nd.make("img",{src:this.prop("image")}),nd.make("span",{html:"&nbsp;"}),this.bind("name","span")),
 			this.bind("native","p.list-group-item-text")
 		);
 	});
@@ -221,7 +223,7 @@ GNBNFContentLoader.whenLoad("multiselect",function(){
 	},function(){
 		return nd.make("div.col-sm-6",
 			nd.make("div.thumbnail",
-				nd.make("img",{src:this.value("image")}),
+				nd.make("img",{src:this.prop("image")}),
 				nd.make("div.caption",
 					this.bind("name","h3"),
 					this.bind("native","p")
