@@ -141,9 +141,23 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   - opera
   
   
-## Nody 0.24 ~ 0.30 TODO #
-Nody는 AMD로 지원을 전환하면서부터 0.26까지는 불안정할 예정입니다.
-0.27부터는 안정화 되면서 api변경이 줄것으로 예상됩니다.
+## Update history #
+
+#### 0.27.x 업데이트
+  - [x] 'node' 함수가 생겼고 '$' 싱글턴 오브젝트가 사라졌습니다. node는 NodeQuery모듈의 초기화 함수 입니다.
+  - [ ] $some 의 표현의 제거되어 테스트페이지를 고쳐야 됩니다.
+  - [ ] 테스트페이지에 새로운 스타일시트 헬퍼 codykit적용.
+  - [x] 새로운 드로세라에서 nody 객체가 좀 더 확연히 드러나도록 코어를 수정하였습니다.
+  - [x] node.css 함수가 생겼습니다. nd.node.css("#foo",".active"); 이런식으로 어트리뷰트를 추가할수 있습니다.
+  - [ ] 데이터와 연동이 자연스럽게 연결되는 ActiveController 업데이트
+  - [ ] ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
+  - [ ] ContentLoader의 하위모듈(3개)의 통일성이 떨어져 재설계
+  - [ ] TimeProperties 모듈에서 Cubicbezior 공식이 도입될수 있도록 반영.
+  - [ ] Form모듈의 리모트폼 구현
+
+  - [ ] 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
+  - [ ] 통신모듈의 재설계
+  - (\[source:+5kB(324)\] \[min:+3kB(190)\])
 
 #### 0.26.x 업데이트
   - [x] TimeProps 모듈 추가
@@ -154,51 +168,7 @@ Nody는 AMD로 지원을 전환하면서부터 0.26까지는 불안정할 예정
   - [x] MVVM 모듈 그룹과 Binder, ModuleEventManager, Template 모듈을 완전히 통합
   - [x] DataContext의 데이터를 다시 데이터로 업데이트 할 수 있게 되었습니다. 이로서 렌더링 부하가 줄었습니다.
   - [x] 이미 렌더링이 끝난 ViewModel을 다시 재활용이 가능하도록 업데이트 하였습니다.
-  - [ ] 데이터와 연동이 자연스럽게 연결되는 ActiveController 업데이트
-  - [ ] ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
-  - [ ] ContentLoader의 하위모듈(3개)의 통일성이 떨어져 재설계
-  - [ ] TimeProperties 모듈에서 Cubicbezior 공식이 도입될수 있도록 반영.
-  - [ ] Form모듈의 리모트폼 구현
-  - [ ] 테스트코드에서 새로운 스타일시트 헬퍼 codykit적용
-  - [ ] 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
-  - [ ] 통신모듈의 재설계
   - (\[source:+17kB(319)\] \[min:+10kB(187)\])
-  
-#### 0.25.x 업데이트
-  - [x] dateExp, timeStampExp, timeScaleExp 업데이트 및 추가
-  - [x] Binder모듈 디자인골 달성
-  - [x] Nody에 포함되어있는 Sizzle 셀렉터엔진을 완전히 제거합니다. 셀렉터는 이제부터 브라우져에 기량에 맞깁니다.
-  - [x] 모듈을 new없이 이니셜라이징 하기위한 _module() 문법이 제거되었습니다. 이제부터 nody.Module.new() 이렇게 접근해야 합니다. 이에 따른 초기 오버헤드도 줄었습니다.
-  - [x] Object모듈의 이름의 성향을 모호하게 함에 따라 이름이 Manage로 변경되었습니다.
-  - [X] 메서드 디자인의 변화 map, getMap 등의 패턴이 setMap, map으로 변경
-  - [X] 문자 연산 퍼포먼스를 약간 더 빠르게 함
-  - [X] node template의 컨샙을 명확히 함
-  - [X] nd.makes에서 template태그 생성을 제대로 지원합니다.
-  - [X] Template모듈 초기화시 좀 더 다양하고 합리적인 방법으로 만들수 있게 하였습니다.
-  - [X] node template의 컨샙을 명확히 함
-  - [X] MVVM 모듈 안정화
-  - [X] 모듈 메서드 버그 fix
-  - [X] ActiveStatus > ViewAndModel > FormController 상속관계 성립
-  - [X] ActiveStatus > ViewAndModel > RoleController 상속관계 성립
-  - [X] Touch, ScrollBox, ScrollTrack 모듈 제거됨
-  - [x] RoleComponent의 구체화
-  - [x] 여러객체의 값을 동기화 시켜주는 Binder모듈이 새로 추가됨 특별한 부분은 값이 바인딩될때 객체마다의 권한과 결정에 따라 트렌젝션 같은 처리가 가능
-  - [x] 파싱의 효율을 높이기 위해 Number에 모듈 메서드가 추가됨
-  - (\[source:-27kB(302)\] \[min:-17kB(177)\])
-  
-#### 0.24.x 업데이트 
-  - [x] 테스트 및 데이터압축 툴로 middleman을 사용하게 되었습니다.
-  - [x] middleman으로 빌드시 자동으로 dist에 배포됩니다.
-  - [x] requirejs의 AMD를 지원합니다.
-  - [x] Nody와 관련된 객체와 함수를 window.nody에 모두 담는것을 검토.
-  - [x] window.nody의 축약어 적용 "nd" 노드상의 nf어트리뷰트도 모두 nd로 적용.
-  - [x] 모듈의 "NF" 접두어를 제거.
-  - [x] Nody에 등록된 함수들의 이름이 uppercase 로 고정되는것을 제거
-  - [x] ::is isNok 제거, isTextNumber와 isText가 asNumber와 asString로 변경
-  - [x] 코어 업데이트 : 메서드의 이름이 "++"로 시작하면 모듈 메서드로 추가됩니니다.(super호출 불가능)
-  - [x] Template에 html(string) 파셜 추가
-  - (+28kbyte 증가:329)
-  
   
 ## 프로젝트의 방향 #
 데이터를 쉽게 뷰로 구성하고 반영할 수 있도록 할것입니다.
