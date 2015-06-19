@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.27.0", N.BUILD = "1197";
+		N.VERSION = "0.27.1", N.BUILD = "1200";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.2", N.CORE_BUILD = "88";
@@ -755,8 +755,6 @@
 				}
 				return c || {};
 			},
-			//좌측으로 0을 붙임
-			"padLeft":function(nr,n,str){ return new N.Array(n-new String(nr).length+1).join(str||'0')+nr; },
 			//1:길이와 같이 2: 함수호출
 			"times":N.CONTINUE_FUNCTION(function(l,f,s){ l=N.toNumber(l); for(var i=(typeof s === 'number')?s:0;i<l;i++){ var r = f(i); if(r==false) break; } return l; },2),
 			"timesMap":N.CONTINUE_FUNCTION(function(l,f,s){ 
@@ -988,7 +986,7 @@
 					return r.format(format);
 					return r;
 			},
-			"timeStampExp":function(exp){
+			"timestampExp":function(exp){
 				if( arguments.length === 0){
 					return (+new Date());
 				}
@@ -1014,19 +1012,19 @@
 				if(typeof exp === "string") {
 					// 
 					exp = exp.replace(/\d+(Y|year)/,function(t){
-						t.replace(/\d+/,function(d){ scale += d*525600000; });
+						t.replace(/\d+/,function(d){ scale += d*31536000000; });
 						return "";
 					})
 					exp = exp.replace(/\d+(M|month)/,function(t){
-						t.replace(/\d+/,function(d){ scale += d*43200000; });
+						t.replace(/\d+/,function(d){ scale += d*2678400000; });
 						return "";
 					})
 					exp = exp.replace(/\d+(D|day)/,function(t){
-						t.replace(/\d+/,function(d){ scale += d*1440000; });
+						t.replace(/\d+/,function(d){ scale += d*86400000; });
 						return "";
 					})
 					exp = exp.replace(/\d+(h|hour)/,function(t){
-						t.replace(/\d+/,function(d){ scale += d*1440000; });
+						t.replace(/\d+/,function(d){ scale += d*3600000; });
 						return "";
 					})
 					exp = exp.replace(/\d+(ms|millisecond)/,function(t){
@@ -2429,7 +2427,14 @@
 	                ("." + numberInfo[1]);
 	            return (numberInfo[0] + floatValue)*1;
 			},
-			"++padRightNumber":function(value,padRight){
+			"++padLeft":function(value,padLength,useFloat){
+				if(typeof padLength !== "number") return value;
+				var padLeft="", numberInfo = this.divideNumber(value);
+				var requirePad = padLength-(numberInfo[0]+"").length;
+				for(var i=0,l=requirePad>0?requirePad:0;i<l;i++){ padLeft += "0"; }
+				return padLeft + (useFloat === false || !numberInfo[1] ? numberInfo[0] : numberInfo[0] + "." + numberInfo[1] )
+			},
+			"++padRight":function(value,padRight){
 	            if(typeof padRight == "number") {
 	                var dInfo = this.divideNumber(value);
 	                var iVal  = dInfo[0];
@@ -3788,6 +3793,7 @@
 				}	
 			},1),
 			"makes":N.CONTINUE_FUNCTION(function(fulltag,root){
+				if(typeof fulltag !== "string" || !fulltag) return [];
 				var makeRoot    = N.make('div');
 				var hasTemplate = (fulltag.toLowerCase().indexOf("template") > -1)?true:false;
 				var divideIndex = fulltag.indexOf(">");
@@ -3871,6 +3877,16 @@
 				}
 				
 				return makes;
+			},1),
+			"makeWrap":N.CONTINUE_FUNCTION(function(wrapper,target,targetParent){
+				var wrapNode     = N.make(wrapper);
+				var targetNodes  = N.find(target,targetParent);
+				console.log("targetNodes",target,targetNodes)
+				if(targetNodes[0] && targetNodes[0].parentElement) {
+					N.node.before(targetNodes[0],wrapNode);
+				}
+				N.node.append(wrapNode,targetNodes);
+				return wrapNode;
 			},1),
 			// 각 arguments에 수치를 넣으면 colgroup > col, col... 의 width값이 대입된다.
 			"makeCol":function(){ 
@@ -4013,7 +4029,13 @@
 				return this.fireEvent("on" + eventObject.type, eventObject);
 			};
 		})(Window.prototype, HTMLDocument.prototype, Element.prototype, "addEventListener", "removeEventListener", "dispatchEvent", []);
-	
+		var APPEND_OR_INSERTBEFORE = function(parent,appendNode,index){
+			if(typeof index === "number" && parent.children[index]){
+				parent.insertBefore(appendNode,parent.children[index]);
+			} else {
+				parent.appendChild(appendNode);
+			}
+		};
 		var NODE_METHODS = {
 			//포커스 상태인지 검사합니다.
 			"hasFocus":function(sel){ return document.activeElement == N.findLite(sel)[0]; },
@@ -4184,11 +4206,13 @@
 				var parent = N.findParent(node);
 				if(parent) return N.dataIndex(parent.children,node);
 			},
-			"append":function(parentIn,childs){
+			"append":function(parentIn,childs,needIndex){
 				var parent = N.findLite(parentIn)[0];
 				if(!N.isNode(parent)) return parentIn;
 				var appendTarget  = N.findLite(childs);
 				var parentTagName = parent.tagName.toLowerCase();
+				var insertVariant = (typeof needIndex === "number") ? true : false;
+				var targetIndex   = needIndex;
 				for(var i=0,l=appendTarget.length;i<l;i++)
 					if (N.isNode(appendTarget[i])) {
 						switch(parentTagName){
@@ -4196,7 +4220,7 @@
 							var tagName = appendTarget[i].tagName.toLowerCase();
 							switch(tagName){
 								case "colgroup": case "tbody": case "thead": case "tfoot":
-									parent.appendChild(appendTarget[i]);
+									APPEND_OR_INSERTBEFORE(parent,appendTarget[i],insertVariant?targetIndex++:undefined);
 									break;
 								case "tr": case "td": case "th": default:
 									window.tb = parent.tBodies;
@@ -4210,19 +4234,19 @@
 									}
 									var tbody = parent.tBodies[parent.tBodies.length - 1];									
 									if(tagName == "tr"){
-										tbody.appendChild(appendTarget[i]);
+										APPEND_OR_INSERTBEFORE(tbody,appendTarget[i],insertVariant?targetIndex++:undefined);
 									} else {
 										//td th else
 										var tr = tbody.insertRow( tbody.children.length );
 										switch(tagName){
 											case "td": case "th":
-												tr.appendChild(appendTarget[i])
+												APPEND_OR_INSERTBEFORE(tr,appendTarget[i],insertVariant?targetIndex++:undefined);
 												break;
 											default:
 												//else
 												var td = N.create("td");
 												tr.appendChild(td);
-												td.appendChild(appendTarget[i]);
+												APPEND_OR_INSERTBEFORE(td,appendTarget[i],insertVariant?targetIndex++:undefined);
 												break;
 										}
 									}
@@ -4233,21 +4257,21 @@
 							var tagName = appendTarget[i].tagName.toLowerCase();
 							switch(tagName){
 								case "td" : case "th" :
-									parent.appendChild(appendTarget[i]);
+									APPEND_OR_INSERTBEFORE(parent,appendTarget[i],insertVariant?targetIndex++:undefined);
 									break;
 								default   :
 									var td = N.create("td");
 									parent.appendChild(td);
-									td.appendChild(appendTarget[i]);
+									APPEND_OR_INSERTBEFORE(td,appendTarget[i],insertVariant?targetIndex++:undefined);
 									break;
 							}
 							break;
 						default:
-							parent.appendChild(appendTarget[i]);
+							APPEND_OR_INSERTBEFORE(parent,appendTarget[i],insertVariant?targetIndex++:undefined);
 							break;
 					} 
 				} else if(N.isTextNode(appendTarget[i])){
-					parent.appendChild(appendTarget[i]);
+					APPEND_OR_INSERTBEFORE(parent,appendTarget[i],insertVariant?targetIndex++:undefined);
 				} else {
 					//append faild
 					console.warn("N.node.append :: 추가하려는 요소는 Element요소여야 합니다.",appendTarget[i])
@@ -4270,15 +4294,13 @@
 			"appendTo":function(targets,parentEL){ return N.node.append(N.findLite(parentEL)[0],targets); },
 			"prependTo":function(targets,parentEL){ return N.node.prepend(N.findLite(parentEL)[0],targets); },
 			"require":function(parent,target,needIndex){
-				var parent = N.findLite(parent);
-				if(parent.length == 0) return undefined;
-				if(parent.length  > 1) console.warn('require::parent must be single');
-				parent = parent[0];
-				var findTargets = N.find(target,parent);
+				var parent = N.findLite(parent)[0];
+				if(!parent) return target;
+				var findTargets = N.findOn(parent,target);
 				if(findTargets.length > 1) console.warn('require::require target must be single, please more specific select');
 				if(findTargets.length > 0) return findTargets[0];
 				var makeTarget = N.make(target);
-				N.node.append(parent,makeTarget);
+				N.node.append(parent,makeTarget,needIndex);
 				return makeTarget;
 			},
 			"css":function(sel,exp){
@@ -4343,17 +4365,6 @@
 					}
 				}
 				return target;
-			},1),
-			//
-			"wrap":N.CONTINUE_FUNCTION(function(target,wrapper){
-				wrapper = N.findLite(wrapper);
-				target  = N.findLite(target);
-				if(!wrapper.length) return undefined;
-				if(wrapper.length > 1) console.warn('wrapTo::wrapper select is mustbe one',wrapper);
-				wrapper = wrapper[0];
-				if(target[0].parentElement) N.node.before(target[0],wrapper);				
-				N.node.append(wrapper,target);
-				return wrapper;
 			},1),
 			//대상과 대상의 엘리먼트를 바꿔치기함
 			"change":N.CONTINUE_FUNCTION(function(left,right){
@@ -7970,7 +7981,10 @@
 				this.move(this._tick + N.timescaleExp(exp));
 			},
 			//속도 1은 1초 양음수 가능
-			rate:function(rate){
+			rate:function(rate,toggle){
+				if((toggle===true || toggle==="toggle") && this._rate!==0){
+					return this.stop();
+				}
 				if(typeof rate !== "number") return console.error("Timeline::rate is must be number");
 				if(this._wheel) clearInterval(this._wheel);
 				if(rate !== 0) {
@@ -7983,7 +7997,7 @@
 						if(_timeline._rate === 0) return _timeline.stop();
 						var newSpot   = (+new Date())
 						var realScale = newSpot - _timeline._spot;
-						var wheelSpot = (_timeline._tick + realScale) * _timeline._rate;
+						var wheelSpot = _timeline._tick + (realScale * _timeline._rate);
 						_timeline.move(wheelSpot,true);
 						_timeline._spot = newSpot;
 					}
@@ -7991,8 +8005,8 @@
 					wheelProc();
 				}
 			},
-			rateWithTimescale:function(exp){
-				return this.rate(N.timescaleExp(exp) / 1000);
+			rateByTimescale:function(exp,toggle){
+				return this.rate(N.timescaleExp(exp) / 1000,toggle);
 			},
 			timestamp:function(){
 				return this._tick;
@@ -8102,8 +8116,6 @@
 				if(this.Source.length === 1 || this.Source.first().time > time) { return [this.Source[0].props,undefined,0]; }
 				if(this.Source.last().time < time) { return [this.Source.last().props,undefined,0]; }
 				
-				
-				
 				//if length 2
 				var selectSource,selectSourceIndex;
 				
@@ -8173,11 +8185,11 @@
 						this.Source.isOne() ? 0 :
 						this.timeStart() - this.timeEnd();
 			}
-		},function(attr,startTime,interval,defaultKey){
+		},function(attr,interval,startTime,defaultKey){
 			this.Source    = new N.Array();
 			this.Attribute = (new N.Manage(attr)).get();
 			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "value"
-			this.defaultStartTime = startTime ? N.timeStampExp(startTime): N.timeStampExp();
+			this.defaultStartTime = startTime ? N.timestampExp(startTime): N.timestampExp();
 			this.defaultInertval  = interval  ? N.timescaleExp(interval) : N.timescaleExp("2s");
 		});
 	
