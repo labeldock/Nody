@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.27.1", N.BUILD = "1200";
+		N.VERSION = "0.27.1", N.BUILD = "1201";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.2", N.CORE_BUILD = "88";
@@ -1102,8 +1102,8 @@
 			var supportPrefix = {};
 		
 			info.getCSSName = function(cssName){
-				if(typeof cssName === "number"){
-					return cssName;
+				if(typeof cssName !== "string"){
+					return cssName+"";
 				}
 				cssName.trim();
 				for(var prefix in supportPrefix) {
@@ -2018,7 +2018,7 @@
 			setProp:function(k,v){
 				if(arguments.length < 2){
 					console.warn('arguments length must be gt 2');
-				} else if(N.asString(k)) {
+				} else if(typeof k === "string") {
 					this.Source[k] = v;
 				} else if(typeof k === "object") {
 					for(var kk in key) this.setProp(kk,key[kk]);
@@ -4616,10 +4616,13 @@
 			},
 			"data":function(node,key,value){
 				var nodes = N.findLite(node);
-				if(nodes.length == 0) return;
+				if(nodes.length == 0) return undefined;
 				if(arguments.length == 1) return N.clone(N.dataFirst(nodes).dataset);
-				if(arguments.length == 2) return N.dataFirst(nodes).dataset[key];
-				if(arguments.length == 3) { N.dataEach(nodes,function(node){ node.dataset[key] = value; }); return nodes; }
+				if(arguments.length == 2) return N.dataFirst(nodes).dataset[nd.camelCase(key)];
+				if(arguments.length == 3) { 
+					key = nd.camelCase(key);
+					N.dataEach(nodes,function(node){ node.dataset[key] = value; }); return nodes; 
+				}
 			},
 			//Disabled
 			"disabled":function(node,status){
@@ -4797,16 +4800,10 @@
 			beforeAll:function(){ return N.CALL(NODE_METHODS.beforeAll,N.node,this); },
 			afterAll :function(){ return N.CALL(NODE_METHODS.afterAll,N.node,this); },
 			replace  :function(){ N.FLATTENCALL(NODE_METHODS.replace,N.node,this,arguments); return this;},
-			up    :function(){ return N.CALL(NODE_METHODS.up,N.node,this); },
-			down  :function(){ return N.CALL(NODE_METHODS.donw,N.node,this); },
-			style :function(name){ 
-				if(arguments.length > 1){
-					N.FLATTENCALL(NODE_METHODS.style,N.node,this,arguments);
-					return this;
-				} else {
-					if(arguments.length == 0) return N.CALL(NODE_METHODS.style,N.node,this);
-					return N.CALL(NODE_METHODS.style,N.node,this,name);
-				}
+			up:function(){ return N.CALL(NODE_METHODS.up,N.node,this); },
+			down:function(){ return N.CALL(NODE_METHODS.donw,N.node,this); },
+			style:function(){ 
+				return NODE_METHODS.style.apply(NODE_METHODS,[this].concat(Array.prototype.slice.call(arguments)));
 			},
 			empty  :function(){ N.CALL(NODE_METHODS.empty,N.node,this); return this; },
 			remove :function(){ N.CALL(NODE_METHODS.remove,N.node,this); return this; },
@@ -7096,10 +7093,14 @@
 					return this.Source.prop(key,filter);
 				}
 			},
-			setProp:function(key,value){
-				this.Source.setProp(key,value);
-				this.DataContext.Binder.send(this,this.DataID+"."+key,value);
-				this.DataContext.Binder.resend(this,"GLOBAL.ManagedDataWasSetValue",this)
+			setProp:function(key,value,useBind){
+				if(typeof key === "string"){
+					this.Source.setProp(key,value,false);
+					this.DataContext.Binder.send(this,this.DataID+"."+key,value);
+				} else if(key === "object"){
+					for(var propKey in key) { this.setProp(propKey,key[propKey],false); }
+				}
+				if(useBind !== false) this.DataContext.Binder.resend(this,"GLOBAL.ManagedDataWasSetValue",this);
 				return this;
 			},
 			removeProp:function(key){
@@ -7430,11 +7431,10 @@
 						this._managePresentorEvent.trigger("dataChange","append",params.newManagedData,this.structureNodes[params.newManagedData.DataID]);
 						this._managePresentorEvent.trigger("displayChange",this,this.view);
 					}
-				});
-				
-				currentBinder.listen(this,"GLOBAL.ManagedDataWasSetValue",function(managedData){
-					this._managePresentorEvent.trigger("dataChange","bind",managedData,this.structureNodes[managedData.DataID])
-				});
+				});				
+				//currentBinder.listen(this,"GLOBAL.ManagedDataWasSetValue",function(managedData){
+				//	this._managePresentorEvent.trigger("dataChange","bind",managedData,this.structureNodes[managedData.DataID])
+				//});
 		
 				//end
 				return true;		
@@ -7562,24 +7562,9 @@
 			getManagedDataByIndex:function(){
 				var _dataContext = this.getRootManagedData();
 				return N.dataMap(this.findByIndex.apply(this,Array.prototype.slice.call(arguments)),function(node){
-					return _dataContext.getManagedDataWithID(node.dataset["managed-id"]);
+					console.log('nd.node.data(node,"managed-id")',node,node.dataset,nd.node.data(node,"managed-id"));
+					return _dataContext.getManagedDataWithID(nd.node.data(node,"managed-id"));
 				});
-			},
-			needActiveController:function(selectPath,allowSelect,allowMultiSelect,allowInactive,firstSelect){
-				if(selectPath.indexOf('/')  >= 0) {
-					var _  = this, __ = this.managedData;
-					selectPath = (typeof selectPath == 'string') ? selectPath : '/*';
-					return new N.ActiveController(this.view,function(){
-						return N.dataMap(__.querySelectData(selectPath),function(managedData){ return _.structureNodes[managedData.DataID]; },N.dataFilter);
-					},'click',function(e){
-						return N.CALL(allowSelect,this,e,_.getManagedDataByNode(this));
-					},firstSelect,allowMultiSelect,allowInactive);
-				} else {
-					var _ = this;
-					return new N.ActiveController(this.view,selectPath,'click',function(e){
-						return N.CALL(allowSelect,this,e,_.getManagedDataByNode(this),_);
-					},firstSelect,allowMultiSelect,allowInactive);
-				}
 			}
 		},function(view,managedData,viewModel,needDisplay){
 			this.view = N.findLite(view)[0];
@@ -8045,7 +8030,7 @@
 			getTimeProperties:function(index){
 				return (arguments.length) ? this.Source[index] : this.Source.clone();
 			},
-			getAttributeOfTimeProperties:function(index){
+			getCurrentAttribute:function(index){
 				if(arguments.length){
 					return this.Source[index] && this.Source[index].Attribute;
 				}
