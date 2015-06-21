@@ -656,3 +656,405 @@ nody.METHOD("TAGSTACKS",function(){
 	}
 	return [stakes,stakee]; 
 });
+
+
+N.MODULE("ContentLoaderBase",{
+	"+_ActiveController":undefined,
+	getActiveController:function(){ return this._ActiveController; },
+	_setEvent:function(eventType,eventName,method){
+		var _ = this;
+		N.dataEach(eventName,function(eventName){
+			if(eventName == "!global"){
+				if(typeof method === "function") _.ContentLoaderBaseEvents[eventType] = method;
+			} else {
+				if((typeof eventName === "string") && (typeof method === "function"))
+				return  _.ContentLoaderBaseEvents[eventType][eventName] = method;
+			}
+		});
+	},
+	whenAnyLoad:function(method){
+		this._setEvent("AnyLoadEvent","!global",method);
+	},
+	whenAnyActive:function(method){
+		this._setEvent("AnyActiveEvent","!global",method);
+	},
+	whenAnyInactive:function(method){
+		this._setEvent("AnyInactiveEvent","!global",method);
+	},
+	whenAnyActiveToggle:function(openMethod,disappearMethod){
+		this.whenAnyActive(openMethod);
+		this.whenAnyInactive(disappearMethod);
+	},
+	whenLoad:function(eventName,method){
+		this._setEvent("ContainerLoadEvents",eventName,method);
+	},
+	//열때마다 일어나는 이벤트
+	whenActive:function(eventName,method){
+		this._setEvent("ContainerOpenEvents",eventName,method);
+	},
+	//보임이 없어질때마다 일어나는 이벤트
+	whenInactive:function(eventName,method){
+		this._setEvent("ContainerInactiveEvents",eventName,method);
+	},
+	whenActiveToggle:function(eventName,openMethod,disappearMethod){
+		this.whenActive(eventName,openMethod);
+		this.whenInactive(eventName,disappearMethod);
+	},
+	getNameOfActive:function(){
+		return this.ContainerActiveKeys.join(" ");
+	},
+	getURLOfActive:function(){
+		return this.Source[this.ContainerActiveKeys.last()];
+	},
+	_triggeringActiveEvents:function(container,activeName,containerEvent,userArgs){
+		// 로드가 완료되었을때
+		if( containerEvent.match("load")) {
+			N.APPLY(this.ContentLoaderBaseEvents.AnyLoadEvent,container,userArgs);
+			N.APPLY(this.ContentLoaderBaseEvents.ContainerLoadEvents[activeName],container,userArgs);
+		}
+		if( containerEvent.match("active")) {
+			N.APPLY(this.ContentLoaderBaseEvents.AnyActiveEvent,container,userArgs);
+			N.APPLY(this.ContentLoaderBaseEvents.ContainerOpenEvents[activeName],container,userArgs);
+		}
+	},
+	_triggeringInactiveEvents:function(container,inactiveName){
+		N.APPLY(this.ContentLoaderBaseEvents.AnyInactiveEvent,container);
+		N.APPLY(this.ContentLoaderBaseEvents.ContainerInactiveEvents[inactiveName],container);
+	},
+	loadHTML:function(loadKey,loadPath,success,error){
+		var _ = this;
+
+		//함수일때
+		if(typeof loadPath === "function") loadPath = loadPath(N.APPLY(loadPath,this));
+
+		//ELEMENT(s) or URL
+		switch(typeof loadPath){
+			case "string":
+				new N.Open(loadPath + (loadPath.indexOf("?") > -1 ? "&token=" : "?token=") + N.Util.base36Random(2),{
+					"dataType":"dom",
+					"success":function(doms){
+						_.saveContainerContents(doms,loadKey);
+						N.CALL(success,_,loadKey,doms);
+					},
+					"error":function(){
+						console.error("ContentLoaderBase::URL링크에서 데이트럴 찾지 못했습니다"+loadPath);
+						N.CALL(error,_,loadKey);
+					}
+				});
+				break;
+			case "object":
+				//엘리먼트 배열로 들어올경우
+				var doms = N.findLite(loadPath);
+
+				//loadPath가 빈 배열이라면 정상적인 처리로 간주합니다.
+				if( doms.length < 1 && !N.isArray(loadPath) ){
+					console.error("ContentLoaderBase::불러올 엘리먼트가 존재하지 않습니다."+loadPath);
+					N.CALL(error,_,loadKey);
+				} else {
+					_.saveContainerContents(doms,loadKey);
+					N.CALL(success,_,loadKey,doms);
+				}
+				break;
+			default :
+				console.log("ContentLoaderBase::올바르지 않은 loadPath =>",loadPath,loadKey);
+				N.CALL(error,_,loadKey);
+				return false;
+				break;
+		}
+		return true;
+	},
+	//컨테이너 컨텐츠
+	saveContainerContents:function(doms,key){
+		if(typeof key === "string") { this.ContainerContents[key] = N.toArray(doms); }
+	},
+	loadContainerContents:function(key){
+		return this.ContainerContents[key];
+	},
+	removeContainer:function(key){
+		delete Containers[key];
+		return this;
+	},
+	//
+	addContainer:function(container,key){
+		var findContainer = N.findLite(container)[0];
+		if(!findContainer) return console.warn(key,"의 컨테이너를 찾을 수 없습니다.");
+		this.ContainerPlaceholder[key] = findContainer;
+		return this;
+	},
+	needActiveController:function(){
+
+		this._ActiveController = N.APPLY(N.ActiveController.new,undefined,arguments);
+		return this._ActiveController;
+	},
+	currentActiveController:function(){
+		return this._ActiveController;
+	}
+},function(baseParam,setupMethod){
+	this.Source = {};
+	this.ContainerPlaceholder = {};
+	this.ContainerContents    = {};
+	this.ContainerActiveKeys  = new N.Array();
+
+	// 로드될때 이벤트입니다.
+	this.ContentLoaderBaseEvents = {
+		"AnyLoadEvent":undefined,
+		"AnyActiveEvent":undefined,
+		"AnyInactiveEvent":undefined,
+		"ContainerLoadEvents":{},
+		"ContainerOpenEvents":{},
+		"ContainerInactiveEvents":{}
+	};
+
+	N.CALL(setupMethod,this);
+
+	switch(typeof baseParam){
+		case "object":
+			N.extend(this.Source,baseParam);
+			break;
+		case "function":
+			var _ = this;
+			var baseFunctionResult = baseParam.call(this,this);
+			if(typeof baseFunctionResult === "object") N.extend(this.Source,baseFunctionResult);
+			break;
+	}
+});
+
+var nody_loader_script_start = function(container){
+	N.find("script",container,N.dataEach,function(scriptNode){
+		var script = scriptNode.innerHTML;
+		N.TRY_CATCH(function(){
+			eval.call(script);
+		},function(e){
+			console.error("다음의 스크립트 구문 오류로 스크립트 실행이 정지되었습니다. => ",N.max(script,200));
+			throw e;
+		});
+	});
+};
+
+N.EXTEND_MODULE("ContentLoaderBase","MultiContentLoader",{
+	loadWithProperty:function(loadset,success){
+		//lo
+		if(typeof loadset !== "object") return console.error("loadAll이 중지되었습니다.");
+		var _ = this;
+		var successFire = new N.Fire(N.propsLength(loadset),function(){ N.CALL(success,_); });
+		N.propsEach(loadset,function(loadPath,loadKey){
+			var placeholder = _.ContainerPlaceholder[loadKey];
+			if(!placeholder) {
+				successFire.touch();
+				return console.error("미리 정의되어있지 않은 플레이스 홀드키가 존재함 =>",loadKey);
+			}
+			_.loadHTML(loadKey,loadPath,function(key,doms){
+				_.Source[loadKey] = _.Source[loadPath];
+				N.node.append(placeholder,doms);
+				nody_loader_script_start(placeholder);
+				_._triggeringActiveEvents(placeholder,key,"load");
+				successFire.touch();
+			},function(){
+				successFire.touch();
+			});
+		});
+	},
+	active:function(name){
+		var activeHTML = this.loadContainerContents(name);
+		if( !activeHTML ) return console.warn("정의되지 않은 컨테이너를 active하려고 함 => ",name);
+
+		//이미 엑티브된 컨테이너는 아무것도 발생하지 않음
+		if( this.ContainerActiveKeys.has(name) ) return false;
+
+		//멀티 액티브가 아니면 다른 active값을 inactive시킴
+		if( this.multiActive == false ) {
+			var _ = this;
+			this.ContainerActiveKeys.each(function(wasActive){
+				_.inactive(wasActive);
+			});
+		}
+		//액티브 된 이벤트를 전달
+		var loadArguments = Array.prototype.slice.call(this,1);
+		this._triggeringActiveEvents(this.ContainerPlaceholder[name],name,"active",loadArguments);
+		this.ContainerActiveKeys.push(name);
+	},
+	inactive:function(name){
+		if( this.ContainerActiveKeys.has(name)) {
+			this.ContainerActiveKeys.remove(name);
+			this._triggeringInactiveEvents(this.ContainerPlaceholder[name],name);
+		}
+	},
+	inactiveAll:function(){
+		var _ = this;
+		this.ContainerActiveKeys.each(function(name){
+			this._triggeringInactiveEvents(this.ContainerPlaceholder[name],name);
+		});
+		this.ContainerActiveKeys.clear();
+	}
+},function(containers,baseParam){
+	//컨테이너 추가;
+	var _ = this;
+	this._super(baseParam,function(){
+		N.propsEach(containers,function(container,key){
+			_.addContainer(container,key);
+		});
+		this.multiActive = false;
+	});
+});
+
+N.EXTEND_MODULE("ContentLoaderBase","ContentLoader",{
+	_inactiveActivatedContents:function(removeInPlaceholder){
+		var _ = this;
+		this.ContainerActiveKeys.each(function(activatedKey){
+			_.saveContainerContents(_.ContainerPlaceholder[activatedKey].children,activatedKey);
+			_._triggeringInactiveEvents(_.ContainerPlaceholder[activatedKey],activatedKey);
+			if(removeInPlaceholder) _.ContainerPlaceholder[activatedKey].innerHTML = "";
+		});
+		this.ContainerActiveKeys.clear();
+	},
+	//무조건 새로 불러옴
+	load:function(loadKey){
+		if(loadKey in this.Source){
+			var _             = this;
+			var loadArguments = Array.prototype.slice.call(arguments,1);
+
+			//이전 컨테이너를 Inactive한다고 통보
+			this._inactiveActivatedContents(true);
+
+			return this.loadHTML(loadKey,this.Source[loadKey],function(key,doms){
+				N.node.append(_.ContainerPlaceholder[key],doms);
+				nody_loader_script_start(_.ContainerPlaceholder[key]);
+				_.ContainerActiveKeys.push(key);
+				_._triggeringActiveEvents(_.ContainerPlaceholder[key],key,"load active",loadArguments);
+			});
+		} else {
+			console.warn("불러올 소스의 경로가 존재하지 않습니다. => ",loadKey,this.ContainerPlaceholder,this.Source);
+		}
+	},
+	active:function(loadKey){
+		//불러와있다면 아무것도 실행하지 않음
+		if( this.ContainerActiveKeys.has(loadKey) ) return false;
+
+		//파라메터를 배열로 변환
+		var openArguments = Array.prototype.slice.call(arguments);
+
+		//로드한 컨텐츠가 아예 존재하지 않으면 load를 진행한다.
+		var loadedHTMLContents = this.loadContainerContents(loadKey);
+		if(!loadedHTMLContents) return this.load.apply(this,openArguments);
+
+		//이전 컨테이너를 Inactive한다고 통보
+		this._inactiveActivatedContents(true);
+
+		N.node.append( this.ContainerPlaceholder[loadKey], loadedHTMLContents );
+		this.ContainerActiveKeys.push(loadKey);
+		openArguments.shift();
+		this._triggeringActiveEvents(this.ContainerPlaceholder[loadKey],loadKey,"active",openArguments);
+		return true;
+	},
+	// 현재 열려있는 페이지를 강제적으로 링크파라메터로 불러옴
+	link: function (linkText){
+		loadHTML(linkText,undefined,function(key,doms){
+			var placeholder = this.ContainerPlaceholder[this.ContainerActiveKeys.last()];
+			placeholder.innerHTML = "";
+			N.node.append(placeholder,doms);
+		});
+	}
+},function(container,baseParam){
+	var _container = N.findLite(container)[0],_ = this;
+	if (_container){
+		this._super(baseParam,function(){
+			//defaultContainer를 보존합니다.
+			var dcf = "initialContainer";
+			this.addContainer(_container,dcf);
+			this.saveContainerContents(_container.children,dcf);
+			this.ContainerActiveKeys.push(dcf);
+		});
+		//다른컨테이너도 플레이스 홀더 설정을 합니다.
+		N.propsEach(this.Source,function(value,key){ _.addContainer(_container,key); });
+	} else {
+		console.error("ContentLoader::해당 컨테이너를 찾을수 없습니다. Navigation Controller의 작동을 완전히 중지합니다.=> ",container);
+	}
+});
+
+N.EXTEND_MODULE("ContentLoaderBase","TabContents",{
+	_inactiveActivatedContents:function(removeInPlaceholder){
+		var _ = this;
+		this.ContainerActiveKeys.each(function(activatedKey){
+			_._triggeringInactiveEvents(_.ContainerPlaceholder[activatedKey],activatedKey);
+			N.node.style( _.ContainerPlaceholder[activatedKey],'display','none');
+		});
+		this.ContainerActiveKeys.clear();
+	},
+	callAsLoad:function(loadKey,loadArguments,after){
+		if(loadKey in this.Source){
+			var _ = this;
+			return this.loadHTML(loadKey,this.Source[loadKey],function(key,doms){
+				N.node.append(_.ContainerPlaceholder[key],doms);
+				nody_loader_script_start(_.ContainerPlaceholder[key]);
+				_._triggeringActiveEvents(_.ContainerPlaceholder[key],key,"load",loadArguments);
+				N.CALL(after,this);
+			});
+		} else {
+			console.warn("불러올 소스의 경로가 존재하지 않습니다. [loadKey : ",loadKey,'] [placeholder(all) => ',this.ContainerPlaceholder,'] [Source => ',this.Source,']');
+		}
+	},
+	//무조건 새로 불러옴
+	load:function(loadKey){
+		this.callAsLoad(loadKey,Array.prototype.slice.call(arguments,1));
+	},
+	active:function(loadKey){
+		//불러와있다면 아무것도 실행하지 않음
+		if( this.ContainerActiveKeys.has(loadKey) ) return false;
+
+		//파라메터를 배열로 변환
+		var openArguments = Array.prototype.slice.call(arguments);
+
+		//이전 컨테이너를 Inactive한다고 통보
+		this._inactiveActivatedContents(true);
+
+		this.ContainerActiveKeys.push(loadKey);
+		N.node.style( this.ContainerPlaceholder[loadKey], 'display', 'block' );
+
+		this._triggeringActiveEvents(this.ContainerPlaceholder[loadKey],loadKey,"active",openArguments.slice(1));
+		return true;
+	},
+	addContainer:function(contents,name,noAppend){
+		var newContainer = N.make('div',{style:'height:100%;display:none;','data-container-name':name},contents);
+		this._super(newContainer,name);
+		if(noAppend !== false) N.node.append(this.view,newContainer);
+		if(name !== "initial-contents") this.callAsLoad(name);
+	},
+	needFormController:function(target){
+		if(!target || typeof target === 'object') {
+			if(!this._globalFormController) this._globalFormController = new N.FormController(this.view);
+			this._globalFormController.addViewStatus(target);
+			return this._globalFormController;
+		}
+		if(!(typeof target === 'string' || typeof target === 'number')) return console.error('문자열 타겟이 아니면 폼컨트롤러를 반환할수 없습니다.');
+		if(!this.ContainerPlaceholder[target]) return console.error('존재하지 않은 컨트롤러 키의 폼컨트롤러를 호출하였습니다',target);
+		if(!this._viewsFormController) this._viewsFormController = [];
+		if(!this._viewsFormController[target]) this._viewsFormController[target] = new N.FormController(this.ContainerPlaceholder[target]);
+		return this._viewsFormController[target];
+	}
+},function(container,baseParam){
+	this.view = N.findLite(container)[0], _ = this;
+
+	if (this.view){
+		//베이스 파라메터가 존재하지 않으면 현재 컨테이너의 컨텐츠를 기본 파라메터로 봄
+		var noConfigMode = false;
+
+		var _ = this;
+		var initialContents = this.view.children;
+		this._super(function(){
+			if(typeof baseParam === 'function') {
+				var result = baseParam.call(_,_);
+				return (!result) ? N.inject(initialContents,function(inj,node,i){ inj[i] = node; }) : result;
+			}
+			return baseParam;
+		},function(){
+			this.addContainer(initialContents,"initial-contents");
+		});
+
+		//다른컨테이너도 플레이스 홀더 설정을 합니다.
+		N.propsEach(this.Source,function(value,key){
+			_.addContainer( noConfigMode ? value : undefined,key);
+		});
+	} else {
+		console.error("TabContents::해당 컨테이너를 찾을수 없습니다. Navigation Controller의 작동을 완전히 중지합니다.=> ",container);
+	}
+});

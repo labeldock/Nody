@@ -149,12 +149,10 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   - [ ] 테스트페이지에 새로운 스타일시트 헬퍼 codykit적용.
   - [x] 새로운 드로세라에서 nody 객체가 좀 더 확연히 드러나도록 코어를 수정하였습니다.
   - [x] node.css 함수가 생겼습니다. nd.node.css("#foo",".active"); 이런식으로 어트리뷰트를 추가할수 있습니다.
-  - [ ] 데이터와 연동이 자연스럽게 연결되는 ActiveController 업데이트
+  - [x] ContentLoader의 재정의 및 개발
   - [ ] ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
-  - [ ] ContentLoader의 하위모듈(3개)의 통일성이 떨어져 재설계
   - [ ] TimeProperties 모듈에서 Cubicbezior 공식이 도입될수 있도록 반영.
   - [ ] Form모듈의 리모트폼 구현
-
   - [ ] 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
   - [ ] 통신모듈의 재설계
   - (\[source:+5kB(324)\] \[min:+3kB(190)\])
