@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.27.4", N.BUILD = "1211";
+		N.VERSION = "0.27.5", N.BUILD = "1213";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -840,7 +840,7 @@
 						return d;
 					} else {
 						if(d == true) { d = {} };
-				        for (var p in target) (typeof t[p] === "object" && t[p] !== null && d[p]) ? N.clone(t[p],d[p]) : d[p] = target[p];
+				        for (var p in target) (typeof target[p] === "object" && target[p] !== null && d[p]) ? N.clone(target[p],d[p]) : d[p] = target[p];
 						return d;
 					}
 				
@@ -3531,7 +3531,7 @@
 				return [];
 			},
 			//여러개의 셀럭터와 하나의 루트노드만 허용
-			"findWithOnePlace":function(findse,rootNode){
+			"findByOnePlace":function(findse,rootNode){
 				if(typeof findse === 'string') return N.NodeUtil.query(findse,rootNode);
 				if( N.isNode(findse) ) {
 					var fs = N.NodeUtil.query(N.node.trace(findse),rootNode);
@@ -3540,7 +3540,7 @@
 				if( N.isArray(findse) ) {
 					var result = [];
 					for(var i=0,l=findse.length;i<l;i++) {
-						var fd = N.findWithOnePlace(findse[i],rootNode);
+						var fd = N.findByOnePlace(findse[i],rootNode);
 						if( fd.length ) result = result.concat(fd);
 					}				
 					return N.dataUnique(result);
@@ -3548,7 +3548,7 @@
 				return [];
 			},
 			//다수의 로트와 샐렉터를 받고 출력
-			"findWithSeveralPlaces":function(find,root){
+			"findBySeveralPlaces":function(find,root){
 				// 
 				if(arguments.length === 1 || typeof root === 'undefined' || root === null || root === W.document ) return N.findLite(find);
 				// find root
@@ -3561,7 +3561,7 @@
 				var result = [];
 				for(var i=0,l=targetRoots.length;i<l;i++) {
 					for(var fi=0,fl=findes.length;fi<fl;fi++) {
-						var fdr = N.findWithOnePlace(findes[fi],targetRoots[i]);
+						var fdr = N.findByOnePlace(findes[fi],targetRoots[i]);
 						if( fdr.length ) result = result.concat(fdr);
 					}
 				}
@@ -3570,8 +3570,8 @@
 			//최적화 분기하여 샐랙터를 실행시킴
 			"find" : N.CONTINUE_FUNCTION(function(find,root,eq){
 				return (typeof root === "number") ? N.findLite(find)[root] :
-					   (typeof eq === "number")   ? N.findWithSeveralPlaces(find,root)[eq] :
-					   N.findWithSeveralPlaces(find,root);
+					   (typeof eq === "number")   ? N.findBySeveralPlaces(find,root)[eq] :
+					   N.findBySeveralPlaces(find,root);
 			}),
 			"findMember":function(sel,offset){
 				var target = N.findLite(sel)[0];
@@ -3583,13 +3583,13 @@
 			},
 			// 하위루트의 모든 노드를 검색함 (Continutiltiy에서 중요함)
 			"findIn" : N.CONTINUE_FUNCTION(function(root,find,index){
-				return (typeof index === 'number') ? N.findWithSeveralPlaces(find || '*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten))[index] :
-					   (typeof find  === 'number') ? N.findWithSeveralPlaces('*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten))[find]   :
-													 N.findWithSeveralPlaces(find || '*',N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten)) ;
+				return (typeof index === 'number') ? N.findBySeveralPlaces(find || '*',N.dataMap(N.findBySeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten))[index] :
+					   (typeof find  === 'number') ? N.findBySeveralPlaces('*',N.dataMap(N.findBySeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten))[find]   :
+													 N.findBySeveralPlaces(find || '*',N.dataMap(N.findBySeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten)) ;
 			},2),
 			// 자식루트의 노드를 검색함
 			"findOn": N.CONTINUE_FUNCTION(function(root,find){
-				var finds = N.dataMap(N.findWithSeveralPlaces(root),function(node){ return node.children; },N.argumentsFlatten);
+				var finds = N.dataMap(N.findBySeveralPlaces(root),function(node){ return node.children; },N.argumentsFlatten);
 				switch(typeof find){
 					case "number": return [finds[find]]; break;
 					case "string": return N.dataFilter(finds,function(node){ return N.NodeUtil.is(node,find); }); break;
@@ -3599,12 +3599,12 @@
 			"findParents":N.CONTINUE_FUNCTION(function(el,require,index){ 
 				if(typeof require === 'string') {
 					return (typeof index === 'number') ?
-					N.dataFilter(N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0]),function(el){ return N.node.is(el,require); })[index]:
-					N.dataFilter(N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0]),function(el){ return N.node.is(el,require); });
+					N.dataFilter(N.NodeUtil.parents(N.findBySeveralPlaces(el)[0]),function(el){ return N.node.is(el,require); })[index]:
+					N.dataFilter(N.NodeUtil.parents(N.findBySeveralPlaces(el)[0]),function(el){ return N.node.is(el,require); });
 				} else if(typeof require === 'number') {
-					return N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0])[require];
+					return N.NodeUtil.parents(N.findBySeveralPlaces(el)[0])[require];
 				} else {
-					return N.NodeUtil.parents(N.findWithSeveralPlaces(el)[0]);
+					return N.NodeUtil.parents(N.findBySeveralPlaces(el)[0]);
 				}
 			},1),
 			"findRoot":N.CONTINUE_FUNCTION(function(el){ 
@@ -4208,8 +4208,14 @@
 					var tid = tclass = tname = tattr = tvalue = '';
 					N.propsEach(N.NodeUtil.attr(t),function(value,sign){
 						switch(sign){
-							case "id"   : var id = t.getAttribute(sign); id.length && (tid='#'+id) ; break;
-							case "class": tclass = '.' + t.getAttribute(sign).trim().replace(/\s\s/g,' ').split(' ').join('.'); break;
+							case "id"   : 
+								var id = t.getAttribute(sign); 
+								id.length && (tid='#'+id) ; 
+								break;
+							case "class": 
+								tclass = t.getAttribute(sign).trim().replace(/\s\s/g,' ').split(' ').join('.'); 
+								if(tclass) tclass = "." + tclass;
+								break;
 							case "name" : tname  = "[name="+t.getAttribute(sign)+"]"; break;
 							case "value": break;
 							default     :
@@ -4733,6 +4739,23 @@
 				} 
 				return findNodes;
 			},
+			"html":function(node,html){
+				var findNode = N.findLite(node)[0];
+				if(findNode.length === 0) return undefined;
+				if(typeof html === "string" || typeof html === "number"){
+					return findNode.innerHTML = html;
+				} else {
+					return findNode.innerHTML;
+				}
+			},
+			"appendHTML":function(node,html,needIndex){
+				var findNode = N.findLite(node)[0];
+				return findNode && N.node.append(findNode,N.parseHTML(html),needIndex);
+			},
+			"prependHTML":function(node,html){
+				var findNode = N.findLite(node)[0];
+				return findNode && N.node.prepend(findNode,N.parseHTML(html));
+			},
 			"toggleClass":function(el,toggleName,flag){
 				var nodes = N.findLite(el);
 				if(typeof toggleName !== 'string') return nodes;
@@ -4866,15 +4889,16 @@
 				}
 			},
 			html:function(html){
-				if(arguments.length === 0) return this[0] && this[0].innerHTML;
-				if(this[0]) this[0].innerHTML = html;
-				return this;
+				var result = N.FLATTENCALL(NODE_METHODS.html,N.node,this,arguments);
+				return (typeof result === "string") ? result : this;
 			},
 			appendHTML:function(html){
-				this[0] && nd.node.append(this[0],N.parseHTML(html));
+				N.FLATTENCALL(NODE_METHODS.appendHTML,N.node,this,arguments);
+				return this;
 			},
 			prependHTML:function(){
-				this[0] && nd.node.prepend(this[0],N.parseHTML(html));
+				N.FLATTENCALL(NODE_METHODS.prependHTML,N.node,this,arguments);
+				return this;
 			},
 			disabled:function(){ N.FLATTENCALL(NODE_METHODS.disabled,N.node,this,arguments); return this; },
 			readonly:function(){ N.FLATTENCALL(NODE_METHODS.readOnly,N.node,this,arguments); return this; },
