@@ -17,7 +17,7 @@ $(document).on('keyup',function(e){
 	}
 });
 
-var runTabContentsActiveController = new nd.ActiveController('.run-content .tabs','li','click',function(e,i){
+var runTabContentsActiveController = new nd.ActiveContexts('.run-content .tabs','li','click',function(e,i){
 	if(i == 0) {
 		$('.run-modal .code-set').removeClass('code-set-origin');
 	} else {
@@ -71,10 +71,10 @@ $('.code-wrapper').on('click','a.live-run-action',function(e){
 nd.find('.code-section > article > header',nd.dataMap,function(header){
 	//with position hack
 	var ankor = nd.make('a');
-	nd.$before(header,ankor);
+	nd.node.before(header,ankor);
 	
 	return nd.make('li',nd.make('a',{
-		href:'#'+nd.$uniqueID(ankor),
+		href:'#'+nd.node.uniqueID(ankor),
 		html:header.innerHTML
 	}));
 	

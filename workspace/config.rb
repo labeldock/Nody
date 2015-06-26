@@ -13,7 +13,8 @@
 
 # Per-page layout changes:
 #
-page "/*", :layout => :nody_layout
+page "/*.html", :layout => :nody_layout
+page "/oldpage/*.html", :layout => :oldpage_layout
 # With no layout
 # page "/path/to/file.html", :layout => false
 #
@@ -40,29 +41,22 @@ page "/*", :layout => :nody_layout
 configure :development do
   activate :livereload
 end
-
 # Methods defined in the helpers block are available in templates
-# helpers do
-#   def some_helper
-#     "Helping"
-#   end
-# end
 helpers do
     #relative path absolute
     def rpa path; ('../' * (current_page.path.count('/')+1)) + (path.match(/^\//) ? path[1..-1] : path); end
 end
 
 #set :css_dir, 'stylesheets'
-
+#
 #set :js_dir, 'javascripts'
-
+#
 #set :images_dir, 'images'
 
 # Build-specific configuration
 configure :build do
-    
   # For example, change the Compass output style for deployment
-  #activate :minify_css
+  # activate :minify_css
 
   # Minify Javascript on build
   activate :minify_javascript
@@ -72,13 +66,11 @@ configure :build do
 
   # Use relative URLs
   # activate :relative_assets
-  
+
   # Or use a different image path
   # set :http_prefix, "/Content/images/"
-  
-  
-  
 end
+
 #nody to dist
 after_build do |builder|
     nody_source_path = File.expand_path('source/resources/js/nody.js',Dir.pwd)

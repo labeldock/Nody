@@ -144,7 +144,15 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
 ## Update history #
 
 #### 0.27.x 업데이트
-  - [x] 'node' 함수가 생겼고 '$' 싱글턴 오브젝트가 사라졌습니다. node는 NodeQuery모듈의 초기화 함수 입니다.
+  - [x] Array모듈 연산시 반복문 오버헤드를 줄었습니다.
+  - [x] NativeModule에 대한 이름 접근이 좀 더 편해졌습니다.
+  - [x] 모듈생성&확장시 프로토타입을 생략하고 초기화 가능해졌습니다.
+  - [x] data...함수와 다르게 진짜 배열만 동작하는 array...함수가 생겼습니다.
+  - [x] clone함수가 재정의 되었습니다.
+  - [x] 어떤 영역에 대한 노드 포함여부를 확인하기 위한 inside, outside 함수가 생겼습니다.
+  - [x] RoleController에서 콜백으로 role을 정의할수 있도록 변경되었습니다.
+  - [x] NodeArray에 html, appendHTML, prependHTML 함수가 생겼습니다.
+  - [x] 'node' 함수가 생겼고 '$' 싱글턴 오브젝트가 사라졌습니다. 여전히 싱글턴으로 사용가능하며 함수 자체는 NodeArray모듈의 초기화 함수 입니다.
   - [ ] $some 의 표현의 제거되어 테스트페이지를 고쳐야 됩니다.
   - [ ] 테스트페이지에 새로운 스타일시트 헬퍼 codykit적용.
   - [x] 새로운 드로세라에서 nody 객체가 좀 더 확연히 드러나도록 코어를 수정하였습니다.
