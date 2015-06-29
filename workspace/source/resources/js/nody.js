@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.27.5", N.BUILD = "1213";
+		N.VERSION = "0.27.6", N.BUILD = "1215";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -4355,35 +4355,6 @@
 				return N.find(sel,N.dataEach,function(node){
 					N.pushCSSExpression(node,exp);
 				});
-				
-			},
-			"put":function(sel){
-				var node = N.findLite(sel)[0];
-				if(!N.isNode(node)) return console.warn("N.node.put:: node를 찾을수 없습니다. => 들어온값",arguments);
-				N.node.empty(node);
-				var newContents = [];
-				var params = Array.prototype.slice.call(arguments);
-				params.shift();
-				N.dataEach( N.argumentsFlatten(params) ,function(content){
-					if(N.isNode(content)){
-						newContents.push(content);
-					} else {
-						content = N.toString(content);
-						switch(node.tagName){
-							case "UL":case "MENU":
-								newContents.push(N.make("li",content));
-								break;
-							case "DL":
-								newContents.push(N.make("dd",content));
-								break;
-							default:
-								newContents.push(N.make("span",content));
-								break;	
-						}
-					}
-				});
-				N.node.append(node,newContents);
-				return node;
 			},
 			//이전 엘리먼트를 찾습니다.
 			"before":N.CONTINUE_FUNCTION(function(node,appendNodes){ 
@@ -4756,6 +4727,36 @@
 				var findNode = N.findLite(node)[0];
 				return findNode && N.node.prepend(findNode,N.parseHTML(html));
 			},
+			"put":function(sel){
+				var node = N.findLite(sel)[0];
+				if(!N.isNode(node)) return console.warn("N.node.put:: node를 찾을수 없습니다. => 들어온값",arguments);
+				N.node.empty(node);
+				var newContents = [];
+				var params = Array.prototype.slice.call(arguments);
+				params.shift();
+				N.dataEach( N.argumentsFlatten(params) ,function(content){
+					if(N.isNode(content)){
+						newContents.push(content);
+					} else if(/^<.+>$/.test(content)){
+						newContents.push(N.parseHTML(content));
+					} else {
+						content = N.toString(content);
+						switch(node.tagName){
+							case "UL":case "MENU":
+								newContents.push(N.make("li",content));
+								break;
+							case "DL":
+								newContents.push(N.make("dd",content));
+								break;
+							default:
+								newContents.push(N.make("span",content));
+								break;	
+						}
+					}
+				});
+				N.node.append(node,newContents);
+				return node;
+			},
 			"toggleClass":function(el,toggleName,flag){
 				var nodes = N.findLite(el);
 				if(typeof toggleName !== 'string') return nodes;
@@ -4908,8 +4909,6 @@
 		
 		N.METHOD("node",nd.NodeArray.new);
 		for(var key in NODE_METHODS) N.node[key]=NODE_METHODS[key];
-		
-		
 	
 		N.EXTEND_MODULE("NodeArray","Make",{},function(node,attr,parent){
 			this.setSource(N.Element.create(node,attr,parent));
@@ -4949,9 +4948,9 @@
 			},
 			setNodeData:function(refData,dataFilter){
 				if(typeof refData !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다",refData); }
-				var _    = this;
 				var data = refData;
 				var dataPointer = this.NodeForPartialPointer;
+				
 			
 				this.callbackNodyNode(this.__nodeDataDefaultKeys,
 					function(name,node,nodeAlias){
@@ -4976,7 +4975,9 @@
 						}
 					});
 				}
-				// 파셜 데이터 입력
+				
+				
+				
 				//퍼포먼스 중심 코딩
 				for(var partialCase in dataPointer) {
 					for(var attrValue in dataPointer[partialCase]) {
@@ -4989,7 +4990,7 @@
 									case "html":node.innerHTML = data[attrValue];break;
 									case "href" :node.setAttribute("href",data[attrValue]);break;
 									case "class":N.node.addClass(node,data[attrValue]);break;
-									case "put"    : N.node.empty(node);
+									case "put"    : N.node.put(node,data[attrValue]); break;
 									case "append" : N.node.append(node,data[attrValue]);break;
 									case "prepend": N.node.prepend(node,data[attrValue]);break;
 									case "display": if(!data[attrValue]){N.node.style(node,'display','none');}  break;
@@ -5023,27 +5024,27 @@
 		},function(node,nodeProp,dataFilter){ 
 			this.setSource(node);
 			this.NodeForPartialPointer = {};
-			if(typeof nodeProp === "object" && typeof dataFilter === "object"){
+			if(typeof nodeProp === "object"){
 				this.setNodeData(nodeProp,dataFilter);
 			}
 		});
 		
 		N.EXTEND_MODULE("NodeArray","Template",{
-			clone :function(nodeData,dataFilter){ return new N.Template(this.initNode); },
+			clone :function(nodeData,dataFilter){ return new N.Template(this); },
 			partialOutput:function(nodeData,dataFilter){
-				return new N.Partial(N.cloneNodes(this.initNode),nodeData,dataFilter);
+				return new N.Partial(N.cloneNodes(this),nodeData,dataFilter);
 			},
 			render:function(nodeData,dataFilter){
-				return this.partialOutput(nodeData,dataFilter).release();
+				return this.partialOutput(nodeData,dataFilter).release()[0];
 			},
 			renders:function(nodeDatas,dataFilter){
 				var _self = this;
 				return N.dataMap(nodeDatas,function(data){
-					return _self.partialOutput(data,dataFilter).release();
+					return _self.partialOutput(data,dataFilter).release()[0];
 				});
 			}
 		},function(node){
-			this.initNode = N.makeSampleNode(node);
+			this.setSource(N.makeSampleNode(node));
 		});
 	})(window,N,N.ENV);
 
@@ -5830,7 +5831,7 @@
 		N.MODULE("ModuleEventManager",{
 			triggerWithOwner:function(owner,triggerName){
 				var args = Array.prototype.slice.call(arguments,2);
-				var arounds = this._manageModuleAroundEvents.prop(triggerName);
+				var arounds = this.ManageModuleAroundEvents.prop(triggerName);
 				if(arounds){
 					var beforeHandlers = arounds.prop("before");
 					if(beforeHandlers && beforeHandlers.isAny(function(beforeCallback){
@@ -5839,7 +5840,7 @@
 						return false;
 					}
 				}
-				var results = this._manageModuleEvents.dataProp(triggerName).map(function(handler){	
+				var results = this.ManageModuleEvents.dataProp(triggerName).map(function(handler){	
 					return handler.apply(owner,args);
 				});
 				if(arounds){
@@ -5851,82 +5852,82 @@
 				return results;
 			},
 			trigger:function(triggerName){
-				this.triggerWithOwner.apply(this,[this._manageModule,triggerName].concat(Array.prototype.slice.call(arguments,1)));
+				this.triggerWithOwner.apply(this,[this.ManageModule,triggerName].concat(Array.prototype.slice.call(arguments,1)));
 			},
 			listenBefore:function(triggerName,proc){
-				if(!this._manageModuleAroundEvents.has(triggerName)){
-					this._manageModuleAroundEvents.setProp(triggerName,new N.HashManager());
+				if(!this.ManageModuleAroundEvents.has(triggerName)){
+					this.ManageModuleAroundEvents.setProp(triggerName,new N.HashManager());
 				}
-				this._manageModuleAroundEvents.getProp(triggerName).pushDataProp("before",proc);
+				this.ManageModuleAroundEvents.getProp(triggerName).pushDataProp("before",proc);
 			},
 			listenAfter:function(triggerName,proc){
-				if(!this._manageModuleAroundEvents.has(triggerName)){
-					this._manageModuleAroundEvents.setProp(triggerName,new N.HashManager());
+				if(!this.ManageModuleAroundEvents.has(triggerName)){
+					this.ManageModuleAroundEvents.setProp(triggerName,new N.HashManager());
 				}
-				this._manageModuleAroundEvents.getProp(triggerName).pushDataProp("after",proc);
+				this.ManageModuleAroundEvents.getProp(triggerName).pushDataProp("after",proc);
 			},
 			listen:function(triggerName,proc){
 				if(typeof proc !== "function") return false;
-				this._manageModuleEvents.pushDataProp(triggerName,proc,true);
+				this.ManageModuleEvents.pushDataProp(triggerName,proc,true);
 			},
 			hasListen:function(triggerName){
-				var listenData = this._manageModuleEvents.prop(triggerName);
+				var listenData = this.ManageModuleEvents.prop(triggerName);
 				return listenData ? !!listenData.length : false;
 			},
-			addTriggerEvent:function(triggerName,owner){
+			addTriggerRegister:function(triggerName,owner){
 				var _self = this;
 				if(typeof triggerName === "string"){
 					var upperCaseName = triggerName[0].toUpperCase() + triggerName.substr(1);
-					this._manageModule["trigger"+upperCaseName] = function(){
-						_self.triggerWithOwner.apply(_self,[owner?owner:_self._manageModule,triggerName].concat(Array.prototype.slice.call(arguments)));
+					this.ManageModule["trigger"+upperCaseName] = function(){
+						_self.triggerWithOwner.apply(_self,[owner?owner:_self.ManageModule,triggerName].concat(Array.prototype.slice.call(arguments)));
 					}
 				} else {
 					N.dataEach(triggerName,function(name){
 						if(typeof name === "string"){
-							_self.addTriggerEvent(name,owner);
+							_self.addTriggerRegister(name,owner);
 						}
 					});
 				}
 			},
-			addModuleEvent:function(eventName,withAroundCallback){
+			addEventRegister:function(eventName,withAroundCallback){
 				var _self = this;
 				if(typeof eventName === "string"){
 					var upperCaseName = eventName[0].toUpperCase() + eventName.substr(1);
 					var onCaseName = "on"+upperCaseName;
 					
-					this._manageModuleEvents.touchDataProp(eventName);
+					this.ManageModuleEvents.touchDataProp(eventName);
 					
 					if(withAroundCallback === true){
 						var willUpperCase = "will"+upperCaseName;
 						var didUpperCase  = "did"+upperCaseName; 
-						this._manageModule[willUpperCase] = function(proc){
+						this.ManageModule[willUpperCase] = function(proc){
 							if(typeof proc !== "function") return console.error("missing method from",willUpperCase);
 							_self.listenBefore(eventName,proc);
 						};
-						this._manageModule[didUpperCase] = function(proc){
+						this.ManageModule[didUpperCase] = function(proc){
 							if(typeof proc !== "function") return console.error("missing method from",didUpperCase);
 							_self.listenAfter(eventName,proc);
 						};
 					}
-					this._manageModule[onCaseName] = function(proc){
+					this.ManageModule[onCaseName] = function(proc){
 						if(typeof proc !== "function") return console.error("missing method from",onCaseName);
 						_self.listen(eventName,proc);
 					};
 				} else {
 					N.dataEach(eventName,function(name){
 						if(typeof name === "string"){
-							_self.addModuleEvent(name,withAroundCallback);
+							_self.addEventRegister(name,withAroundCallback);
 						}
 					});
 				}
 			}
 		},function(module){
 			if(!N.isModule(module)) console.error("ModuleEventManager:: manage object is must be nody module");
-			this._manageModule = module;
+			this.ManageModule = module;
 			//{eventName:[handers...]}
-			this._manageModuleEvents = new N.HashManager();
+			this.ManageModuleEvents = new N.HashManager();
 			//{eventName:{aroundName:[handlers..]}}
-			this._manageModuleAroundEvents = new N.HashManager();
+			this.ManageModuleAroundEvents = new N.HashManager();
 			var _self = this;
 		});
 		
@@ -5948,24 +5949,24 @@
 				return resultController;
 			},
 			hasProp:function(key){
-				return this._manageProp.has(key);
+				return this.ManageProp.has(key);
 			},
 			prop:function(key,filter){
 				if(arguments.length === 0){
-					return this._manageProp.get();
+					return this.ManageProp.get();
 				} else {
-					return this._manageProp.prop(key,filter);
+					return this.ManageProp.prop(key,filter);
 				}
 			},
 			setProp:function(key,value){
-				this._manageProp.setProp(key,value);
+				this.ManageProp.setProp(key,value);
 				return this;
 			},
 			data:function(){
-				return this._manageData;
+				return this.ManageData;
 			},
 			pushData:function(v){
-				this._manageData.push(v);
+				this.ManageData.push(v);
 				return this;
 			},
 			findRole:function(find,proc){
@@ -5988,7 +5989,7 @@
 				return finded.roleController;
 			},
 			findRoleByProp:function(prop,proc){
-				var props = this._manageProp.prop(prop);
+				var props = this.ManageProp.prop(prop);
 				var roles = this.findRole(props);
 				if(typeof proc === "function"){
 					N.dataEach(roles,proc);	
@@ -5997,14 +5998,14 @@
 			}
 		},function(targetRole,props,data,initViewProc){
 			if( this._super(targetRole,true,true) === true ) {
-				this._manageProp  = new N.HashManager(props);
-				this._manageData  = new N.Array(data);
-				this._manageEvent = new N.ModuleEventManager(this);
+				this.ManageProp  = new N.HashManager(props);
+				this.ManageData  = new N.Array(data);
+				this.ManageEvent = new N.ModuleEventManager(this);
 				
 				var _self = this;
 				N.find('script[type*=json]', this.view ,N.dataEach ,function(scriptTag){
 					var jsonData = N.node.value(scriptTag);
-					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self._manageData.append(jsonData) : _self._manageProp.extend(jsonData);
+					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self.ManageData.append(jsonData) : _self.ManageProp.extend(jsonData);
 					N.node.remove(scriptTag);
 				});
 				this.view.roleController = this;
@@ -6292,7 +6293,7 @@
 		
 		N.MODULE("ContentLoader",{
 			hasLoadContent:function(loadKey){
-				return this._manageLoadNode.has(loadKey);
+				return this.ManageLoadNode.has(loadKey);
 			},
 			loadContent:function(loadPath,loadKey){
 				var _self   = this;
@@ -6308,8 +6309,8 @@
 						new N.Open(loadURL,{
 							"dataType":"dom",
 							"success":function(doms){
-								_self._manageLoadNode.setProp(loadKey,doms);
-								_self._manageEvent.trigger("load",loadKey,doms);
+								_self.ManageLoadNode.setProp(loadKey,doms);
+								_self.ManageEvent.trigger("load",loadKey,doms);
 								success = true;
 							},
 							"error":function(){
@@ -6324,8 +6325,8 @@
 						if( doms.length === 0 ) { 
 							console.error("ContentLoader:: not found of the loadObject => "+loadPath);
 						} else {
-							_self._manageLoadNode.setProp(loadKey,doms);
-							_self._manageEvent.trigger("load",loadKey,doms);
+							_self.ManageLoadNode.setProp(loadKey,doms);
+							_self.ManageEvent.trigger("load",loadKey,doms);
 							success = true;
 						}
 					break;
@@ -6334,8 +6335,8 @@
 			},
 			putContent:function(putNode,loadKey){
 				if(typeof loadKey !== "string") loadKey = this._loadkey;
-				if(this._manageLoadNode.has(loadKey)){
-					return N.node.put(putNode,loadKey,this._manageLoadNode.prop(loadKey));
+				if(this.ManageLoadNode.has(loadKey)){
+					return N.node.put(putNode,loadKey,this.ManageLoadNode.prop(loadKey));
 				} else {
 					console.error('must be loadContent after putContent =>',loadKey);
 				}
@@ -6343,17 +6344,17 @@
 			},
 			templateContent:function(loadKey){
 				if(typeof loadKey !== "string") loadKey = this._loadkey;
-				if(this._manageLoadNode.has(loadKey)){
-					return new N.Template(this._manageLoadNode.prop(loadKey));
+				if(this.ManageLoadNode.has(loadKey)){
+					return new N.Template(this.ManageLoadNode.prop(loadKey));
 				} else {
 					console.error('must be loadContent after templateContent =>',loadKey);
 				}
 			},
 		},function(){
 			//key node
-			this._manageLoadNode = new N.HashManager();
-			this._manageEvent    = new N.ModuleEventManager(this);
-			this._manageEvent.addModuleEvent("load");
+			this.ManageLoadNode = new N.HashManager();
+			this.ManageEvent    = new N.ModuleEventManager(this);
+			this.ManageEvent.addEventRegister("load");
 			this._loadkey = "defaultLoadContent";
 		});
 		
@@ -6363,28 +6364,28 @@
 				if(typeof activeName === "string" && this._activeStatus === activeName){
 					return true;
 				}
-				if(!this._manageLoadPath.has(activeName)){
+				if(!this.ManageLoadPath.has(activeName)){
 					console.error('ActiveContentLoader::activeName in not defined');
 					return false;
 				}
 				var readyActive = true;
-				if(!this._manageLoadNode.has(activeName)){
-					readyActive = this.loadContent(activeName,this._manageLoadPath.prop(activeName));
+				if(!this.ManageLoadNode.has(activeName)){
+					readyActive = this.loadContent(activeName,this.ManageLoadPath.prop(activeName));
 				}
 				if(readyActive){
 					//before active view save
 					
 					if(this._activeStatus){
 						var inactiveNodes  = N.findLite(this.view.childNodes);
-						var inactiveResult = this._manageEvent.trigger("inactive",this._activeStatus,inactiveNodes);
+						var inactiveResult = this.ManageEvent.trigger("inactive",this._activeStatus,inactiveNodes);
 						if(N.dataHas(inactiveResult,false)){
 							return false;
 						}
 						
 						
 					}
-					var activeNodes  = this._manageLoadNode.prop(activeName);
-					var activeResult = this._manageEvent.trigger("active",this._activeStatus,activeNodes);
+					var activeNodes  = this.ManageLoadNode.prop(activeName);
+					var activeResult = this.ManageEvent.trigger("active",this._activeStatus,activeNodes);
 					if(N.dataHas(inactiveResult,false)){
 						return false;
 					}
@@ -6397,19 +6398,19 @@
 			this._super();
 			this.view = N.find(view,0);
 			if(this.view) { 
-				this._manageEvent.addModuleEvent(["active","inactive"],true);
-				this._manageEvent.didInactive(function(keyName,inactiveNodes){
-					this._manageLoadNode.setProp(this._activeStatus,inactiveNodes);
+				this.ManageEvent.addEventRegister(["active","inactive"],true);
+				this.ManageEvent.didInactive(function(keyName,inactiveNodes){
+					this.ManageLoadNode.setProp(this._activeStatus,inactiveNodes);
 					N.node.empty(this.view);
 					this._activeStatus = undefined;
 				});
-				this._manageEvent.didActive(function(keyName,activeNodes){
-					this._manageLoadNode.setProp(keyName,activeNodes);
+				this.ManageEvent.didActive(function(keyName,activeNodes){
+					this.ManageLoadNode.setProp(keyName,activeNodes);
 					N.node.put(this.view,activeNodes);
 					this._activeStatus = keyName;
 				});
 				
-				this._manageLoadPath = new N.HashManager(N.marge(loadInfo,{"loaderInitial":N.toArray(this.view.childNodes)}));
+				this.ManageLoadPath = new N.HashManager(N.marge(loadInfo,{"loaderInitial":N.toArray(this.view.childNodes)}));
 				this._activeStatus   = "loaderInitial";
 			} else {
 				return console.error("ActiveContentLoader:: not found view of selector =>",view); 
@@ -6887,35 +6888,31 @@
 				}
 			},
 			template:function(_template,dataFilter){
-				var templateNode
 				var _self = this;
 				
-				// dataFilter 에서 function렌더링시 메니지드데이터를 가르키게 한다.
+				// dataFilter 에서 function필터링시 메니지드 데이터 스코프에 포함하도록 한다.
 				if(typeof dataFilter === 'object'){
 	   				 dataFilter = N.propsMap(dataFilter,function(v){
-	   					if(typeof v === 'function'){
-	   						return function(){ 
-								return v.apply(_self,Array.prototype.slice.call(arguments)); 
-							};
-	   					} 
+	   					if(typeof v === 'function') return function(){ return v.apply(_self,Array.prototype.slice.call(arguments));};
 	   					return v;
 	   				});
 				}
 				
 				//output partial
+				var partialNode;
 				if(typeof _template === 'object') { 
-					templateNode = _template.partialOutput(this.prop(),dataFilter);
+					partialNode = _template.partialOutput(this.prop(),dataFilter);
 				} else if(typeof _template === 'string') {
-					templateNode = (new N.Template(_template,true)).partialOutput(this.prop(),dataFilter);
+					partialNode = (new N.Template(_template,true)).partialOutput(this.prop(),dataFilter);
 				} else { 
 					console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template); return false; 
 				}
 				
-				if(templateNode.isNone()) { 
-					console.error("template :: 렌더링할 template를 찾을수 없습니다",templateNode); return false; 
+				if(partialNode.isNone()) { 
+					console.error("template :: 렌더링할 template를 찾을수 없습니다",partialNode); return false; 
 				}
 
-				templateNode.callbackNodyNode(['bind','action','placeholder'],
+				partialNode.callbackNodyNode(['bind','action','placeholder'],
 					function(name,node,nodeAlias){
 						switch(nodeAlias){
 							case 'bind': _self.bind(name,node); break;
@@ -6931,8 +6928,7 @@
 						}
 					}
 				);
-				
-				return templateNode.release();
+				return partialNode;
 			},
 			response:function(responseKey,proc){
 				if(typeof responseKey !== "string" && typeof proc !== "function") console.warn("response args must be string & function => ",responseKey,proc);
@@ -7070,9 +7066,9 @@
 			addActionEvent:function(name,method){
 				if(!this._dataActions){
 					this._dataActions = new N.HashManager();;
-					this._manageDataActions = new N.ModuleEventManager(this._dataActions);
+					this.ManageDataActions = new N.ModuleEventManager(this._dataActions);
 				}
-				this._manageDataActions.listen(name,method);
+				this.ManageDataActions.listen(name,method);
 			},
 			addPlaceholderNode:function(dataID,placeholderNode){
 				if( typeof dataID === "string" && N.isNode(placeholderNode) ){
@@ -7086,8 +7082,8 @@
 				var viewController = this;
 				var _self = this;
 				N.node.on(element,"click", function(){
-					if(_self._manageDataActions.hasListen(actionName)){
-						_self._manageDataActions.triggerWithOwner(managedData,actionName,arg,element,_self);
+					if(_self.ManageDataActions.hasListen(actionName)){
+						_self.ManageDataActions.triggerWithOwner(managedData,actionName,arg,element,_self);
 					} else {
 						console.warn("MVVM::no had action",actionName);
 					}
@@ -7145,8 +7141,8 @@
 					} else {
 						this.needDisplay(rerenderManagedData);
 					}
-					this._managePresentorEvent.trigger("dataChange","rerender",rerenderManagedData,this.structureNodes[rerenderManagedData.DataID]);
-					this._managePresentorEvent.trigger("displayChange",this,this.view);
+					this.ManagePresentorEvent.trigger("dataChange","rerender",rerenderManagedData,this.structureNodes[rerenderManagedData.DataID]);
+					this.ManagePresentorEvent.trigger("displayChange",this,this.view);
 				});
 		
 				currentBinder.listen(this,"GLOBAL.ManagedDataIndexExchange",function(changesManagedData){
@@ -7164,8 +7160,8 @@
 						N.node.remove(nodeHelper1);
 						N.node.remove(nodeHelper2);
 	
-						this._managePresentorEvent.trigger("dataChange","position",changesManagedData[0],node1);
-						this._managePresentorEvent.trigger("dataChange","position",changesManagedData[1],node2);
+						this.ManagePresentorEvent.trigger("dataChange","position",changesManagedData[0],node1);
+						this.ManagePresentorEvent.trigger("dataChange","position",changesManagedData[1],node2);
 					}
 				});
 		
@@ -7180,8 +7176,8 @@
 						N.node.remove(this.structureNodes[dataID])
 						delete this.structureNodes[dataID];
 						//	
-						this._managePresentorEvent.trigger("dataChange","remove",managedData);
-						this._managePresentorEvent.trigger("displayChange",this,this.view);
+						this.ManagePresentorEvent.trigger("dataChange","remove",managedData);
+						this.ManagePresentorEvent.trigger("displayChange",this,this.view);
 					}
 					//
 					if(this.placeholderNodes[dataID]) delete this.placeholderNodes[dataID];
@@ -7190,13 +7186,13 @@
 				currentBinder.listen(this,"GLOBAL.ManagedDataAddedChild",function(params){
 					if(this.placeholderNodes[params.dataID]) {
 						this.needDisplay(params.newManagedData,this.placeholderNodes[params.dataID]);
-						this._managePresentorEvent.trigger("dataChange","append",params.newManagedData,this.structureNodes[params.newManagedData.DataID]);
-						this._managePresentorEvent.trigger("displayChange",this,this.view);
+						this.ManagePresentorEvent.trigger("dataChange","append",params.newManagedData,this.structureNodes[params.newManagedData.DataID]);
+						this.ManagePresentorEvent.trigger("displayChange",this,this.view);
 					}
 				});				
 				currentBinder.listen(this,"GLOBAL.ManagedDataWasSetValue",function(managedData){
-					this._managePresentorEvent.trigger("propChange","bind",managedData,this.structureNodes[managedData.DataID])
-					this._managePresentorEvent.trigger("displayChange",this,this.view);
+					this.ManagePresentorEvent.trigger("propChange","bind",managedData,this.structureNodes[managedData.DataID])
+					this.ManagePresentorEvent.trigger("displayChange",this,this.view);
 				});
 		
 				//end
@@ -7288,7 +7284,7 @@
 	
 					},startDepth);
 				}
-				this._managePresentorEvent.trigger("displayChange",this,this.view);
+				this.ManagePresentorEvent.trigger("displayChange",this,this.view);
 				return this;
 			},
 			needDisplayWithViewModel:function(newViewModel){
@@ -7342,9 +7338,9 @@
 			// dep!바인딩 :: N.DataContextNotificationCenter.addObserver(this);
 
 			//events
-			this._managePresentorEvent = new N.ModuleEventManager(this);
-			this._managePresentorEvent.addModuleEvent(["propChange","dataChange","displayChange"]);
-			this._managePresentorEvent.addTriggerEvent(["displayChange"]);
+			this.ManagePresentorEvent = new N.ModuleEventManager(this);
+			this.ManagePresentorEvent.addEventRegister(["propChange","dataChange","displayChange"]);
+			this.ManagePresentorEvent.addTriggerRegister(["displayChange"]);
 			this.addActionEvent("up",function(arg,el,vc){
 				console.log("tup")
 				if(typeof arg === "function") {
@@ -7823,7 +7819,7 @@
 			if(typeof fps === "number") this.setFPS(fps);
 			
 			this.EventManager = new N.ModuleEventManager(this);
-			this.EventManager.addModuleEvent(["timeMove","timeFinish"]);
+			this.EventManager.addEventRegister(["timeMove","timeFinish"]);
 		});
 		
 		N.MODULE("TimeProperties",{
