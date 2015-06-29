@@ -1974,9 +1974,9 @@
 			console.warn("Array.split only text or array", text);
 			return new N.Array(text);
 		});
-	
+		
 		//******************
-		N.MODULE("Manage",{
+		N.MODULE("HashManager",{
 			setSource:function(obj,k){ 
 				obj = N.toObject(obj,k);
 				if(typeof obj === "object"){ 
@@ -2171,7 +2171,7 @@
 			concat:function(){ 
 				var result = this.clone(); 
 				for(var i=0,l=arguments.length;i<l;i++){ 
-					new N.Manage(arguments[i]).each(function(v,k){ result[k] = v; });
+					new N.HashManager(arguments[i]).each(function(v,k){ result[k] = v; });
 				}; 
 				return result; 
 			},
@@ -2184,7 +2184,7 @@
 			safeConcat:function(){ 
 				var result = this.clone(); 
 				for(var i=0,l=arguments.length;i<l;i++){ 
-					new N.Manage(arguments[i]).each(function(v,k){ 
+					new N.HashManager(arguments[i]).each(function(v,k){ 
 						if( (k in result) == false) result[k] = v; 
 					});
 				} 
@@ -2908,8 +2908,8 @@
 			        // specify the data we wish to handle. Plaintext in this case.
 			        trans.addDataFlavor('text/unicode');
 			        // To get the data from the transferable we need two new objects
-			        var str = new N.Manage();
-			        var len = new N.Manage();
+			        var str = new N.HashManager();
+			        var len = new N.HashManager();
 			        var str = Components.classes["@mozilla.org/supports-string;[[[[1]]]]"].createInstance(Components.interfaces.nsISupportsString);
 			        var copytext=meintext;
 			        str.data=copytext;
@@ -4915,36 +4915,9 @@
 			this.setSource(N.Element.create(node,attr,parent));
 		});
 		
-		
-		N.EXTEND_MODULE("NodeArray","Template",{
-			clone    : function(nodeData,dataFilter){ 
-				return new N.Template(this.initNode,nodeData,(dataFilter || this._persistantDataFilter),true); 
-			},
-			clones:function(nodeDatas,dataFilter){
-				nodeDatas  = N.toArray(nodeDatas);
-				var result = [];
-				for(var i=0,l=nodeDatas.length;i<l;i++) result.push( this.clone(nodeDatas[i],dataFilter) );
-				return result;
-			},
-			render:function(nodeData,dataFilter){
-				return this.clone(nodeData,dataFilter).get();
-			},
-			renders:function(nodeDatas,dataFilter){
-				return N.dataMap(this.clones( N.toArray(nodeDatas) ,dataFilter ),function(template){
-					return template.get();
-				});
-			},
-			renderTo:function(appendTo,nodeDatas,dataFilter){
-				var at = N.findLite(appendTo)[0];
-				var rr = this.renders( (typeof nodeDatas !== 'object') ? [{}] : nodeDatas, dataFilter );
-				if(at) N.node.append(at,rr);
-				return rr;
-			},
-			renderAfterQuery:function(){
-				return new N.NodeArray(this.render.apply(this,Array.prototype.slice.call(arguments)));
-			},
+		N.EXTEND_MODULE("NodeArray","Partial",{
 			// 키를 지우면서
-			partialAttr:function(attrKey,callback){
+			callbackAttrEach:function(attrKey,callback){
 				this.find("["+attrKey+"]").each(function(node){
 					//attrValue, node
 					callback(node.getAttribute(attrKey),node,attrKey);
@@ -4952,7 +4925,7 @@
 				});
 				return this;
 			},
-			partialNodeProps:function(propKeys,callback,presets){
+			callbackNodyNode:function(propKeys,callback,presets){
 				var keys  = propKeys;
 				var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new N.Array(keys)).map(function(key){ return 'nd-'+key; });
 				var sKeys = (presets && presets.sKeys) ? presets.sKeys : (new N.Array(pKeys)).map(function(pkey){ return '['+ pkey +']'; });
@@ -4971,15 +4944,16 @@
 			__nodeDataAttrKeys:["nd-value", 'nd-html', "nd-class", "nd-dataset", "nd-href", "nd-append", "nd-prepend", "nd-put", "nd-display"],
 			__nodeDataSelectKeys:["[nd-value]", "[nd-html]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-append]", "[nd-prepend]", "[nd-put]", "[nd-display]"],	
 			//
+			getNodePoint:function(){
+				return this.NodeForPartialPointer;
+			},
 			setNodeData:function(refData,dataFilter){
-				if(!this.TemplatePartials) this.TemplatePartials = {};
-			
 				if(typeof refData !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다",refData); }
-				var _ = this,data = N.cloneObject(refData),dataPointer = this.TemplatePartials;
-				dataFilter = dataFilter || this._persistantDataFilter;
+				var _    = this;
+				var data = refData;
+				var dataPointer = this.NodeForPartialPointer;
 			
-				// 파셜 노드 수집 // 재사용 가능하도록 고려해야함
-				this.partialNodeProps(this.__nodeDataDefaultKeys,
+				this.callbackNodyNode(this.__nodeDataDefaultKeys,
 					function(name,node,nodeAlias){
 						if(!(nodeAlias in dataPointer)) dataPointer[nodeAlias] = {};
 						name.replace(/\S+/g,function(s){
@@ -5028,8 +5002,6 @@
 				}
 				return this;
 			},
-			setDataFilter:function(dataFilter){ if(typeof dataFilter === 'object') this._persistantDataFilter = dataFilter; return this; },
-			removeDataFilter:function(){ delete this['_persistantDataFilter']; return this; },
 			//name base form data
 			getFormData:function(){ 
 				return N.inject(this,function(inj,node){
@@ -5037,28 +5009,42 @@
 				}); 
 			},
 			setFormData:function(data){ 
-				if(typeof data === 'object') this.each(function(node){ (new N.Form(node)).setFormData(data); }); return this; 
+				if(typeof data === 'object'){
+					this.each(function(node){ (new N.Form(node)).setFormData(data); });
+					return this; 
+				} 
 			},
-			reset : function(nodeData,dataFilter){
-				if (this.initNode.length === 0) console.error("tamplate 소스를 찾을수 없습니다.",this.initNode);
-				if (this.initNode.length > 1) console.warn("tamplate 소스는 반드시 1개만 선택되어야 합니다.",this.initNode);
-				this.setSource(N.cloneNodes(this.initNode));
-				if(typeof nodeData == "object") this.setNodeData(nodeData,dataFilter);
-				return this;
+			release:function(){
+				var finalData = this.toArray();
+				this.splice(0,this.length);
+				this.NodeForPartialPointer = null;
+				return finalData;
 			}
-		},function(node,nodeData,dataFilter,beRender){
-			this.initNode = N.makeSampleNode(node);
-			if(this.initNode){
-				if(dataFilter) this.setDataFilter(dataFilter);
-				this.reset(nodeData,dataFilter);
-				if(nodeData === true || dataFilter === true || beRender === true) this.setNodeData(nodeData,dataFilter);
+		},function(node,nodeProp,dataFilter){ 
+			this.setSource(node);
+			this.NodeForPartialPointer = {};
+			if(typeof nodeProp === "object" && typeof dataFilter === "object"){
+				this.setNodeData(nodeProp,dataFilter);
 			}
-		},function(multiNodes){
-			//get 함수입니다. Template모듈은 배열이나 노드를 반환합니다.
-			var fs = N.findLite(this);
-			return (fs.length === 1) ? fs[0] : fs;
 		});
 		
+		N.EXTEND_MODULE("NodeArray","Template",{
+			clone :function(nodeData,dataFilter){ return new N.Template(this.initNode); },
+			partialOutput:function(nodeData,dataFilter){
+				return new N.Partial(N.cloneNodes(this.initNode),nodeData,dataFilter);
+			},
+			render:function(nodeData,dataFilter){
+				return this.partialOutput(nodeData,dataFilter).release();
+			},
+			renders:function(nodeDatas,dataFilter){
+				var _self = this;
+				return N.dataMap(nodeDatas,function(data){
+					return _self.partialOutput(data,dataFilter).release();
+				});
+			}
+		},function(node){
+			this.initNode = N.makeSampleNode(node);
+		});
 	})(window,N,N.ENV);
 
 	//Nody Component Foundation
@@ -5137,7 +5123,7 @@
 			checkoutFilter:function(o){ this.FrameCheckoutFilter = o; },
 			checkinFilter:function(o){ this.FrameCheckinFilter = o; },
 			checkout:function(){
-				return new N.Manage(this.getCheckoutElementsWithToken()).setMap(function(node,key){
+				return new N.HashManager(this.getCheckoutElementsWithToken()).setMap(function(node,key){
 					var value = N.node.value(node);
 					return value == null ? "" : value;
 				}).get();
@@ -5869,13 +5855,13 @@
 			},
 			listenBefore:function(triggerName,proc){
 				if(!this._manageModuleAroundEvents.has(triggerName)){
-					this._manageModuleAroundEvents.setProp(triggerName,new N.Manage());
+					this._manageModuleAroundEvents.setProp(triggerName,new N.HashManager());
 				}
 				this._manageModuleAroundEvents.getProp(triggerName).pushDataProp("before",proc);
 			},
 			listenAfter:function(triggerName,proc){
 				if(!this._manageModuleAroundEvents.has(triggerName)){
-					this._manageModuleAroundEvents.setProp(triggerName,new N.Manage());
+					this._manageModuleAroundEvents.setProp(triggerName,new N.HashManager());
 				}
 				this._manageModuleAroundEvents.getProp(triggerName).pushDataProp("after",proc);
 			},
@@ -5938,9 +5924,9 @@
 			if(!N.isModule(module)) console.error("ModuleEventManager:: manage object is must be nody module");
 			this._manageModule = module;
 			//{eventName:[handers...]}
-			this._manageModuleEvents = new N.Manage();
+			this._manageModuleEvents = new N.HashManager();
 			//{eventName:{aroundName:[handlers..]}}
-			this._manageModuleAroundEvents = new N.Manage();
+			this._manageModuleAroundEvents = new N.HashManager();
 			var _self = this;
 		});
 		
@@ -6011,7 +5997,7 @@
 			}
 		},function(targetRole,props,data,initViewProc){
 			if( this._super(targetRole,true,true) === true ) {
-				this._manageProp  = new N.Manage(props);
+				this._manageProp  = new N.HashManager(props);
 				this._manageData  = new N.Array(data);
 				this._manageEvent = new N.ModuleEventManager(this);
 				
@@ -6215,8 +6201,8 @@
 				var newRequest = this.getRequestObject();
 		
 				//data 처리
-				var requestData   = new N.Manage((typeof this.moduleOption.constData === "object") ? new N.Manage(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
-				var requestString = new N.Manage(requestData.toParameter()).join("=","&");
+				var requestData   = new N.HashManager((typeof this.moduleOption.constData === "object") ? new N.HashManager(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
+				var requestString = new N.HashManager(requestData.toParameter()).join("=","&");
 			
 				// request params (기록용)
 			
@@ -6365,7 +6351,7 @@
 			},
 		},function(){
 			//key node
-			this._manageLoadNode = new N.Manage();
+			this._manageLoadNode = new N.HashManager();
 			this._manageEvent    = new N.ModuleEventManager(this);
 			this._manageEvent.addModuleEvent("load");
 			this._loadkey = "defaultLoadContent";
@@ -6423,7 +6409,7 @@
 					this._activeStatus = keyName;
 				});
 				
-				this._manageLoadPath = new N.Manage(N.marge(loadInfo,{"loaderInitial":N.toArray(this.view.childNodes)}));
+				this._manageLoadPath = new N.HashManager(N.marge(loadInfo,{"loaderInitial":N.toArray(this.view.childNodes)}));
 				this._activeStatus   = "loaderInitial";
 			} else {
 				return console.error("ActiveContentLoader:: not found view of selector =>",view); 
@@ -6478,7 +6464,7 @@
 					if(N.isArray(data)) {
 						return {};
 					} else {
-						return new N.Manage(data).remove(this.DefaultDataKey).get();
+						return new N.HashManager(data).remove(this.DefaultDataKey).get();
 					}
 				}
 			},
@@ -6737,7 +6723,7 @@
 			}
 		},function(source,defaultKey){
 			this.ContextID             = N.Util.base36UniqueRandom(5,'co');
-			this.Source         = new N.Manage(source);
+			this.Source         = new N.HashManager(source);
 			this.DefaultDataKey = defaultKey || "data";
 			this.Binder         = new N.Binder();
 			// 데이터 안의 모든 Managed data를 생성하여 메타안에 집어넣음
@@ -6901,36 +6887,52 @@
 				}
 			},
 			template:function(_template,dataFilter){
-				var templateNode,_ = this;
+				var templateNode
+				var _self = this;
+				
 				// dataFilter 에서 function렌더링시 메니지드데이터를 가르키게 한다.
-				if(typeof dataFilter === 'object') dataFilter = N.propsMap(dataFilter,function(v){
-					if(typeof v === 'function') return function(){ return v.apply(_,Array.prototype.slice.call(arguments)); };
-					return v;
-				});
+				if(typeof dataFilter === 'object'){
+	   				 dataFilter = N.propsMap(dataFilter,function(v){
+	   					if(typeof v === 'function'){
+	   						return function(){ 
+								return v.apply(_self,Array.prototype.slice.call(arguments)); 
+							};
+	   					} 
+	   					return v;
+	   				});
+				}
+				
+				//output partial
+				if(typeof _template === 'object') { 
+					templateNode = _template.partialOutput(this.prop(),dataFilter);
+				} else if(typeof _template === 'string') {
+					templateNode = (new N.Template(_template,true)).partialOutput(this.prop(),dataFilter);
+				} else { 
+					console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template); return false; 
+				}
+				
+				if(templateNode.isNone()) { 
+					console.error("template :: 렌더링할 template를 찾을수 없습니다",templateNode); return false; 
+				}
 
-				if(typeof _template === 'object')        { templateNode = _template.clone(this.prop(),dataFilter);
-				} else if(typeof _template === 'string') { templateNode = new N.Template(_template,this.prop(),dataFilter,true);
-				} else                                   { console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template); return false; }
-
-				if(templateNode.isNone()) { console.error("template :: 렌더링할 template를 찾을수 없습니다",templateNode); return false; }
-
-				templateNode.partialNodeProps(['bind','action','placeholder'],
+				templateNode.callbackNodyNode(['bind','action','placeholder'],
 					function(name,node,nodeAlias){
 						switch(nodeAlias){
-							case 'bind': _.bind(name,node); break;
+							case 'bind': _self.bind(name,node); break;
 							case 'action':
 								if(("nd-param" in node.attributes)) {
-									_.action(name,node,N.toObject(node.getAttribute("nd-param")));
+									_self.action(name,node,N.toObject(node.getAttribute("nd-param")));
 									node.removeAttribute("nd-param");
 								} else {
-									_.action(name,node);
+									_self.action(name,node);
 								}
 								break;
-							case 'placeholder': _.placeholder(node); break;
+							case 'placeholder': _self.placeholder(node); break;
 						}
 					}
 				);
-				return templateNode;
+				
+				return templateNode.release();
 			},
 			response:function(responseKey,proc){
 				if(typeof responseKey !== "string" && typeof proc !== "function") console.warn("response args must be string & function => ",responseKey,proc);
@@ -7013,16 +7015,19 @@
 				if(onlyThis === true) {
 					this.removeFromParent();
 					this.DataContext.Binder.resend(this,"GLOBAL.ManagedDataRemoved",this);
-					this.kill();
+					this.release();
 				} else {
 					this.feedUpManageData(function(md){ 
 						md.removeManagedData(true);
 					});
 				}
 			},
-			kill:function(){
+			release:function(){
 				this.DataContext.Binder.removeListener(this);
-				if(this.__response__)this.DataContext.Binder.removeListener(this.__response__);
+				if(this.__response__) {
+					this.DataContext.Binder.removeListener(this.__response__);
+				}
+				return this.view;
 			},
 			//하위 데이터를 추가함
 			addChildData:function(data){
@@ -7042,7 +7047,7 @@
 		},function(DataContext,initData,dataType){
 			this.DataContext = DataContext;
 			this.DataID      = N.Util.base62UniqueRandom(8,'ma');
-			this.Source      = new N.Manage(initData);
+			this.Source      = new N.HashManager(initData);
 			this.SourceType  = dataType || "object";
 			//노드구조
 			this.Child       = new N.Array();
@@ -7064,7 +7069,7 @@
 		N.MODULE("Presentor",{
 			addActionEvent:function(name,method){
 				if(!this._dataActions){
-					this._dataActions = new N.Manage();;
+					this._dataActions = new N.HashManager();;
 					this._manageDataActions = new N.ModuleEventManager(this._dataActions);
 				}
 				this._manageDataActions.listen(name,method);
@@ -7145,7 +7150,6 @@
 				});
 		
 				currentBinder.listen(this,"GLOBAL.ManagedDataIndexExchange",function(changesManagedData){
-					console.log("GLOBAL.ManagedDataIndexExchange",changesManagedData);
 					
 					var node1 = this.structureNodes[changesManagedData[0].DataID];
 					var node2 = this.structureNodes[changesManagedData[1].DataID];
@@ -7190,9 +7194,10 @@
 						this._managePresentorEvent.trigger("displayChange",this,this.view);
 					}
 				});				
-				//currentBinder.listen(this,"GLOBAL.ManagedDataWasSetValue",function(managedData){
-				//	this._managePresentorEvent.trigger("dataChange","bind",managedData,this.structureNodes[managedData.DataID])
-				//});
+				currentBinder.listen(this,"GLOBAL.ManagedDataWasSetValue",function(managedData){
+					this._managePresentorEvent.trigger("propChange","bind",managedData,this.structureNodes[managedData.DataID])
+					this._managePresentorEvent.trigger("displayChange",this,this.view);
+				});
 		
 				//end
 				return true;		
@@ -7338,8 +7343,8 @@
 
 			//events
 			this._managePresentorEvent = new N.ModuleEventManager(this);
-			this._managePresentorEvent.addModuleEvent(["dataChange","displayChange"]);
-			this._managePresentorEvent.addTriggerEvent(["dataChange","displayChange"]);
+			this._managePresentorEvent.addModuleEvent(["propChange","dataChange","displayChange"]);
+			this._managePresentorEvent.addTriggerEvent(["displayChange"]);
 			this.addActionEvent("up",function(arg,el,vc){
 				console.log("tup")
 				if(typeof arg === "function") {
@@ -7605,7 +7610,7 @@
 				redefine[this.defaultKey] = defaultData;
 				defaultData = redefine;
 			}
-			this.beforeProperty  = new N.Manage(defaultData);
+			this.beforeProperty  = new N.HashManager(defaultData);
 			// { listener:Object , listen:"name" ,proc: }
 		});
 	
@@ -7807,7 +7812,7 @@
 			}
 		},function(fps){
 			this.Source = new N.Array();
-			this.Status = new N.Manage({
+			this.Status = new N.HashManager({
 				timeStart:0,
 				timeEnd  :0
 			});
@@ -7896,7 +7901,7 @@
 				if(typeof aroundData[1] === "undefined"){
 					return this._gto,aroundData[0];
 				} else {
-					var dataProps = new N.Manage();
+					var dataProps = new N.HashManager();
 					dataProps.arrangementObjectsDataProp(aroundData[0],aroundData[1]);
 					return dataProps.setMap(function(arrange){
 						var a0n = typeof arrange[0] === "number";
@@ -7929,7 +7934,7 @@
 			}
 		},function(attr,interval,startTime,defaultKey){
 			this.Source    = new N.Array();
-			this.Attribute = (new N.Manage(attr)).get();
+			this.Attribute = (new N.HashManager(attr)).get();
 			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "value"
 			this.defaultStartTime = startTime ? N.timestampExp(startTime): N.timestampExp();
 			this.defaultInertval  = interval  ? N.timescaleExp(interval) : N.timescaleExp("2s");

@@ -145,7 +145,8 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
 
 #### 0.27.x 업데이트
   - [x] Array모듈 연산시 반복문 오버헤드를 줄었습니다.
-  - [x] NativeModule에 대한 이름 접근이 좀 더 편해졌습니다.
+  - [x] Template모듈이 Template모듈과 Partial모듈로 기능이 분리되었습니다. 
+  - [x] Template노드의 초기화부터 Partial렌더링까지 연산이 20배 이상 빨라졌습니다.
   - [x] 모듈생성&확장시 프로토타입을 생략하고 초기화 가능해졌습니다.
   - [x] data...함수와 다르게 진짜 배열만 동작하는 array...함수가 생겼습니다.
   - [x] clone함수가 재정의 되었습니다.

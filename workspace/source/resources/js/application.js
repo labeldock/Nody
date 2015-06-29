@@ -142,12 +142,11 @@ switch(nd.node("body").data("page")){
 		var viewModel = new nd.ViewModel("#mvvm-ul","#mvvm-list","#mvvm-td");
 		//뷰를 그리고 이벤트를 등록함
 	    var listViewController = new nd.Presentor("#listContainer",dataContext.getRootManagedData(),viewModel);
-		listViewController.onDataChange(function(){
-			console.log("onDataChange trigger!");
+		listViewController.onDisplayChange(function(){
 			var xmpText = dataContext.JSONString().replace(/\:\[/,":[\n\t").replace(/\}\]\}\,(\s|)/g,"}]},\n\t").replace("]}]}","]}\n]}");
 			mvvmXMP.text(xmpText);
 		});
-		listViewController.triggerDataChange();
+		listViewController.triggerDisplayChange();
 	    listViewController.needDisplay();
 		break;
 	case "viewmodel":
