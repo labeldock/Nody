@@ -87,6 +87,11 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   
 ## Update history #
 
+#### 0.28.x 업데이트
+  - [ ] 테스트페이지의 컨텐츠가 모두 version2labs.github.io로 옮겨집니다.
+  - [ ] Contexts와 ActiveContexts의 API가 재설계 됩니다.
+  - (\[source:-11kB(313)\] \[min:-9kB(181)\])
+  
 #### 0.27.x 업데이트
   - [x] Array모듈 연산시 반복문 오버헤드를 줄었습니다.
   - [x] Template모듈이 Template모듈과 Partial모듈로 기능이 분리되었습니다. 
@@ -98,28 +103,11 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   - [x] RoleController에서 콜백으로 role을 정의할수 있도록 변경되었습니다.
   - [x] NodeArray에 html, appendHTML, prependHTML 함수가 생겼습니다.
   - [x] 'node' 함수가 생겼고 '$' 싱글턴 오브젝트가 사라졌습니다. 여전히 싱글턴으로 사용가능하며 함수 자체는 NodeArray모듈의 초기화 함수 입니다.
-  - [ ] $some 의 표현의 제거되어 테스트페이지를 고쳐야 됩니다.
-  - [ ] 테스트페이지에 새로운 스타일시트 헬퍼 codykit적용.
   - [x] 새로운 드로세라에서 nody 객체가 좀 더 확연히 드러나도록 코어를 수정하였습니다.
   - [x] node.css 함수가 생겼습니다. nd.node.css("#foo",".active"); 이런식으로 어트리뷰트를 추가할수 있습니다.
   - [x] ContentLoader의 재정의 및 개발
-  - [ ] ActiveController의 should... API가 어플리케이션 동작의 신뢰성을 떨어트려 재설계
-  - [ ] TimeProperties 모듈에서 Cubicbezior 공식이 도입될수 있도록 반영.
-  - [ ] Form모듈의 리모트폼 구현
-  - [ ] 패키지 그룹의 컨샙이 명확하도록 분리 (core,util,interface,webenv,selector,node,ui)
-  - [ ] 통신모듈의 재설계
   - (\[source:+5kB(324)\] \[min:+3kB(190)\])
 
-#### 0.26.x 업데이트
-  - [x] TimeProps 모듈 추가
-  - [x] Timeline 모듈 추가
-  - [x] Manage모듈의 효과적인 사용이 가능해짐
-  - [x] makes의 표현식과 exp의 표현식을 결합함 ".list-$*4" 와 ".list-\\{$i*4}"는 같은 표현식임 ".list-\\{(($i+20)*20)-5}" 이런식으로 다양하게 숫자를 만들어낼수 있게되었음.
-  - [x] FormController가 뷰상태에 초점이 맞춰졌고 초기화 순서가 변경됨
-  - [x] MVVM 모듈 그룹과 Binder, ModuleEventManager, Template 모듈을 완전히 통합
-  - [x] DataContext의 데이터를 다시 데이터로 업데이트 할 수 있게 되었습니다. 이로서 렌더링 부하가 줄었습니다.
-  - [x] 이미 렌더링이 끝난 ViewModel을 다시 재활용이 가능하도록 업데이트 하였습니다.
-  - (\[source:+17kB(319)\] \[min:+10kB(187)\])
   
 ## 프로젝트의 방향 #
 데이터를 쉽게 뷰로 구성하고 반영할 수 있도록 할것입니다.
