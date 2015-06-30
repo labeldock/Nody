@@ -3,11 +3,11 @@
 Nody.js는 데이터 관점에서 표준적인 방법으로 DOM을 쉽게 구성하기 위한 라이브러리입니다. 
 
 ## Feature #
-  - Nody plays well with another library
-  - Nody helps create node as CSS Style
-  - 노드를 찾은 후 바로 다른 파라메터 안에 다른 액션을 사용할 수 있습니다.
-  - 템플릿 사용이 편하며 표현이 매우 다양합니다.
+  - Nody plays well with another library.
+  - Nody helps create node as CSS Style.
   - 바인딩을 쉽게 구현할수 있습니다.
+  - MVVM모듈이 내장되어있습니다.
+  - 영향받은 언어나 라이브러리 : Ruby, Cocoa, Backbone, jQuery, Emmet
 
 #### Example of create node
 ```javascript
