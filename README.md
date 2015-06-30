@@ -14,9 +14,6 @@ Nody.js는 데이터 관점에서 표준적인 방법으로 DOM을 쉽게 구성
 nd.make('button.btn.btn-default#btn-action');
 //=> <button class="btn btn-default" id="btn-action"></button>
 
-nd.make('input[type=checkbox][checked]');
-//=> <input type="checkbox" checked="" value="">
-
 nd.make('div',
 	nd.make('a',nd.make('span','first value')),
 	nd.make('a',nd.make('span','second value'))
@@ -29,9 +26,6 @@ nd.makes('div>a>span::first value+span::second value');
 
 nd.makes('ul>li.item-$*3');
 //=> [ <ul><li class="item-1"></li><li class="item-2"></li><li class="item-3"></li></ul> ]
-
-nd.makes('table>thead>tr>td^^tbody>tr>td');
-//=> [ <table><thead><tr><td></td></tr><tbody><tr><td></td></tr></tbody></thead></table> ]
 
 nd.makes('h1::title+p::subtitle+section>header+.content+footer');
 //=> [ <h1>title</h1>, <p>subtitle</p>, <section><header></header><div class="content"></div><footer></footer></section> ]
@@ -59,79 +53,29 @@ binder.bindNode("#bind2");
 // That's it! :)
 ```
 
-#### Example of bind value inspect
-```html
-	<input id="bind1">
-	<p>
-		First input value is <span id="bind2"></span>
-	</p>
-```
-```javascript
-var binder = new nd.Binder(10); // initial value
-binder.bindNode("#bind1");
-binder.bindNode("#bind2");
-binder.inspect(function(value){
-	//if input is empty then execute transaction with return false;
-	if(value === ""){ return false; }
-});
-```
-
-#### Example of binding with many properties
-```html
-	<input id="bind1">
-	<input id="bind2">
-	<p>
-		First input value is <span id="bind1-1"></span>
-	</p>
-	<p>
-		Second input value is <span id="bind2-1"></span>
-	</p>
-```
-```javascript
-var binder = new nd.Binder({"bind1":5,"bind2":10}); // initial value
-binder.bindNode("#bind1","bind1");
-binder.bindNode("#bind1-1","bind1");
-
-binder.bindNode("#bind2","bind2");
-binder.bindNode("#bind2-1","bind2");
-```
-
-
-
-
 #### Example of template
 ```javascript
-nd.makes('ul#ul','body');
-
-var temp = new nd.Template('<li nd-class="index" nd-value="item-value"></li>');
+var temp = new nd.Template('<li nd-class="index" nd-value="text"></li>');
 	temp.renderTo('#ul',
 		[
-			{'index':'index1','item-value':'A'},
-			{'index':'index1','item-value':'B'},
-			{'index':'index1','item-value':'C'},
-			{'index':'index1','item-value':'D'}
+			{'index':'index1','text':'A'},
+			{'index':'index1','text':'B'},
+			{'index':'index1','text':'C'},
+			{'index':'index1','text':'D'}
 		]
 	);
 ```
-  
+
 #### Example of partial (and binding)
 ```javascript
-nd.makes('div#placeholder-$*2','body');
-
 var dataContext = new nd.DataContext({name:'hello world'});
 
 new nd.Presentor('#placeholder-1',dataContext,['<input type="text" nd-bind="name">'],true);
 new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name">'],true);
 ```
 
-```
-	Nody가 불러와진 상태에서 콘솔로 바로 실행해 보세요.
-	(Just do it in console before include the Nody.js)
-	아래의 데모를 통해 Nody를 실행해불 수 있습니다.
-```
-
 # Live demo #
-<a href="http://nineten11.net/nody/">http://nineten11.net/nody/</a>
+<a href="http://version2labs.github.io/build/nodyjs.html">http://version2labs.github.io/build/nodyjs.html</a>
 
 ## Compatibility #
   - IE9+

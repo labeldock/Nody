@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.27.6", N.BUILD = "1215";
+		N.VERSION = "0.27.6", N.BUILD = "1217";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -444,7 +444,7 @@
 		}
 		N.cache.clear();
 	
-		var nody_typemap = { "string" : "isString", "number" : "isNumber", "asnumber": "asNumber", "asstring" : "asString", "array" : "isArray", "object" : "isObject", "email" : "isEmail", "ascii" : "isAscii", "true" : "isTrue", "false" : "isFalse", "nothing" : "isNothing", "ok" : "isOk" };
+		var nody_typemap = { "string" : "isString", "number" : "isNumber", "likenumber": "likeNumber", "likestring" : "likeString", "array" : "isArray", "object" : "isObject", "email" : "isEmail", "ascii" : "isAscii", "true" : "isTrue", "false" : "isFalse", "nothing" : "isNothing", "ok" : "isOk" };
 	
 		N.SINGLETON("TYPE",{
 			// // 데이터 타입 검사
@@ -457,18 +457,18 @@
 			"isObject"   : function (t) {return typeof t === "object"   ? true : false;},
 			"isString"   : function (t) {return typeof t === "string"   ? true : false;},
 			"isNumber"   : function (t) {return typeof t === "number"   ? true : false;},
-			"asNumber" : function (t) {return (typeof t === "number") ? true : ((typeof t === "string") ? (parseFloat(t)+"") == (t+"") : false );},
+			"likeNumber" : function (t) {return (typeof t === "number") ? true : ((typeof t === "string") ? (parseFloat(t)+"") == (t+"") : false );},
 		
 			"isJquery"   : function(o){ return (typeof o === "object" && o !== null ) ? ("jquery" in o) ? true : false : false; },
 			"isArray"    : function(a){ return (typeof a === "object" && a !== null ) ? (((a instanceof Array || a instanceof NodeList || N.isJquery(a) || ( !isNaN(a.length) && isNaN(a.nodeType))) && !(a instanceof Window) ) ? true : false) : false; },
 			"isArguments": function(a){ return (typeof a === "object" && a !== null) ? ("callee" in a) ? true : false : false; },
-			"isEmail"    : function(t){ return N.asString(t) ? /^[\w]+\@[\w]+\.[\.\w]+/.test(t) : false;},
-			"isAscii"    : function(t){ return N.asString(t) ? /^[\x00-\x7F]*$/.test(t)         : false;},
+			"isEmail"    : function(t){ return N.likeString(t) ? /^[\w]+\@[\w]+\.[\.\w]+/.test(t) : false;},
+			"isAscii"    : function(t){ return N.likeString(t) ? /^[\x00-\x7F]*$/.test(t)         : false;},
 			"isTrue"     : function(t){ return !!t ? true : false;},
 			"isFalse"    : function(t){ return  !t ? false : true;},
 		
 			//문자나 숫자이면 참
-			"asString" :function(v){ return (typeof v === "string" || typeof v === "number") ? true : false; },
+			"likeString" :function(v){ return (typeof v === "string" || typeof v === "number") ? true : false; },
 		
 			// // 엘리먼트 유형 검사
 			"isWindow"  :function(a){ if(typeof a === "object") return "navigator" in a; return false; },
@@ -545,7 +545,7 @@
 								if(!testResult) break;
 								//길이 확인
 								if(param[3] != "" && param[4] != ""){
-									if( N.asNumber(param[4]) ) {
+									if( N.likeNumber(param[4]) ) {
 										switch(param[3]){
 											case ">": testResult = N.toSize(target,param[2]) > parseFloat(param[4]); break;
 											case "<": testResult = N.toSize(target,param[2]) < parseFloat(param[4]); break;
@@ -575,7 +575,7 @@
 						}
 						break;
 					case "object":
-						if((test instanceof RegExp) && N.asString(target)){
+						if((test instanceof RegExp) && N.likeString(target)){
 							testResult = test.test(target+"");
 						} else {
 							testResult = false;
@@ -1652,12 +1652,12 @@
 	                    return seed;
 	                }).replace(/\&\d+/g, function(s) {
 	                    var av = aPoint[parseInt(s.substr(1))];
-	                    return N.asNumber(av) ? av * 1 : '\"' + av + '\"';
+	                    return N.likeNumber(av) ? av * 1 : '\"' + av + '\"';
 	                }).replace(/\$\d+/g, function(s) {
 	                    var paramResult = params[parseInt(s.substr(1))];
 	                    if (paramResult) {
 	                        paramResult = N.zoneValue(paramResult);
-	                        return N.asNumber(paramResult) ? paramResult : '\"' + paramResult + '\"' ;
+	                        return N.likeNumber(paramResult) ? paramResult : '\"' + paramResult + '\"' ;
 	                    }
 	                });
 					var v = eval(evs);
@@ -1940,11 +1940,11 @@
 			random:function(length){ return new N.Array(N.dataRandom(this.toArray())); },
 			shuffle:function(){ return new N.Array(N.dataShuffle(this.toArray())); },
 			setShuffle:function(){ return this.setSource(this.shuffle()); },
-			join:function(t,p,s){ return (N.asString(p)?p:"")+Array.prototype.join.call(this,t)+((N.asString(s))?s:""); },
+			join:function(t,p,s){ return (N.likeString(p)?p:"")+Array.prototype.join.call(this,t)+((N.likeString(s))?s:""); },
 			//Object로 반환
 			keyPair:function(key,value){
-				if (!N.asString(key)) key = "key";
-				if (!N.asString(value)) value = "value";
+				if (!N.likeString(key)) key = "key";
+				if (!N.likeString(value)) value = "value";
 				var r = {};
 				this.each(function(data){
 					if(typeof data === "object" || typeof data === "function"){
@@ -2778,7 +2778,7 @@
 			getAbsolutePath:function(url,fp){
 				if(N.isNothing(url)){
 					return this.url();
-				} else if(N.asString(url)){
+				} else if(N.likeString(url)){
 					if(this.urlInfo(url)==null){
 						url = url.trim();
 						if(url.indexOf("./") == 0) { url = url.substr(2); } 
@@ -3022,7 +3022,6 @@
 				var meta    = this;
 				var _keys   = new N.Array(keys);
 				var _toKeys = new N.Array(toKeys);
-			
 				if (_keys.length == _toKeys.length) {
 					var orientation = _keys.map(function(key){
 						return meta.getProp(key);
@@ -4112,7 +4111,7 @@
 					if(N.node.attr(nodeZero,"type") == "radio"){
 						//read write
 						if(!N.isNothing(nodeZeroName)){
-							if(N.asString(value)){
+							if(N.likeString(value)){
 								var findEl = N.find(N.node.filter(nodes,"[type=radio][name="+nodeZeroName+"]::"+value,0));
 								if(findEl) findEl.checked = true;
 								return findEl;
@@ -4250,7 +4249,7 @@
 				var appendTarget  = N.findLite(childs);
 				var parentTagName = parent.tagName.toLowerCase();
 				var insertVariant = (typeof needIndex === "number") ? true : false;
-				var targetIndex   = needIndex;
+				var targetIndex   = typeof needIndex === "number" ? needIndex < 0 ? 0 : needIndex : needIndex;
 				
 				for(var i=0,l=appendTarget.length;i<l;i++)
 					if (N.isNode(appendTarget[i])) {
@@ -4356,33 +4355,39 @@
 					N.pushCSSExpression(node,exp);
 				});
 			},
-			//이전 엘리먼트를 찾습니다.
-			"before":N.CONTINUE_FUNCTION(function(node,appendNodes){ 
+			"insertAfter":N.CONTINUE_FUNCTION(function(node,appendNodes){ 
 				var target = N.findLite(node)[0];
-				if(!N.isNode(target)) return node;
-				if(arguments.length < 2) return N.findMember(target,-1);
-				var appendTarget = N.findLite(appendNodes);
-				if(appendTarget.length > 0){
-					for(var i=0,l=appendTarget.length;i<l;i++) target.parentNode.insertBefore(appendTarget[i],target); 
-				}
-				return target; 
-			},1),
-		
+				if(!target) return;
+				if(!target.parentElement) return;
+				var appendTargets = N.findLite(appendNodes);
+				if(!appendTargets.length) return;
+				var targetIndex = NODE_METHODS.index(target);
+				NODE_METHODS.append(target.parentElement,appendTargets,targetIndex+1);
+			},2),
+			"insertBefore":N.CONTINUE_FUNCTION(function(node,appendNodes){ 
+				var target = N.findLite(node)[0];
+				if(!target) return;
+				if(!target.parentElement) return;
+				var appendTargets = N.findLite(appendNodes);
+				if(!appendTargets.length) return;
+				var targetIndex = NODE_METHODS.index(target);
+				NODE_METHODS.append(target.parentElement,appendTargets,targetIndex-1);
+			},2),
 			//이후 엘리먼트를 찾습니다.
 			"after" :N.CONTINUE_FUNCTION(function(target,appendNodes){ 
 				target = N.findLite(target)[0];
 				if(!N.isNode(target))    return target; 
 				if(arguments.length < 2) return N.findMember(target,1);
-				var appendTarget = N.findLite(appendNodes);
-				if(appendTarget.length > 0){
-					var afterElement = N.findMember(target,1);
-					if( N.isNode(afterElement) ){
-						for(var i=0,l=appendTarget.length;i<l;i++) target.parentNode.insertBefore(appendTarget[i],afterElement); 
-					} else {
-						N.node.append(target,appendTarget);
-					}
-				}
+				NODE_METHODS.insertAfter(target,appendNodes);
 				return target;
+			},1),
+			//이전 엘리먼트를 찾습니다.
+			"before":N.CONTINUE_FUNCTION(function(node,appendNodes){ 
+				var target = N.findLite(node)[0];
+				if(!N.isNode(target)) return node;
+				if(arguments.length < 2) return N.findMember(target,-1);
+				NODE_METHODS.insertBefore(target,appendNodes);
+				return target; 
 			},1),
 			//대상과 대상의 엘리먼트를 바꿔치기함
 			"change":N.CONTINUE_FUNCTION(function(left,right){
@@ -4542,11 +4547,14 @@
 					N.dataEach(nodes,function(eventNode){
 						N.dataEach(events,function(event){
 							eventNode.addEventListener(event, function(e){
-								var matchingNode = N.dataMatching(
-									N.find(delegateTarget,node),
-									N.NodeUtil.is(e.target,delegateTarget) ? [e.target].concat(N.findParents(e.target,delegateTarget)) : N.findParents(e.target,delegateTarget)
-								);
-								if(matchingNode) return eventHandler.call(matchingNode,e);
+								var delegateNodes = N.find(delegateTarget,eventNode);
+								N.dataEach(delegateNodes,function(delegateNode){
+									if(N.inside(delegateNode,e.target)){
+										e['delegateTarget'] = delegateNode;
+										eventHandler.call(delegateNode,e);
+										return false;
+									}
+								});
 							}, useCapture==true ? true : false); 
 						});
 					});
@@ -4683,32 +4691,43 @@
 				}
 			},
 			"CommonString":new N.String(),
-			"addClass":function(node,addClass){	
+			"addAttr":function(node,attrName,attrValue){
 				var findNodes = N.findLite(node);
-				if(typeof addClass !== "string") return findNodes;
-				for(var i=0,l=findNodes.length;i<l;i++) findNodes[i].setAttribute("class",NODE_METHODS.CommonString.set(findNodes[i].getAttribute("class")).addModel(addClass));
+				if(typeof attrValue !== "attrName" && typeof attrValue !== "string") return findNodes;
+				for(var i=0,l=findNodes.length;i<l;i++) {
+					findNodes[i].setAttribute(attrName,NODE_METHODS.CommonString.set(findNodes[i].getAttribute(attrName)).addModel(attrValue));
+				} 
 				return findNodes;
 			},
-			"hasClass":function(node,hasClass){
+			"hasAttr":function(node,attrName,attrValue){
 				var findNodes = N.findLite(node);
-				if(typeof hasClass !== "string") return false;
-				for(var i=0,l=findNodes.length;i<l;i++) if( !NODE_METHODS.CommonString.set(findNodes[i].getAttribute("class")).hasModel(hasClass) ) {
+				if(typeof attrValue !== "string") return false;
+				for(var i=0,l=findNodes.length;i<l;i++) if( !NODE_METHODS.CommonString.set(findNodes[i].getAttribute(attrName)).hasModel(attrValue) ) {
 					return false;
 				}
 				return true;
 			},
-			"removeClass":function(node,removeClass){
+			"removeAttr":function(node,attrName,attrValue){
 				var findNodes = N.findLite(node);
-				if(typeof removeClass !== "string") return findNodes;
+				if(typeof attrName !== "string" && typeof removeClass !== "string") return findNodes;
 				for(var i=0,l=findNodes.length;i<l;i++) {
-					var didRemoveClassText = NODE_METHODS.CommonString.set(findNodes[i].getAttribute("class")).setRemoveModel(removeClass).trim();
+					var didRemoveClassText = NODE_METHODS.CommonString.set(findNodes[i].getAttribute(attrName)).setRemoveModel(attrValue).trim();
 					if( !didRemoveClassText.length ) {
-						findNodes[i].removeAttribute("class");
+						findNodes[i].removeAttribute(attrName);
 					} else {
-						findNodes[i].setAttribute("class",didRemoveClassText);
+						findNodes[i].setAttribute(attrName,didRemoveClassText);
 					}
 				} 
 				return findNodes;
+			},
+			"addClass":function(node,addClass){	
+				return NODE_METHODS.addAttr(node,"class",addClass);
+			},
+			"hasClass":function(node,hasClass){
+				return NODE_METHODS.hasAttr(node,"class",hasClass);
+			},
+			"removeClass":function(node,removeClass){
+				return NODE_METHODS.removeAttr(node,"class",removeClass);
 			},
 			"html":function(node,html){
 				var findNode = N.findLite(node)[0];
@@ -4805,116 +4824,129 @@
 			}
 		};
 	
-		N.EXTEND_MODULE("Array","NodeArray",{
+		N.EXTEND_MODULE("Array","NodeHandler",{
 			find:function(query){ 
-				return new N.NodeArray(N.find.apply(undefined,[query,this].concat(Array.prototype.slice.call(arguments,1)))); 
+				return new N.NodeHandler(N.find.apply(undefined,[query,this].concat(Array.prototype.slice.call(arguments,1)))); 
 			},
-			hasFocus:function(){ return N.node.hasFocus(this); },
-			caretPossible:function(){ return N.node.caretPossible(this); },
+			hasFocus:function(){ return NODE_METHODS.hasFocus(this); },
+			caretPossible:function(){ return NODE_METHODS.caretPossible(this); },
 			attr:function(name){ 
 				if(arguments.length > 1){
-					N.FLATTENCALL(N.node.attr,undefined,this,arguments);
+					N.FLATTENCALL(NODE_METHODS.attr,undefined,this,arguments);
 					return this;
 				} else {
-					if(arguments.length == 0) return N.CALL(N.node.attr,undefined,this);
-					return N.CALL(N.node.attr,undefined,this,name);
+					if(arguments.length == 0) return N.CALL(NODE_METHODS.attr,undefined,this);
+					return N.CALL(NODE_METHODS.attr,undefined,this,name);
 				}
 			},
-			hasAttr:function(){ N.FLATTENCALL(N.node.attr,N.node,this,arguments);return this; },
-			addClass:function(className){ N.CALL(NODE_METHODS.addClass,N.node,this,className);return this; },
-			hasClass:function(className){ N.CALL(NODE_METHODS.hasClass,N.node,this,className);return this; },
-			removeClass:function(className){ N.CALL(NODE_METHODS.removeClass,N.node,this,className);return this; },
-			toggleClass:function(className,toggle){ N.CALL(NODE_METHODS.toggleClass,N.node,this,className,toggle); return this; },
+			addAttr:function(){
+				N.FLATTENCALL(NODE_METHODS.addClass,NODE_METHODS,this,arguments);
+			},
+			removeAttr:function(){
+				N.FLATTENCALL(NODE_METHODS.addClass,NODE_METHODS,this,arguments);
+			},
+			hasAttr:function(){ 
+				N.FLATTENCALL(NODE_METHODS.hasAttr,NODE_METHODS,this,arguments);
+			},
+			addClass:function(className){ N.CALL(NODE_METHODS.addClass,NODE_METHODS,this,className);return this; },
+			hasClass:function(className){ N.CALL(NODE_METHODS.hasClass,NODE_METHODS,this,className);return this; },
+			removeClass:function(className){ N.CALL(NODE_METHODS.removeClass,NODE_METHODS,this,className);return this; },
+			toggleClass:function(className,toggle){ N.CALL(NODE_METHODS.toggleClass,NODE_METHODS,this,className,toggle); return this; },
 			is     :function(exp){
 				return NODE_METHODS.is(this,exp); 
 			},
-			filter :function(){ this.replace(N.FLATTENCALL(N.node.filter,N.node,this,arguments)); return this; },
+			filter :function(){ this.replace(N.FLATTENCALL(NODE_METHODS.filter,NODE_METHODS,this,arguments)); return this; },
 			value  :function(name){ 
 				if(arguments.length > 0){
-					N.FLATTENCALL(NODE_METHODS.value,N.node,this,arguments);
+					N.FLATTENCALL(NODE_METHODS.value,NODE_METHODS,this,arguments);
 					return this;
 				} else {
-					return N.CALL(NODE_METHODS.value,N.node,this,name);
+					return N.CALL(NODE_METHODS.value,NODE_METHODS,this,name);
 				}
 			},
-			trace    :function(){ return N.FLATTENCALL(NODE_METHODS.trace,N.node,this,arguments); },
+			trace    :function(){ return N.FLATTENCALL(NODE_METHODS.trace,NODE_METHODS,this,arguments); },
 			//index
-			currentIndex:function(){ return N.FLATTENCALL(NODE_METHODS.index,N.node,this,arguments); },
+			currentIndex:function(){ 
+				return NODE_METHODS.index(this);
+			},
 			append   :function(targets){ NODE_METHODS.append(this,targets);return this; },
 			prepend  :function(targets){ NODE_METHODS.prepend(this,targets);return this; },
-			appendTo :function(target){ N.CALL(NODE_METHODS.appendTo,N.node,this,target); return this; },
-			prependTo:function(target){ N.CALL(NODE_METHODS.prependTo,N.node,this,target);return this; },
-			put      :function(){ N.FLATTENCALL(NODE_METHODS.put,N.node,this,arguments); return this; },
-			putTo    :function(target){ N.CALL(NODE_METHODS.put,N.node,target,this);; return this;},
+			appendTo :function(target){ N.CALL(NODE_METHODS.appendTo,NODE_METHODS,this,target); return this; },
+			prependTo:function(target){ N.CALL(NODE_METHODS.prependTo,NODE_METHODS,this,target);return this; },
+			put      :function(){ N.FLATTENCALL(NODE_METHODS.put,NODE_METHODS,this,arguments); return this; },
+			putTo    :function(target){ N.CALL(NODE_METHODS.put,NODE_METHODS,target,this);; return this;},
 			before   :function(){
 				if(arguments.length > 0){
-					N.FLATTENCALL(NODE_METHODS.before,N.node,this,arguments);
+					N.FLATTENCALL(NODE_METHODS.before,NODE_METHODS,this,arguments);
 					return this;
 				} else {
-					return N.CALL(NODE_METHODS.before,N.node,this);
+					return N.CALL(NODE_METHODS.before,NODE_METHODS,this);
 				}
 			},
 			after    :function(){
 				if(arguments.length > 0){
-					N.FLATTENCALL(NODE_METHODS.after,N.node,this,arguments);
+					N.FLATTENCALL(NODE_METHODS.after,NODE_METHODS,this,arguments);
 					return this;
 				} else {
-					return N.CALL(NODE_METHODS.after,N.node,this);
+					return N.CALL(NODE_METHODS.after,NODE_METHODS,this);
 				}
 			},
-			beforeAll:function(){ return N.CALL(NODE_METHODS.beforeAll,N.node,this); },
-			afterAll :function(){ return N.CALL(NODE_METHODS.afterAll,N.node,this); },
-			replace  :function(){ N.FLATTENCALL(NODE_METHODS.replace,N.node,this,arguments); return this;},
-			up:function(){ return N.CALL(NODE_METHODS.up,N.node,this); },
-			down:function(){ return N.CALL(NODE_METHODS.donw,N.node,this); },
+			beforeAll:function(){ return N.CALL(NODE_METHODS.beforeAll,NODE_METHODS,this); },
+			afterAll :function(){ return N.CALL(NODE_METHODS.afterAll,NODE_METHODS,this); },
+			replace  :function(){ N.FLATTENCALL(NODE_METHODS.replace,NODE_METHODS,this,arguments); return this;},
+			up:function(){ return N.CALL(NODE_METHODS.up,NODE_METHODS,this); },
+			down:function(){ return N.CALL(NODE_METHODS.donw,NODE_METHODS,this); },
 			style:function(){ 
 				return NODE_METHODS.style.apply(NODE_METHODS,[this].concat(Array.prototype.slice.call(arguments)));
 			},
 			require:function(){
 				return NODE_METHODS.require.apply(NODE_METHODS,[this].concat(Array.prototype.slice.call(arguments)));
 			},
-			empty  :function(){ N.CALL(NODE_METHODS.empty,N.node,this); return this; },
-			remove :function(){ N.CALL(NODE_METHODS.remove,N.node,this); return this; },
-			caret  :function(){ N.FLATTENCALL(NODE_METHODS.caret,N.node,this,arguments); },
-			trigger:function(name){ N.CALL(NODE_METHODS.trigger,N.node,this,name); return this; },
-			on     :function(e,h,c,x){ NODE_METHODS.on.call(undefined,this,e,h,c,x); return this; },
-			off    :function(e,h,c,x){ NODE_METHODS.off.call(undefined,this,e,h,c,x); return this; },
-			onetime:function(){ N.FLATTENCALL(NODE_METHODS.onetime,N.node,this,arguments); return this; },
+			empty  :function(){ N.CALL(NODE_METHODS.empty,NODE_METHODS,this); return this; },
+			remove :function(){ N.CALL(NODE_METHODS.remove,NODE_METHODS,this); return this; },
+			caret  :function(){ N.FLATTENCALL(NODE_METHODS.caret,NODE_METHODS,this,arguments); },
+			trigger:function(name){ N.CALL(NODE_METHODS.trigger,NODE_METHODS,this,name); return this; },
+			on     :function(e,h,c,x){ 
+				NODE_METHODS.on.call(NODE_METHODS,this,e,h,c,x); return this; },
+			off    :function(e,h,c,x){ 
+				NODE_METHODS.off.call(NODE_METHODS,this,e,h,c,x); return this; 
+			},
+			onetime:function(){ N.FLATTENCALL(NODE_METHODS.onetime,NODE_METHODS,this,arguments); return this; },
 			data   :function(name){
 				if(arguments.length > 1){
-					N.FLATTENCALL(NODE_METHODS.data,N.node,this,arguments);
+					N.FLATTENCALL(NODE_METHODS.data,NODE_METHODS,this,arguments);
 					return this;
 				} else {
-					if(arguments.length == 0) return N.CALL(NODE_METHODS.data,N.node,this);
-					return N.CALL(NODE_METHODS.data,N.node,this,name);
+					if(arguments.length == 0) return N.CALL(NODE_METHODS.data,NODE_METHODS,this);
+					return N.CALL(NODE_METHODS.data,NODE_METHODS,this,name);
 				}
 			},
 			html:function(html){
-				var result = N.FLATTENCALL(NODE_METHODS.html,N.node,this,arguments);
+				var result = N.FLATTENCALL(NODE_METHODS.html,NODE_METHODS,this,arguments);
 				return (typeof result === "string") ? result : this;
 			},
 			appendHTML:function(html){
-				N.FLATTENCALL(NODE_METHODS.appendHTML,N.node,this,arguments);
+				N.FLATTENCALL(NODE_METHODS.appendHTML,NODE_METHODS,this,arguments);
 				return this;
 			},
 			prependHTML:function(){
-				N.FLATTENCALL(NODE_METHODS.prependHTML,N.node,this,arguments);
+				N.FLATTENCALL(NODE_METHODS.prependHTML,NODE_METHODS,this,arguments);
 				return this;
 			},
-			disabled:function(){ N.FLATTENCALL(NODE_METHODS.disabled,N.node,this,arguments); return this; },
-			readonly:function(){ N.FLATTENCALL(NODE_METHODS.readOnly,N.node,this,arguments); return this; },
+			disabled:function(){ N.FLATTENCALL(NODE_METHODS.disabled,NODE_METHODS,this,arguments); return this; },
+			readonly:function(){ N.FLATTENCALL(NODE_METHODS.readOnly,NODE_METHODS,this,arguments); return this; },
 		},function(select,parent,i){
 			this.setSource(N.find(select,parent,i));
 		});
 		
-		N.METHOD("node",nd.NodeArray.new);
+		N.METHOD("node",nd.NodeHandler.new);
 		for(var key in NODE_METHODS) N.node[key]=NODE_METHODS[key];
 	
-		N.EXTEND_MODULE("NodeArray","Make",{},function(node,attr,parent){
+		N.EXTEND_MODULE("NodeHandler","Make",{},function(node,attr,parent){
 			this.setSource(N.Element.create(node,attr,parent));
 		});
 		
-		N.EXTEND_MODULE("NodeArray","Partial",{
+		N.EXTEND_MODULE("NodeHandler","Partial",{
 			// 키를 지우면서
 			callbackAttrEach:function(attrKey,callback){
 				this.find("["+attrKey+"]").each(function(node){
@@ -5029,7 +5061,11 @@
 			}
 		});
 		
-		N.EXTEND_MODULE("NodeArray","Template",{
+		N.EXTEND_MODULE("Partial","PartialMakes",function(makesParam,nodeProp,dataFilter){
+			this._super(N.makes(makesParam),nodeProp,dataFilter);
+		});
+		
+		N.EXTEND_MODULE("NodeHandler","Template",{
 			clone :function(nodeData,dataFilter){ return new N.Template(this); },
 			partialOutput:function(nodeData,dataFilter){
 				return new N.Partial(N.cloneNodes(this),nodeData,dataFilter);
@@ -5062,7 +5098,7 @@
 			disabled:function(status,filter){ return this.statusFunction(N.node.disabled,(status !== false ? true : false),filter); },
 			readonly:function(status,filter){ return this.statusFunction(N.node.readOnly,(status !== false ? true : false),filter); },
 			empty   :function(filter)       { filter = filter?filter+",:not(button):not(select)":":not(button):not(select)"; return this.statusFunction(N.node.value   ,"",filter); },
-			map     :function(mapf,filter)  { return this.statusFunction(function(node){ var r = mapf(node); if(N.asString(r)){ N.node.value(node,r); } },"",filter); },
+			map     :function(mapf,filter)  { return this.statusFunction(function(node){ var r = mapf(node); if(N.likeString(r)){ N.node.value(node,r); } },"",filter); },
 			selectEach:function(eachf,filter) { return this.statusFunction(function(node){ var r = eachf.call(node,node); },"",filter); },
 			removePartClass:function(rmClass,filter,req){
 				var r = this.statusFunction(function(node,param){
@@ -5774,9 +5810,9 @@
 				if(typeof name === 'string') this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
 			},
 			node:function(innerKey){
-				if(arguments.length === 0) return new N.NodeArray(this.view);
+				if(arguments.length === 0) return new N.NodeHandler(this.view);
 				if(innerKey in this) innerKey = this[innerKey];
-				return new N.NodeArray(N.find.apply(undefined,N.ownerMap(this,[innerKey,this.view].concat(Array.prototype.slice.call(arguments,1)))));
+				return new N.NodeHandler(N.find.apply(undefined,N.ownerMap(this,[innerKey,this.view].concat(Array.prototype.slice.call(arguments,1)))));
 			},
 			find:function(query){
 				return N.find.apply(undefined,N.ownerMap(this,[query,this.view].concat(Array.prototype.slice.call(arguments,1))));
@@ -5858,13 +5894,13 @@
 				if(!this.ManageModuleAroundEvents.has(triggerName)){
 					this.ManageModuleAroundEvents.setProp(triggerName,new N.HashManager());
 				}
-				this.ManageModuleAroundEvents.getProp(triggerName).pushDataProp("before",proc);
+				this.ManageModuleAroundEvents.prop(triggerName).pushDataProp("before",proc);
 			},
 			listenAfter:function(triggerName,proc){
 				if(!this.ManageModuleAroundEvents.has(triggerName)){
 					this.ManageModuleAroundEvents.setProp(triggerName,new N.HashManager());
 				}
-				this.ManageModuleAroundEvents.getProp(triggerName).pushDataProp("after",proc);
+				this.ManageModuleAroundEvents.prop(triggerName).pushDataProp("after",proc);
 			},
 			listen:function(triggerName,proc){
 				if(typeof proc !== "function") return false;
@@ -5937,15 +5973,16 @@
 				//rolename
 				if(typeof rolename === "string") activeRolename = rolename;
 				if (!activeRolename) {
-					var nativeName = _prototype.__NativeHistroy__[_prototype.__NativeHistroy__.length-1];
-					activeRolename = N.kebabCase(nativeName);
+					activeRolename = N.kebabCase(_prototype.__NativeHistroy__[_prototype.__NativeHistroy__.length-1]);
 				}
 				return N.find("[data-role~="+activeRolename+"]",findwhere);
 			},
 			"++findRoleAndActive":function(findwhere,props,data,rolename){
 				var _self=this;
 				var findedRoles = this.findRole(findwhere,rolename),resultController = [];
-				for(var i=0,l=findedRoles.length;i<l;i++) resultController.push(new _self(findedRoles[i],props,data));
+				for(var i=0,l=findedRoles.length;i<l;i++){
+					!findedRoles[i].roleController && resultController.push(new _self(findedRoles[i],props,data));
+				} 
 				return resultController;
 			},
 			hasProp:function(key){
@@ -5995,6 +6032,10 @@
 					N.dataEach(roles,proc);	
 				}
 				return roles;
+			},
+			release:function(){
+				nd.node.removeAttr(this.view,"data-role",N.kebabCase(this.__NativeModule__()));
+				for(var key in this) this[key] = null;
 			}
 		},function(targetRole,props,data,initViewProc){
 			if( this._super(targetRole,true,true) === true ) {
@@ -6003,6 +6044,7 @@
 				this.ManageEvent = new N.ModuleEventManager(this);
 				
 				var _self = this;
+				
 				N.find('script[type*=json]', this.view ,N.dataEach ,function(scriptTag){
 					var jsonData = N.node.value(scriptTag);
 					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self.ManageData.append(jsonData) : _self.ManageProp.extend(jsonData);
@@ -6011,6 +6053,7 @@
 				this.view.roleController = this;
 				
 				if(typeof initViewProc === "function" && this.view){
+					N.node.addAttr(this.view,"data-role",N.kebabCase(this.__NativeModule__()));
 					initViewProc.call(this,this);
 				}
 			}
@@ -6693,7 +6736,7 @@
 								});
 							});
 						}
-					} else if(N.asNumber(path)){
+					} else if(N.likeNumber(path)){
 						N.dataEach(searchTarget,function(managedData){
 							var ch = managedData.Child[parseInt(path)];
 							if(ch){ searchResult.push(ch); }
@@ -7304,7 +7347,7 @@
 				var selectQuery = N.dataFilter(N.argumentsFlatten(arguments),function(v){ return (typeof v === "number" || v === "*")?true:false; },N.dataMap,function(v,i){
 					return v === "*" ? "[data-managed-depth=\""+i+"\"]" : "[data-managed-depth=\""+i+"\"]:nth-child("+(v+1)+")";
 				}).join(" ");
-				return new nd.NodeArray(selectQuery,this.view);
+				return new nd.NodeHandler(selectQuery,this.view);
 			},
 			getManagedDataByNode:function(node,strict){
 				if(strict === true) {
