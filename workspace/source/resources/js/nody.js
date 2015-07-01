@@ -9,7 +9,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.27.6", N.BUILD = "1217";
+		N.VERSION = "0.27.7", N.BUILD = "1218";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -758,7 +758,7 @@
 			"argumentsFlatten":function(){ var result = []; function arrayFlatten(args){ N.dataEach(args,function(arg){ if(N.isArray(arg)) return N.dataEach(arg,arrayFlatten); result.push(arg); }); } arrayFlatten(arguments); return result; },
 			//owner를 쉽게 바꾸면서 함수실행을 위해 있음
 			"APPLY" : function(f,owner,args) { if( typeof f === "function" ) { args = N.cloneArray(args); return (args.length > 0) ? f.apply(owner,args) : f.call(owner); } },
-			"FLATTENCALL" : function(f,owner) { N.APPLY(f,owner,N.argumentsFlatten(Array.prototype.slice.call(arguments,2))); },
+			"FLATTENCALL" : function(f,owner) { return N.APPLY(f,owner,N.argumentsFlatten(Array.prototype.slice.call(arguments,2))); },
 			"CALL"    :function(f,owner){ return (typeof f === "function") ? ((arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner)) : undefined; },
 			"CALLBACK":function(f,owner){ return (typeof f === "function") ? ((arguments.length > 2) ? f.apply(owner,Array.prototype.slice.call(arguments,2)) : f.call(owner)) : f; },
 			//배열이 아니면 배열로 만들어줌
@@ -829,6 +829,72 @@
 				}
 				return r;
 			},1),
+			"divideNumber":function(value,padRigth){
+				var numberInfo = [0,0];
+	            var parseString = "";
+	            (value+"").replace(/\d|\./g,function(s){ parseString += s; });
+
+	            // test exsist number
+	            if(/\d/.test(parseString)){
+	                var dotIndex = parseString.indexOf(".");
+	                switch(dotIndex) {
+	                    case -1:
+	                        numberInfo[0] = parseString*1;
+	                        break;
+	                    case 0:
+	                        parseString = "0" + parseString;
+	                    default:
+	                        var intValue = /[\d]+\./.exec(parseString)[0];
+	                        numberInfo[0] = intValue.substr(0,intValue.length - 1) * 1;
+            
+	                        numberInfo[1] = /\.[\d]+/.exec(parseString);
+	                        numberInfo[1] = numberInfo[1] === null ? 0 : numberInfo[1][0].substr(1);
+            
+	                        break;
+	                }
+	            }
+	            return numberInfo;
+			},
+			"decimalValue":function(text){
+	            var numberValue = N.divideNumber(text)[0]+"";
+	            if(numberValue.length < 4) return numberValue;
+	            var total = "",count = 0;
+	            (numberValue.split('').reverse().join('')).replace(/./g,function(s){ total = ((count%3) === 2 ) ? ("," + s + total) : (s + total), count++; });
+	            return total.replace(/^\,/,"");
+	        },
+			"parseFloat":function(value,padRight){
+				var numberInfo = N.divideNumber(value);
+	            var floatValue = 
+	                (typeof padRight == "number") ?
+	                (("." + numberInfo[1]).substr(0,padRight+1)) :
+	                ("." + numberInfo[1]);
+	            return (numberInfo[0] + floatValue)*1;
+			},
+			"padLeft":function(value,padLength,useFloat){
+				if(typeof padLength !== "number") return value;
+				var padLeft="", numberInfo = N.divideNumber(value);
+				var requirePad = padLength-(numberInfo[0]+"").length;
+				for(var i=0,l=requirePad>0?requirePad:0;i<l;i++){ padLeft += "0"; }
+				return padLeft + (useFloat === false || !numberInfo[1] ? numberInfo[0] : numberInfo[0] + "." + numberInfo[1] )
+			},
+			"padRight":function(value,padRight){
+	            if(typeof padRight == "number") {
+	                var dInfo = N.divideNumber(value);
+	                var iVal  = dInfo[0];
+        
+	                if(Math.floor(padRight) === 0) return dInfo[0] + "";
+        
+	                var fStr = (dInfo[1]+"").substr(0,padRight);
+        
+	                for(var i=0,l=padRight - fStr.length;i<l;fStr += "0",i++);
+	                return iVal+"."+fStr;                
+	            } else {
+	                return N.parseFloat(value)+"";
+	            }
+	        },
+	        "parseInt":function(value){
+	            return N.divideNumber(value)[0];
+	        },
 			//
 			"propsLength":function(data){ var l = 0; if(typeof data === "object" || typeof data === "function") for(var key in data) l++; return l; },
 			//새로운 객체를 만들어 복사
@@ -1976,7 +2042,7 @@
 		});
 		
 		//******************
-		N.MODULE("HashManager",{
+		N.MODULE("HashSource",{
 			setSource:function(obj,k){ 
 				obj = N.toObject(obj,k);
 				if(typeof obj === "object"){ 
@@ -2023,6 +2089,12 @@
 					if(key in this.Source) this.Source[key] = arguments[i*2+1];
 				}
 				return this;
+			},
+			hasProp:function(key){
+				if(arguments.length === 0){
+					for(var sk in this.Source) return true; return false;
+				}
+				return key in this.Source;
 			},
 			prop:function(k,filter){
 				if(arguments.length === 0){
@@ -2171,7 +2243,7 @@
 			concat:function(){ 
 				var result = this.clone(); 
 				for(var i=0,l=arguments.length;i<l;i++){ 
-					new N.HashManager(arguments[i]).each(function(v,k){ result[k] = v; });
+					new N.HashSource(arguments[i]).each(function(v,k){ result[k] = v; });
 				}; 
 				return result; 
 			},
@@ -2184,7 +2256,7 @@
 			safeConcat:function(){ 
 				var result = this.clone(); 
 				for(var i=0,l=arguments.length;i<l;i++){ 
-					new N.HashManager(arguments[i]).each(function(v,k){ 
+					new N.HashSource(arguments[i]).each(function(v,k){ 
 						if( (k in result) == false) result[k] = v; 
 					});
 				} 
@@ -2411,72 +2483,6 @@
 	
 		// Number
 		N.EXTEND_MODULE("String","Number",{
-			"++divideNumber":function(value,padRigth){
-				var numberInfo = [0,0];
-	            var parseString = "";
-	            (value+"").replace(/\d|\./g,function(s){ parseString += s; });
-
-	            // test exsist number
-	            if(/\d/.test(parseString)){
-	                var dotIndex = parseString.indexOf(".");
-	                switch(dotIndex) {
-	                    case -1:
-	                        numberInfo[0] = parseString*1;
-	                        break;
-	                    case 0:
-	                        parseString = "0" + parseString;
-	                    default:
-	                        var intValue = /[\d]+\./.exec(parseString)[0];
-	                        numberInfo[0] = intValue.substr(0,intValue.length - 1) * 1;
-            
-	                        numberInfo[1] = /\.[\d]+/.exec(parseString);
-	                        numberInfo[1] = numberInfo[1] === null ? 0 : numberInfo[1][0].substr(1);
-            
-	                        break;
-	                }
-	            }
-	            return numberInfo;
-			},
-			"++decimalValue":function(text){
-	            var numberValue = N.Number.divideNumber(text)[0]+"";
-	            if(numberValue.length < 4) return numberValue;
-	            var total = "",count = 0;
-	            (numberValue.split('').reverse().join('')).replace(/./g,function(s){ total = ((count%3) === 2 ) ? ("," + s + total) : (s + total), count++; });
-	            return total.replace(/^\,/,"");
-	        },
-			"++parseFloat":function(value,padRight){
-				var numberInfo = this.divideNumber(value);
-	            var floatValue = 
-	                (typeof padRight == "number") ?
-	                (("." + numberInfo[1]).substr(0,padRight+1)) :
-	                ("." + numberInfo[1]);
-	            return (numberInfo[0] + floatValue)*1;
-			},
-			"++padLeft":function(value,padLength,useFloat){
-				if(typeof padLength !== "number") return value;
-				var padLeft="", numberInfo = this.divideNumber(value);
-				var requirePad = padLength-(numberInfo[0]+"").length;
-				for(var i=0,l=requirePad>0?requirePad:0;i<l;i++){ padLeft += "0"; }
-				return padLeft + (useFloat === false || !numberInfo[1] ? numberInfo[0] : numberInfo[0] + "." + numberInfo[1] )
-			},
-			"++padRight":function(value,padRight){
-	            if(typeof padRight == "number") {
-	                var dInfo = this.divideNumber(value);
-	                var iVal  = dInfo[0];
-        
-	                if(Math.floor(padRight) === 0) return dInfo[0] + "";
-        
-	                var fStr = (dInfo[1]+"").substr(0,padRight);
-        
-	                for(var i=0,l=padRight - fStr.length;i<l;fStr += "0",i++);
-	                return iVal+"."+fStr;                
-	            } else {
-	                return this.parseFloat(value)+"";
-	            }
-	        },
-	        "++parseInt":function(value){
-	            return this.divideNumber(value)[0];
-	        },
 			// number core
 			// spot 1:prefix 2:integer 3:floatValue 4:suffix
 			isNotANumber:function(){ if((new StringNumberInfo(this.Source)).get("number").length) return true; return false; },
@@ -2908,8 +2914,8 @@
 			        // specify the data we wish to handle. Plaintext in this case.
 			        trans.addDataFlavor('text/unicode');
 			        // To get the data from the transferable we need two new objects
-			        var str = new N.HashManager();
-			        var len = new N.HashManager();
+			        var str = new N.HashSource();
+			        var len = new N.HashSource();
 			        var str = Components.classes["@mozilla.org/supports-string;[[[[1]]]]"].createInstance(Components.interfaces.nsISupportsString);
 			        var copytext=meintext;
 			        str.data=copytext;
@@ -3454,24 +3460,21 @@
 					return N.ENV.supportComputedStyle ? window.getComputedStyle(node,null) : node.currentStyle;
 				}
 				if(typeof styleName === "string"){
-					if(typeof styleName === "string"){
-						//mordern-style-name
-						var prefixedName = N.ENV.getCSSName(styleName);
-						//get
-						if(typeof value === "undefined") 
-							return N.ENV.supportComputedStyle ? window.getComputedStyle(node,null).getPropertyValue(prefixedName) : node.currentStyle[camelCase(prefixedName)];
-					
-						//set
-						var wasStyle = N.node.attr(node,"style") || "";
-						if(value === null) {
-							wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+"(.?:.?|)[^\;]+\;","g"),function(s){console.log(s); return ''});
-							N.node.attr(node,"style",wasStyle);
-						} else {
-							var prefixedValue = N.ENV.getCSSName(value);
-							//set //with iefix
-							wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+".?:.?[^\;]+\;","g"),"");
-							N.node.attr(node,"style",prefixedName+":"+prefixedValue+";"+wasStyle);
-						}
+					//mordern-style-name
+					var prefixedName = N.ENV.getCSSName(styleName);
+					if(arguments.length < 3){
+						return N.ENV.supportComputedStyle ? window.getComputedStyle(node,null).getPropertyValue(prefixedName) : node.currentStyle[camelCase(prefixedName)];
+					}
+					//set
+					var wasStyle = N.node.attr(node,"style") || "";
+					if(value === null) {
+						wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+"(.?:.?|)[^\;]+\;","g"),function(s){console.log(s); return ''});
+						N.node.attr(node,"style",wasStyle);
+					} else {
+						var prefixedValue = N.ENV.getCSSName(value);
+						//set //with iefix
+						wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+".?:.?[^\;]+\;","g"),"");
+						N.node.attr(node,"style",prefixedName+":"+prefixedValue+";"+wasStyle);
 					}
 				} else if(typeof styleName === "object") {
 					N.propsEach(styleName,function(val,name){
@@ -4089,15 +4092,23 @@
 					return result;
 				}
 			},
-			"content":function(node,setValue){
-				var node = N.findLite(node)[0];
-				if(node) {
-					if(typeof setValue === 'undefined') return node.textContent || node.innerText;
-					//set
-					if('textContent' in node) node.textContent = setValue + '';
-					else node.innerText = setValue + '';
+			"content":function(contentNode,setValue){
+				//get
+				if(arguments.length < 2){
+					var node = N.findLite(contentNode)[0];
+					return node ? (node.textContent || node.innerText) : undefined;
 				}
-				return node;
+				//set
+				return N.dataEach(N.findLite(contentNode),function(node){
+					if('textContent' in node){
+						node.textContent = setValue + '';
+					} else {
+						node.innerText   = setValue + '';
+					}
+				});
+			},
+			"text":function(node,setValue){
+				return NODE_METHODS.content.apply(NODE_METHODS,Array.prototype.slice.call(arguments));
 			},
 			//el의 중요값을 찾거나 변경합니다.
 			"value":function(aNode,value,htmlContent){
@@ -4124,7 +4135,6 @@
 				node     = N.dataFirst(nodes);
 				nodeName = node.tagName.toLowerCase();
 				switch(nodeName){
-					
 					case "img" :if(arguments.length < 2) return node.src; node.src = value; return node; break;
 					case "link":if(arguments.length < 2) return node.rel; node.rel = value; return node; break;
 					case "script":
@@ -4426,9 +4436,15 @@
 			"down" : function(target){if(!N.isNode(target))return target;var parent=target.parentNode;if(!N.isNode(parent))return target;var next=target.nextSibling;if(!N.isNode(next))return target;N.node.after(next,target);},
 			//스타일을 얻어냅니다.
 			"style": function(targets,styleName,value){
-				return N.dataEach(N.findLite(targets),function(node){
-					N.NodeUtil.style(node,styleName,value);
-				});
+				//get
+				if(arguments.length < 3){
+					var node = N.findLite(targets)[0];
+					if(node){
+						return N.NodeUtil.style(node,styleName);
+					}
+				} else {
+					return N.dataEach(N.findLite(targets),function(node){ N.NodeUtil.style(node,styleName,value); });
+				}
 			},
 			//내무의 내용을 지웁니다.
 			"empty"  : function(target){ return N.find(target,N.dataMap,function(node){ if("innerHTML" in node) node.innerHTML = ""; return node; }); },
@@ -4567,41 +4583,42 @@
 				}
 				return nodes;
 			},
-			//auto with touch event
-			"bind":function(node, eventName){
+			//bind touch event
+			"punch":function(node, eventName){
 				var onTargets = N.node.onTarget(node);
 				N.node.on.apply(N.node,[onTargets].concat(Array.prototype.slice.call(arguments,1)));
 				if(!('ontouchend' in document)) return onTargets;
 				
 				if(N.isDocument(onTargets) || onTargets.length){
 					N.dataEach(eventName.split(" "),function(mousename){
-						var touchname = mousename === "mousedown" ? "touchstart" :
-										mousename === "mouseup"   ? "touchend"   :
-										mousename === "mousemove" ? "touchmove"  :
-										mousename === "mouseout"  ? "touchleave" : null;
-						if(touchname) {
+						var bindnames = mousename === "mousedown" ? ["touchstart"] :
+									    mousename === "mouseup"   ? ["touchend","touchcancle"]   :
+									    mousename === "mousemove" ? ["touchmove"]  :
+									    mousename === "mouseout"  ? ["touchleave"] : null;
+						if(bindnames) {
 							N.dataEach(onTargets,function(target){
-				                target.addEventListener(touchname,function(event){
-				                    //1개의 터치만 지원
-				                    if(event.touches.length > 1 || event.type == "touchend" && event.touches.length > 0 )
-				                    {return;}
+								N.dataEach(bindnames,function(bindEventName){
+									target.addEventListener(bindEventName,function(event){
+					                    //1개의 터치만 지원
+					                    //if(event.touches.length !== || (!event.touches.length && bindnames !== "touchend")){return;}
+					                    var newEvent      = document.createEvent("MouseEvents");
+					                    var changedTouche = event.changedTouches[0];
                     
-				                    var newEvent      = document.createEvent("MouseEvents");
-				                    var changedTouche = event.changedTouches[0];
-                    
-				                    newEvent.initMouseEvent(
-				                        mousename,
-				                        true,
-				                        true,
-				                        null,
-				                        null,
-				                        changedTouche.screenX,
-				                        changedTouche.screenY,
-				                        changedTouche.clientX,
-				                        changedTouche.clientY
-				                    );
-				                    target.dispatchEvent(newEvent);
-				                });
+					                    newEvent.initMouseEvent(
+					                        mousename,
+					                        true,
+					                        true,
+					                        null,
+					                        null,
+					                        changedTouche.screenX,
+					                        changedTouche.screenY,
+					                        changedTouche.clientX,
+					                        changedTouche.clientY
+					                    );
+										newEvent.touches = event.touches;
+					                    target.dispatchEvent(newEvent);
+					                });
+								});
 							});
 						}
 					});
@@ -4855,7 +4872,16 @@
 			is     :function(exp){
 				return NODE_METHODS.is(this,exp); 
 			},
-			filter :function(){ this.replace(N.FLATTENCALL(NODE_METHODS.filter,NODE_METHODS,this,arguments)); return this; },
+			filter :function(){ 
+				this.setSource(N.FLATTENCALL(NODE_METHODS.filter,NODE_METHODS,this,arguments));
+				return this;
+			},
+			content:function(){
+				return N.FLATTENCALL(NODE_METHODS.content,NODE_METHODS,this,arguments);
+			},
+			text:function(){
+				return N.FLATTENCALL(NODE_METHODS.text,NODE_METHODS,this,arguments);
+			},
 			value  :function(name){ 
 				if(arguments.length > 0){
 					N.FLATTENCALL(NODE_METHODS.value,NODE_METHODS,this,arguments);
@@ -5160,7 +5186,7 @@
 			checkoutFilter:function(o){ this.FrameCheckoutFilter = o; },
 			checkinFilter:function(o){ this.FrameCheckinFilter = o; },
 			checkout:function(){
-				return new N.HashManager(this.getCheckoutElementsWithToken()).setMap(function(node,key){
+				return new N.HashSource(this.getCheckoutElementsWithToken()).setMap(function(node,key){
 					var value = N.node.value(node);
 					return value == null ? "" : value;
 				}).get();
@@ -5864,7 +5890,7 @@
 			}
 		});
 		
-		N.MODULE("ModuleEventManager",{
+		N.MODULE("EventListener",{
 			triggerWithOwner:function(owner,triggerName){
 				var args = Array.prototype.slice.call(arguments,2);
 				var arounds = this.ManageModuleAroundEvents.prop(triggerName);
@@ -5892,13 +5918,13 @@
 			},
 			listenBefore:function(triggerName,proc){
 				if(!this.ManageModuleAroundEvents.has(triggerName)){
-					this.ManageModuleAroundEvents.setProp(triggerName,new N.HashManager());
+					this.ManageModuleAroundEvents.setProp(triggerName,new N.HashSource());
 				}
 				this.ManageModuleAroundEvents.prop(triggerName).pushDataProp("before",proc);
 			},
 			listenAfter:function(triggerName,proc){
 				if(!this.ManageModuleAroundEvents.has(triggerName)){
-					this.ManageModuleAroundEvents.setProp(triggerName,new N.HashManager());
+					this.ManageModuleAroundEvents.setProp(triggerName,new N.HashSource());
 				}
 				this.ManageModuleAroundEvents.prop(triggerName).pushDataProp("after",proc);
 			},
@@ -5907,8 +5933,18 @@
 				this.ManageModuleEvents.pushDataProp(triggerName,proc,true);
 			},
 			hasListen:function(triggerName){
-				var listenData = this.ManageModuleEvents.prop(triggerName);
-				return listenData ? !!listenData.length : false;
+				if(arguments.length === 0) this.ManageModuleEvents.hasProp();
+				return this.ManageModuleEvents.hasProp(triggerName);
+			},
+			hasListener:function(triggerName){
+				var result = false;
+				this.ManageModuleEvents.each(function(v){
+					if(v.length){
+						result = true;
+						return false;
+					}
+				});
+				return result;
 			},
 			addTriggerRegister:function(triggerName,owner){
 				var _self = this;
@@ -5958,12 +5994,12 @@
 				}
 			}
 		},function(module){
-			if(!N.isModule(module)) console.error("ModuleEventManager:: manage object is must be nody module");
+			if(!N.isModule(module)) console.error("EventListener:: manage object is must be nody module");
 			this.ManageModule = module;
 			//{eventName:[handers...]}
-			this.ManageModuleEvents = new N.HashManager();
+			this.ManageModuleEvents = new N.HashSource();
 			//{eventName:{aroundName:[handlers..]}}
-			this.ManageModuleAroundEvents = new N.HashManager();
+			this.ManageModuleAroundEvents = new N.HashSource();
 			var _self = this;
 		});
 		
@@ -6039,9 +6075,9 @@
 			}
 		},function(targetRole,props,data,initViewProc){
 			if( this._super(targetRole,true,true) === true ) {
-				this.ManageProp  = new N.HashManager(props);
+				this.ManageProp  = new N.HashSource(props);
 				this.ManageData  = new N.Array(data);
-				this.ManageEvent = new N.ModuleEventManager(this);
+				this.ManageEvent = new N.EventListener(this);
 				
 				var _self = this;
 				
@@ -6245,8 +6281,8 @@
 				var newRequest = this.getRequestObject();
 		
 				//data 처리
-				var requestData   = new N.HashManager((typeof this.moduleOption.constData === "object") ? new N.HashManager(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
-				var requestString = new N.HashManager(requestData.toParameter()).join("=","&");
+				var requestData   = new N.HashSource((typeof this.moduleOption.constData === "object") ? new N.HashSource(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
+				var requestString = new N.HashSource(requestData.toParameter()).join("=","&");
 			
 				// request params (기록용)
 			
@@ -6395,8 +6431,8 @@
 			},
 		},function(){
 			//key node
-			this.ManageLoadNode = new N.HashManager();
-			this.ManageEvent    = new N.ModuleEventManager(this);
+			this.ManageLoadNode = new N.HashSource();
+			this.ManageEvent    = new N.EventListener(this);
 			this.ManageEvent.addEventRegister("load");
 			this._loadkey = "defaultLoadContent";
 		});
@@ -6453,7 +6489,7 @@
 					this._activeStatus = keyName;
 				});
 				
-				this.ManageLoadPath = new N.HashManager(N.marge(loadInfo,{"loaderInitial":N.toArray(this.view.childNodes)}));
+				this.ManageLoadPath = new N.HashSource(N.marge(loadInfo,{"loaderInitial":N.toArray(this.view.childNodes)}));
 				this._activeStatus   = "loaderInitial";
 			} else {
 				return console.error("ActiveContentLoader:: not found view of selector =>",view); 
@@ -6508,7 +6544,7 @@
 					if(N.isArray(data)) {
 						return {};
 					} else {
-						return new N.HashManager(data).remove(this.DefaultDataKey).get();
+						return new N.HashSource(data).remove(this.DefaultDataKey).get();
 					}
 				}
 			},
@@ -6767,7 +6803,7 @@
 			}
 		},function(source,defaultKey){
 			this.ContextID             = N.Util.base36UniqueRandom(5,'co');
-			this.Source         = new N.HashManager(source);
+			this.Source         = new N.HashSource(source);
 			this.DefaultDataKey = defaultKey || "data";
 			this.Binder         = new N.Binder();
 			// 데이터 안의 모든 Managed data를 생성하여 메타안에 집어넣음
@@ -7086,7 +7122,7 @@
 		},function(DataContext,initData,dataType){
 			this.DataContext = DataContext;
 			this.DataID      = N.Util.base62UniqueRandom(8,'ma');
-			this.Source      = new N.HashManager(initData);
+			this.Source      = new N.HashSource(initData);
 			this.SourceType  = dataType || "object";
 			//노드구조
 			this.Child       = new N.Array();
@@ -7108,8 +7144,8 @@
 		N.MODULE("Presentor",{
 			addActionEvent:function(name,method){
 				if(!this._dataActions){
-					this._dataActions = new N.HashManager();;
-					this.ManageDataActions = new N.ModuleEventManager(this._dataActions);
+					this._dataActions = new N.HashSource();;
+					this.ManageDataActions = new N.EventListener(this._dataActions);
 				}
 				this.ManageDataActions.listen(name,method);
 			},
@@ -7125,7 +7161,7 @@
 				var viewController = this;
 				var _self = this;
 				N.node.on(element,"click", function(){
-					if(_self.ManageDataActions.hasListen(actionName)){
+					if(_self.ManageDataActions.hasListener(actionName)){
 						_self.ManageDataActions.triggerWithOwner(managedData,actionName,arg,element,_self);
 					} else {
 						console.warn("MVVM::no had action",actionName);
@@ -7381,7 +7417,7 @@
 			// dep!바인딩 :: N.DataContextNotificationCenter.addObserver(this);
 
 			//events
-			this.ManagePresentorEvent = new N.ModuleEventManager(this);
+			this.ManagePresentorEvent = new N.EventListener(this);
 			this.ManagePresentorEvent.addEventRegister(["propChange","dataChange","displayChange"]);
 			this.ManagePresentorEvent.addTriggerRegister(["displayChange"]);
 			this.addActionEvent("up",function(arg,el,vc){
@@ -7649,7 +7685,7 @@
 				redefine[this.defaultKey] = defaultData;
 				defaultData = redefine;
 			}
-			this.beforeProperty  = new N.HashManager(defaultData);
+			this.beforeProperty  = new N.HashSource(defaultData);
 			// { listener:Object , listen:"name" ,proc: }
 		});
 	
@@ -7752,11 +7788,11 @@
 				}
 				if(finished === true){
 					this.stop();
-					this.EventManager.trigger("timeMove");
-					this.EventManager.trigger("timeFinish");
+					this.EventListener.trigger("timeMove");
+					this.EventListener.trigger("timeFinish");
 				} else {
 					this._tick = timestamp;
-					this.EventManager.trigger("timeMove");
+					this.EventListener.trigger("timeMove");
 					N.CALL(this._onTimeMove,this._tick);
 				}
 			},
@@ -7847,11 +7883,11 @@
 			},
 			setFPS:function(fps){
 				this._fps      = (typeof fps === "number") ? fps : 30;
-				this._interval = N.Number.parseInt(1000 / this._fps);
+				this._interval = N.parseInt(1000 / this._fps);
 			}
 		},function(fps){
 			this.Source = new N.Array();
-			this.Status = new N.HashManager({
+			this.Status = new N.HashSource({
 				timeStart:0,
 				timeEnd  :0
 			});
@@ -7861,8 +7897,8 @@
 			this._rightDirection = true;
 			if(typeof fps === "number") this.setFPS(fps);
 			
-			this.EventManager = new N.ModuleEventManager(this);
-			this.EventManager.addEventRegister(["timeMove","timeFinish"]);
+			this.EventListener = new N.EventListener(this);
+			this.EventListener.addEventRegister(["timeMove","timeFinish"]);
 		});
 		
 		N.MODULE("TimeProperties",{
@@ -7940,7 +7976,7 @@
 				if(typeof aroundData[1] === "undefined"){
 					return this._gto,aroundData[0];
 				} else {
-					var dataProps = new N.HashManager();
+					var dataProps = new N.HashSource();
 					dataProps.arrangementObjectsDataProp(aroundData[0],aroundData[1]);
 					return dataProps.setMap(function(arrange){
 						var a0n = typeof arrange[0] === "number";
@@ -7973,7 +8009,7 @@
 			}
 		},function(attr,interval,startTime,defaultKey){
 			this.Source    = new N.Array();
-			this.Attribute = (new N.HashManager(attr)).get();
+			this.Attribute = (new N.HashSource(attr)).get();
 			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "value"
 			this.defaultStartTime = startTime ? N.timestampExp(startTime): N.timestampExp();
 			this.defaultInertval  = interval  ? N.timescaleExp(interval) : N.timescaleExp("2s");
@@ -8106,5 +8142,133 @@
 				N.node.on(window,'resize',this.Handler);
 			}
 		});
+		
+		
+		N.MODULE("Gesture",function(gestureView,allowOuterMove,allowVitureTouch){
+			this.view = N.findLite(gestureView)[0];
+			if(this.view){
+				this.GestureListener = {};
+				this._firstPinchValue;
+				this._firstPageX;
+				this._firstPageY;
+				this._lastPageX;
+				this._lastPageY;
+				this.stopPropagation = true;
+				this.preventDefault  = true;
+				//touch event
+				this.ManageEvent = new N.EventListener(this);
+				this.ManageEvent.addEventRegister(["gesture","drag","throw","pinch"]);
+				var manageEvent = this.ManageEvent;
+				var _self = this;
+				var getPinchDistance = function(fx1,fy1,fx2,fy2){
+					return Math.sqrt(
+						Math.pow((fx1-fx2),2),
+						Math.pow((fy1-fy2),2)
+					);
+				};
+				this._gestureStartHandler = function(e){
+					if(manageEvent.hasListener()){
+						var pageX = _self._firstPageX = _self._lastPageX = e.touches ? e.touches[0].pageX : e.pageX;
+						var pageY = _self._firstPageY = _self._lastPageY = e.touches ? e.touches[0].pageY : e.pageY;
+						
+						_self._lastGesture = {
+							e:e,
+							pageX:pageX,
+							pageY:pageY,
+							relativeX:0,
+							relativeY:0,
+							moveX:0,
+							moveY:0
+						};
+						
+						if (manageEvent.hasListener("pinch") && e.touches && e.touches.length === 2) {
+							e.preventDefault();
+							_self._firstPinchValue = getPinchDistance(
+								 pageX,
+								 pageY,
+								 e.touches[1].pageX,
+								 e.touches[1].pageY
+							);
+							_self._lastGesture.pinch = 1;
+							manageEvent.trigger("pinch",_self._lastGesture,"start");
+						}
+						manageEvent.trigger("gesture",_self._lastGesture,"start");
+						
+						if(_self.stopPropagation===true)e.stopPropagation();
+						if(_self.preventDefault===true) e.preventDefault();
+					}
+				}
+			
+				this._gestureMoveHandler = function(e){
+					//TouchMoveX를 체크하는 에유는
+					//시작한 터치무브가 존재하지 않을경우에는 작동되지 않음 (바깥쪽 이벤트가 Touch끼리 서로 섞이지 않게 하기 위함)
+					if(manageEvent.hasListener() && _self._firstPageX !== undefined){
+						var pageX = e.touches ? e.touches[0].pageX : e.pageX;
+						var pageY = e.touches ? e.touches[0].pageY : e.pageY;
+						
+						_self._lastGesture = {
+							e:e,
+							pageX:pageX,
+							pageY:pageY,
+							relativeX:pageX - _self._firstPageX,
+							relativeY:pageY - _self._firstPageY,
+							moveX:pageX - _self._lastPageX,
+							moveY:pageY - _self._lastPageY
+						}
+						
+						_self._lastPageX = pageX;
+						_self._lastPageY = pageY;
+						
+						if (manageEvent.hasListener("pinch") && (typeof _self._firstPinchValue === "number") && e.touches && e.touches.length === 2) {
+							e.preventDefault();
+							var pinchDistance = getPinchDistance(
+								 e.touches[0].pageX,
+								 e.touches[0].pageY,
+								 e.touches[1].pageX,
+								 e.touches[1].pageY
+							);
+							_self._lastGesture.pinch = -((_self._firstPinchValue / pinchDistance) - 1);
+							manageEvent.trigger("pinch",_self._lastGesture,"move");
+							
+							//핀치시에는 이벤트를 초기화함
+							//_self._firstPageX = _self._lastPageX = undefined;
+							//_self._firstPageY = _self._lastPageY = undefined;
+						}
+						manageEvent.trigger("gesture",_self._lastGesture,"move");
+						
+						if(_self.stopPropagation===true)e.stopPropagation();
+						if(_self.preventDefault===true) e.preventDefault();
+					}
+				};
+			
+				this._gestureEndHandler = function(e){
+					if(manageEvent.hasListener() && _self._firstPageX !== undefined){
+						
+						if (manageEvent.hasListener("pinch") && (typeof _self._firstPinchValue === "number") && e.touches && e.touches.length === 2) {
+							this.manageEvent.trigger("pinch",_self._lastGesture,"end");
+						}
+						manageEvent.trigger("gesture",_self._lastGesture,"end");
+						
+						_self._firstPageX = _self._lastPageX = undefined;
+						_self._firstPageY = _self._lastPageY = undefined;
+						_self._firstPinchValue = undefined;
+						_self._lastGesture = undefined;
+						
+						if(_self.stopPropagation===true)e.stopPropagation();
+						if(_self.preventDefault===true) e.preventDefault();
+					}
+				};
+				
+				N.node.punch(this.view,"mousedown",this._gestureStartHandler);
+				N.node.punch(document.body,"mousemove",this._gestureMoveHandler);
+				N.node.punch(document.body,"mouseup",this._gestureEndHandler);
+				//N.node.punch(document.body,"mouseout",function(e){
+				//	console.log("mouseout",e.target.tagName);
+				//	//_self._gestureEndHandler(e);
+				//});
+			}
+			
+		});
+		
 	})(window,N,N.ENV);
 })();
