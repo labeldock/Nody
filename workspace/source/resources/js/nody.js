@@ -3,13 +3,12 @@
  * Copyright HOJUNG-AHN. and other contributors
  * Released under the MIT license
  */
-
 (function(){
 	var N=(function(){return N.API.apply(window,Array.prototype.slice.call(arguments))});
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.27.7", N.BUILD = "1218";
+		N.VERSION = "0.28.0", N.BUILD = "1222";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -659,6 +658,10 @@
 			"dataReverseEach":N.CONTINUE_FUNCTION(function(v,f){ var ev=N.toArray(v); for(var i=ev.length-1;i>-1;i--) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
 			// 각각의 값을 배열로 다시 구해오기
 			"dataMap":N.CONTINUE_FUNCTION(function(v,f){ var rv=[],ev=N.toArray(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
+			"arrayMap":N.CONTINUE_FUNCTION(function(v,f){ 
+				var rv = N.toArray(v);
+				for(var i=0,l=rv.length;i<l;i++) rv[i] = f.call(rv[i],rv[i],i); return rv;
+			},2),
 			"ownerMap":function(owner,args){
 				return N.dataMap(args,function(arg){
 					return (typeof arg === "function") ? function(){ return arg.apply(owner,Array.prototype.slice.call(arguments)); } : arg;
@@ -784,12 +787,12 @@
 						var jp = JSON.parse(param);
 						if(typeof jp !== "object") throw new Error("pass");
 					},function(e){
-						if( (new N.String(param)).isDataContent()=="plain" ){
+						if( (new N.StringSource(param)).isDataContent()=="plain" ){
 							var esv = (typeof es === "string" ? es : "value");
 							var reo={};reo[esv]=param;
 							return reo;
 						}
-						return (new N.String(param)).getContentObject();
+						return (new N.StringSource(param)).getContentObject();
 					});
 				}
 				return c || {};
@@ -2227,7 +2230,7 @@
 			join:function(a,b){ a = typeof a === "string" ? a : ":"; b = typeof b === "string" ? b : ","; return this.inject([],function(v,i,k){ i.push(k+a+N.toString(v)); }).join(b); },
 			
 			//toParam
-			toParameter : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : (new N.String(key)).encode()) ] = (useEncode == false ? val : (new N.String(val)).encode()); }); },
+			toParameter : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : (new N.StringSource(key)).encode()) ] = (useEncode == false ? val : (new N.StringSource(val)).encode()); }); },
 			
 			//jsonString으로 반환
 			stringify:function(){ return JSON.stringify(this.getDataPropFix()); },
@@ -2280,7 +2283,7 @@
 		//******************
 		//String
 		var htmlSafeMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': '&quot;', "'": '&#39;', "/": '&#x2F;' };
-		N.MODULE("String",{
+		N.MODULE("StringSource",{
 			encode:function(){ return encodeURI(this.Source); },
 			decode:function(){ return decodeURI(this.Source); },
 			setEncode:function(){this.Source = this.encode();return this;},
@@ -2312,7 +2315,7 @@
 			tabsOffset:function(offset,tabString){
 				offset = parseInt(offset);
 				if(typeof offset === "number") return N.Array.split(this.Source,"\n").setMap(function(text){
-					return (new N.String(text)).tabAbsolute((new N.String(text)).tabSize() + offset,tabString);
+					return (new N.StringSource(text)).tabAbsolute((new N.StringSource(text)).tabSize() + offset,tabString);
 				}).join("\n");
 				return this.Source;
 			},
@@ -2320,7 +2323,7 @@
 			tabsSize:function(){
 				var minimum;
 				this.lineEach(function(line){
-					var tabSize = (new N.String(line)).tabSize();
+					var tabSize = (new N.StringSource(line)).tabSize();
 					if((minimum == undefined) || (tabSize < minimum)) minimum = tabSize;
 				});
 				return minimum;
@@ -2330,7 +2333,7 @@
 				var baseOffset = 0;
 				return this.lineEach(function(line){
 					//console.log("baseOffset",baseOffset);
-					var tabSize = (new N.String(line)).tabSize();
+					var tabSize = (new N.StringSource(line)).tabSize();
 					//console.log(tabSize,beforeSize);
 					if(beforeSize == undefined){
 						beforeSize = 0;
@@ -2343,7 +2346,7 @@
 						//nothing is right
 					}
 					beforeSize = tabSize;
-					return (new N.String(line)).tabAbsolute(baseOffset);
+					return (new N.StringSource(line)).tabAbsolute(baseOffset);
 				});
 			},
 			setTabsAlign:function(){ this.Source = this.tabsAlign(); return this; },
@@ -2381,7 +2384,7 @@
 			isDataContentFunction:function(fs,is,js){
 				return new N.Array( (js==true) ? N.safeSplit(this.Source,fs,["{}","[]",'""',"''"]) : this.Source.trim().split(fs) ).inject({},function(s,inj){
 					var v = s.substr(s.indexOf(is)+1);
-					if(s.trim().length > 0) inj[ N.unwrap(s.substr(0,s.indexOf(is)),['""',"''"]) ] = N.unwrap((js == true) ? (new N.String(v)).getContentObject(true) : v,['""',"''"]);
+					if(s.trim().length > 0) inj[ N.unwrap(s.substr(0,s.indexOf(is)),['""',"''"]) ] = N.unwrap((js == true) ? (new N.StringSource(v)).getContentObject(true) : v,['""',"''"]);
 					return inj;
 				});
 			},
@@ -2396,7 +2399,7 @@
 							return [];
 						} else {
 							return new N.Array(a).inject([],function(s,inj){
-								inj.push(N.unwrap( (new N.String(s)).getContentObject(true) , ["''",'""'] )); 
+								inj.push(N.unwrap( (new N.StringSource(s)).getContentObject(true) , ["''",'""'] )); 
 								return inj; 
 							});
 						}
@@ -2463,255 +2466,7 @@
 			return this;
 		});
 	
-		N.EXTEND_MODULE("String","ZString",{
-			getZContent:function(seed){
-				return N.exp.seed(seed).apply(undefined,[this.Source].concat(this.ZoneParams));
-			},
-			toArray:function(length,startAt){
-				length  = (typeof length === "number")  ? length : 1;
-				var i = (typeof startAt === "number") ? startAt : 0;
-				var result = [];
-				for(var l=i+length;i<l;i++) result.push( this.getZContent(i) );
-				return result;
-			}
-		},function(param){
-			this.ZoneParams = Array.prototype.slice.call(arguments);
-			this._super(this.ZoneParams.shift());
-		},function(seed){
-			return this.getZContent(seed);
-		});
-	
-		// Number
-		N.EXTEND_MODULE("String","Number",{
-			// number core
-			// spot 1:prefix 2:integer 3:floatValue 4:suffix
-			isNotANumber:function(){ if((new StringNumberInfo(this.Source)).get("number").length) return true; return false; },
-			isANumber   :function(){ return !this.isNotANumber(); },
-			numberInfo : function(spot){
-				//getInfo
-				var info = new StringNumberInfo(this.Source);
-				info.fixNumberInfo();
-			
-				//result
-				if(typeof spot === "number") switch(spot){
-					case 0: return info.get("prefix"); break;
-					case 2: return info.get("integer"); break;
-					case 3: return info.get("floatValue"); break;
-					case 4: return info.get("suffix"); break;
-					case 5: return info.get("number"); break;
-				}
-			
-				var info =  { 
-					"prefix"     : info.get("prefix"), 
-					"suffix"     : info.get("suffix"), 
-					"integer"    : info.get("integer"), 
-					"floatValue" : info.get("floatValue"), 
-					"number"     : info.get("number")
-				};
-				if(typeof spot === "string") return info.get(spot);
-				return info;
-			},
-			setNumberInfo : function(value,position){
-				var i = this.numberInfo();
-				switch(position){
-					case 1: case "prefix"     : i["prefix"]     = value; break;
-					case 4: case "suffix"     : i["suffix"]     = value; break;
-					case 2: case "integer"    : i["integer"]    = value; break;
-					case 3: case "floatValue" : i["floatValue"] = value; break;
-					case 5: case "number"     : i["integer"]    = value; i["floatValue"] = 0; break;
-					default: break;
-				}
-				this.Source = i.prefix + (parseInt(i.integer) + parseFloat(i.floatValue)) + i.suffix;
-			},
-			// getter // setter
-			getInteger     : function()  { return this.numberInfo(2); },
-			getFloat       : function()  { return this.numberInfo(3); },
-			getFloatNumber : function()  { return this.numberInfo(3).replace(/^0\./,''); },
-			getNumber      : function()  { return this.numberInfo(5); },
-			getPrefix      : function()  { return this.numberInfo(1); }, 
-			getSuffix      : function()  { return this.numberInfo(4); },
-			integer        : function() { return this.getInteger()*1;},
-			floatNumber    : function() { return this.getFloatNumber()*1;},
-			floatValue     : function() { return this.getFloat()*1;},
-			number         : function() { return this.getNumber()* 1;},
-			// already not support minus
-			getTrunc : function(s) { var n = this.number(); return isNaN(s) ? (Math[n > 0 ? "floor" : "ceil"](n)) : (Math[n > 0 ? "floor" : "ceil"](n * Math.pow(0.1,parseInt(s))) * Math.pow(10,parseInt(s))); },
-			trunc    : function(s){ this.setNumberInfo( this.getTrunc(s) , 5 ); return this; },
-			//size
-			less:function(n){
-				if( n == isNaN(n) ) return false;
-				if( this.isNotANumber() ) return false;
-				return this.number() < parseFloat(n);
-			},
-			great:function(){
-				if( n == isNaN(n) ) return false;
-				if( this.isNotANumber() ) return false;
-				return this.number() > parseFloat(n);
-			},
-			// math
-			percentIn:function(withValue,trunc){
-				//소비자가격을 입력하였다면 판매가격도 동기화된다
-				var lv = new Number(withValue).number();
-				var rv = this.number();
-				var result = 0;
-		
-				//할인율 계산하고 적용
-				if(rv > lv){
-					result = 0;
-				} else {
-					result = ((lv - rv) / lv) * 100;
-					result = isNaN(result) ? 0 : result;
-				}
-		
-				if(typeof trunc === "number"){return new Number(result).getTrunc(trunc);}
-				return result;
-			},
-			// expression
-			expression:function(senceParameter,option){
-				var senceNumber  = new Number(senceParameter);
-				var optionNumber = new Number(option);
-				var result       = NaN;
-				switch ( senceNumber.prefix() ) {
-					case "+"  : result = this.number() + senceNumber.number(); break;
-					case "-"  : result = this.number() - senceNumber.number(); break;
-					case "x"  : case "*" : result = this.number() * senceNumber.number(); break;
-					case "/"  : result = this.number() / senceNumber.number(); break;
-					case "%"  : result = this.number() % senceNumber.number(); break;
-					case "++" : result = this.number() + 1; break;
-					case "--" : result = this.number() - 1; break;
-					case "."  : result = this.number(); break;
-					case ".x" : case "?." : result = this.integer(); break;
-					case "x." : case ".?" : result = this.floatValue(); break;
-					case "?//": result = this.getSuffix(); break;
-					case "//?": result = this.getPrefix(); break;
-				}
-				if(typeof targetPoint === "string"){
-					var execResult = /(\+\=|)([0-9]+)(\.[0-9]|)/.exec(targetPoint);
-					if(execResult[1] == "+="){
-						if(execResult[3] == ""){
-							targetPoint = parseInt(execResult[2]) + this.currentValue[0];
-						} else {
-							targetPoint = parseFloat(execResult[2] + execResult[3]) + this.currentValue[0];
-						}
-					}
-				}
-				return result;
-			},
-			// mask core
-			defaultTranslation:{
-	            '0': {pattern: /\d/},
-	            '9': {pattern: /\d/, optional: true},
-	            '#': {pattern: /\d/, recursive: true},
-	            'A': {pattern: /[a-zA-Z0-9]/},
-	            'D': {pattern: /[a-zA-Z]/}
-			},
-			defaultOption:{},
-			__Format:function(value,mask,reverse){
-				//mask value
-				switch(typeof mask){
-					case "function" : mask = mask(value); break;
-					case "string"   : break;
-				}
-				if(typeof mask !== "string") console.error("Number::getFormat::첫번째 파라메터는 반드시 string이나 function으로 string이 꼭 되도록 해주세요.",typeof mask,mask);
-				//defaultOptions
-				skipMaskChars = false;
-				//idea by http://igorescobar.github.io/jQuery-Mask-Plugin/
-	            var buf = [];
-	            var m = 0; 
-				var maskLen = mask.length;
-	            var v = 0;
-				var valLen = value.length;
-	            var offset = 1;
-				var addMethod = "push";
-	            var resetPos = -1;
-	            var lastMaskChar,check;
-				//
-	            if (reverse) {
-	                addMethod = "unshift";
-	                offset = -1;
-	                lastMaskChar = 0;
-	                m = maskLen - 1;
-	                v = valLen - 1;
-	                check = function () {
-	                    return m > -1 && v > -1;
-	                };
-	            } else {
-	                lastMaskChar = maskLen - 1;
-	                check = function () {
-	                    return m < maskLen && v < valLen;
-	                };
-	            }
-
-	            while (check()) {
-	                var maskDigit   = mask.charAt(m);
-	                var valDigit    = value.charAt(v);
-	
-	                var translation = this.defaultTranslation[maskDigit];
-	                if (translation) {
-	                    if (valDigit.match(translation.pattern)) {
-	                        buf[addMethod](valDigit);
-	                         if (translation.recursive) {
-	                            if (resetPos === -1) {
-	                                resetPos = m;
-	                            } else if (m === lastMaskChar) {
-	                                m = resetPos - offset;
-	                            }
-	                            if (lastMaskChar === resetPos) {
-	                                m -= offset;
-	                            }
-	                        }
-	                        m += offset;
-	                    } else if (translation.optional) {
-	                        m += offset;
-	                        v -= offset;
-	                    }
-	                    v += offset;
-	                } else {
-	                    if (!skipMaskChars) {
-	                        buf[addMethod](maskDigit);
-	                    }
-        
-	                    if (valDigit === maskDigit) {
-	                        v += offset;
-	                    }
-
-	                    m += offset;
-	                }
-	            }
-	            var lastMaskCharDigit = mask.charAt(lastMaskChar);
-	            if (maskLen === valLen + 1 && !this.defaultTranslation[lastMaskCharDigit]) { buf.push(lastMaskCharDigit); }
-	            return buf.join("");
-			},
-			numberFormat : function(mask,reverse){
-				if(this.getNumber().indexOf("-") == 0){
-					return "-" + this.__Format(this.getNumber().substr(1),mask,reverse);
-				} else {
-					return this.__Format(this.getNumber(),mask,reverse);
-				}
-			},
-			setNumberFormat    : function(){ this.Source = this.getFormat.apply(this,arguments); return this; },
-			numberText       : function(v) { return this.Source.replace(/\D/gi,""); },
-			numberTextFormat : function(mask,reverse){ return this.__Format(this.numberText(),mask,reverse); },
-			setNumberTextFormat    : function(){ this.Source = this.getFormat.apply(this,arguments); return this; },
-			decimal:function(p,s){ return  (new N.String(this.numberFormat("#,##0",true))).fixString(p,s);  },
-			// calc line
-			percentOf : function(maxValue,minValue) { 
-				maxValue = N.toNumber(maxValue);
-				minValue = N.toNumber(minValue);
-				return ((this.number()-minValue)/(maxValue-minValue))*100;},
-			pointOf   : function(lengthValue)  { return lengthValue?lengthValue:0/this.integer()*100;  },
-			lengthOf  : function(percentValue) { return this.integer()*percentValue?percentValue:0/100 },
-			getGCD:function(value){
-				function gcd(p, q){
-				    if(q==0)return p;
-				    var r = p % q;
-				    return gcd(q, r);
-				}
-				return gcd(this.integer(),value);
-			}
-		});
-	
-		var util_unique_random_key = [];
+		var UNIQUE_RANDOM_KEYS = [];
 	
 		N.SINGLETON("Util",{
 			//random
@@ -2731,7 +2486,7 @@
 				do {
 					var needContinue = false;
 					randomKey        = prefixKey + this.base64Random(length,codeAt,codeLength);
-					N.dataEach(util_unique_random_key,function(recentKey){
+					N.dataEach(UNIQUE_RANDOM_KEYS,function(recentKey){
 						if(recentKey == randomKey) needContinue = true;
 						return false;
 					});
@@ -2745,7 +2500,7 @@
 					}
 				} while(needContinue);
 			
-				if(randomKey) util_unique_random_key.push(randomKey);
+				if(randomKey) UNIQUE_RANDOM_KEYS.push(randomKey);
 			
 				return randomKey;
 			},
@@ -2972,127 +2727,7 @@
 				return parseInt(this.getFlashVersion().split(',')[0]);
 			}
 		});
-	
-		//******************
-		//UID //Meta
-		W.ManagedUIDObjectData = [];
-		N.SINGLETON("UID",{
-			get:function(idObject){
-				if(typeof idObject === "object" || typeof idObject === "function"){
-					for(var i=0,l=W.ManagedUIDObjectData.length;i<l;i++) if(W.ManagedUIDObjectData[i] == idObject) return i;
-					W.ManagedUIDObjectData.push(idObject);
-					return W.ManagedUIDObjectData.length - 1;
-				}
-			},
-			getObject:function(i){
-				return W.ManagedUIDObjectData[i];
-			},
-			destroy:function(idObject){
-				switch(typeof idObject){
-					case "object":
-						for(var i=0,l=W.ManagedUIDObjectData.length;i<l;i++) if(W.ManagedUIDObjectData[i] == idObject) {
-							W.ManagedUIDObjectData[i] = undefined;
-							return i;
-						}
-						break;
-					case "number":
-						idObject = parseInt(idObject);
-						if(typeof W.ManagedUIDObjectData[idObject] !== "undefined"){
-							W.ManagedUIDObjectData[idObject] = undefined;
-							return idObject;
-						}
-						break;
-					default: break;
-				}
-			}
-		});
-		W.ManagedMetaObjectData = [];
-		N.MODULE("Meta",{
-			//validate
-			isValid :function() { return this.Source == false ? false : true; },
-			//data
-			data    :function(v){ if(this.isValid()){ return W.ManagedMetaObjectData[this.Source]; } },
-			getOwner:function() { if(this.isValid()) return N.UID.getObject(this.Source); },
-			//prop
-			getProp :function(propName){ if(typeof propName === "string" || typeof propName === "number"){ return W.ManagedMetaObjectData[this.Source][propName]; } },
-			getProps:function(propExpression) {
-				var regexp = new RegExp(propExpression);
-				var result = [];
-				for (key in W.ManagedMetaObjectData[this.Source]) if (key.match(regexp)) result.push(W.ManagedMetaObjectData[this.Source][key]);
-				return result;
-			},
-			setProp :function(propName,value){ if(typeof propName === "string" || typeof propName === "number"){ W.ManagedMetaObjectData[this.Source][propName] = value;} return this; },
-			hasProp :function(propName){ if(typeof propName === "string" || typeof propName === "number") return (propName in W.ManagedMetaObjectData[this.Source]); return false; },
-			removeProp:function(propName){ if( this.hasProp(propName) ) delete W.ManagedMetaObjectData[this.Source][propName]; return this; },
-			keyChange:function(keys,toKeys){
-				var meta    = this;
-				var _keys   = new N.Array(keys);
-				var _toKeys = new N.Array(toKeys);
-				if (_keys.length == _toKeys.length) {
-					var orientation = _keys.map(function(key){
-						return meta.getProp(key);
-					});
-					_keys.each(function(key){
-						meta.removeProp(key);
-					});
-					_toKeys.each(function(key,i){
-						meta.setProp(key,orientation[i]);
-					});
-				} else {
-					console.warn("Meta::keyChange는 이전값과 바꿀값의 길이가 같아야합니다.");
-				}
-			},
-			keySort:function(){
-				var thisSource = W.ManagedMetaObjectData[this.Source];
-				var replaceObj = {};
-				var keys       = [];
-				for(var key in thisSource) keys.push(key);
-				keys.sort();
-				N.dataEach(keys,function(key){ replaceObj[key] = thisSource[key] });			
-				W.ManagedMetaObjectData[this.Source] = replaceObj;
-			},
-			//Destroy
-			destroy   :function() { if(this.isValid()){ W.ManagedMetaObjectData[this.Source] = undefined; N.UID.destroy(this.Source); return true;} return false; },
-			lastProp:function(propName){ var r = this.getProp(propName); this.destroy(); return r; },
-			lastData:function(){ var r = this.data(); this.destroy(); return r; },
-			destroyTimeout:function(time){ var own = this; setTimeout(function(){ own.destroy(); },N.toNumber(time));}
-		},function(v,d){
-			if(typeof v === "object" || typeof v === "function"){
-				this.Source = N.UID.get(v);
-				if(!(this.Source in W.ManagedMetaObjectData)){
-					if(typeof d === "object"){
-						W.ManagedMetaObjectData[this.Source] = N.clone(d);
-					} else if(typeof d === "undefined"){
-						W.ManagedMetaObjectData[this.Source] = {};
-					} else {
-						console.warn("Meta::init::Meta의 셋팅할 property값은 Object만 가능합니다. => ",v,d)
-						W.ManagedMetaObjectData[this.Source] = {};
-					}
-				}
-			} else {
-				console.error("Meta::init::Meta는 Object나 function만 가능합니다. => ",v,d)
-				this.Source = false;
-			}
-		});
-		N.MODULE_PROPERTY("Meta","trace",function(){
-			var r = ["TRACE MetaData"];
-			for(var i=0,l=W.ManagedUIDObjectData.length;i<l;i++){
-				var pushString = N.max(N.toString(W.ManagedUIDObjectData[i]),40) + "  =>  ";
-				var pushLength = 0;
-				N.propsEach(W.ManagedMetaObjectData[i],function(data,key){
-					pushString += "\n    ";
-					pushString += key;
-					pushString += " : ";
-					pushString += N.max(N.toString(data),40);
-					pushLength++;
-				});
-				pushString += "\n    [";
-				pushString += pushLength;
-				pushString += "] length";
-				r.push(pushString);
-			}
-			return r.join("\n");
-		});
+			
 	})(window,N);
 	
 	//Nody Node Foundation 
@@ -4110,9 +3745,10 @@
 			"text":function(node,setValue){
 				return NODE_METHODS.content.apply(NODE_METHODS,Array.prototype.slice.call(arguments));
 			},
-			//el의 중요값을 찾거나 변경합니다.
+			//element value or text change
 			"value":function(aNode,value,htmlContent){
 				var node,nodes = N.findLite(aNode);
+				
 				if(nodes.length == 0){
 					return;
 				} else if(nodes.length > 1){
@@ -4134,6 +3770,7 @@
 				}
 				node     = N.dataFirst(nodes);
 				nodeName = node.tagName.toLowerCase();
+				
 				switch(nodeName){
 					case "img" :if(arguments.length < 2) return node.src; node.src = value; return node; break;
 					case "link":if(arguments.length < 2) return node.rel; node.rel = value; return node; break;
@@ -4183,31 +3820,30 @@
 						return false;
 						break;
 					default :
-						//elcontent에서 자동을 getset을 실행함
-						if(htmlContent === true){
-							node.innerHTML = value;
-							return node;
+						if(arguments.length < 2){
+							return htmlContent === true ? N.node.content(node) : node.innerHTML;
 						} else {
-							return N.node.content(node,value);
+							if(htmlContent === true){
+								node.innerHTML = value;
+							} else {
+								N.node.content(node,value);
+							}
 						}						
 					break;
 				}
 				return node;
 			},
-			"hasAttr":function(sel,name,hideConsole){
-				var node = N.findLite(sel)[0];
-				if(node) { return N.node.attr(sel,name) == null ? false : true; }
-				if(hideConsole !== true) console.error("NODE_METHODS.hasAttr:: 알수없는 node값 입니다. => " + N.tos(node) );
-				return false;
+			"unique":function(sel,root){
+				return N.find(sel,root,N.dataEach,function(node){
+					if(!N.node.hasAttr(node,"id")) node.setAttribute("id",N.Util.base26UniqueRandom(8,'uq'));
+				});
 			},
-			"unique":function(sel){
-				var node = N.findLite(sel)[0];
-				if(node) { if(!N.node.hasAttr(node,"id")) node.setAttribute("id",N.Util.base26UniqueRandom(8,'uq')) }
-				return node;
-			},
-			"uniqueID":function(sel){
-				var result = N.node.unique(sel);
-				if(result) { return result.getAttribute("id") }
+			"uniqueID":function(sel,root){
+				var node = N.find(sel,root,0);
+				if(node){
+					N.node.unique(node);
+					return node.getAttribute("id");
+				} 
 			},
 			//get css style tag info
 			"trace"   :function(target,detail){
@@ -4707,7 +4343,7 @@
 					});
 				}
 			},
-			"CommonString":new N.String(),
+			"CommonString":new N.StringSource(),
 			"addAttr":function(node,attrName,attrValue){
 				var findNodes = N.findLite(node);
 				if(typeof attrValue !== "attrName" && typeof attrValue !== "string") return findNodes;
@@ -4718,6 +4354,10 @@
 			},
 			"hasAttr":function(node,attrName,attrValue){
 				var findNodes = N.findLite(node);
+				if(arguments.length === 2) {
+					for(var i=0,l=findNodes.length;i<l;i++) if( findNodes[i].getAttribute(attrName) ) return true;
+					return false;
+				}
 				if(typeof attrValue !== "string") return false;
 				for(var i=0,l=findNodes.length;i<l;i++) if( !NODE_METHODS.CommonString.set(findNodes[i].getAttribute(attrName)).hasModel(attrValue) ) {
 					return false;
@@ -4882,12 +4522,12 @@
 			text:function(){
 				return N.FLATTENCALL(NODE_METHODS.text,NODE_METHODS,this,arguments);
 			},
-			value  :function(name){ 
+			value  :function(nodeValue){ 
 				if(arguments.length > 0){
-					N.FLATTENCALL(NODE_METHODS.value,NODE_METHODS,this,arguments);
+					N.CALL(NODE_METHODS.value,NODE_METHODS,this,nodeValue);
 					return this;
 				} else {
-					return N.CALL(NODE_METHODS.value,NODE_METHODS,this,name);
+					return N.FLATTENCALL(NODE_METHODS.value,NODE_METHODS,this,arguments);
 				}
 			},
 			trace    :function(){ return N.FLATTENCALL(NODE_METHODS.trace,NODE_METHODS,this,arguments); },
@@ -4926,7 +4566,7 @@
 				return NODE_METHODS.style.apply(NODE_METHODS,[this].concat(Array.prototype.slice.call(arguments)));
 			},
 			require:function(){
-				return NODE_METHODS.require.apply(NODE_METHODS,[this].concat(Array.prototype.slice.call(arguments)));
+				return new N.NodeHandler(NODE_METHODS.require.apply(NODE_METHODS,[this].concat(Array.prototype.slice.call(arguments))));
 			},
 			empty  :function(){ N.CALL(NODE_METHODS.empty,NODE_METHODS,this); return this; },
 			remove :function(){ N.CALL(NODE_METHODS.remove,NODE_METHODS,this); return this; },
@@ -4949,7 +4589,7 @@
 			},
 			html:function(html){
 				var result = N.FLATTENCALL(NODE_METHODS.html,NODE_METHODS,this,arguments);
-				return (typeof result === "string") ? result : this;
+				return arguments.length ? this : result ;
 			},
 			appendHTML:function(html){
 				N.FLATTENCALL(NODE_METHODS.appendHTML,NODE_METHODS,this,arguments);
@@ -4958,6 +4598,13 @@
 			prependHTML:function(){
 				N.FLATTENCALL(NODE_METHODS.prependHTML,NODE_METHODS,this,arguments);
 				return this;
+			},
+			unique:function(){
+				N.FLATTENCALL(NODE_METHODS.unique,NODE_METHODS,this,arguments);
+				return this;
+			},
+			uniqueID:function(){
+				return N.FLATTENCALL(NODE_METHODS.uniqueID,NODE_METHODS,this,arguments);
 			},
 			disabled:function(){ N.FLATTENCALL(NODE_METHODS.disabled,NODE_METHODS,this,arguments); return this; },
 			readonly:function(){ N.FLATTENCALL(NODE_METHODS.readOnly,NODE_METHODS,this,arguments); return this; },
@@ -5130,7 +4777,7 @@
 				var r = this.statusFunction(function(node,param){
 					var classes = N.node.attr(node,"class");
 					if(typeof classes === "string"){
-						classes = (new N.String(classes)).setRemoveModel(eval("/^"+param+"/"));
+						classes = (new N.StringSource(classes)).setRemoveModel(eval("/^"+param+"/"));
 						N.node.attr(node,"class",classes);
 						return node;
 					}
@@ -5141,7 +4788,7 @@
 			changePartClass:function(selClass,toClass,filter){
 				new N.Array(this.removePartClass(selClass,filter,true)).each(function(node){
 					var classes = N.node.attr(node,"class");
-					N.node.attr(node,"class",(new N.String(classes)).addModel(selClass+toClass));
+					N.node.attr(node,"class",(new N.StringSource(classes)).addModel(selClass+toClass));
 				});
 				return this;
 			}
@@ -6013,7 +5660,7 @@
 				}
 				return N.find("[data-role~="+activeRolename+"]",findwhere);
 			},
-			"++findRoleAndActive":function(findwhere,props,data,rolename){
+			"++dataRoleActive":function(findwhere,props,data,rolename){
 				var _self=this;
 				var findedRoles = this.findRole(findwhere,rolename),resultController = [];
 				for(var i=0,l=findedRoles.length;i<l;i++){
@@ -6063,7 +5710,7 @@
 			},
 			findRoleByProp:function(prop,proc){
 				var props = this.ManageProp.prop(prop);
-				var roles = this.findRole(props);
+				var roles = N.isModule(props,"RoleController") ? [props] : this.findRole(props);
 				if(typeof proc === "function"){
 					N.dataEach(roles,proc);	
 				}
@@ -6125,184 +5772,128 @@
 			return new N.Fire(list,executor).each(counter);
 		});
 	
-		//XMLHTTP REQUEST
 		N.MODULE("Request",{
-			__debug:function(data,param,moduleOption){
-				var debugObject = {
-					method:this.option.method,
-					url:this.url,
-					param:param,
-					data:data,
-					dataTrace:undefined,
-					dataTraceMax:400
+			send:function(param,callback,method){
+				if(typeof this.defaultURL !== "string"){
+					return console.error("Requst::send => not exesist request url");
 				}
-				var debugTrace = typeof moduleOption["debugTrace"] === "function" ? moduleOption["debugTrace"] : false;
-				if(debugTrace){
-					var getOption = debugTrace(debugObject);
-					if(typeof getOption === "object"){
-						debugObject = getOption;
+				this.relativeSend("",param,callback);
+			},
+			relativeSend:function(url,param,callback,method){
+				var _self=this,sender=new (function(){
+					//url
+					this.url       = this.defaultURL + url;
+					//method
+					this.method    = method && _self.option.prop("method") && "GET";
+					if (typeof this.method === "string"){
+						this.method = this.method.toUpperCase();
 					} else {
-						console.error("Request::debugTrace시 결과값은 반드시 Object이여야 합니다");
+						console.warn("Requst::send => method is must be string", this.method);
+						this.method = "GET";
 					}
-				}
-				debugObject["dataTrace"] = (typeof debugObject.data === "undefined") ? "none" : debugObject.data;
-				console.info("Request::Success:: [\n - method => "
-							,debugObject.method
-							,"\n - url    => "
-							,debugObject.url
-							,"\n - param  => "
-							,N.tos(debugObject.param)
-							,"\n]\n:::result==> "
-							,N.max(N.tos(debugObject.data),debugObject.dataTraceMax)
-							,"\n\n"
-						);
-				return debugObject;			
-			},
-			onFinal:function(data,scope,requestObject){
-				N.CALL(this.option.final,scope,data);
-			},
-			onSuccess:function(data,param,moduleOption,requestObject){
-				//디버그 옵션이 true일 경우 데이터 통신 결과를 알려준다.
-				if(moduleOption["debug"] == true) this.__debug(data,param,moduleOption);
-
-				//리퀘스트 컨트롤러의 석세스시 처리
-				var requestHandler = N.CALL(moduleOption["requestSuccess"],moduleOption.scope,data);
-
-				//리퀘스트 컨트롤러의 석세스 이후 에러처리
-				if(typeof requestHandler === "string") {
-					 if( requestHandler.indexOf("error") > -1 ){
-						console.error("Request::통신을 완료하였지만 [requestSuccess]에서 dataError를 보고하고 있습니다. => ",requestHandler.substr(5));
-						N.CALL(this.option,undefined,requestHandler);
-						requestHandler = false;
-					 }
-				}
-				var finalData;
-				//석세스 처리가 정상적으로 진행될 경우 아닌경우
-				if (requestHandler !== false) {
-					//CustomRequestControl;
-					if(typeof this.option.success === "function"){
-						finalData = this.option.success.apply(moduleOption.scope,[data,param]);
-					} else {
-						console.warn("Request::통신을 완료하였지만 [success] 후처리가 없습니다. data => ",{"responseText":N.tos(data)});
-					}
-				}
-				this.onFinal(finalData,moduleOption.scope);
-			},
-			onError:function(data,param,moduleOption,requestObject){
-				var xhr       = requestObject;
-				var textError = requestObject.statusText;
-				var result = N.CALL(moduleOption["requestError"],moduleOption.scope,xhr,textError,data );
-				var finalData;
-				if(result !== false) {
-					if(typeof error === "function") var resultIn = this.option.error(xhr,textError,data);
-					if(resultIn !== false) console.error("Request::load : '"+ this.url +"' 호출이 실패되었습니다. JSON 파라메터와 에러코드를 출력합니다. ==> \n------\n" ,N.tos(this.option) ,"\n------\n", textError, N.tos(this.option.data));
-					finalData = resultIn;
-				}
-				this.onFinal(finalData,moduleOption.scope);
-			},
-			onStateChangeWithRequest:function(requestObject){
-				switch(requestObject.readyState){
-					case 4:
-						switch(requestObject.status){
-							case 200: case 0:
-								var response;
-								switch(this.option.dataType){
-									case "json": case "object":
-										N.TRY_CATCH(function(){
-											response = JSON.parse(requestObject.responseText);
-										},function(e){
-											console.error("json 포멧이 올바르지 않습니다. =>",requestObject.status,"::",requestObject.responseText);
-											throw e;
-										});
-										break;
-									case "dom": case "node":
-										var wrapper = document.createElement("div");
-										wrapper.innerHTML = requestObject.responseText;
-										response = wrapper.childNodes;
-										break;
-									case "http": case "html": case "js": case "javascript": case "css": case "stylesheets": default :
-										response = requestObject.responseText;
-										break;
-								}
-								this.onSuccess(response, (new N.Meta(requestObject)).lastProp("requestParam") ,this.moduleOption, requestObject);
-								break;
-							default:
-								if( this.moduleOption.debug == true ) switch(requestObject.status) {
-									case 404 :
-										console.info("Request:: 404 페이지가 존재하지 않음");
-										break;
-									case 500 :
-										console.info("Request:: 500 응답서버 내부오류");
-										break;
-								}
-								this.onError(response, (new N.Meta(requestObject)).lastProp("requestParam") ,this.moduleOption, requestObject);
-								break;
-						};
-						break;
-					case 1: case 2: case 3: break;
-					default : if( this.moduleOption.debug == true ) console.info("Request debug",requestObject.readyState,requestObject.responseText); break;
-				}
-			},
-			requestForm:function(requestOption){
-				if( typeof requestOption === "function" ) requestOption = {success:requestOption};
-			
-				requestOption = N.toObject(requestOption,"method");
-			
-				var openForm = {};
-				var recallLoop = false;
-				// 메서드의 형식
-				openForm.method     = typeof requestOption.method === "string" ? requestOption.method : "get"  ;
-				// success시 data형태
-				openForm.dataType = requestOption.dataType ? requestOption.dataType : "html" ;
-				//if jsonp call blocked
-				//if(openForm.dataType == "jsonp") openForm.jsonpCallback = requestOption.jsonp ? requestOption.jsonp  : "callback";
-				//호출 data를 정재한다.
-				openForm.data    = requestOption.data;
-				//헨들링
-				openForm.success = requestOption.success;
-				openForm.error   = requestOption.error;
-		
-				this.option      = openForm;
-				return this.option;
-			},
-			getRequestObject:function(){
-				var own=this,
-				requestObject = window.XMLHttpRequest ? new XMLHttpRequest() : window.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : function () { console.error("XMLHTTPRequest를 지원하지 않는 브라우져입니다"); };
-				requestObject.onreadystatechange = function(){ own.onStateChangeWithRequest.call(own,requestObject); };
-				return requestObject;
-			},
-			send:function(success,error){
-				//new handler
-				if(typeof success === "function") this.option.success = success;
-				if(typeof error   === "function") this.option.error   = error;
-				if( !("success" in this.option) ) console.warn("Request Warning :: success메서드가 정의되지 않은 상태로 호출되었습니다.");
-		
+					//parameter
+					var parameterSource = (new N.HashSource(_self.option.prop("parameter"))).extend(param);
+					this.parameter       = parameterSource.get();
+					this.parameterString = parameterSource.toParameter().join("=","&");
+					//callback
+					this.callback  = (typeof callback === "function") ? callback : _self.option.prop("callback");
+					_self.option.each(function(value,key){
+						switch(key){ 
+							case "url":case "parameter":case "parameterString":case "method":case "callback":break;
+							default:this[key] = value;
+						}
+					});
+				})();
+				sender.prototype = {
+					"onreadystatechange":function(){ this.callback.apply(this,Array.prototype.slice.call(arguments)); }
+				};
+				
+				if( !("callback" in sender) ) return console.error("Request :: callback is undefined. this must exsist");
+				
 				//request Object만들기
-				var newRequest = this.getRequestObject();
-		
-				//data 처리
-				var requestData   = new N.HashSource((typeof this.moduleOption.constData === "object") ? new N.HashSource(this.moduleOption.constData).setConcat(this.option.data) : this.option.data);
-				var requestString = new N.HashSource(requestData.toParameter()).join("=","&");
-			
-				// request params (기록용)
-			
-				(new N.Meta(newRequest)).setProp("requestParam",requestData.get());
-				N.TRY_CATCH(function(){
-					if( this.option.method.toLowerCase() == "post" ){
-						newRequest.open("POST", this.url, true );
-						N.TRY_CATCH(function(){
-							newRequest.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-							newRequest.setRequestHeader('Content-type'    , 'application/x-www-form-urlencoded');
-						},function(){
-							console.warn("XMLHttpRequest:: setRequestHeader를 지원하지 않는 브라우져입니다");
-							throw e;
-						},this);
-						newRequest.send( requestString );
-					} else {
-						newRequest.open("GET", this.url + (N.isNothing(requestString) == true ? "" : "?"+requestString), true );
-						newRequest.send();
+				var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : 
+									window.ActiveXObject ? new ActiveXObject('Microsoft.XMLHTTP') : 
+									(function () { console.error("XMLHTTPRequest를 지원하지 않는 브라우져입니다"); }());					
+				if (!xhr) return;
+				
+				xhr.onreadystatechange = function(){ 
+					switch(xhr.readyStatus){
+						case 1: 
+							if(sender.option.debug) console.info("Request::("+sender.url+")server connection established");
+							break;
+						case 2: 
+							if(sender.option.debug) console.info("Request::("+sender.url+")request recived");
+							break;
+						case 3: 
+							if(sender.option.debug) console.info("Request::("+sender.url+")processing request");
+							break;
+						case 4:
+							if(xhr.status < 400){
+								if(sender.option.debug === "true"){
+					 				var debugObject = {
+					 					method:sender.method,
+					 					url:sender.url,
+					 					param:sender.parameter
+					 				};
+					 				console.info("Request::Success:: [\n - method => "
+					 							,debugObject.method
+					 							,"\n - url    => "
+					 							,debugObject.url
+					 							,"\n - param  => "
+					 							,N.tos(debugObject.param)
+					 							,"\n]\n:::result==> "
+					 							,N.max(N.tos(debugObject.data),debugObject.dataTraceMax)
+					 							,"\n\n"
+					 						);
+					 				return debugObject;
+								}
+							} else {
+								console.error("Request::load : '"+ this.url +"' 호출이 실패되었습니다. JSON 파라메터와 에러코드를 출력합니다. ==> \n------\n" ,N.tos(this.option) ,"\n------\n", textError, N.tos(this.option.data))
+								if(xhr.status<500){
+									//4xx error
+									console.warn("Request::send::error => ["+xhr.status+"] page not found",sender.url);
+								}else if(xhr.status<600){
+									//5xx error
+									console.warn("Request::send::error => ["+xhr.status+"] internal server error",sender.url);
+								} else {
+									//etc error
+									console.warn("Request::send::error => ["+xhr.status+"] error",sender.url);
+								}
+							}
+							sender.onreadystatechange(xhr.responseText,xhr.status,sender,xhr);
+						break;
 					}
-				},function(){
+				};
+				
+				N.TRY_CATCH(function(){
+					switch(sender.method){
+						case "GET":
+							xhr.open(
+								"GET", 
+								sender.url + (senderparameterString.length ? sender.parameterString : "?"+sender.parameterString), 
+								true 
+							);
+							xhr.send();
+							break;
+						case "POST":
+						default:
+							if(!this.sender.method.length){
+								return console.error("Requst::send => method name is worng", sender.method);
+							}
+							xhr.open("POST", this.url, true );
+							N.TRY_CATCH(
+								function(){
+									xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+									xhr.setRequestHeader('Content-type'    , 'application/x-www-form-urlencoded');
+								},function(){
+									console.warn("XMLHttpRequest:: setRequestHeader를 지원하지 않는 브라우져입니다");
+									throw e;
+								}
+							);
+							xhr.send( requestString );
+							break;
+					}
+				},function(e){
 					if(e.message.indexOf("denied") > 0){
 						throw new Error("Cross Domain Error (if current browser is IE)");
 					} else {
@@ -6310,64 +5901,52 @@
 					}
 				},this);
 			}
-		},function(url,requestOption,moduleOption){
-			//리퀘스트 디폴트
-			this.url = url;
-			if ((typeof requestOption === "string") && (typeof moduleOption === "function")) {
-				// request option setup
-				this.option = this.requestForm({
-					dataType:requestOption,
-					success:moduleOption
-				});
-				// module option
-				this.moduleOption = {};
-			} else {
-				// request option setup
-				this.option = this.requestForm(requestOption);
-				// module option
-				this.moduleOption = N.toObject(moduleOption,"debug");
-			}
+		},function(url,option){
+			//option
+			//parameter => default parameter
+			//callback  => default callbck
+			//method    => default callbck
+			this.defaultURL = url;
+			this.option     = new N.HashSource(option);
 		});
-	
-		N.EXTEND_MODULE("Request","Open",{},function(url,requestOption,moduleOption){ 
-			this._super(url,requestOption,moduleOption);
-			this.send();
-		});
-	
-		N.EXTEND_MODULE("Request","HTMLOpen",{
-			send:function(){
-			
-				var requestFrame = N.create("iframe",{src:this.url + (this.url.indexOf("?") > -1 ? "&token=" : "?token=") +N.Util.base36Random(2),style:"display:none;"});
-			
-				var dummyRequstObject = {
-					"readyState":4,
-					"status":200,
-					"responseText":""
+		
+		N.METHOD("open",function(url,option){
+			if(typeof option === "function") option = {success:option};
+			//success option
+			var option = N.HashSource({
+				"callback":function(responseText,status,sender,xhr){
+					if(status < 400){
+						var successResult;
+						switch(sender.contentType){
+							case "json": case "object":
+								N.TRY_CATCH(function(){
+									successResult = JSON.parse(responseText);
+								},function(e){
+									console.error("open::wrong json format. =>",responseText,xhr);
+									throw e;
+								});
+								break;
+							case "dom": case "node":
+								successResult = N.parseHTML(responseText);
+								break;
+							case "http": case "html": case "js": case "javascript": case "css": case "stylesheets": default :
+								successResult = responseText
+								break;
+						}
+						if(typeof sender.success !== "function") return console.error("open:: must 'success' exsist as function =>",option);
+						sender.success(successResult,sender,xhr);
+						(typeof sender.final === "function") && sender.final(finalResult,sender,xhr);
+					} else {
+						var finalResult;
+						if(sender.error) {
+							finalResult = requestObject.statusText;
+							sender.error(requestObject.statusText,sender,xhr);
+						}
+						(typeof sender.final === "function") && sender.final(finalResult,sender,xhr);
+					}
 				}
-			
-				(new N.Meta(dummyRequstObject)).setProp("requestParam",{});
-			
-				var _ = this;
-			
-				requestFrame.onload = function(){
-					dummyRequstObject.responseText = Array.prototype.slice.call(N.findDocument(requestFrame).body.children);
-					_.onStateChangeWithRequest(dummyRequstObject);
-				}
-				requestFrame.onerror = function(){
-					dummyRequstObject["readyState"] = 4;
-					dummyRequstObject["status"] = 404;
-					_.onStateChangeWithRequest(dummyRequstObject);
-				}
-			
-				N.node.append(document.body,requestFrame);
-			}
-		},function(url,success,error){
-			this._super(url,{
-				"success":success,
-				"error":error,
-				"dataType":"html"
-			});
-			this.send();
+			}).marge(option)
+			return (new N.Request(url,option)).send();
 		});
 		
 		N.MODULE("ContentLoader",{
@@ -6607,22 +6186,22 @@
 				}
 			},
 			//자식연쇄 메니지드 데이터를 준비합니다.
-			feedDownManagedDataMake:function(data,parent){
+			feedDownLinkDataMake:function(data,parent){
 				
 				if( typeof data === "object" ){
-					var makeManagedData = N.isArray(data) ? new N.ManagedData(this,this._getDataProps(data),"array") : new N.ManagedData(this,this._getDataProps(data),"object");
+					var makeLinkData = N.isArray(data) ? new N.LinkData(this,this._getDataProps(data),"array") : new N.LinkData(this,this._getDataProps(data),"object");
 					var childDatas = this._getChildData(data);
 					var childrens  = [];
 					var _self      = this;
 					if(N.isArray(childDatas)){
 						N.dataEach(childDatas,function(childData){
-							var child = _self.feedDownManagedDataMake(childData,makeManagedData);
+							var child = _self.feedDownLinkDataMake(childData,makeLinkData);
 							if(child) childrens.push(child);
 						});
 					}
-					if(typeof parent === "object") parent.appendChild(makeManagedData);
+					if(typeof parent === "object") parent.appendChild(makeLinkData);
 
-					return makeManagedData;
+					return makeLinkData;
 				} else {
 					console.error("data초기 값은 반드시 object타입이여야 합니다. =>",typeof data,data);
 				}
@@ -6631,7 +6210,7 @@
 			update:function(data,parent,marge){
 				
 				if( typeof data === "object" ){
-					var managedData = parent || this.RootManagedData;
+					var managedData = parent || this.RootLinkData;
 					
 					//feedDownUpdate
 					var dataProp  = this._getDataProps(data);
@@ -6661,7 +6240,7 @@
 					}
 					//데이터 지우기
 					N.dataEach(removeTargets,function(removeTarget){
-						removeTarget.removeManagedData();
+						removeTarget.removeLinkData();
 					});
 					return managedData;
 				} else {
@@ -6674,7 +6253,7 @@
 			//managedData를 string이나 오브젝트로 뽑아넴
 			trace:function(managedData){
 				var _self = this;
-				if (!managedData) managedData = this.RootManagedData;
+				if (!managedData) managedData = this.RootLinkData;
 				var ra = managedData.SourceType == "array";
 				var rs = ra ? "[" : "{";
 				var re = ra ? "]" : "}";
@@ -6692,27 +6271,27 @@
 			JSONObject:function(){ return JSON.parse(this.JSONString()); },
 
 			// path로 메니지드 데이터를 얻습니다.
-			getManagedData:function(path,withChildren){
-				if(typeof path == '/') return this.RootManagedData;
+			getLinkData:function(path,withChildren){
+				if(typeof path == '/') return this.RootLinkData;
 				if (path.indexOf("/") == 0) path = this.ContextID + path;
 				var paths    = path.split("/");
 				var thisID   = this.ContextID;
-				var thisRoot = this.RootManagedData;
+				var thisRoot = this.RootLinkData;
 
-				var selectedManagedData;
+				var selectedLinkData;
 
 				N.dataEach(paths,function(path){
 					if(thisID == path) {
-						selectedManagedData = thisRoot;
+						selectedLinkData = thisRoot;
 					} else {
-						selectedManagedData = selectedManagedData.Child[parseInt(path)];
+						selectedLinkData = selectedLinkData.Child[parseInt(path)];
 					}
 				});
-				return selectedManagedData;
+				return selectedLinkData;
 			},
 	
 			querySelectData:function(path){
-				var resultData = [this.RootManagedData];
+				var resultData = [this.RootLinkData];
 				if(path == '/' || path == '') return resultData;
 				var pathes = [];
 
@@ -6728,7 +6307,7 @@
 						});
 					} else if(path == '**') {
 						N.dataEach(searchTarget,function(managedData){
-							managedData.feedDownManagedData(function(){
+							managedData.feedDownLinkData(function(){
 								searchResult.push(this);
 							});
 						});
@@ -6751,7 +6330,7 @@
 	
 						if(/\[[^\]]+\]\*\*$/.test(path)) {
 							N.dataEach(searchTarget,function(managedData){
-								managedData.feedDownManagedData(function(){
+								managedData.feedDownLinkData(function(){
 									var md   = this;
 									var pass = true;
 									N.propsEach(wantedProps,function(v,k){
@@ -6788,18 +6367,18 @@
 				});
 				return resultData;
 			},
-			getManagedDataWithID:function(findid){
-				return this.RootManagedData.getManagedDataWithID(findid);
+			getLinkDataWithID:function(findid){
+				return this.RootLinkData.getLinkDataWithID(findid);
 			},
-			getManagedDataWithOffset:function(path,offset){
+			getLinkDataWithOffset:function(path,offset){
 				var value = /(.*)\/([\d]+)$/.exec(path);
-				if(value === null)console.error("getNextManagedData 에러",path);return;
-				var nextManagedData = this.getManagedData(value[1]+"/"+(parseInt(value[2])+offset));
-				if(N.isArray(nextManagedData)) nextManagedData = nextManagedData[0];
-				return nextManagedData;
+				if(value === null)console.error("getNextLinkData 에러",path);return;
+				var nextLinkData = this.getLinkData(value[1]+"/"+(parseInt(value[2])+offset));
+				if(N.isArray(nextLinkData)) nextLinkData = nextLinkData[0];
+				return nextLinkData;
 			},
-			getRootManagedData:function(){
-				return this.RootManagedData;
+			getRootLinkData:function(){
+				return this.RootLinkData;
 			}
 		},function(source,defaultKey){
 			this.ContextID             = N.Util.base36UniqueRandom(5,'co');
@@ -6807,7 +6386,7 @@
 			this.DefaultDataKey = defaultKey || "data";
 			this.Binder         = new N.Binder();
 			// 데이터 안의 모든 Managed data를 생성하여 메타안에 집어넣음
-			this.RootManagedData = this.feedDownManagedDataMake(this.Source.get(),"root");
+			this.RootLinkData = this.feedDownLinkDataMake(this.Source.get(),"root");
 		});
 
 		N.MODULE("ViewModel",{
@@ -6843,7 +6422,7 @@
 			});
 		});
 
-		N.MODULE("ManagedData",{
+		N.MODULE("LinkData",{
 			//노드구조
 			appendChild:function(childrens){
 				var parent = this;
@@ -6868,21 +6447,21 @@
 					}
 				});
 			},
-			breakableFeedDownManagedData:function(method,param){
+			breakableFeedDownLinkData:function(method,param){
 				var newParam = method.call(this,param);
 
 				if(newParam !== false) {
 					N.dataEach(this.Child,function(child){ 
-						return child.breakableFeedDownManagedData(method,newParam); 
+						return child.breakableFeedDownLinkData(method,newParam); 
 					});
 				}
 
 				return newParam;
 			},
 			//현재부터 자식으로 
-			feedDownManagedData:function(method,param){
+			feedDownLinkData:function(method,param){
 				var newParam = method.call(this,param);
-				N.dataEach(this.Child,function(child){ child.feedDownManagedData(method,newParam); });
+				N.dataEach(this.Child,function(child){ child.feedDownLinkData(method,newParam); });
 				return this;
 			},
 			feedUpManageData:function(method,depth){
@@ -6903,7 +6482,7 @@
 				}
 			},
 			replaceProp:function(data,rerender){
-				if( N.isModule(data,'ManagedData') ) data = data.prop();
+				if( N.isModule(data,'LinkData') ) data = data.prop();
 				if( typeof data === 'object' ) this.Source.setSource(data);
 				if( rerender === true ) this.rerender();
 			},
@@ -6924,7 +6503,7 @@
 				} else if(key === "object"){
 					for(var propKey in key) { this.setProp(propKey,key[propKey],false); }
 				}
-				if(useBind !== false) this.DataContext.Binder.resend(this,"GLOBAL.ManagedDataWasSetValue",this);
+				if(useBind !== false) this.DataContext.Binder.resend(this,"GLOBAL.LinkDataWasSetValue",this);
 				return this;
 			},
 			removeProp:function(key){
@@ -7026,10 +6605,10 @@
 				if(path == '' || path == '/') return [this];
 				return this.DataContext.querySelectData( this.getPath() + '/' + path );
 			},
-			getManagedDataWithID:function(findid){
+			getLinkDataWithID:function(findid){
 				if(typeof findid == 'string') {
 					var result;
-					this.breakableFeedDownManagedData(function(){
+					this.breakableFeedDownLinkData(function(){
 						if( this.DataID == findid ) {
 							result = this;
 							return false;
@@ -7038,10 +6617,10 @@
 					return result;
 				}
 			},
-			getParentManagedData : function(){ return this.Parent; },
-			getChildManagedData  : function(){ return this.Child; },
-			hasParentManagedData : function(){ return !!this.Parent; },
-			hasChildManagedData  : function(){ return !!this.Child.length; },
+			getParentLinkData : function(){ return this.Parent; },
+			getChildLinkData  : function(){ return this.Child; },
+			hasParentLinkData : function(){ return !!this.Parent; },
+			hasChildLinkData  : function(){ return !!this.Child.length; },
 			getDepth:function(){ var depth = 0; this.feedUpManageData(function(m,d){ if (depth < (d + 1)) depth = (d + 1); }); return depth; },
 			getLevel:function(){ var level = 0; this.chainUpMangedData(function(){ this.Parent ? level++ : undefined; }); return level; },
 			getIndex:function(){ return this.Parent.Child.indexOf(this); },
@@ -7063,37 +6642,37 @@
 			//렌더시 다음 아래의 메서드들은 절대 호출하면 안됩니다.
 			//지정한 인덱스로
 			rerender:function(){
-				this.DataContext.Binder.resend(this,"GLOBAL.ManagedDataNeedRerender",this);
+				this.DataContext.Binder.resend(this,"GLOBAL.LinkDataNeedRerender",this);
 			},
 			managedDataIndexExchange:function(changeTarget){
 				if(changeTarget){
 					this.Parent.Child.changeIndex(this.getIndex(),changeTarget.getIndex());
-					this.DataContext.Binder.resend(this,"GLOBAL.ManagedDataIndexExchange",[this,changeTarget]);
+					this.DataContext.Binder.resend(this,"GLOBAL.LinkDataIndexExchange",[this,changeTarget]);
 					return true;
 				}
 				return false;
 			},
 			//상위 인덱스로
 			managedDataIncrease:function(){
-				var nextManagedData = this.Parent.Child[this.Parent.Child.indexOf(this)+1];
-				if (nextManagedData) return this.managedDataIndexExchange(nextManagedData);
+				var nextLinkData = this.Parent.Child[this.Parent.Child.indexOf(this)+1];
+				if (nextLinkData) return this.managedDataIndexExchange(nextLinkData);
 				return false;
 			},
 			//하위 인덱스로
 			managedDataDecrease:function(){
-				var prevManagedData = this.Parent.Child[this.Parent.Child.indexOf(this)-1];
-				if (prevManagedData) return this.managedDataIndexExchange(prevManagedData);
+				var prevLinkData = this.Parent.Child[this.Parent.Child.indexOf(this)-1];
+				if (prevLinkData) return this.managedDataIndexExchange(prevLinkData);
 				return false;
 			},
 			//현재 데이터를 제거함
-			removeManagedData:function(onlyThis){
+			removeLinkData:function(onlyThis){
 				if(onlyThis === true) {
 					this.removeFromParent();
-					this.DataContext.Binder.resend(this,"GLOBAL.ManagedDataRemoved",this);
+					this.DataContext.Binder.resend(this,"GLOBAL.LinkDataRemoved",this);
 					this.release();
 				} else {
 					this.feedUpManageData(function(md){ 
-						md.removeManagedData(true);
+						md.removeLinkData(true);
 					});
 				}
 			},
@@ -7108,9 +6687,9 @@
 			addChildData:function(data){
 				if(typeof data === "function") data = data();
 				if(typeof data === "object") {
-					this.DataContext.feedDownManagedDataMake(data||{},this);
+					this.DataContext.feedDownLinkDataMake(data||{},this);
 					var makedData = this.Child.last();
-					this.DataContext.Binder.resend(this,"GLOBAL.ManagedDataAddedChild",{"dataID":this.DataID,"newManagedData":makedData});
+					this.DataContext.Binder.resend(this,"GLOBAL.LinkDataAddedChild",{"dataID":this.DataID,"newLinkData":makedData});
 					return makedData;
 				} else {
 					console.warn("addChildData :: append data가 들어오지 않았습니다", data);
@@ -7168,66 +6747,66 @@
 					}
 				});
 			},
-			setManagedData:function(managedData){
-				var findManagedData;
+			setLinkData:function(managedData){
+				var findLinkData;
 				if(N.isModule(managedData,"DataContext")){
-					findManagedData = managedData.getRootManagedData();
-				} else if(N.isModule(managedData,"ManagedData")) {
-					findManagedData = managedData;
+					findLinkData = managedData.getRootLinkData();
+				} else if(N.isModule(managedData,"LinkData")) {
+					findLinkData = managedData;
 				} else if(typeof managedData === 'object') {
-					findManagedData = new N.DataContext(managedData).getRootManagedData();
+					findLinkData = new N.DataContext(managedData).getRootLinkData();
 				}
-				if(!findManagedData){
-					console.warn("setManagedData::managedData 오브젝트가 필요합니다. 들어온 값->", managedData);
+				if(!findLinkData){
+					console.warn("setLinkData::managedData 오브젝트가 필요합니다. 들어온 값->", managedData);
 					return false;
 				}
 		
 				if(this.managedData){
-					if(this.managedData.DataContext === findManagedData.DataContext){
+					if(this.managedData.DataContext === findLinkData.DataContext){
 						return true;
 					}
-					if(this.managedData.DataContext !== findManagedData.DataContext){
+					if(this.managedData.DataContext !== findLinkData.DataContext){
 						this.managedData.DataContext.Binder.removeListener(this);
 					}
 				}
 				
-				this.managedData = findManagedData;
-				var currentBinder = findManagedData.DataContext.Binder;
+				this.managedData = findLinkData;
+				var currentBinder = findLinkData.DataContext.Binder;
 		
-				currentBinder.listen(this,"GLOBAL.ManagedDataNeedRerender",function(rerenderManagedData){
+				currentBinder.listen(this,"GLOBAL.LinkDataNeedRerender",function(rerenderLinkData){
 					//부모의 placehoder를 찾음
-					var parentManagedData = rerenderManagedData.getParentManagedData();
-					if(parentManagedData) {
+					var parentLinkData = rerenderLinkData.getParentLinkData();
+					if(parentLinkData) {
 						//부모의 placeholder가 존재해야 작동함
-						var parentPlaceHolder = this.placeholderNodes[parentManagedData.getDataID()];
-						var beforeElement     = this.structureNodes[rerenderManagedData.getDataID()];
-						var beforePlaceHolder = this.placeholderNodes[rerenderManagedData.getDataID()];
+						var parentPlaceHolder = this.placeholderNodes[parentLinkData.getDataID()];
+						var beforeElement     = this.structureNodes[rerenderLinkData.getDataID()];
+						var beforePlaceHolder = this.placeholderNodes[rerenderLinkData.getDataID()];
 						//console.log('parentPlaceHolder,beforeElement,beforePlaceHolder',parentPlaceHolder,beforeElement,beforePlaceHolder)
 
 						if(!beforeElement) console.error('rerender 대상의 데이터를 찾을 수 없습니다.') ;
 						if(parentPlaceHolder) {
 							//바꿔치기 하기
-							this.needDisplay(rerenderManagedData,parentPlaceHolder,true);
-							N.node.before(beforeElement,this.structureNodes[rerenderManagedData.DataID]);
+							this.needDisplay(rerenderLinkData,parentPlaceHolder,true);
+							N.node.before(beforeElement,this.structureNodes[rerenderLinkData.DataID]);
 							//placeHolder를 가지고 있었을 경우에만 호출됨
-							if(beforePlaceHolder) N.node.append(this.placeholderNodes[rerenderManagedData.DataID],beforePlaceHolder.children);
+							if(beforePlaceHolder) N.node.append(this.placeholderNodes[rerenderLinkData.DataID],beforePlaceHolder.children);
 							//remove binder
-							rerenderManagedData.DataContext.Binder.removeListenerWithNode(beforeElement);
+							rerenderLinkData.DataContext.Binder.removeListenerWithNode(beforeElement);
 							N.node.remove(beforeElement);
 						} else {
 							return console.error("부모의 placeholder가 존재해야 rerender가 작동할수 있습니다.");
 						}
 					} else {
-						this.needDisplay(rerenderManagedData);
+						this.needDisplay(rerenderLinkData);
 					}
-					this.ManagePresentorEvent.trigger("dataChange","rerender",rerenderManagedData,this.structureNodes[rerenderManagedData.DataID]);
+					this.ManagePresentorEvent.trigger("dataChange","rerender",rerenderLinkData,this.structureNodes[rerenderLinkData.DataID]);
 					this.ManagePresentorEvent.trigger("displayChange",this,this.view);
 				});
 		
-				currentBinder.listen(this,"GLOBAL.ManagedDataIndexExchange",function(changesManagedData){
+				currentBinder.listen(this,"GLOBAL.LinkDataIndexExchange",function(changesLinkData){
 					
-					var node1 = this.structureNodes[changesManagedData[0].DataID];
-					var node2 = this.structureNodes[changesManagedData[1].DataID];
+					var node1 = this.structureNodes[changesLinkData[0].DataID];
+					var node2 = this.structureNodes[changesLinkData[1].DataID];
 			
 					if(node1 && node2){
 						var nodeHelper1 = N.create("div");
@@ -7239,12 +6818,12 @@
 						N.node.remove(nodeHelper1);
 						N.node.remove(nodeHelper2);
 	
-						this.ManagePresentorEvent.trigger("dataChange","position",changesManagedData[0],node1);
-						this.ManagePresentorEvent.trigger("dataChange","position",changesManagedData[1],node2);
+						this.ManagePresentorEvent.trigger("dataChange","position",changesLinkData[0],node1);
+						this.ManagePresentorEvent.trigger("dataChange","position",changesLinkData[1],node2);
 					}
 				});
 		
-				currentBinder.listen(this,"GLOBAL.ManagedDataRemoved",function(managedData){
+				currentBinder.listen(this,"GLOBAL.LinkDataRemoved",function(managedData){
 					var dataID = managedData.DataID;
 					if(this.structureNodes[dataID]){
 						var _self = this;
@@ -7261,15 +6840,22 @@
 					//
 					if(this.placeholderNodes[dataID]) delete this.placeholderNodes[dataID];
 				});
-		
-				currentBinder.listen(this,"GLOBAL.ManagedDataAddedChild",function(params){
-					if(this.placeholderNodes[params.dataID]) {
-						this.needDisplay(params.newManagedData,this.placeholderNodes[params.dataID]);
-						this.ManagePresentorEvent.trigger("dataChange","append",params.newManagedData,this.structureNodes[params.newManagedData.DataID]);
-						this.ManagePresentorEvent.trigger("displayChange",this,this.view);
+				currentBinder.listen(this,"GLOBAL.LinkDataAddedChild",function(params){
+					try {
+						if(this.placeholderNodes[params.dataID]) {
+						
+							this.needDisplay(params.newLinkData,this.placeholderNodes[params.dataID]);
+							this.ManagePresentorEvent.trigger("dataChange","append",params.newLinkData,this.structureNodes[params.newLinkData.DataID]);
+							this.ManagePresentorEvent.trigger("displayChange",this,this.view);
+						}
+					} catch(e) {
+						console.log(e);
+						console.log(this.placeholderNodes);
+						debugger;
 					}
+					
 				});				
-				currentBinder.listen(this,"GLOBAL.ManagedDataWasSetValue",function(managedData){
+				currentBinder.listen(this,"GLOBAL.LinkDataWasSetValue",function(managedData){
 					this.ManagePresentorEvent.trigger("propChange","bind",managedData,this.structureNodes[managedData.DataID])
 					this.ManagePresentorEvent.trigger("displayChange",this,this.view);
 				});
@@ -7279,7 +6865,7 @@
 			},
 			needDisplay:function(managedData,rootElement,sigleRenderMode){
 				//기본적으로 존재하지 않는값을 경고해줌
-				if(!this.managedData) console.warn("DataContextViewController:: Must need set ManagedData before needDisplay");
+				if(!this.managedData) console.warn("DataContextViewController:: Must need set LinkData before needDisplay");
 				if(!this.viewModel) console.warn("DataContextViewController:: Must need set ViewModel before needDisplay");
 				//파라메터 두개가 존재하지 않으면 초기화 진행을 한다
 				if( (!managedData) && (!rootElement) ){
@@ -7371,9 +6957,9 @@
 				this.needDisplay();
 			},
 			needDisplayWithData:function(data){
-				this.setManagedData(data) ? this.needDisplay() : console.warn("데이터를 초기화하는데 실패하였습니다. 데이터의 형식이 잘못되었습니다.",data);
+				this.setLinkData(data) ? this.needDisplay() : console.warn("데이터를 초기화하는데 실패하였습니다. 데이터의 형식이 잘못되었습니다.",data);
 			},
-			findByManagedData:function(managedData){
+			findByLinkData:function(managedData){
 				return this.structureNodes[managedData.getDataID()];
 			},
 			findByManagedId:function(managedDataID){
@@ -7385,37 +6971,31 @@
 				}).join(" ");
 				return new nd.NodeHandler(selectQuery,this.view);
 			},
-			getManagedDataByNode:function(node,strict){
+			getLinkDataByNode:function(node,strict){
 				if(strict === true) {
-					for(var key in this.structureNodes) if(this.structureNodes[key] === node) return this.managedData.getManagedDataWithID(key);
+					for(var key in this.structureNodes) if(this.structureNodes[key] === node) return this.managedData.getLinkDataWithID(key);
 				} else {
-					if( N.node.is(node,'[data-managed-id]') ) return this.getManagedDataByNode(node,true);
+					if( N.node.is(node,'[data-managed-id]') ) return this.getLinkDataByNode(node,true);
 					var parentNode = N.findParent(node,'[data-managed-id]');
-					if(parentNode) return this.getManagedDataByNode(parentNode,true);
+					if(parentNode) return this.getLinkDataByNode(parentNode,true);
 				}
 			},
-			getRootManagedData:function(){
+			getRootLinkData:function(){
 				return this.managedData;
 			},
-			getManagedDataByIndex:function(){
-				var _dataContext = this.getRootManagedData();
+			getLinkDataByIndex:function(){
+				var _dataContext = this.getRootLinkData();
 				return N.dataMap(this.findByIndex.apply(this,Array.prototype.slice.call(arguments)),function(node){
-					return _dataContext.getManagedDataWithID(nd.node.data(node,"managed-id"));
+					return _dataContext.getLinkDataWithID(nd.node.data(node,"managed-id"));
 				});
 			}
 		},function(view,managedData,viewModel,needDisplay){
 			this.view = N.findLite(view)[0];
 			if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
-			if(managedData)this.setManagedData(managedData);
-			this.viewModel     = viewModel ? N.isArray(viewModel) ? N.ViewModel.new.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
-			//바인딩 관련 인자
-			// dep!바인딩 :: this.bindValueNodes = [];
-	
+			
 			this.structureNodes = {};
 			this.placeholderNodes = {};
-	
-			// dep!바인딩 :: N.DataContextNotificationCenter.addObserver(this);
-
+			
 			//events
 			this.ManagePresentorEvent = new N.EventListener(this);
 			this.ManagePresentorEvent.addEventRegister(["propChange","dataChange","displayChange"]);
@@ -7437,7 +7017,11 @@
 				}
 			});
 			this.addActionEvent("append",function(arg,el,vc){ console.log("ap"); this.addChildData(arg); });
-			this.addActionEvent("delete",function(arg,el,vc){ console.log("de"); this.removeManagedData(); });
+			this.addActionEvent("delete",function(arg,el,vc){ console.log("de"); this.removeLinkData(); });
+			
+			this.viewModel = viewModel ? N.isArray(viewModel) ? N.ViewModel.new.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
+			
+			if(managedData)this.setLinkData(managedData);
 
 			//needDisplay
 			if(typeof needDisplay === "function") needDisplay = N.CALL(needDisplay,this);
