@@ -87,7 +87,8 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   
 ## Update history #
 
-#### 0.28.0 업데이트
+#### 0.28.1 업데이트
+  - [x] Partial모듈의 파셜노드들의 재사용성이 강화되었습니다.
   - [x] String모듈이 StringSource로 명칭 변경
   - [x] ZString모듈이 제거됨
   - [x] Number모듈이 제거됨 추후 NumberSource로 새로 작성할 계획
@@ -97,10 +98,12 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   - [x] HTMLOpen모듈이 제거됨
   - [x] ManagedData모듈이 LinkData로 명칭 변경
   - [x] 일대다 DataContext - Presentor의 관계에서 중요한 버그 수정
+  - [ ] 코어:모든 모듈에 공통적으로 release를 추가하는것을 검토.
+  - [ ] 코어:Source관리 모듈이 아닌 모듈이 훨씬 많아 Source관리 메서드 제거 검토.
   - [ ] LinkData에 behavior 추가에 대한 검토.
   - [ ] 테스트페이지의 컨텐츠가 모두 version2labs.github.io로 옮겨집니다.
   - [ ] Contexts와 ActiveContexts의 API가 재설계 됩니다.
-  - (\[source:-22kB(302)\] \[min:-15kB(175)\])
+  - (\[source:-21kB(303)\] \[min:-15kB(175)\])
   
 #### 0.27.6 업데이트
   - [x] Array모듈 연산시 반복문 오버헤드를 줄었습니다.

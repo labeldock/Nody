@@ -8,7 +8,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.28.0", N.BUILD = "1222";
+		N.VERSION = "0.28.1", N.BUILD = "1228";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -21,7 +21,7 @@
 	
 		// Pollyfill : Trim 
 		if(!String.prototype.trim) String.prototype.trim = function() { return this.replace(/(^\s*)|(\s*$)/gi, ""); };
-	
+	 
 		// Pollyfill : JSON
 		if(typeof W.JSON === "undefined"){ W.JSON = { 'parse' : function(s) { var r; try { r = eval('(' + s + ')'); } catch(e) { r = N.toObject(s); } return r; }, 'stringify' : function(o) { return W.N.toString(obj,Number.POSITIVE_INFINITY,true); } };}
 		
@@ -511,9 +511,9 @@
 			"toSize":function(target,type){
 				if((typeof type != "undefined") && (typeof type != "string")) console.error("N.toSize::type은 반드시 string으로 보내주세요",type);
 				switch(type){
-					case "asnumber": return parseFloat(target); break;
+					case "likenumber": return parseFloat(target); break;
 					case "number"  : return parseFloat(target); break;
-					case "asstring": case "text" : case "email" : case "ascii" : return (target + "").length; break;
+					case "likestring": case "text" : case "email" : case "ascii" : return (target + "").length; break;
 					case "string"  : case "array" : return target.length;
 					case "object"  : default : return N.toLength(target); break;
 				}
@@ -569,7 +569,7 @@
 									if(!testResult) break;
 								}
 							} else {
-								console.warn("인식할수 없는 타입의 키워드 입니다.",param[2],"(",typeof param[2],")");
+								console.warn("Nody::IS::인식할수 없는 타입의 키워드 입니다. => ",param[2]+"("+typeof param[2]+")");
 							}	
 						}
 						break;
@@ -3317,15 +3317,15 @@
 			"findTree":N.CONTINUE_FUNCTION(function(node,stringify){
 				var treeNode = N.findLite(node)[0];
 				if(!treeNode) return [];
-			
 				var tree = N.findParents(treeNode,N.dataMap,function(){ return (stringify === true ? N.node.trace(this) : this ); });
 				tree.reverse();
 				tree.push( (stringify === true ? N.node.trace(treeNode) : treeNode ) );
 				return tree;
 			},1),
 			"inside":N.CONTINUE_FUNCTION(function(node,target){
-				var insideNode = N.findLite(target);
-				return insideNode.length ? (N.find(node,insideNode).length ? true : false) : false;
+				var inside = N.findLite(node);
+				if(!inside.length) return false; 
+				return N.find(target,node).length ? true : false;
 			},1),
 			"outside":N.CONTINUE_FUNCTION(function(node,target){
 				var insideNode = N.findLite(target);
@@ -3506,6 +3506,7 @@
 					
 					//var nodyExp = eachtag
 					var hasExp = (eachtag.indexOf("\\{") > -1) ? true : false;
+					
 					//generate
 					N.times(repeat,function(i){
 						var rtag     = hasExp ? N.exp.seed(i)(eachtag) : eachtag;
@@ -4042,18 +4043,25 @@
 				if(left && right ){
 					var lp = left.parentNode;
 					var rp = right.parentNode;
-					if(lp && rp){
-						var helper = N.make("div");
-						var li = N.dataIndex(lp.children,left);
-						var ri = N.dataIndex(rp.children,right);
-					
-						rp.insertBefore(helper,right);
-						lp.insertBefore(right,left);
-						rp.insertBefore(left,helper);
-						rp.removeChild(helper);
-					
+					if(lp || rp){
+						if(lp){
+							var lplace = N.make("div");
+							NODE_METHODS.insertBefore(left,lplace);
+						}
+						if(rp){
+							var rplace = N.make("div");
+							NODE_METHODS.insertBefore(right,rplace);
+						}
+						if(lplace){
+							NODE_METHODS.insertBefore(lplace,right);
+							NODE_METHODS.remove(lplace);
+						}
+						if(rplace){
+							NODE_METHODS.insertBefore(rplace,left);
+							NODE_METHODS.remove(rplace);
+						}
 					} else {
-						console.warn("has not parent",left,lp,right,rp);
+						console.warn("node::can't change node",left,lp,right,rp);
 					}
 				} else {
 					console.warn("not found",left,right);
@@ -4497,10 +4505,10 @@
 				}
 			},
 			addAttr:function(){
-				N.FLATTENCALL(NODE_METHODS.addClass,NODE_METHODS,this,arguments);
+				N.FLATTENCALL(NODE_METHODS.addAttr,NODE_METHODS,this,arguments);
 			},
 			removeAttr:function(){
-				N.FLATTENCALL(NODE_METHODS.addClass,NODE_METHODS,this,arguments);
+				N.FLATTENCALL(NODE_METHODS.removeAttr,NODE_METHODS,this,arguments);
 			},
 			hasAttr:function(){ 
 				N.FLATTENCALL(NODE_METHODS.hasAttr,NODE_METHODS,this,arguments);
@@ -4556,6 +4564,11 @@
 				} else {
 					return N.CALL(NODE_METHODS.after,NODE_METHODS,this);
 				}
+			},
+			change:function(){
+				var r = N.FLATTENCALL(NODE_METHODS.change,NODE_METHODS,this,arguments);
+				this.setSource(r[1]);				
+				return this;
 			},
 			beforeAll:function(){ return N.CALL(NODE_METHODS.beforeAll,NODE_METHODS,this); },
 			afterAll :function(){ return N.CALL(NODE_METHODS.afterAll,NODE_METHODS,this); },
@@ -4620,17 +4633,29 @@
 		});
 		
 		N.EXTEND_MODULE("NodeHandler","Partial",{
-			// 키를 지우면서
-			callbackAttrEach:function(attrKey,callback){
-				this.find("["+attrKey+"]").each(function(node){
-					//attrValue, node
-					callback(node.getAttribute(attrKey),node,attrKey);
-					node.removeAttribute(attrKey);
+			partialNode:function(partialCase,partialKey){
+				if(arguments.length === 0) return N.clone(this.__partialPointer);
+				if(!(partialCase in this.__partialPointer)) return console.error("NodeHandler::partialNode case가 존재하지 않습니다.",partialCase);
+				if(arguments.length === 1) return N.clone(this.__partialPointer[partialCase]);
+				return this.__partialPointer[partialCase][partialKey];
+			},
+			group:function(key){
+				return N.NodeHandler(this.partialNode("group",key));
+			},
+			value:function(key){
+				return N.node.value(this.partialNode("value",key));
+			},
+			setValue:function(key,value){
+				if(value === undefined || value === null) return;
+				N.dataEach(this.partialNode("value",key),function(node){
+					return N.node.value(node,value);
 				});
 				return this;
 			},
-			callbackNodyNode:function(propKeys,callback,presets){
+			// 실제 노드의 키를 지우면서 실행함
+			partialSetup:function(propKeys,callback,presets){
 				var keys  = propKeys;
+				
 				var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new N.Array(keys)).map(function(key){ return 'nd-'+key; });
 				var sKeys = (presets && presets.sKeys) ? presets.sKeys : (new N.Array(pKeys)).map(function(pkey){ return '['+ pkey +']'; });
 				var pNodes = this.find(sKeys.join(','));
@@ -4644,27 +4669,22 @@
 				}
 			},
 			//성능의 가속을 위해 존재하는 값들입니다. 이것을 건드리면 엄청난 문제를 초례할 가능성이 있습니다.
-			__nodeDataDefaultKeys:['value','html','class','dataset','href','append','prepend','put','display'],
-			__nodeDataAttrKeys:["nd-value", 'nd-html', "nd-class", "nd-dataset", "nd-href", "nd-append", "nd-prepend", "nd-put", "nd-display"],
-			__nodeDataSelectKeys:["[nd-value]", "[nd-html]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-append]", "[nd-prepend]", "[nd-put]", "[nd-display]"],	
-			//
-			getNodePoint:function(){
-				return this.NodeForPartialPointer;
-			},
-			setNodeData:function(refData,dataFilter){
+			defaultPartialDataKeys:['value','html','class','dataset','href','put','display','group'],
+			defaultPartialAttrKeys:["nd-value", 'nd-html', "nd-class", "nd-dataset", "nd-href", "nd-put", "nd-display","nd-group"],
+			defaultPartialSelectorKeys:["[nd-value]", "[nd-html]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-put]", "[nd-display]", "[nd-group]"],
+			setPartialProperties:function(refData,dataFilter){
 				if(typeof refData !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다",refData); }
 				var data = refData;
-				var dataPointer = this.NodeForPartialPointer;
+				var dataPointer = this.__partialPointer;
 				
-			
-				this.callbackNodyNode(this.__nodeDataDefaultKeys,
+				this.partialSetup(this.defaultPartialDataKeys,
 					function(name,node,nodeAlias){
 						if(!(nodeAlias in dataPointer)) dataPointer[nodeAlias] = {};
 						name.replace(/\S+/g,function(s){
 							if(!dataPointer[nodeAlias][s]) dataPointer[nodeAlias][s] = [];
 							dataPointer[nodeAlias][s].push(node);
 						});
-					},{pKeys:this.__nodeDataAttrKeys,sKeys:this.__nodeDataSelectKeys}
+					},{pKeys:this.defaultPartialAttrKeys,sKeys:this.defaultPartialSelectorKeys}
 				);
 			
 				if(typeof dataFilter === 'object') {
@@ -4680,9 +4700,6 @@
 						}
 					});
 				}
-				
-				
-				
 				//퍼포먼스 중심 코딩
 				for(var partialCase in dataPointer) {
 					for(var attrValue in dataPointer[partialCase]) {
@@ -4696,11 +4713,11 @@
 									case "href" :node.setAttribute("href",data[attrValue]);break;
 									case "class":N.node.addClass(node,data[attrValue]);break;
 									case "put"    : N.node.put(node,data[attrValue]); break;
-									case "append" : N.node.append(node,data[attrValue]);break;
-									case "prepend": N.node.prepend(node,data[attrValue]);break;
+									//case "append" : N.node.append(node,data[attrValue]);break;
+									//case "prepend": N.node.prepend(node,data[attrValue]);break;
 									case "display": if(!data[attrValue]){N.node.style(node,'display','none');}  break;
 									case "dataset": N.propsEach(data[attrValue],function(key,value){ node.dataset[value] = key; });break;
-									case "custom" : if(typeof data[attrValue] === 'function') data[attrValue].call(node,node,attrValue); break;
+									case "group" : if(typeof data[attrValue] === 'function') data[attrValue].call(node,node,attrValue); break;
 								}
 							}
 						}
@@ -4723,33 +4740,30 @@
 			release:function(){
 				var finalData = this.toArray();
 				this.splice(0,this.length);
-				this.NodeForPartialPointer = null;
+				this.__partialPointer = null;
 				return finalData;
 			}
 		},function(node,nodeProp,dataFilter){ 
-			this.setSource(node);
-			this.NodeForPartialPointer = {};
+			if(typeof node === "string") node = (/^<.+>$/.test(node)) ? N.parseHTML(node) : N.makes(node);
+			this.setSource(N.findLite(node));
+			this.__partialPointer = {};
 			if(typeof nodeProp === "object"){
-				this.setNodeData(nodeProp,dataFilter);
+				this.setPartialProperties(nodeProp,dataFilter);
 			}
-		});
-		
-		N.EXTEND_MODULE("Partial","PartialMakes",function(makesParam,nodeProp,dataFilter){
-			this._super(N.makes(makesParam),nodeProp,dataFilter);
 		});
 		
 		N.EXTEND_MODULE("NodeHandler","Template",{
 			clone :function(nodeData,dataFilter){ return new N.Template(this); },
-			partialOutput:function(nodeData,dataFilter){
+			output:function(nodeData,dataFilter){
 				return new N.Partial(N.cloneNodes(this),nodeData,dataFilter);
 			},
 			render:function(nodeData,dataFilter){
-				return this.partialOutput(nodeData,dataFilter).release()[0];
+				return this.output(nodeData,dataFilter).release()[0];
 			},
 			renders:function(nodeDatas,dataFilter){
 				var _self = this;
 				return N.dataMap(nodeDatas,function(data){
-					return _self.partialOutput(data,dataFilter).release()[0];
+					return _self.output(data,dataFilter).release()[0];
 				});
 			}
 		},function(node){
@@ -6555,13 +6569,12 @@
 	   					return v;
 	   				});
 				}
-				
 				//output partial
 				var partialNode;
 				if(typeof _template === 'object') { 
-					partialNode = _template.partialOutput(this.prop(),dataFilter);
+					partialNode = _template.output(this.prop(),dataFilter);
 				} else if(typeof _template === 'string') {
-					partialNode = (new N.Template(_template,true)).partialOutput(this.prop(),dataFilter);
+					partialNode = (new N.Template(_template,true)).output(this.prop(),dataFilter);
 				} else { 
 					console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template); return false; 
 				}
@@ -6570,7 +6583,7 @@
 					console.error("template :: 렌더링할 template를 찾을수 없습니다",partialNode); return false; 
 				}
 
-				partialNode.callbackNodyNode(['bind','action','placeholder'],
+				partialNode.partialSetup(['bind','action','placeholder'],
 					function(name,node,nodeAlias){
 						switch(nodeAlias){
 							case 'bind': _self.bind(name,node); break;
