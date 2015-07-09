@@ -8,7 +8,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.28.1", N.BUILD = "1228";
+		N.VERSION = "0.28.1", N.BUILD = "1231";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -3986,7 +3986,7 @@
 				return N.node.prepend(N.findLite(parentEL)[0],appendTargets); 
 				return appendTargets;
 			},
-			"require":function(parent,target,needIndex,needNode){
+			"require":function(parent,target,needIndex){
 				var parent = N.findLite(parent)[0];
 				if(!parent) return target;
 				var findTargets = N.findOn(parent,target);
@@ -3994,7 +3994,7 @@
 				if(findTargets.length > 0) return findTargets[0];
 				var makes = N.makes(target);
 				N.node.append(parent,makes,needIndex);
-				return (makes.length > 0 && needNode === true) ? makes[0] : makes;
+				return (makes.length > 1) ? makes : makes[0];
 			},
 			"css":function(sel,exp){
 				if(!sel || typeof exp !== "string") return N.find(sel);
@@ -4493,6 +4493,9 @@
 			find:function(query){ 
 				return new N.NodeHandler(N.find.apply(undefined,[query,this].concat(Array.prototype.slice.call(arguments,1)))); 
 			},
+			children:function(query){ 
+				return new N.NodeHandler(N.findOn(this,query)); 
+			},
 			hasFocus:function(){ return NODE_METHODS.hasFocus(this); },
 			caretPossible:function(){ return NODE_METHODS.caretPossible(this); },
 			attr:function(name){ 
@@ -4635,12 +4638,12 @@
 		N.EXTEND_MODULE("NodeHandler","Partial",{
 			partialNode:function(partialCase,partialKey){
 				if(arguments.length === 0) return N.clone(this.__partialPointer);
-				if(!(partialCase in this.__partialPointer)) return console.error("NodeHandler::partialNode case가 존재하지 않습니다.",partialCase);
+				if(!(partialCase in this.__partialPointer)) return console.error("NodeHandler::partialNode case가 존재하지 않습니다.",partialCase,this.__partialPointer);
 				if(arguments.length === 1) return N.clone(this.__partialPointer[partialCase]);
 				return this.__partialPointer[partialCase][partialKey];
 			},
 			group:function(key){
-				return N.NodeHandler(this.partialNode("group",key));
+				return new N.NodeHandler(this.partialNode("group",key));
 			},
 			value:function(key){
 				return N.node.value(this.partialNode("value",key));
@@ -4652,10 +4655,17 @@
 				});
 				return this;
 			},
+			put:function(key,value){
+				var puts = nd.findLite(value);
+				if(!puts.length) return this;
+				N.dataEach(this.partialNode("put",key),function(node){
+					return N.node.put(node,puts);
+				});
+				return this;
+			},
 			// 실제 노드의 키를 지우면서 실행함
 			partialSetup:function(propKeys,callback,presets){
 				var keys  = propKeys;
-				
 				var pKeys = (presets && presets.pKeys) ? presets.pKeys : (new N.Array(keys)).map(function(key){ return 'nd-'+key; });
 				var sKeys = (presets && presets.sKeys) ? presets.sKeys : (new N.Array(pKeys)).map(function(pkey){ return '['+ pkey +']'; });
 				var pNodes = this.find(sKeys.join(','));
@@ -4672,17 +4682,16 @@
 			defaultPartialDataKeys:['value','html','class','dataset','href','put','display','group'],
 			defaultPartialAttrKeys:["nd-value", 'nd-html', "nd-class", "nd-dataset", "nd-href", "nd-put", "nd-display","nd-group"],
 			defaultPartialSelectorKeys:["[nd-value]", "[nd-html]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-put]", "[nd-display]", "[nd-group]"],
-			setPartialProperties:function(refData,dataFilter){
-				if(typeof refData !== "object") { return console.error("nodeData의 파라메터는 object이여야 합니다",refData); }
-				var data = refData;
-				var dataPointer = this.__partialPointer;
+			setPartialProperties:function(data,dataFilter){
+				if(!data)data={};
 				
-				this.partialSetup(this.defaultPartialDataKeys,
-					function(name,node,nodeAlias){
-						if(!(nodeAlias in dataPointer)) dataPointer[nodeAlias] = {};
+				var pointer = this.__partialPointer;
+				
+				this.partialSetup(this.defaultPartialDataKeys,function(name,node,nodeAlias){
+						if(!(nodeAlias in pointer)) pointer[nodeAlias] = {};
 						name.replace(/\S+/g,function(s){
-							if(!dataPointer[nodeAlias][s]) dataPointer[nodeAlias][s] = [];
-							dataPointer[nodeAlias][s].push(node);
+							if(!pointer[nodeAlias][s]) pointer[nodeAlias][s] = [];
+							pointer[nodeAlias][s].push(node);
 						});
 					},{pKeys:this.defaultPartialAttrKeys,sKeys:this.defaultPartialSelectorKeys}
 				);
@@ -4690,7 +4699,7 @@
 				if(typeof dataFilter === 'object') {
 					N.propsEach(dataFilter,function(value,key){
 						if(typeof value === 'function') {
-							if( dataPointer.custom && (key in dataPointer.custom) ) {
+							if( pointer.custom && (key in pointer.custom) ) {
 								data[key] = value;
 							} else {
 								data[key] = value.call(data,data[key],key,data);
@@ -4701,10 +4710,10 @@
 					});
 				}
 				//퍼포먼스 중심 코딩
-				for(var partialCase in dataPointer) {
-					for(var attrValue in dataPointer[partialCase]) {
+				for(var partialCase in pointer) {
+					for(var attrValue in pointer[partialCase]) {
 						if(attrValue in data && data[attrValue] !== null) {
-							var nodelist = dataPointer[partialCase][attrValue];
+							var nodelist = pointer[partialCase][attrValue];
 							for(var i=0,l=nodelist.length;i<l;i++) {
 								var node = nodelist[i];
 								switch(partialCase){
@@ -4747,9 +4756,7 @@
 			if(typeof node === "string") node = (/^<.+>$/.test(node)) ? N.parseHTML(node) : N.makes(node);
 			this.setSource(N.findLite(node));
 			this.__partialPointer = {};
-			if(typeof nodeProp === "object"){
-				this.setPartialProperties(nodeProp,dataFilter);
-			}
+			this.setPartialProperties(nodeProp,dataFilter);
 		});
 		
 		N.EXTEND_MODULE("NodeHandler","Template",{
@@ -4976,6 +4983,15 @@
 			},
 			reactTo:function(status){
 				return this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this,true);
+			},
+			toggleTo:function(status,flag){
+				if(typeof flag === "boolean"){
+					if(flag){
+						this.reactTo.apply(this,[status].concat(Array.prototype.slice.call(arguments,2)));
+					} else {
+						this.inactTo.apply(this,[status].concat(Array.prototype.slice.call(arguments,2)));
+					}
+				}
 			},
 			getActiveStatus:function(){
 				return this.ActiveKeys.join(" ");
@@ -5705,12 +5721,13 @@
 			},
 			findRole:function(find,proc){
 				var finded = N.find(find);
-				var selectedRoles = new N.Array();
+				var selectedRoles = new N.Array(N.dataFilter(N.argumentsFlatten(find),function(obj){ return N.isModule(obj,"RoleController"); }));
 				if(finded.length === 0) selectedRoles;
 				
 				N.dataEach(finded,function(roleNode){
 					if(typeof roleNode.roleController === "object") selectedRoles.push(roleNode.roleController);
 				});
+				
 				if(typeof proc === "function"){
 					var _self = this;
 					N.dataEach(selectedRoles,function(roleController){ proc.call(_self,roleController); });
@@ -5737,6 +5754,7 @@
 		},function(targetRole,props,data,initViewProc){
 			if( this._super(targetRole,true,true) === true ) {
 				this.ManageProp  = new N.HashSource(props);
+				this.ManageProp.pushDataProp(this.__NativeModule__(),this);
 				this.ManageData  = new N.Array(data);
 				this.ManageEvent = new N.EventListener(this);
 				
@@ -7040,8 +7058,16 @@
 			if(typeof needDisplay === "function") needDisplay = N.CALL(needDisplay,this);
 			if(needDisplay === true) this.needDisplay();
 		});
-		
-		N.METHOD("makeCubicbezier",function(x1, y1, x2, y2, epsilon){
+		N.METHOD("workerOfLinearVector",function(x,y,epsilon){
+			epsilon = (typeof epsilon === "number") ? epsilon : 1;
+			var pointX = N.parseInt(x);
+			var pointY = N.parseInt(y);
+			if(pointX === pointY){ return function(){ return pointX; }; }
+			return function(t){
+				return pointX + (((pointY - pointX) / epsilon) * t);
+			};
+		});
+		N.METHOD("workerOfCubicBezier",function(x1, y1, x2, y2, epsilon){
 			epsilon = (typeof epsilon === "number") ? epsilon : 1;
 			var curveX = function(t){
 					var v = 1 - t;
@@ -7614,7 +7640,7 @@
 	
 		N.EXTEND_MODULE("Counter","BezierCounter",{
 			setCubicBezier:function(x1,x2,y1,y2){
-				this.setCountProcessor(N.makeCubicbezier(
+				this.setCountProcessor(N.workerOfCubicBezier(
 					(typeof x1 === "number") ? x1 : 0,
 					(typeof x2 === "number") ? x2 : 0,
 					(typeof y1 === "number") ? y1 : 0,
@@ -7743,127 +7769,128 @@
 		
 		N.MODULE("Gesture",function(gestureView,allowOuterMove,allowVitureTouch){
 			this.view = N.findLite(gestureView)[0];
-			if(this.view){
-				this.GestureListener = {};
-				this._firstPinchValue;
-				this._firstPageX;
-				this._firstPageY;
-				this._lastPageX;
-				this._lastPageY;
-				this.stopPropagation = true;
-				this.preventDefault  = true;
-				//touch event
-				this.ManageEvent = new N.EventListener(this);
-				this.ManageEvent.addEventRegister(["gesture","drag","throw","pinch"]);
-				var manageEvent = this.ManageEvent;
-				var _self = this;
-				var getPinchDistance = function(fx1,fy1,fx2,fy2){
-					return Math.sqrt(
-						Math.pow((fx1-fx2),2),
-						Math.pow((fy1-fy2),2)
-					);
-				};
-				this._gestureStartHandler = function(e){
-					if(manageEvent.hasListener()){
-						var pageX = _self._firstPageX = _self._lastPageX = e.touches ? e.touches[0].pageX : e.pageX;
-						var pageY = _self._firstPageY = _self._lastPageY = e.touches ? e.touches[0].pageY : e.pageY;
-						
-						_self._lastGesture = {
-							e:e,
-							pageX:pageX,
-							pageY:pageY,
-							relativeX:0,
-							relativeY:0,
-							moveX:0,
-							moveY:0
-						};
-						
-						if (manageEvent.hasListener("pinch") && e.touches && e.touches.length === 2) {
-							e.preventDefault();
-							_self._firstPinchValue = getPinchDistance(
-								 pageX,
-								 pageY,
-								 e.touches[1].pageX,
-								 e.touches[1].pageY
-							);
-							_self._lastGesture.pinch = 1;
-							manageEvent.trigger("pinch",_self._lastGesture,"start");
-						}
-						manageEvent.trigger("gesture",_self._lastGesture,"start");
-						
-						if(_self.stopPropagation===true)e.stopPropagation();
-						if(_self.preventDefault===true) e.preventDefault();
+			
+			if(!this.view) return console.error("Gesture::no find gestrue view");
+			
+			this.GestureListener = {};
+			this._firstPinchValue;
+			this._firstPageX;
+			this._firstPageY;
+			this._lastPageX;
+			this._lastPageY;
+			this.stopPropagation = true;
+			this.preventDefault  = true;
+			//touch event
+			this.ManageEvent = new N.EventListener(this);
+			this.ManageEvent.addEventRegister(["gesture","drag","throw","pinch"]);
+			var manageEvent = this.ManageEvent;
+			var _self = this;
+			var getPinchDistance = function(fx1,fy1,fx2,fy2){
+				return Math.sqrt(
+					Math.pow((fx1-fx2),2),
+					Math.pow((fy1-fy2),2)
+				);
+			};
+			this._gestureStartHandler = function(e){
+				if(manageEvent.hasListener()){
+					var pageX = _self._firstPageX = _self._lastPageX = e.touches ? e.touches[0].pageX : e.pageX;
+					var pageY = _self._firstPageY = _self._lastPageY = e.touches ? e.touches[0].pageY : e.pageY;
+					
+					_self._lastGesture = {
+						e:e,
+						pageX:pageX,
+						pageY:pageY,
+						relativeX:0,
+						relativeY:0,
+						moveX:0,
+						moveY:0
+					};
+					
+					if (manageEvent.hasListener("pinch") && e.touches && e.touches.length === 2) {
+						e.preventDefault();
+						_self._firstPinchValue = getPinchDistance(
+							 pageX,
+							 pageY,
+							 e.touches[1].pageX,
+							 e.touches[1].pageY
+						);
+						_self._lastGesture.pinch = 1;
+						manageEvent.trigger("pinch",_self._lastGesture,"start");
 					}
+					manageEvent.trigger("gesture",_self._lastGesture,"start");
+					
+					if(_self.stopPropagation===true)e.stopPropagation();
+					if(_self.preventDefault===true) e.preventDefault();
 				}
-			
-				this._gestureMoveHandler = function(e){
-					//TouchMoveX를 체크하는 에유는
-					//시작한 터치무브가 존재하지 않을경우에는 작동되지 않음 (바깥쪽 이벤트가 Touch끼리 서로 섞이지 않게 하기 위함)
-					if(manageEvent.hasListener() && _self._firstPageX !== undefined){
-						var pageX = e.touches ? e.touches[0].pageX : e.pageX;
-						var pageY = e.touches ? e.touches[0].pageY : e.pageY;
-						
-						_self._lastGesture = {
-							e:e,
-							pageX:pageX,
-							pageY:pageY,
-							relativeX:pageX - _self._firstPageX,
-							relativeY:pageY - _self._firstPageY,
-							moveX:pageX - _self._lastPageX,
-							moveY:pageY - _self._lastPageY
-						}
-						
-						_self._lastPageX = pageX;
-						_self._lastPageY = pageY;
-						
-						if (manageEvent.hasListener("pinch") && (typeof _self._firstPinchValue === "number") && e.touches && e.touches.length === 2) {
-							e.preventDefault();
-							var pinchDistance = getPinchDistance(
-								 e.touches[0].pageX,
-								 e.touches[0].pageY,
-								 e.touches[1].pageX,
-								 e.touches[1].pageY
-							);
-							_self._lastGesture.pinch = -((_self._firstPinchValue / pinchDistance) - 1);
-							manageEvent.trigger("pinch",_self._lastGesture,"move");
-							
-							//핀치시에는 이벤트를 초기화함
-							//_self._firstPageX = _self._lastPageX = undefined;
-							//_self._firstPageY = _self._lastPageY = undefined;
-						}
-						manageEvent.trigger("gesture",_self._lastGesture,"move");
-						
-						if(_self.stopPropagation===true)e.stopPropagation();
-						if(_self.preventDefault===true) e.preventDefault();
-					}
-				};
-			
-				this._gestureEndHandler = function(e){
-					if(manageEvent.hasListener() && _self._firstPageX !== undefined){
-						
-						if (manageEvent.hasListener("pinch") && (typeof _self._firstPinchValue === "number") && e.touches && e.touches.length === 2) {
-							this.manageEvent.trigger("pinch",_self._lastGesture,"end");
-						}
-						manageEvent.trigger("gesture",_self._lastGesture,"end");
-						
-						_self._firstPageX = _self._lastPageX = undefined;
-						_self._firstPageY = _self._lastPageY = undefined;
-						_self._firstPinchValue = undefined;
-						_self._lastGesture = undefined;
-						
-						if(_self.stopPropagation===true)e.stopPropagation();
-						if(_self.preventDefault===true) e.preventDefault();
-					}
-				};
-				
-				N.node.punch(this.view,"mousedown",this._gestureStartHandler);
-				N.node.punch(document.body,"mousemove",this._gestureMoveHandler);
-				N.node.punch(document.body,"mouseup",this._gestureEndHandler);
-				//N.node.punch(document.body,"mouseout",function(e){
-				//	console.log("mouseout",e.target.tagName);
-				//	//_self._gestureEndHandler(e);
-				//});
 			}
+		
+			this._gestureMoveHandler = function(e){
+				//TouchMoveX를 체크하는 에유는
+				//시작한 터치무브가 존재하지 않을경우에는 작동되지 않음 (바깥쪽 이벤트가 Touch끼리 서로 섞이지 않게 하기 위함)
+				if(manageEvent.hasListener() && _self._firstPageX !== undefined){
+					var pageX = e.touches ? e.touches[0].pageX : e.pageX;
+					var pageY = e.touches ? e.touches[0].pageY : e.pageY;
+					
+					_self._lastGesture = {
+						e:e,
+						pageX:pageX,
+						pageY:pageY,
+						relativeX:pageX - _self._firstPageX,
+						relativeY:pageY - _self._firstPageY,
+						moveX:pageX - _self._lastPageX,
+						moveY:pageY - _self._lastPageY
+					}
+					
+					_self._lastPageX = pageX;
+					_self._lastPageY = pageY;
+					
+					if (manageEvent.hasListener("pinch") && (typeof _self._firstPinchValue === "number") && e.touches && e.touches.length === 2) {
+						e.preventDefault();
+						var pinchDistance = getPinchDistance(
+							 e.touches[0].pageX,
+							 e.touches[0].pageY,
+							 e.touches[1].pageX,
+							 e.touches[1].pageY
+						);
+						_self._lastGesture.pinch = -((_self._firstPinchValue / pinchDistance) - 1);
+						manageEvent.trigger("pinch",_self._lastGesture,"move");
+						
+						//핀치시에는 이벤트를 초기화함
+						//_self._firstPageX = _self._lastPageX = undefined;
+						//_self._firstPageY = _self._lastPageY = undefined;
+					}
+					manageEvent.trigger("gesture",_self._lastGesture,"move");
+					
+					if(_self.stopPropagation===true)e.stopPropagation();
+					if(_self.preventDefault===true) e.preventDefault();
+				}
+			};
+		
+			this._gestureEndHandler = function(e){
+				if(manageEvent.hasListener() && _self._firstPageX !== undefined){
+					
+					if (manageEvent.hasListener("pinch") && (typeof _self._firstPinchValue === "number") && e.touches && e.touches.length === 2) {
+						this.manageEvent.trigger("pinch",_self._lastGesture,"end");
+					}
+					manageEvent.trigger("gesture",_self._lastGesture,"end");
+					
+					_self._firstPageX = _self._lastPageX = undefined;
+					_self._firstPageY = _self._lastPageY = undefined;
+					_self._firstPinchValue = undefined;
+					_self._lastGesture = undefined;
+					
+					if(_self.stopPropagation===true)e.stopPropagation();
+					if(_self.preventDefault===true) e.preventDefault();
+				}
+			};
+			
+			N.node.punch(this.view,"mousedown",this._gestureStartHandler);
+			N.node.punch(document.body,"mousemove",this._gestureMoveHandler);
+			N.node.punch(document.body,"mouseup",this._gestureEndHandler);
+			//N.node.punch(document.body,"mouseout",function(e){
+			//	console.log("mouseout",e.target.tagName);
+			//	//_self._gestureEndHandler(e);
+			//});
 			
 		});
 		
