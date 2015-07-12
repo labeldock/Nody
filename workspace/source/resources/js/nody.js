@@ -8,7 +8,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.28.1", N.BUILD = "1231";
+		N.VERSION = "0.28.3", N.BUILD = "1237";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -3245,7 +3245,7 @@
 				}
 			},1),
 			"findRoot":N.CONTINUE_FUNCTION(function(el){ 
-				return N.NodeUtil.root(N.find(el,0));
+				return N.NodeUtil.root(N.findLite(el)[0]);
 			},1),
 			"findBefore":N.CONTINUE_FUNCTION(function(node,filter){ 
 				node = N.findLite(node)[0];
@@ -3464,6 +3464,7 @@
 			},1),
 			"makes":N.CONTINUE_FUNCTION(function(fulltag,root){
 				if(typeof fulltag !== "string" || !fulltag) return [];
+				
 				var makeRoot    = N.make('div');
 				var hasTemplate = (fulltag.toLowerCase().indexOf("template") > -1)?true:false;
 				var divideIndex = fulltag.indexOf(">");
@@ -4493,6 +4494,12 @@
 			find:function(query){ 
 				return new N.NodeHandler(N.find.apply(undefined,[query,this].concat(Array.prototype.slice.call(arguments,1)))); 
 			},
+			parent:function(query){ 
+				return new N.NodeHandler(N.findParent.apply(undefined,[this].concat(Array.prototype.slice.call(arguments)))); 
+			},
+			parents:function(query){ 
+				return new N.NodeHandler(N.findParents.apply(undefined,[this].concat(Array.prototype.slice.call(arguments)))); 
+			},
 			children:function(query){ 
 				return new N.NodeHandler(N.findOn(this,query)); 
 			},
@@ -4636,31 +4643,34 @@
 		});
 		
 		N.EXTEND_MODULE("NodeHandler","Partial",{
-			partialNode:function(partialCase,partialKey){
+			findPartial:function(partialCase,partialKey){
 				if(arguments.length === 0) return N.clone(this.__partialPointer);
-				if(!(partialCase in this.__partialPointer)) return console.error("NodeHandler::partialNode case가 존재하지 않습니다.",partialCase,this.__partialPointer);
+				if(!(partialCase in this.__partialPointer)) 
+					return console.error("NodeHandler::partial case가 존재하지 않습니다.",partialCase,this.__partialPointer);
 				if(arguments.length === 1) return N.clone(this.__partialPointer[partialCase]);
-				return this.__partialPointer[partialCase][partialKey];
+				return new N.NodeHandler(this.__partialPointer[partialCase][partialKey]);
 			},
 			group:function(key){
-				return new N.NodeHandler(this.partialNode("group",key));
+				return this.findPartial("group",key);
 			},
-			value:function(key){
-				return N.node.value(this.partialNode("value",key));
-			},
-			setValue:function(key,value){
-				if(value === undefined || value === null) return;
-				N.dataEach(this.partialNode("value",key),function(node){
-					return N.node.value(node,value);
-				});
-				return this;
+			value:function(key,value){
+				if(arguments.length === 2){
+					if(value !== undefined || value !== null){
+						this.findPartial("value",key).each(function(node){
+							return N.node.value(node,value);
+						});
+					}
+					return this;
+				} else {
+					return this.findPartial("value",key).value();
+				}
 			},
 			put:function(key,value){
 				var puts = nd.findLite(value);
 				if(!puts.length) return this;
-				N.dataEach(this.partialNode("put",key),function(node){
+				this.findPartial("put",key).each(function(node){
 					return N.node.put(node,puts);
-				});
+				})
 				return this;
 			},
 			// 실제 노드의 키를 지우면서 실행함
@@ -4679,14 +4689,12 @@
 				}
 			},
 			//성능의 가속을 위해 존재하는 값들입니다. 이것을 건드리면 엄청난 문제를 초례할 가능성이 있습니다.
-			defaultPartialDataKeys:['value','html','class','dataset','href','put','display','group'],
-			defaultPartialAttrKeys:["nd-value", 'nd-html', "nd-class", "nd-dataset", "nd-href", "nd-put", "nd-display","nd-group"],
-			defaultPartialSelectorKeys:["[nd-value]", "[nd-html]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-put]", "[nd-display]", "[nd-group]"],
+			defaultPartialDataKeys:['dataset','value','href','put','display','group'],
+			defaultPartialAttrKeys:["nd-dataset","nd-value","nd-href","nd-put","nd-display","nd-group"],
+			defaultPartialSelectorKeys:["[nd-dataset]","[nd-value]","[nd-href]","[nd-put]","[nd-display]","[nd-group]"],
 			setPartialProperties:function(data,dataFilter){
 				if(!data)data={};
-				
 				var pointer = this.__partialPointer;
-				
 				this.partialSetup(this.defaultPartialDataKeys,function(name,node,nodeAlias){
 						if(!(nodeAlias in pointer)) pointer[nodeAlias] = {};
 						name.replace(/\S+/g,function(s){
@@ -5753,8 +5761,17 @@
 			}
 		},function(targetRole,props,data,initViewProc){
 			if( this._super(targetRole,true,true) === true ) {
-				this.ManageProp  = new N.HashSource(props);
-				this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+				if(N.isModule(props,"Binder")){
+					this.ManageProp = props.beforeProperty;
+					this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+					this.Binder = props;
+				} else if(N.isModule(props,"HashSource")) {
+					this.ManageProp  = props;
+					this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+				} else {
+					this.ManageProp  = new N.HashSource(props);
+					this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+				}
 				this.ManageData  = new N.Array(data);
 				this.ManageEvent = new N.EventListener(this);
 				
@@ -6535,7 +6552,7 @@
 				} else if(key === "object"){
 					for(var propKey in key) { this.setProp(propKey,key[propKey],false); }
 				}
-				if(useBind !== false) this.DataContext.Binder.resend(this,"GLOBAL.LinkDataWasSetValue",this);
+				if(useBind !== false) this.DataContext.Binder.post(this,"GLOBAL.LinkDataWasSetValue",this);
 				return this;
 			},
 			removeProp:function(key){
@@ -6588,20 +6605,20 @@
 	   				});
 				}
 				//output partial
-				var partialNode;
+				var partialOutput;
 				if(typeof _template === 'object') { 
-					partialNode = _template.output(this.prop(),dataFilter);
+					partialOutput = _template.output(this.prop(),dataFilter);
 				} else if(typeof _template === 'string') {
-					partialNode = (new N.Template(_template,true)).output(this.prop(),dataFilter);
+					partialOutput = (new N.Template(_template,true)).output(this.prop(),dataFilter);
 				} else { 
 					console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template); return false; 
 				}
 				
-				if(partialNode.isNone()) { 
-					console.error("template :: 렌더링할 template를 찾을수 없습니다",partialNode); return false; 
+				if(partialOutput.isNone()) { 
+					console.error("template :: 렌더링할 template를 찾을수 없습니다",partialOutput); return false; 
 				}
 
-				partialNode.partialSetup(['bind','action','placeholder'],
+				partialOutput.partialSetup(['bind','action','placeholder'],
 					function(name,node,nodeAlias){
 						switch(nodeAlias){
 							case 'bind': _self.bind(name,node); break;
@@ -6617,7 +6634,7 @@
 						}
 					}
 				);
-				return partialNode;
+				return partialOutput;
 			},
 			response:function(responseKey,proc){
 				if(typeof responseKey !== "string" && typeof proc !== "function") console.warn("response args must be string & function => ",responseKey,proc);
@@ -6673,12 +6690,12 @@
 			//렌더시 다음 아래의 메서드들은 절대 호출하면 안됩니다.
 			//지정한 인덱스로
 			rerender:function(){
-				this.DataContext.Binder.resend(this,"GLOBAL.LinkDataNeedRerender",this);
+				this.DataContext.Binder.post(this,"GLOBAL.LinkDataNeedRerender",this);
 			},
 			managedDataIndexExchange:function(changeTarget){
 				if(changeTarget){
 					this.Parent.Child.changeIndex(this.getIndex(),changeTarget.getIndex());
-					this.DataContext.Binder.resend(this,"GLOBAL.LinkDataIndexExchange",[this,changeTarget]);
+					this.DataContext.Binder.post(this,"GLOBAL.LinkDataIndexExchange",[this,changeTarget]);
 					return true;
 				}
 				return false;
@@ -6699,7 +6716,7 @@
 			removeLinkData:function(onlyThis){
 				if(onlyThis === true) {
 					this.removeFromParent();
-					this.DataContext.Binder.resend(this,"GLOBAL.LinkDataRemoved",this);
+					this.DataContext.Binder.post(this,"GLOBAL.LinkDataRemoved",this);
 					this.release();
 				} else {
 					this.feedUpManageData(function(md){ 
@@ -6720,7 +6737,7 @@
 				if(typeof data === "object") {
 					this.DataContext.feedDownLinkDataMake(data||{},this);
 					var makedData = this.Child.last();
-					this.DataContext.Binder.resend(this,"GLOBAL.LinkDataAddedChild",{"dataID":this.DataID,"newLinkData":makedData});
+					this.DataContext.Binder.post(this,"GLOBAL.LinkDataAddedChild",{"dataID":this.DataID,"newLinkData":makedData});
 					return makedData;
 				} else {
 					console.warn("addChildData :: append data가 들어오지 않았습니다", data);
@@ -7180,7 +7197,7 @@
 				//set data
 				if(allowProc === true) this.shouldSendValueToListenersInfo(sendTargets,setValue,dataName);
 			},
-			resend:function(sender,dataName,setValue,forceLevel){
+			post:function(sender,dataName,setValue,forceLevel){
 				this.send(sender,dataName,setValue,forceLevel,true);
 			},
 			listen:function(listener,propertyName,proc,allowProc,protectLevel,prefixListen){
@@ -7223,9 +7240,11 @@
 			selfListen:function(propertyName,proc,allowProc,protectLevel){
 				return this.listen(this,propertyName,proc,allowProc,protectLevel);
 			},
-			//custom send
-			getValue:function(propertyName){
-				return this.beforeProperty.prop(propertyName);
+			prop:function(){
+				return this.beforeProperty.prop.apply(this.beforeProperty,Array.prototype.slice.call(arguments));
+			},
+			setProp:function(){
+				return this.beforeProperty.setProp.apply(this.beforeProperty,Array.prototype.slice.call(arguments));
 			},
 			inspect:function(allowProc,propertyName,protectLevel){
 				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
@@ -7260,11 +7279,16 @@
 					});
 				}
 			},
-			getListeners:function(){
-				return this.Source.map(function(listenInfo){ listenInfo.listener }).setUnique();
+			getListener:function(){
+				return this.Source.map(function(listenInfo){ return listenInfo.listener }).setUnique();
+			},
+			getListenerByKey:function(key){
+				return this.Source.filter(function(listenInfo){ 
+					return listenInfo.propertyName === key;
+				}).setUnique();
 			},
 			getProperties:function(){
-				return this.Source.map(function(listenInfo){ listenInfo.propertyName }).setUnique();
+				return this.Source.map(function(listenInfo){ return listenInfo.propertyName }).setUnique();
 			},
 			removeListener:function(listener){
 				this.Source.setFilter(function(listenInfo){
