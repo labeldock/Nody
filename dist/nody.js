@@ -8,7 +8,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.28.1", N.BUILD = "1231";
+		N.VERSION = "0.28.3", N.BUILD = "1240";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -653,9 +653,19 @@
 			//배열의 뒤
 			"dataLast"   :function(t){ return N.isArray(t) ? t[t.length-1] : t; },
 			// 각각의 값의 function실행
-			"dataEach"    :N.CONTINUE_FUNCTION(function(v,f){ var ev=N.toArray(v); for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
+			"dataEach"    :N.CONTINUE_FUNCTION(function(v,f){ 
+				var ev=N.toArray(v); 
+				for(var i=0,l=ev.length;i<l;i++) 
+					if(f.call(ev[i],ev[i],i) === false) return false;
+				return ev; 
+			},2),
 			// 각각의 값의 function실행
-			"dataReverseEach":N.CONTINUE_FUNCTION(function(v,f){ var ev=N.toArray(v); for(var i=ev.length-1;i>-1;i--) if(f.call(ev[i],ev[i],i) === false) break; return ev; },2),
+			"dataReverseEach":N.CONTINUE_FUNCTION(function(v,f){ 
+				var ev=N.toArray(v); 
+				for(var i=ev.length-1;i>-1;i--) 
+					if(f.call(ev[i],ev[i],i) === false) return false; 
+				return ev; 
+			},2),
 			// 각각의 값을 배열로 다시 구해오기
 			"dataMap":N.CONTINUE_FUNCTION(function(v,f){ var rv=[],ev=N.toArray(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
 			"arrayMap":N.CONTINUE_FUNCTION(function(v,f){ 
@@ -815,20 +825,63 @@
 			"indexForReverse":function(index,maxIndex){ return (maxIndex-1) - index },
 			"indexForTurn":function(index,maxIndex){ if(index < 0) { var abs = Math.abs(index); index = maxIndex-(abs>maxIndex?abs%maxIndex:abs); }; return (maxIndex > index)?index:index%maxIndex; },
 			"indexForSpring":function(index,maxIndex){ index = N.toNumber(index); maxIndex = N.toNumber(maxIndex); return (index == 0 || (Math.floor(index/maxIndex)%2 == 0))?index%maxIndex:maxIndex-(index%maxIndex); },
+			"isProp":function(source){
+				return (typeof source === "object") || (typeof source === "function");
+			},
 			//오브젝트의 key를 each열거함
-			"propsEach":N.CONTINUE_FUNCTION(function(v,f){if((typeof v === "object") && (typeof f === "function")){ for(k in v) if(f(v[k],k)===false) break; }; return v; },2),
+			"propEach":N.CONTINUE_FUNCTION(function(v,f){
+				if(N.isProp(v)){for(k in v) if(f(v[k],k)===false) break;}; 
+				return v;
+			},2),
 			//
-			"propsMap":N.CONTINUE_FUNCTION(function(v,f){ var result = {}; if(typeof v === "object" && (typeof f === "function")){ for(var k in v) result[k] = f(v[k],k); return result; } return result;},2),
+			"propChange":N.CONTINUE_FUNCTION(function(source,original,change){
+				if(N.isProp(source) && typeof original === "string" && typeof change === "string") { 
+					source[change] = source[original]; delete source[original]; 
+				}
+				return source;
+			}),
+			"propSet":N.CONTINUE_FUNCTION(function(source,key){
+				if(N.isProp(source) && (typeof key === "string" || typeof key === "number")) {
+					for(var i=2,l=arguments.length;i<l;i++){
+						if(arguments[i] !== undefined || arguments[i] !== NaN){
+							source[key] = arguments[i];
+							break;
+						}
+					}
+				}
+				return source;
+			}),
+			"propShift":N.CONTINUE_FUNCTION(function(source,key){
+				var result;
+				if(N.isProp(source) && (typeof key === "string" || typeof key === "number") && (key in source)) {
+					result = source[key];
+					delete source[key];
+				}
+				return result;
+			}),
+			"propMap":N.CONTINUE_FUNCTION(function(v,f){ 
+				var result = {}; 
+				if(N.isProp(v)) for(var k in v) result[k] = f(v[k],k); return result; 
+				return result;
+			},2),
 			//오브젝트의 key value값을 Array 맵으로 구한다.
-			"propsData" :N.CONTINUE_FUNCTION(function(v,f){ var result = []; if(typeof f !== "function") f = function(v){ return v; }; if(typeof v === "object"){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
-			"propsKey"  :N.CONTINUE_FUNCTION(function(obj,rule){
+			"propData" :N.CONTINUE_FUNCTION(function(v,f){ var result = []; if(typeof f !== "function") f = function(v){ return v; }; if(typeof v === "object"){ for(var k in v) result.push(f(v[k],k)); return result; } return result;},2),
+			"propKey"  :N.CONTINUE_FUNCTION(function(obj,rule,expandKeys){
 				var r = [];
 				if(typeof rule === "string"){
-					N.propsEach(obj,function(v,k){ if(k.indexOf(rule) > -1){ r.push(k); }});
+					if((rule in obj) || expandKeys === true) r.push(rule);
+				} else if(N.isArray(rule)) {
+					if(expandKeys === true){
+						for(var i=0,l=rule.length;i<l;i++) (typeof rule[i] === "string") && r.push(rule[i]);
+					} else {
+						for(var i=0,l=rule.length;i<l;i++) (rule[i] in obj) && r.push(rule[i]);
+					}
 				} else if(rule instanceof RegExp) {
-					N.propsEach(obj,function(v,k){ if(rule.test(k)){ r.push(k) }});
+					var r = [];
+					N.propEach(obj,function(v,k){ if(rule.test(k)){ r.push(k) }});
 				} else {
-					N.propsEach(obj,function(v,k){ r.push(k); });
+					var r = [];
+					N.propEach(obj,function(v,k){ r.push(k); });
 				}
 				return r;
 			},1),
@@ -898,8 +951,26 @@
 	        "parseInt":function(value){
 	            return N.divideNumber(value)[0];
 	        },
+	        "parseHigh":function(value){
+				var high = Number.NEGATIVE_INFINITY;
+				var numberList = N.argumentsFlatten(arguments);
+				for(var i=0,l=numberList.length;i<l;i++){
+					var parseNumber = N.parseFloat(numberList[i]);
+					if(high < parseNumber) high = parseNumber;
+				}
+				return high === Number.NEGATIVE_INFINITY ? 0 : high;
+	        },
+	        "parseLow":function(value){
+				var low = Number.POSITIVE_INFINITY;
+				var numberList = N.argumentsFlatten(arguments);
+				for(var i=0,l=numberList.length;i<l;i++){
+					var parseNumber = N.parseFloat(numberList[i]);
+					if(low > parseNumber) low = parseNumber;
+				}
+				return low === Number.POSITIVE_INFINITY ? 0 : low;
+	        },
 			//
-			"propsLength":function(data){ var l = 0; if(typeof data === "object" || typeof data === "function") for(var key in data) l++; return l; },
+			"propLength":function(data){ var l = 0; if(typeof data === "object" || typeof data === "function") for(var key in data) l++; return l; },
 			//새로운 객체를 만들어 복사
 			"clone"  : function(target,d) { 
 				if(d) {
@@ -938,7 +1009,7 @@
 			},
 			"diffKeys":function(a,b){
 				if(typeof a === "object" && typeof b === "object"){
-					return N.dataFilter(N.dataFlatten(N.propsKey(a),N.propsKey(b),N.dataUnique),function(key){
+					return N.dataFilter(N.dataFlatten(N.propKey(a),N.propKey(b),N.dataUnique),function(key){
 						if(a[key] !== b[key]){ return true; }
 					});
 				}
@@ -1031,7 +1102,10 @@
 			},
 			//무엇이든 문자열로 넘기지만 4댑스 이하로는 읽지 않음
 			"tos"  : function(tosv,jsonfy){ return N.toString(tosv,9,jsonfy); },
-			"toDataString":function(v){ return N.toString(v,99,true); },
+			"toDataString":function(v){ 
+				if(typeof v === "boolean") return v ? "true" : "false";
+				return N.toString(v,99,true); 
+			},
 			"fromDataString":function(v){ 
 				if(typeof v === "string") { 
 					if( v.charAt(0)=="\"" && v.charAt(v.length-1)=="\"" ){
@@ -1351,25 +1425,44 @@
 	(function(W,N){
 		if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
 		N.SINGLETON("PARTICU",{
+			"scalef":function(scale,value,total){
+				return (typeof value === "number"?value:100) / (typeof total === "number"?total:100) * scale;
+			},
+			"scale":function(scale,value,total){
+				return Math.round(N.PARTICU.scalef(scale,value,total));
+			},
 			// nd.ratio(500,10,50,100) => [31, 156, 313]
-			"ratio":function(ratioTotal){
-				var args = N.argumentsFlatten(arguments),total = 0;
-				ratioTotal = N.toNumber(args.shift()) || 100;
-				var resultRatio = N.dataMap(args,function(v){
+			"ratiof":function(ratioTotal){
+				var args = N.argumentsFlatten(arguments),total = 0,ratioTotal=N.toNumber(args.shift()) || 100;
+				return N.dataMap(args,function(v){
 					var num = N.toNumber(v);
 					total += num;
 					return num;
-				},N.dataMap,function(num){
-					return Math.round(num / total * ratioTotal);
+				},N.arrayMap,function(num){
+					return num / total * ratioTotal;
 				});
-				//fixresult
-				var fixResult = 0;
-				N.dataEach(resultRatio,function(n){ fixResult += n; });
-				fixResult = ratioTotal-fixResult;
-				if( fixResult !== 0){
-					resultRatio[resultRatio.length-1] += fixResult;
-				}
-				return resultRatio;
+			},
+			"ratio":function(ratioTotal){
+				var fixResult = N.toNumber(ratioTotal);
+				var roundResult = N.arrayMap(N.PARTICU.ratiof.apply(this,Array.prototype.slice.call(arguments)),function(n){
+					var round = Math.round(n);
+					fixResult -= round;
+					return round;
+				});
+				if(fixResult !== 0){
+					console.log("?r",roundResult);
+					roundResult[roundResult.length-1] += fixResult;
+				} 
+				return roundResult;
+			},
+			"radiusArcf":function(radius,deg){
+				var radian = (360-deg) * Math.PI / 180;
+				return [radius - radius * Math.sin(radian),radius - radius * Math.cos(radian)];
+			},
+			"radiusArc":function(radius,deg){
+				return N.arrayMap(N.radiusArcf(radius,deg),function(n){
+					return Math.round(n);
+				});
 			},
 			"toPx":function(v){ if( /(\%|px)$/.test(v) ) return v; return N.toNumber(v)+"px"; },
 			//래핑된 텍스트를 제거
@@ -1671,7 +1764,7 @@
 				var value,mutableType,type = (command.indexOf("\\!") == 0)?"fixed":(command.indexOf("\\?") == 0)?"mutable":"plain";
 				if(type != "plain"){
 					command = command.substr(2);
-					if(/\d\~\d/.test(command)){
+					if(/\d+\~\d+/.test(command)){
 						mutableType = "range";
 						value = (type == "fixed") ? N.zoneRange(command) : command;
 					} else if( command.indexOf("|") > -1 ){
@@ -1762,7 +1855,7 @@
 			// each의 반대 동작
 			reverseEach : function(block) { for ( var i=this.length-1;i>-1;i--) { if( block(this[i],i) == false ) break; } return this; },
 			// key배열 습득
-			keys  : function(rule){ return N.propsKey(this,rule); },
+			keys  : function(rule){ return N.propKey(this,rule); },
 			//첫번째 요소 반환.
 			zero  :function(){ return N.dataFirst(this); },
 			first :function(){ return N.dataFirst(this); },
@@ -2054,7 +2147,7 @@
 				} 
 				return this; 
 			},
-			keys:function(rule){ return N.propsKey(this.Source,rule); },
+			keys:function(rule,keys){ return N.propKey(this.Source,rule,keys); },
 			values:function(){ 
 				var result = [];
 				if(arguments.length){
@@ -2075,7 +2168,7 @@
 			callback:function(f){
 				if(typeof f === "function") this.call(this,this.Source);
 			},
-			count:function(){return N.propsLength(this.Source); },
+			count:function(){return N.propLength(this.Source); },
 			clone:function(){return N.clone(this.Source); },
 			save:function() {return this.__NativeInitializer__(N.clone(this.Source)); },
 			//key value get setter
@@ -2183,7 +2276,7 @@
 				var _self = this;
 				for(var i=0,l=arguments.length;i<l;i++){
 					if(typeof args[i] === "object"){
-						arrangementKeys.marge(N.propsKey(args[i]));
+						arrangementKeys.marge(N.propKey(args[i]));
 					}
 				}
 				for(var i=0,l=args.length;i<l;i++){
@@ -2212,16 +2305,17 @@
 			//map
 			map:function(f,ksel){ 
 				if(typeof f === "function"){
-					var result = N.clone(this.Source);
-					var keys   = this.keys(ksel);
+					var result = N.clone(this.Source),keys = this.keys(ksel,true);
 					for(var i=0,l=keys.length;i<l;i++) result[keys[i]] = f(this.Source[keys[i]],keys[i]);
 					return result; 
-				} else { 
-					return N.clone(this.Source);
-				} 
+				}
 			},
-			setMap:function() { 
-				return this.setSource( this.map.apply(this,arguments) ); 
+			setMap:function(f,ksel){ 
+				if(typeof f === "function"){
+					var keys = this.keys(ksel,true);
+					for(var i=0,l=keys.length;i<l;i++) this.Source[keys[i]] = f.call(this,this.Source[keys[i]],keys[i]);
+					return this;
+				}
 			},
 			//inject 
 			inject:function(o,f,ksel){ if(typeof f === "function") { this.map(function(v,k){ var or = f(v,o,k); if(typeof or !== "undefined") { o=or; } },ksel); return o; } },
@@ -2237,7 +2331,10 @@
 			//jsonString으로 반환
 			toString:function(){ return JSON.stringify(this.getDataPropFix()); },
 			//키이름을 변경
-			change:function(original, change){ if(typeof original === "string" && typeof change === "string") { this.Source[change] = this.Source[original]; delete this.Source[original]; } return this.Source; },
+			change:function(original, change){ 
+				N.propChange(this.Source,original,change); 
+				return this.Source;
+			},
 			//오브젝트의 키를 지우고자 할때
 			removeAll:function(){ for( var key in this.Source ) delete this.Source[key]; return this.Source; },
 			getRemove:function(){ var source = this.Source; new N.Array(arguments).setStringFlatten().each(function(key){ delete source[key]; }); return this.Source; },
@@ -3112,7 +3209,7 @@
 						N.node.attr(node,"style",prefixedName+":"+prefixedValue+";"+wasStyle);
 					}
 				} else if(typeof styleName === "object") {
-					N.propsEach(styleName,function(val,name){
+					N.propEach(styleName,function(val,name){
 						if(typeof name === "string"){ N.NodeUtil.style(node,name,val); }
 					});
 				}
@@ -3245,7 +3342,7 @@
 				}
 			},1),
 			"findRoot":N.CONTINUE_FUNCTION(function(el){ 
-				return N.NodeUtil.root(N.find(el,0));
+				return N.NodeUtil.root(N.findLite(el)[0]);
 			},1),
 			"findBefore":N.CONTINUE_FUNCTION(function(node,filter){ 
 				node = N.findLite(node)[0];
@@ -3464,6 +3561,7 @@
 			},1),
 			"makes":N.CONTINUE_FUNCTION(function(fulltag,root){
 				if(typeof fulltag !== "string" || !fulltag) return [];
+				
 				var makeRoot    = N.make('div');
 				var hasTemplate = (fulltag.toLowerCase().indexOf("template") > -1)?true:false;
 				var divideIndex = fulltag.indexOf(">");
@@ -3852,7 +3950,7 @@
 				if( t ){
 					var tag = t.tagName.toLowerCase();
 					var tid = tclass = tname = tattr = tvalue = '';
-					N.propsEach(N.NodeUtil.attr(t),function(value,sign){
+					N.propEach(N.NodeUtil.attr(t),function(value,sign){
 						switch(sign){
 							case "id"   : 
 								var id = t.getAttribute(sign); 
@@ -4129,7 +4227,7 @@
 						}
 						//textarea
 						var pos  = 0,
-						ran    = node.createTextRange(),
+						ran      = node.createTextRange(),
 						r2       = document.selection.createRange().duplicate(),
 						bookmark = r2.getBookmark();
 
@@ -4181,7 +4279,7 @@
 				} else {
 					e = {};
 				}
-				if(eventParam) N.propsEach(eventParam,function(v,k){ e[k] = v; });
+				if(eventParam) N.propEach(eventParam,function(v,k){ e[k] = v; });
 			    node.dispatchEvent(e);
 				return node;
 			},
@@ -4269,7 +4367,7 @@
 				}
 			},
 			"off":function(node, eventName, eventHandler, useCapture){
-				if((typeof eventName !== "string") || (typeof eventHandler !== "function")) return console.erro("N.node.on 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요",node, eventName, eventHandler);
+				if((typeof eventName !== "string") || (typeof eventHandler !== "function")) return console.error("N.node.on 노드 , 이벤트이름, 이벤트헨들러 순으로 파라메터를 입력하세요",node, eventName, eventHandler);
 				var nodes  = N.node.onTarget(node);
 				var events = eventName.split(" ");
 				N.dataEach(nodes,function(eventNode){
@@ -4493,6 +4591,12 @@
 			find:function(query){ 
 				return new N.NodeHandler(N.find.apply(undefined,[query,this].concat(Array.prototype.slice.call(arguments,1)))); 
 			},
+			parent:function(query){ 
+				return new N.NodeHandler(N.findParent.apply(undefined,[this].concat(Array.prototype.slice.call(arguments)))); 
+			},
+			parents:function(query){ 
+				return new N.NodeHandler(N.findParents.apply(undefined,[this].concat(Array.prototype.slice.call(arguments)))); 
+			},
 			children:function(query){ 
 				return new N.NodeHandler(N.findOn(this,query)); 
 			},
@@ -4636,31 +4740,34 @@
 		});
 		
 		N.EXTEND_MODULE("NodeHandler","Partial",{
-			partialNode:function(partialCase,partialKey){
+			findPartial:function(partialCase,partialKey){
 				if(arguments.length === 0) return N.clone(this.__partialPointer);
-				if(!(partialCase in this.__partialPointer)) return console.error("NodeHandler::partialNode case가 존재하지 않습니다.",partialCase,this.__partialPointer);
+				if(!(partialCase in this.__partialPointer)) 
+					return console.error("NodeHandler::partial case가 존재하지 않습니다.",partialCase,this.__partialPointer);
 				if(arguments.length === 1) return N.clone(this.__partialPointer[partialCase]);
-				return this.__partialPointer[partialCase][partialKey];
+				return new N.NodeHandler(this.__partialPointer[partialCase][partialKey]);
 			},
 			group:function(key){
-				return new N.NodeHandler(this.partialNode("group",key));
+				return this.findPartial("group",key);
 			},
-			value:function(key){
-				return N.node.value(this.partialNode("value",key));
-			},
-			setValue:function(key,value){
-				if(value === undefined || value === null) return;
-				N.dataEach(this.partialNode("value",key),function(node){
-					return N.node.value(node,value);
-				});
-				return this;
+			value:function(key,value){
+				if(arguments.length === 2){
+					if(value !== undefined || value !== null){
+						this.findPartial("value",key).each(function(node){
+							return N.node.value(node,value);
+						});
+					}
+					return this;
+				} else {
+					return this.findPartial("value",key).value();
+				}
 			},
 			put:function(key,value){
 				var puts = nd.findLite(value);
 				if(!puts.length) return this;
-				N.dataEach(this.partialNode("put",key),function(node){
+				this.findPartial("put",key).each(function(node){
 					return N.node.put(node,puts);
-				});
+				})
 				return this;
 			},
 			// 실제 노드의 키를 지우면서 실행함
@@ -4679,14 +4786,12 @@
 				}
 			},
 			//성능의 가속을 위해 존재하는 값들입니다. 이것을 건드리면 엄청난 문제를 초례할 가능성이 있습니다.
-			defaultPartialDataKeys:['value','html','class','dataset','href','put','display','group'],
-			defaultPartialAttrKeys:["nd-value", 'nd-html', "nd-class", "nd-dataset", "nd-href", "nd-put", "nd-display","nd-group"],
-			defaultPartialSelectorKeys:["[nd-value]", "[nd-html]", "[nd-class]", "[nd-dataset]", "[nd-href]", "[nd-put]", "[nd-display]", "[nd-group]"],
+			defaultPartialDataKeys:['dataset','value','href','put','display','group'],
+			defaultPartialAttrKeys:["nd-dataset","nd-value","nd-href","nd-put","nd-display","nd-group"],
+			defaultPartialSelectorKeys:["[nd-dataset]","[nd-value]","[nd-href]","[nd-put]","[nd-display]","[nd-group]"],
 			setPartialProperties:function(data,dataFilter){
 				if(!data)data={};
-				
 				var pointer = this.__partialPointer;
-				
 				this.partialSetup(this.defaultPartialDataKeys,function(name,node,nodeAlias){
 						if(!(nodeAlias in pointer)) pointer[nodeAlias] = {};
 						name.replace(/\S+/g,function(s){
@@ -4697,7 +4802,7 @@
 				);
 			
 				if(typeof dataFilter === 'object') {
-					N.propsEach(dataFilter,function(value,key){
+					N.propEach(dataFilter,function(value,key){
 						if(typeof value === 'function') {
 							if( pointer.custom && (key in pointer.custom) ) {
 								data[key] = value;
@@ -4725,7 +4830,7 @@
 									//case "append" : N.node.append(node,data[attrValue]);break;
 									//case "prepend": N.node.prepend(node,data[attrValue]);break;
 									case "display": if(!data[attrValue]){N.node.style(node,'display','none');}  break;
-									case "dataset": N.propsEach(data[attrValue],function(key,value){ node.dataset[value] = key; });break;
+									case "dataset": N.propEach(data[attrValue],function(key,value){ node.dataset[value] = key; });break;
 									case "group" : if(typeof data[attrValue] === 'function') data[attrValue].call(node,node,attrValue); break;
 								}
 							}
@@ -4958,7 +5063,7 @@
 							this.ActiveKeys.add(status);
 							N.APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
 							N.APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
-							if( this.ActiveKeys.length === N.propsLength(this.Source) ) N.APPLY(this.AllActive,owner,param);
+							if( this.ActiveKeys.length === N.propLength(this.Source) ) N.APPLY(this.AllActive,owner,param);
 						}
 					} else  {
 						if( N.APPLY(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
@@ -4970,7 +5075,7 @@
 							this.ActiveKeys.add(status);
 							N.APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
 							N.APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
-							if( this.ActiveKeys.length === N.propsLength(this.Source) ) N.APPLY(this.AllActive,owner,param);
+							if( this.ActiveKeys.length === N.propLength(this.Source) ) N.APPLY(this.AllActive,owner,param);
 						}
 					}
 				}
@@ -5548,14 +5653,14 @@
 				var _self = this;
 				
 				if(viewStatus && (typeof viewStatus === "object")) {
-					N.propsEach(viewStatus,function(handle,key){
+					N.propEach(viewStatus,function(handle,key){
 						_self.addViewStatus(key,handle);
 					});
 				};
 				
 				if(typeof methodHelper === 'function') methodHelper = {init:methodHelper};
 				
-				N.propsEach(methodHelper,function(fn,key){
+				N.propEach(methodHelper,function(fn,key){
 					if(!(key in _self.constructor.prototype)) {
 						if(key === 'init') {
 							if(typeof fn === 'function') fn.apply(_self,Array.prototype.slice.call(arguments));
@@ -5690,7 +5795,7 @@
 				}
 				return N.find("[data-role~="+activeRolename+"]",findwhere);
 			},
-			"++dataRoleActive":function(findwhere,props,data,rolename){
+			"++activeDataRole":function(findwhere,props,data,rolename){
 				var _self=this;
 				var findedRoles = this.findRole(findwhere,rolename),resultController = [];
 				for(var i=0,l=findedRoles.length;i<l;i++){
@@ -5753,8 +5858,17 @@
 			}
 		},function(targetRole,props,data,initViewProc){
 			if( this._super(targetRole,true,true) === true ) {
-				this.ManageProp  = new N.HashSource(props);
-				this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+				if(N.isModule(props,"Binder")){
+					this.ManageProp = props.beforeProperty;
+					this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+					this.Binder = props;
+				} else if(N.isModule(props,"HashSource")) {
+					this.ManageProp  = props;
+					this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+				} else {
+					this.ManageProp  = new N.HashSource(props);
+					this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+				}
 				this.ManageData  = new N.Array(data);
 				this.ManageEvent = new N.EventListener(this);
 				
@@ -6365,7 +6479,7 @@
 								managedData.feedDownLinkData(function(){
 									var md   = this;
 									var pass = true;
-									N.propsEach(wantedProps,function(v,k){
+									N.propEach(wantedProps,function(v,k){
 										return pass = (v === null || v === '') ? md.hasProp(k) : (md.prop(k) == v);
 									});
 									if(pass === true) searchResult.push(md);
@@ -6376,7 +6490,7 @@
 								var passData = [];
 								N.dataEach(managedData.Child,function(managedData){
 									var pass = true;
-									N.propsEach(wantedProps,function(v,k){
+									N.propEach(wantedProps,function(v,k){
 										return pass = (v === null || v === '') ? managedData.hasProp(k) : (managedData.prop(k) == v);
 									});
 									if(pass === true) searchResult.push(managedData);
@@ -6535,7 +6649,7 @@
 				} else if(key === "object"){
 					for(var propKey in key) { this.setProp(propKey,key[propKey],false); }
 				}
-				if(useBind !== false) this.DataContext.Binder.resend(this,"GLOBAL.LinkDataWasSetValue",this);
+				if(useBind !== false) this.DataContext.Binder.post(this,"GLOBAL.LinkDataWasSetValue",this);
 				return this;
 			},
 			removeProp:function(key){
@@ -6582,26 +6696,26 @@
 				
 				// dataFilter 에서 function필터링시 메니지드 데이터 스코프에 포함하도록 한다.
 				if(typeof dataFilter === 'object'){
-	   				 dataFilter = N.propsMap(dataFilter,function(v){
+	   				 dataFilter = N.propMap(dataFilter,function(v){
 	   					if(typeof v === 'function') return function(){ return v.apply(_self,Array.prototype.slice.call(arguments));};
 	   					return v;
 	   				});
 				}
 				//output partial
-				var partialNode;
+				var partialOutput;
 				if(typeof _template === 'object') { 
-					partialNode = _template.output(this.prop(),dataFilter);
+					partialOutput = _template.output(this.prop(),dataFilter);
 				} else if(typeof _template === 'string') {
-					partialNode = (new N.Template(_template,true)).output(this.prop(),dataFilter);
+					partialOutput = (new N.Template(_template,true)).output(this.prop(),dataFilter);
 				} else { 
 					console.error('template 값이 잘못되어 랜더링을 할수 없었습니다.',_template); return false; 
 				}
 				
-				if(partialNode.isNone()) { 
-					console.error("template :: 렌더링할 template를 찾을수 없습니다",partialNode); return false; 
+				if(partialOutput.isNone()) { 
+					console.error("template :: 렌더링할 template를 찾을수 없습니다",partialOutput); return false; 
 				}
 
-				partialNode.partialSetup(['bind','action','placeholder'],
+				partialOutput.partialSetup(['bind','action','placeholder'],
 					function(name,node,nodeAlias){
 						switch(nodeAlias){
 							case 'bind': _self.bind(name,node); break;
@@ -6617,7 +6731,7 @@
 						}
 					}
 				);
-				return partialNode;
+				return partialOutput;
 			},
 			response:function(responseKey,proc){
 				if(typeof responseKey !== "string" && typeof proc !== "function") console.warn("response args must be string & function => ",responseKey,proc);
@@ -6673,12 +6787,12 @@
 			//렌더시 다음 아래의 메서드들은 절대 호출하면 안됩니다.
 			//지정한 인덱스로
 			rerender:function(){
-				this.DataContext.Binder.resend(this,"GLOBAL.LinkDataNeedRerender",this);
+				this.DataContext.Binder.post(this,"GLOBAL.LinkDataNeedRerender",this);
 			},
 			managedDataIndexExchange:function(changeTarget){
 				if(changeTarget){
 					this.Parent.Child.changeIndex(this.getIndex(),changeTarget.getIndex());
-					this.DataContext.Binder.resend(this,"GLOBAL.LinkDataIndexExchange",[this,changeTarget]);
+					this.DataContext.Binder.post(this,"GLOBAL.LinkDataIndexExchange",[this,changeTarget]);
 					return true;
 				}
 				return false;
@@ -6699,7 +6813,7 @@
 			removeLinkData:function(onlyThis){
 				if(onlyThis === true) {
 					this.removeFromParent();
-					this.DataContext.Binder.resend(this,"GLOBAL.LinkDataRemoved",this);
+					this.DataContext.Binder.post(this,"GLOBAL.LinkDataRemoved",this);
 					this.release();
 				} else {
 					this.feedUpManageData(function(md){ 
@@ -6720,7 +6834,7 @@
 				if(typeof data === "object") {
 					this.DataContext.feedDownLinkDataMake(data||{},this);
 					var makedData = this.Child.last();
-					this.DataContext.Binder.resend(this,"GLOBAL.LinkDataAddedChild",{"dataID":this.DataID,"newLinkData":makedData});
+					this.DataContext.Binder.post(this,"GLOBAL.LinkDataAddedChild",{"dataID":this.DataID,"newLinkData":makedData});
 					return makedData;
 				} else {
 					console.warn("addChildData :: append data가 들어오지 않았습니다", data);
@@ -7180,7 +7294,7 @@
 				//set data
 				if(allowProc === true) this.shouldSendValueToListenersInfo(sendTargets,setValue,dataName);
 			},
-			resend:function(sender,dataName,setValue,forceLevel){
+			post:function(sender,dataName,setValue,forceLevel){
 				this.send(sender,dataName,setValue,forceLevel,true);
 			},
 			listen:function(listener,propertyName,proc,allowProc,protectLevel,prefixListen){
@@ -7223,9 +7337,11 @@
 			selfListen:function(propertyName,proc,allowProc,protectLevel){
 				return this.listen(this,propertyName,proc,allowProc,protectLevel);
 			},
-			//custom send
-			getValue:function(propertyName){
-				return this.beforeProperty.prop(propertyName);
+			prop:function(){
+				return this.beforeProperty.prop.apply(this.beforeProperty,Array.prototype.slice.call(arguments));
+			},
+			setProp:function(){
+				return this.beforeProperty.setProp.apply(this.beforeProperty,Array.prototype.slice.call(arguments));
 			},
 			inspect:function(allowProc,propertyName,protectLevel){
 				var propertyName = (typeof propertyName === "string")?propertyName:this.defaultKey;
@@ -7260,11 +7376,16 @@
 					});
 				}
 			},
-			getListeners:function(){
-				return this.Source.map(function(listenInfo){ listenInfo.listener }).setUnique();
+			getListener:function(){
+				return this.Source.map(function(listenInfo){ return listenInfo.listener }).setUnique();
+			},
+			getListenerByKey:function(key){
+				return this.Source.filter(function(listenInfo){ 
+					return listenInfo.propertyName === key;
+				}).setUnique();
 			},
 			getProperties:function(){
-				return this.Source.map(function(listenInfo){ listenInfo.propertyName }).setUnique();
+				return this.Source.map(function(listenInfo){ return listenInfo.propertyName }).setUnique();
 			},
 			removeListener:function(listener){
 				this.Source.setFilter(function(listenInfo){
@@ -7507,17 +7628,20 @@
 			setFPS:function(fps){
 				this._fps      = (typeof fps === "number") ? fps : 30;
 				this._interval = N.parseInt(1000 / this._fps);
+			},
+			clear:function(){
+				this.Source = new N.Array();
+				this.Status = new N.HashSource({
+					timeStart:0,
+					timeEnd  :0
+				});
+				this._tick  = 0;
+				this._rate  = 0;
+				this._wheel = null;
+				this._rightDirection = true;
 			}
 		},function(fps){
-			this.Source = new N.Array();
-			this.Status = new N.HashSource({
-				timeStart:0,
-				timeEnd  :0
-			});
-			this._tick  = 0;
-			this._rate  = 0;
-			this._wheel = null;
-			this._rightDirection = true;
+			this.clear();
 			if(typeof fps === "number") this.setFPS(fps);
 			
 			this.EventListener = new N.EventListener(this);
