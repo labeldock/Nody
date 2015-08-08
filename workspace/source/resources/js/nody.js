@@ -8,7 +8,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.28.4", N.BUILD = "1240";
+		N.VERSION = "0.29", N.BUILD = "1250";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -636,6 +636,7 @@
 			});
 			return tr;
 		};
+		
 		// Nody Super base
 		N.SINGLETON("KIT",{
 			"dataCall":N.CONTINUE_FUNCTION(function(d,alt){ return (typeof d === 'undefined') ? N.cloneArray(alt) : ((alt === true) ? N.cloneArray(d) : N.toArray(d)); },1),
@@ -667,7 +668,10 @@
 				return ev; 
 			},2),
 			// 각각의 값을 배열로 다시 구해오기
-			"dataMap":N.CONTINUE_FUNCTION(function(v,f){ var rv=[],ev=N.toArray(v); for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
+			"dataMap":N.CONTINUE_FUNCTION(function(v,f){ 
+				var rv=[],ev=N.toArray(v); 
+				for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; 
+			},2),
 			"arrayMap":N.CONTINUE_FUNCTION(function(v,f){ 
 				var rv = N.toArray(v);
 				for(var i=0,l=rv.length;i<l;i++) rv[i] = f.call(rv[i],rv[i],i); return rv;
@@ -1102,21 +1106,6 @@
 			},
 			//무엇이든 문자열로 넘기지만 4댑스 이하로는 읽지 않음
 			"tos"  : function(tosv,jsonfy){ return N.toString(tosv,9,jsonfy); },
-			"toDataString":function(v){ 
-				if(typeof v === "boolean") return v ? "true" : "false";
-				return N.toString(v,99,true); 
-			},
-			"fromDataString":function(v){ 
-				if(typeof v === "string") { 
-					if( v.charAt(0)=="\"" && v.charAt(v.length-1)=="\"" ){
-						return v.substr(1,v.length-2);
-					} else {
-						return eval("(" + v + ")");
-					}
-					console.error("decodeString::디코딩실패 ->",v,"<-");throw e;
-				}
-				return v; 
-			},
 			//어떠한 객체의 길이를 조절함
 			"max"  : function(target,length,suffix){
 				if(typeof target === "string"){
@@ -1212,8 +1201,10 @@
 			}
 		});
 		N.KIT.EACH_TO_METHOD();
+		
 	})(window,[],{},{},{},N);
-
+	
+	
 	// AMD : Requirejs
 	(function(W){
 		window.nd = window.nody = N;
@@ -1226,7 +1217,12 @@
 		
 		N.ENV = (function(){
 			var info = {};
+			
 			if(navigator) {
+				//agent test
+				info.agent = (navigator.userAgent||navigator.vendor||window.opera);
+				info.isAgent = function(t){ return info.agent && ((typeof t === "string") ? info.agent.toLowerCase().indexOf(t.toLowerCase()) > -1 : info.agent); };
+				
 				// Operating system
 				info.os = /(win|mac|linux|iphone)/.exec(navigator.platform.toLowerCase());
 				info.os = (info.os !== null) ? info.os[0].replace("sunos", "solaris") : "unknown";
@@ -1255,7 +1251,19 @@
 				info.browser = info.os = 'unknown';
 				info.online  = false; 
 			}
-		
+			
+			//support LocalStorage
+			info.supportLocalStorage = window ? ('localStorage' in window) ? true : false : false;
+			info.localStorage = window.localStorage;
+			
+			//support SessionStorage
+			info.supportSessionStorage = window ? ('sessionStorage' in window) ? true : false : false;
+			info.sessionStorage = window.sessionStorage;
+			
+			//storage hack
+			info.supportStorage = info.supportLocalStorage || info.supportSessionStorage;
+			info.storage = info.localStorage || info.sessionStorage;
+			
 			//support ComputedStyle
 			info.supportComputedStyle  =  window ? ('getComputedStyle' in window) ? true : false : false;
 		
@@ -1418,12 +1426,195 @@
 			N.MATCHES_SELECTOR_ENGINE_ID = null;
 			throw new Error("Nody::ENV::IMPORTANT!! - matchesSelectorEngine is not detected");
 		}
-		
 	})(N);
 
 	//Nody Foundation
 	(function(W,N){
 		if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
+		
+		
+		//expireTime default 16h
+		var STORE_DEFAULT_EXPIRE_TIME = 57600000;
+		var STORE_DEFAULT_PERSISTENT_TIME = 2000000000;
+		N.SINGLETON("STORE",{
+			//cookie
+			setCookie:function (name, value, expire, path) { document.cookie = name + "=" + escape(value) + ((expire == undefined) ?"" : ("; expires=" + expire.toGMTString())) + ";path=" + (typeof path === "undefined"?"/":escape(path)) },
+			getCookie:function (name,path) {
+			  var search = name + "="; 
+			  if (document.cookie.length > 0) {
+			    var offset = document.cookie.indexOf(search); 
+			    if (offset != -1){
+			        offset += search.length;
+			        var end = document.cookie.indexOf(";", offset);
+			        if (end == -1) 
+			          end = document.cookie.length; 
+			        return unescape(document.cookie.substring(offset, end)); 
+			    }
+			  }
+			  return null;
+			},
+			usingCookie:function (name) { if(this.getCookie(name))return true;return false; },
+			touchCookie:function (name, expireTime, cookieValue) {
+				if(!this.getCookie(name)) {
+					if(!cookieValue)cookieValue = "true";
+					
+					if(!expireTime) expireTime  = STORE_DEFAULT_EXPIRE_TIME;
+					var now    = new Date();
+					var expire = new Date();
+					expire.setTime(now.getTime()+expireTime);
+				    setCookie(name, cookieValue, expire); 
+					return true;
+				}
+				return false;
+			},
+			removeCookie:function(name,path){ path = ";path=" + (typeof path === "undefined"? "/" : escape(path)); document.cookie=name+"="+path+";expires=Thu, 01 Jan 1970 00:00:01 GMT"; },
+			setLocalData:(function(){
+				if(N.ENV.supportLocalStorage)
+					return function(k,v){
+						N.ENV.localStorage.setItem(k,N.toDataString(v));
+						return true;
+					}
+				return function(k,v){ return this.setCookie(k,N.toDataString(v)); };
+			}()),
+			localData:(function(){
+				if(N.ENV.supportLocalStorage)
+					return function(k){
+						if(!arguments.length) return N.ENV.localStorage;
+						var bi = N.ENV.localStorage.getItem(k);
+						return (bi==null) ? undefined : N.fromDataString(bi);
+					}
+				return function(k){ N.fromDataString(this.getCookie(k)); };
+			}()),
+			usingLocalData:(function(){
+				if(N.ENV.supportLocalStorage)
+					return function(k){
+						return (N.ENV.localStorage.getItem(k) ? true : false);
+					}
+				return function(k){ this.usingCookie(k) };
+			}()),
+			touchLocalData:(function(){
+				if(N.ENV.supportLocalStorage)
+					return function(k,v){
+						if( !this.usingLocalData(k) ) this.setLocalData(k,v);
+					};
+				return function(k,v){ this.touchCookie(k,N.toDataString(v)) };
+			}()),
+			removeLocalData:(function(){
+				if(N.ENV.supportLocalStorage)
+					return function(k){
+						N.ENV.localStorage.removeItem(k);
+					};
+				return function(k){this.removeCookie(k)}
+			}()),
+			setSessionData:(function(){
+				if(N.ENV.supportSessionStorage)
+					return function(k,v){
+						N.ENV.sessionStorage.setItem(k,N.toDataString(v));
+						return true;
+					}
+				return function(k,v){ return this.setCookie(k,N.toDataString(v)); };
+			}()),
+			sessionData:(function(){
+				if(N.ENV.supportSessionStorage)
+					return function(k){
+						if(!arguments.length) return N.ENV.sessionStorage;
+						var bi = N.ENV.sessionStorage.getItem(k);
+						return (bi==null) ? undefined : N.fromDataString(bi);
+					}
+				return function(k){ N.fromDataString(this.getCookie(k)); };
+			}()),
+			usingSessionData:(function(){
+				if(N.ENV.supportSessionStorage)
+					return function(k){
+						return (N.ENV.sessionStorage.getItem(k) ? true : false);
+					}
+				return function(k){ this.usingCookie(k) };
+			}()),
+			touchSessionData:(function(){
+				if(N.ENV.supportSessionStorage || N.ENV.isAgent("adobeair"))
+					return function(k,v){
+						if( !this.usingSessionData(k) ) this.setSessionData(k,v);
+					};
+				return function(k,v){ this.touchCookie(k,N.toDataString(v)) };
+			}()),
+			removeSessionData:(function(){
+				if(N.ENV.supportSessionStorage)
+					return function(k){
+						N.ENV.sessionStorage.removeItem(k);
+					};
+				return function(k){this.removeCookie(k)}
+			}()),			
+			//clipboard
+			setClipboard:function(s){
+				//http://stackoverflow.com/questions/7713182/copy-to-clipboard-for-all-browsers-using-javascript
+			    if( window.clipboardData && clipboardData.setData ) { 
+					clipboardData.setData("Text", s); 
+				} else {
+			        // You have to sign the code to enable this or allow the action in about:config by changing
+			        user_pref("signed.applets.codebase_principal_support", true);
+			        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+			        var clip = Components.classes['@mozilla.org/widget/clipboard;[[[[1]]]]'].createInstance(Components.interfaces.nsIClipboard);
+			        if (!clip) return;
+			        // create a transferable
+			        var trans = Components.classes['@mozilla.org/widget/transferable;[[[[1]]]]'].createInstance(Components.interfaces.nsITransferable);
+			        if (!trans) return;
+			        // specify the data we wish to handle. Plaintext in this case.
+			        trans.addDataFlavor('text/unicode');
+			        // To get the data from the transferable we need two new objects
+			        var str = new N.HashSource();
+			        var len = new N.HashSource();
+			        var str = Components.classes["@mozilla.org/supports-string;[[[[1]]]]"].createInstance(Components.interfaces.nsISupportsString);
+			        var copytext=meintext;
+			        str.data=copytext;
+			        trans.setTransferData("text/unicode",str,copytext.length*[[[[2]]]]);
+			        var clipid=Components.interfaces.nsIClipboard;
+			        if (!clip) return false;
+			        clip.setData(trans,null,clipid.kGlobalClipboard);      
+			    }
+			},
+			"toDataString":function(v){ 
+				if(typeof v === "boolean") return v ? "true" : "false";
+				return N.toString(v,99,true); 
+			},
+			"fromDataString":function(v){ 
+				if(typeof v === "string") { 
+					if( v.charAt(0)=="\"" && v.charAt(v.length-1)=="\"" ){
+						return v.substr(1,v.length-2);
+					} else {
+						return /^(\s+|)$/.test(v) ? "" : eval("(" + v + ")");
+					}
+					console.error("decodeString::디코딩실패 ->",v,"<-"); throw e;
+				}
+				return v; 
+			}
+		});
+		N.STORE.EACH_TO_METHOD();
+		
+		//FLASH INTERFACE
+		var FLASH_STORE_KEY     = "NODY_FLASH_PERSISTANCE_STORE";
+		var FLASH_STORE_BEFORE  = N.sessionData(FLASH_STORE_KEY) || {};
+		var FLASH_STORE_CURRENT = {};
+		window && window.addEventListener("beforeunload",function(e){ 
+			N.removeSessionData(FLASH_STORE_KEY);
+			if(N.propLength(FLASH_STORE_CURRENT) > 0){
+				N.setSessionData(FLASH_STORE_KEY,FLASH_STORE_CURRENT)
+			}
+		});
+		
+		N.SINGLETON("FLASH",{
+			flash:function(k){
+				return arguments.length ? N.fromDataString(FLASH_STORE_BEFORE[k]) : FLASH_STORE_BEFORE;
+			},
+			nextFlash:function(k,v){
+				if(arguments.length > 1){
+					FLASH_STORE_CURRENT[k] = N.toDataString(v);
+					return true;
+				}
+				return arguments.length ? FLASH_STORE_CURRENT[k] : FLASH_STORE_CURRENT;
+			}
+		})
+		N.FLASH.EACH_TO_METHOD();
+		
 		N.SINGLETON("PARTICU",{
 			"scalef":function(scale,value,total){
 				return (typeof value === "number"?value:100) / (typeof total === "number"?total:100) * scale;
@@ -1450,17 +1641,17 @@
 					return round;
 				});
 				if(fixResult !== 0){
-					console.log("?r",roundResult);
 					roundResult[roundResult.length-1] += fixResult;
 				} 
 				return roundResult;
 			},
-			"radiusArcf":function(radius,deg){
+			"arcPointf":function(radius,deg){
+				radius=N.parseFloat(radius),deg=N.parseFloat(deg);
 				var radian = (360-deg) * Math.PI / 180;
 				return [radius - radius * Math.sin(radian),radius - radius * Math.cos(radian)];
 			},
-			"radiusArc":function(radius,deg){
-				return N.arrayMap(N.radiusArcf(radius,deg),function(n){
+			"arcPoint":function(radius,deg){
+				return N.arrayMap(N.arcPointf(radius,deg),function(n){
 					return Math.round(n);
 				});
 			},
@@ -2527,14 +2718,16 @@
 			},
 			//model
 			removeModel:function(target,space){
+				//model split
 				space = space ? space : " ";
 				var models = this.Source.split(space);
 				var result = [];
-				if(target instanceof RegExp) {
-					for (var i=0,l=models.length;i<l;i++) if(target.test(models[i]) == false) result.push(models[i]);
-				} else {
-					for (var i=0,l=models.length;i<l;i++) if(models[i] !== target) result.push(models[i]);
-				}
+				if(typeof target === "string") target = new RegExp(
+					"("+ target.replace(new RegExp(space+"+","g"),"|")  + ")","g");
+				if(target instanceof RegExp) 
+					for (var i=0,l=models.length;i<l;i++) 
+						if(target.test(models[i]) == false) 
+							result.push(models[i]);
 				return result.join(space);
 			},
 			setRemoveModel:function(target,space){
@@ -2614,10 +2807,6 @@
 		//******************
 		//ClientKit
 		N.SINGLETON("Client",{
-			agent :function(t){ 
-				return (typeof t === "string") ? ((navigator.userAgent||navigator.vendor||window.opera).toLowerCase().indexOf(t.toLowerCase()) > -1) : (navigator.userAgent||navigator.vendor||window.opera);
-			},
-			info:N.ENV,
 			width :function(){ return (window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName('body')[0].clientWidth); },
 			height:function(){ return (window.innerHeight|| document.documentElement.clientHeight|| document.getElementsByTagName('body')[0].clientHeight); },
 			bound :function(){ return {"width":this.width(),"height":this.height()}; },
@@ -2662,46 +2851,6 @@
 			scriptName : function(url) { return this.scriptInfo(url).filename },
 			scriptPath : function(url) { return this.scriptInfo(url).path     },
 			scriptRoot : function(url) { return /(.*\/|\/|)[^\/]*$/.exec(this.scriptInfo(url).path)[1]; },
-			//cookie
-			setCookie:function (name, value, expire, path) { document.cookie = name + "=" + escape(value) + ((expire == undefined) ?"" : ("; expires=" + expire.toGMTString())) + ";path=" + (typeof path === "undefined"?"/":escape(path)) },
-			getCookie:function (name,path) {
-			  var search = name + "="; 
-			  if (document.cookie.length > 0) {
-			    var offset = document.cookie.indexOf(search); 
-			    if (offset != -1){
-			        offset += search.length;
-			        var end = document.cookie.indexOf(";", offset);
-			        if (end == -1) 
-			          end = document.cookie.length; 
-			        return unescape(document.cookie.substring(offset, end)); 
-			    }
-			  }
-			  return null;
-			},
-			usingCookie:function (name) { if(this.getCookie(name))return true;return false; },
-			touchCookie:function (name, expireTime, cookieValue) {
-				if(!this.getCookie(name)) {
-					if(!cookieValue)cookieValue = "true";
-					//expireTime default 16h
-					if(!expireTime) expireTime  = 57600000;
-					var now    = new Date();
-					var expire = new Date();
-					expire.setTime(now.getTime()+expireTime);
-				    setCookie(name, cookieValue, expire); 
-					return true;
-				}
-				return false;
-			},
-			removeCookie:function(name,path){ path = ";path=" + (typeof path === "undefined"? "/" : escape(path)); document.cookie=name+"="+path+";expires=Thu, 01 Jan 1970 00:00:01 GMT"; },
-			setLocalData:function(k,v){
-				if(this.agent("adobeair")){
-					 var utf8v = new air.ByteArray();
-					 utf8v.writeUTFBytes(N.toDataString(v));
-					 air.EncryptedLocalStore.setItem(k,utf8v);
-				} else {
-					return this.setCookie(k,N.toDataString(v));
-				}
-			},
 			isEventSupport:function(eventName,tagName){
 				var testTag = (typeof tagName === "object") ? tagName : document.createElement( (typeof tagName === "string") ? tagName : "div" );
 				var isSupport = ( eventName in testTag );
@@ -2711,72 +2860,11 @@
 				}
 				return isSupport;
 			},
-			localData:function(k){
-				if(this.agent("adobeair")){
-					var bi = air.EncryptedLocalStore.getItem(k);
-					if(bi==null){
-						return undefined;
-					} else {
-						return N.fromDataString(bi.readUTFBytes(bi.bytesAvailable));
-					}
-				} else {
-					return N.fromDataString(this.getCookie(k));
-				}
-			},
-			usingLocalData:function(k){
-				if(this.agent("adobeair")){
-					return (air.EncryptedLocalStore.getItem(k) ? true : false);
-				} else {
-					return this.usingCookie(k);
-				}
-			},
-			touchLocalData:function(k,v){
-				if(this.agent("adobeair")){
-					if( !this.usingLocalData ) this.setLocalData(k,v);
-				} else {
-					return this.touchCookie(k,v);
-				}
-			},
-			removeLocalData:function(k){
-				if(this.agent("adobeair")){
-					air.EncryptedLocalStore.removeItem(k);
-				} else {
-					return this.removeCookie(k);
-				}
-			},
 			isLocalHTML:function(){
 				return (location.href.indexOf("http:" == 0) || location.href.indexOf("https:" == 0)) ? true : false;
 			},
 			//include
 			include:function(aFilename){ return N.include(aFilename); },
-			//clipboard
-			setClipboard:function(s){
-				//http://stackoverflow.com/questions/7713182/copy-to-clipboard-for-all-browsers-using-javascript
-			    if( window.clipboardData && clipboardData.setData ) { 
-					clipboardData.setData("Text", s); 
-				} else {
-			        // You have to sign the code to enable this or allow the action in about:config by changing
-			        user_pref("signed.applets.codebase_principal_support", true);
-			        netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-			        var clip = Components.classes['@mozilla.org/widget/clipboard;[[[[1]]]]'].createInstance(Components.interfaces.nsIClipboard);
-			        if (!clip) return;
-			        // create a transferable
-			        var trans = Components.classes['@mozilla.org/widget/transferable;[[[[1]]]]'].createInstance(Components.interfaces.nsITransferable);
-			        if (!trans) return;
-			        // specify the data we wish to handle. Plaintext in this case.
-			        trans.addDataFlavor('text/unicode');
-			        // To get the data from the transferable we need two new objects
-			        var str = new N.HashSource();
-			        var len = new N.HashSource();
-			        var str = Components.classes["@mozilla.org/supports-string;[[[[1]]]]"].createInstance(Components.interfaces.nsISupportsString);
-			        var copytext=meintext;
-			        str.data=copytext;
-			        trans.setTransferData("text/unicode",str,copytext.length*[[[[2]]]]);
-			        var clipid=Components.interfaces.nsIClipboard;
-			        if (!clip) return false;
-			        clip.setData(trans,null,clipid.kGlobalClipboard);      
-			    }
-			},
 			cursorPoint:function(e) {
 			    e = e || window.event; 
 				var cursor = { x: 0, y: 0 };
@@ -4474,7 +4562,9 @@
 				var findNodes = N.findLite(node);
 				if(typeof attrName !== "string" && typeof removeClass !== "string") return findNodes;
 				for(var i=0,l=findNodes.length;i<l;i++) {
-					var didRemoveClassText = NODE_METHODS.CommonString.set(findNodes[i].getAttribute(attrName)).setRemoveModel(attrValue).trim();
+					var didRemoveClassText = NODE_METHODS.CommonString.set(
+						findNodes[i].getAttribute(attrName)
+					).setRemoveModel(attrValue).trim();
 					if( !didRemoveClassText.length ) {
 						findNodes[i].removeAttribute(attrName);
 					} else {
@@ -4542,13 +4632,20 @@
 			"toggleClass":function(el,toggleName,flag){
 				var nodes = N.findLite(el);
 				if(typeof toggleName !== 'string') return nodes;
+				
 				if(flag===undefined) {
 					return N.dataEach(nodes,function(node){
 						N.node.hasClass(node,toggleName) ? N.node.removeClass(node,toggleName) : N.node.addClass(node,toggleName);
 					});
-				} else {
-					return flag ? N.node.addClass(el,toggleName) : N.node.removeClass(el,toggleName);
 				}
+				if(N.isArray(flag)) flag = flag.join(" ");
+				
+				if(typeof flag === "string") {
+					N.node.removeClass(el,flag);
+					N.node.addClass(el,toggleName);
+				}
+				
+				return flag ? N.node.addClass(el,toggleName) : N.node.removeClass(el,toggleName);
 			},
 			"coords":function(nodes,coordinate,insertAbsolute,offsetX,offsetY,scale){
 				var findNode = N.findLite(nodes,0);
@@ -4733,10 +4830,14 @@
 		});
 		
 		N.METHOD("node",nd.NodeHandler.new);
+		
 		for(var key in NODE_METHODS) N.node[key]=NODE_METHODS[key];
-	
-		N.EXTEND_MODULE("NodeHandler","Make",{},function(node,attr,parent){
-			this.setSource(N.Element.create(node,attr,parent));
+		
+		N.METHOD("makeAnd",function(makeParam,makeParam2){
+			return new N.NodeHandler(N.make.apply(undefined,Array.prototype.slice.call(arguments)));
+		});
+		N.METHOD("makesAnd",function(makeParam,makeParam2){
+			return new N.NodeHandler(N.makes.apply(undefined,Array.prototype.slice.call(arguments)));
 		});
 		
 		N.EXTEND_MODULE("NodeHandler","Partial",{
@@ -4865,20 +4966,22 @@
 		});
 		
 		N.EXTEND_MODULE("NodeHandler","Template",{
-			clone :function(nodeData,dataFilter){ return new N.Template(this); },
-			output:function(nodeData,dataFilter){
-				return new N.Partial(N.cloneNodes(this),nodeData,dataFilter);
+			clone :function(){ return new N.Template(this,this.defaultFilter); },
+			output:function(nodeData,filter){
+				return new N.Partial(N.cloneNodes(this),nodeData,N.marge(this.defaultFilter,filter));
 			},
-			render:function(nodeData,dataFilter){
-				return this.output(nodeData,dataFilter).release()[0];
+			render:function(nodeData,filter){
+				return this.output(nodeData,N.marge(this.defaultFilter,filter)).release()[0];
 			},
-			renders:function(nodeDatas,dataFilter){
+			renders:function(nodeDatas,filter){
 				var _self = this;
+				var dataFilter = N.marge(this.defaultFilter,filter);
 				return N.dataMap(nodeDatas,function(data){
 					return _self.output(data,dataFilter).release()[0];
 				});
 			}
-		},function(node){
+		},function(node,defaultFilter){
+			this.defaultFilter = defaultFilter;
 			this.setSource(N.makeSampleNode(node));
 		});
 	})(window,N,N.ENV);

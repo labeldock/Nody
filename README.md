@@ -87,7 +87,20 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   
 ## Update history #
 
-#### 0.28.1 업데이트
+#### 0.29 업데이트
+  - [x] Adobe Air의 스토리지 관련 지원을 제거하였습니다.
+  - [x] 내부에서 STORE 모듈 영역이 분리되었습니다.
+  - [x] 인스턴스 데이터를 취급하는 FLASH 모듈이 추가되었습니다. Rails의 FLASH와 비슷한 작동방식입니다.
+  - [x] LocalStorage와 SessionStorage의 기능을 모두 지원합니다.
+  - [ ] 다중 Partial모듈 셋팅시 하위 Partial모듈의 셋팅을 가져오는것을 검토합니다.
+  - [ ] 코어:모든 모듈에 공통적으로 release를 추가하는것을 검토.
+  - [ ] 코어:Source관리 모듈이 아닌 모듈이 훨씬 많아 Source관리 메서드 제거 검토.
+  - [ ] LinkData에 behavior 추가에 대한 검토.
+  - [ ] 테스트페이지의 컨텐츠가 모두 version2labs.github.io로 옮겨집니다.
+  - [ ] Contexts와 ActiveContexts의 API가 재설계 됩니다.
+  - ( 코드가 증가함 ㅠㅠ : \[source:311\] \[min:175\])
+  
+#### 0.28 업데이트
   - [x] Partial모듈의 파셜노드들의 재사용성이 강화되었습니다.
   - [x] String모듈이 StringSource로 명칭 변경
   - [x] ZString모듈이 제거됨
@@ -98,28 +111,7 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   - [x] HTMLOpen모듈이 제거됨
   - [x] ManagedData모듈이 LinkData로 명칭 변경
   - [x] 일대다 DataContext - Presentor의 관계에서 중요한 버그 수정
-  - [ ] 코어:모든 모듈에 공통적으로 release를 추가하는것을 검토.
-  - [ ] 코어:Source관리 모듈이 아닌 모듈이 훨씬 많아 Source관리 메서드 제거 검토.
-  - [ ] LinkData에 behavior 추가에 대한 검토.
-  - [ ] 테스트페이지의 컨텐츠가 모두 version2labs.github.io로 옮겨집니다.
-  - [ ] Contexts와 ActiveContexts의 API가 재설계 됩니다.
   - (\[source:-21kB(303)\] \[min:-15kB(175)\])
-  
-#### 0.27.6 업데이트
-  - [x] Array모듈 연산시 반복문 오버헤드를 줄었습니다.
-  - [x] Template모듈이 Template모듈과 Partial모듈로 기능이 분리되었습니다. 
-  - [x] Template노드의 초기화부터 Partial렌더링까지 연산이 20배 이상 빨라졌습니다.
-  - [x] 모듈생성&확장시 프로토타입을 생략하고 초기화 가능해졌습니다.
-  - [x] data...함수와 다르게 진짜 배열만 동작하는 array...함수가 생겼습니다.
-  - [x] clone함수가 재정의 되었습니다.
-  - [x] 어떤 영역에 대한 노드 포함여부를 확인하기 위한 insideNode, outsideNode 함수가 생겼습니다.
-  - [x] RoleController에서 콜백으로 role을 정의할수 있도록 변경되었습니다.
-  - [x] NodeArray에 html, appendHTML, prependHTML 함수가 생겼습니다.
-  - [x] 'node' 함수가 생겼고 '$' 싱글턴 오브젝트가 사라졌습니다. 여전히 싱글턴으로 사용가능하며 함수 자체는 NodeArray모듈의 초기화 함수 입니다.
-  - [x] 새로운 드로세라에서 nody 객체가 좀 더 확연히 드러나도록 코어를 수정하였습니다.
-  - [x] node.css 함수가 생겼습니다. nd.node.css("#foo",".active"); 이런식으로 어트리뷰트를 추가할수 있습니다.
-  - [x] ContentLoader의 재정의 및 개발
-  - (\[source:+5kB(324)\] \[min:+3kB(190)\])
 
   
 ## 프로젝트의 방향 #
