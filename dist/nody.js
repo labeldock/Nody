@@ -8,7 +8,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.29", N.BUILD = "1250";
+		N.VERSION = "0.29.1", N.BUILD = "1252";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -3288,7 +3288,7 @@
 					//set
 					var wasStyle = N.node.attr(node,"style") || "";
 					if(value === null) {
-						wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+"(.?:.?|)[^\;]+\;","g"),function(s){console.log(s); return ''});
+						wasStyle     = wasStyle.replace(new RegExp("(-webkit-|-o-|-ms-|-moz-|)"+styleName+"(.?:.?|)[^\;]+\;","g"),function(s){return ''});
 						N.node.attr(node,"style",wasStyle);
 					} else {
 						var prefixedValue = N.ENV.getCSSName(value);
@@ -5228,553 +5228,6 @@
 			this.ActiveKeys = new N.Array();
 		});
 		
-		// 컨텍스트 컨트롤러
-		N.MODULE("Contexts",{
-			"+_selectPoolCount":0,
-			selectPoolStart:function(){
-				if(this._selectPoolCount === 0) this._selectPoolList = this.selects(false);
-				this._selectPoolCount = this._selectPoolCount + 1;
-				//console.log('pool ++',this._selectPoolCount);
-			},
-			selectPoolEnd:function(){
-				this._selectPoolCount = this._selectPoolCount - 1;
-				if(this._selectPoolCount === 0) this._selectPoolList = null;
-				//console.log('pool --',this._selectPoolCount);
-			},
-			contexts:function(callback){ 
-				var contexts = N.findLite(this._initParams[0]);
-				if(typeof callback === "function"){
-					return callback.apply(undefined,[contexts].concat(Array.prototype.slice.call(arguments,1)));
-				}
-				return contexts;
-			},
-			selects:function(usePool){
-				if(usePool == false && this._selectPoolCount > 0) { 
-					return N.cloneArray(this._selectPoolList);
-				}
-				
-				var selects;
-				switch(typeof this._initParams[1]) {
-					case 'function':
-						selects = this._initParams[1]();
-						break;
-					default:
-						var selectQuery = N.isNothing(this._initParams[1]) ? ">*" : this._initParams[1];
-						if(selectQuery == "self") return this.contexts();
-						if(selectQuery.charAt(0) == ">"){
-							selects = N.findOn(this.contexts(),selectQuery.substr(1));
-						} else {
-							selects = N.findIn(this.contexts(),selectQuery);
-						}
-						break;
-				}
-				if(selects && typeof usePool === "function") {
-					return usePool.apply(undefined,[selects].concat(Array.prototype.slice.call(arguments,1)));
-				}
-				return selects;
-			},
-			getContext:function(eq){ return this.contexts()[eq]; },
-			getSelect :function(eq){ return this.selects()[eq]; },
-			on:function(event,func,otherFunc){
-				var _ = this;
-				// 이벤트와 번호가 들어오면
-				if(typeof event=="string" && typeof func === "number"){
-					this.selectPoolStart();
-					//캐쉬를 사용함 단 트리깅에서만
-					var selNode = this.getSelect(func);
-				
-					if(N.isNode(selNode)) {
-						N.node.trigger(selNode,event, (arguments.length > 2)  ? {'arguments':Array.prototype.slice.call(arguments,2)} : undefined ); 
-					} else {
-						console.warn("Contexts::on::트리깅할 대상이 없습니다.");
-					} 
-					this.selectPoolEnd();
-					return this;
-				}
-				if(typeof event=="string" && typeof func === "function"){
-					N.node.on(this.contexts(),event,function(e){
-					
-						var curSel = new N.Array( _.selects() );
-						if(curSel.has(e.target)){
-							//버블이 잘 왔을때
-							var curfuncindex  = curSel.indexOf(e.target);
-							var curfuncresult = func.call(e.target,e,curfuncindex,_);
-						
-							if(curfuncresult == false) return false;
-						
-							if(typeof otherFunc === "function") curSel.each(function(otherObj,index){ 
-								if(e.target !== otherObj) return otherFunc.call(otherObj,e,index,_); 
-							});
-						
-							return curfuncresult;
-						} else {
-							//버블링이 중간에 멈췄을때
-							var eventCapture; 
-							curSel.each(function(sel){
-								if(N.find(e.target,sel,0)){
-									eventCapture = sel;
-									return false;
-								}
-							});
-							if(eventCapture){
-								//이벤트를 다시 발생시킴
-								N.node.trigger(eventCapture,e.type);
-								return false;
-							}
-						}
-					});
-				} else {
-					console.error("onSelect::초기화 할수 없습니다. 글자함수필요",event,func);
-				}
-				return this;
-			}
-		},function(contextSelector,selectsSelector){
-			this._initParams = [contextSelector,selectsSelector];
-		});
-	
-		N.EXTEND_MODULE('Contexts','FilterContexts',{
-			needFiltering:function(filterData){
-				var selectNodes = this.selects();
-				var fm = this.filterMethod;
-				var filteringDataIndexes = [];
-				if(this.filterClass) {
-					var fc = this.filterClass;
-					N.dataEach(this.selects(),function(sNode,i){
-						if( fm.call(sNode,sNode,i,filterData) === true ){
-							N.node.removeClass(sNode,fc)
-						} else {
-							N.node.addClass(sNode,fc);
-							filteringDataIndexes.push(i);
-						}
-					});
-				} else {
-					N.dataEach(this.selects(),function(sNode,i){
-						if( fm.call(sNode,sNode,i,filterData) === true ){
-							N.node.style(sNode,'display',null)
-						} else {
-							N.node.style(sNode,'display','none')
-							filteringDataIndexes.push(i)
-						}
-					});
-				}
-				return filteringDataIndexes;
-			}
-		},function(c,s,filterMethod,filterWithClass){
-			this._super(c,s);
-			if(typeof filterMethod !== 'function') console.error('Filter::세번째 파라메터는 반드시 함수를 넣어주세요',filterMethod);
-			this.filterMethod = filterMethod;
-		
-			if(typeof filterWithClass === 'string') this.filterClass = filterWithClass;
-			if(filterWithClass === true) this.filterClass = 'hidden';
-		});
-
-		N.EXTEND_MODULE("Contexts","ActiveContexts",{
-			whenWillActive:function(method){ this.ContextsEvents.willActive = method; return this; },
-			whenDidActive:function(method){ this.ContextsEvents.didActive = method; return this;},
-			whenDidInactive:function(method){ this.ContextsEvents.didInactive = method; return this; },
-			whenWillChange:function(method){ this.ContextsEvents.willChange = method; return this;},
-			whenDidChange:function(method){ this.ContextsEvents.didChange = method; return this;},
-			whenActiveToggle:function(am,im){ this.whenDidActive(am); return this.whenDidInactive(im); },
-			whenActiveStart:function(method){ this.ContextsEvents.activeStart = method; return this; },
-			whenActiveEnd:function(method){this.ContextsEvents.activeEnd = method; return this;},
-			shouldTriggering:function(index,wait){
-				var _ = this;
-				if(typeof index !== 'number') console.warn('index는 반드시 number이여야 합니다.');
-			
-				if((wait === 0) || (wait === false)) {
-					_.on(_.ContextsEventName,index,wait);
-				} else {
-					var t = setTimeout(function(){
-						_.on(_.ContextsEventName,index,wait);
-						clearTimeout(t);
-					},(typeof wait === 'number') ? wait : N.toNumber(wait));
-				}
-				return this;
-			},
-			getActiveIndexes:function(lastIndex){
-				this.selectPoolStart();
-			
-				var indexes = [];
-				N.dataEach( this.selects() ,function(node,i){ 
-					if(N.node.hasClass(node,'active')) indexes.push(i); 
-				 });
-			 
-				this.selectPoolEnd();
-			
-				if(typeof lastIndex === 'number')
-					return indexes[lastIndex];
-				if(lastIndex === true)
-					return indexes[indexes.length - 1];
-					return indexes;
-			},
-			setActiveIndexes:function(indexes,withEvent){;
-				this.selectPoolStart();
-			
-				var indexesObject = new N.Array(indexes);
-			
-				if(withEvent === false) {
-					N.dataEach( this.selects() , function(node,i){
-						if( indexesObject.has(i) ) {
-							if( !N.node.hasClass(node,'active') ) N.node.addClass(node,'active');
-						} else {
-							if( N.node.hasClass(node,'active') ) N.node.removeClass(node,'active');
-						} 
-					});
-				} else {
-					var _ = this;
-					N.dataEach( this.selects() , function(node,i){
-						if( indexesObject.has(i) ) {
-							if( !N.node.hasClass(node,'active') ) _.shouldTriggering(i,withEvent);
-						} else {
-							if( N.node.hasClass(node,'active') ) _.shouldTriggering(i,withEvent);
-						} 
-					});
-				}
-				this.selectPoolEnd();
-				return this;
-			},
-			shouldActive:function(index,withEvent,unique){
-				if(typeof index === 'number') {
-					this.selectPoolStart();
-				
-					var activeIndexes = this.getActiveIndexes();
-					if( !N.dataHas(activeIndexes,index) ) {
-						if(unique === true) {
-							this.setActiveIndexes([index],withEvent);
-						} else {
-							activeIndexes.push(index);
-							this.setActiveIndexes(activeIndexes,withEvent);
-						}
-					}
-					this.selectPoolEnd();
-				}
-				return this;
-			},
-			shouldInactive:function(index,withEvent){
-				if(typeof index === 'number') {
-					this.selectPoolStart();
-					var activeIndexes = new N.Array(this.getActiveIndexes()) ;
-					if( N.dataHas(activeIndexes,index) ) {
-						activeIndexes.remove(index);
-						this.setActiveIndexes(activeIndexes,withEvent);
-					}
-					this.selectPoolEnd();
-				}
-				return this;
-			},
-			getActiveSelects:function(){
-				this.selectPoolStart();
-				var r = N.dataFilter(this.selects(),function(node){ return N.node.hasClass(node,'active'); });
-				this.selectPoolEnd();
-				return r;
-			},
-			getInactiveSelects:function(){
-				this.selectPoolStart();
-				var r = N.dataFilter(this.selects(),function(node){ return !N.node.hasClass(node,'active'); });
-				this.selectPoolEnd();
-				return r;
-			},
-			activeAll:function(withEvent){
-				this.selectPoolStart();
-				this.setActiveIndexes(N.dataMap(this.selects(),function(n,i){ return i; }),withEvent);
-				this.selectPoolEnd();
-				return this;
-			},
-			inactiveAll:function(withEvent){
-				this.selectPoolStart();
-				this.setActiveIndexes([],withEvent);
-				this.selectPoolEnd();
-				return this;
-			},
-			hasActive:function(){
-				var result = false;
-				this.selectPoolStart();
-				var selects = this.selects();
-				for(var i=0,l=selects.length;i<l;i++) if(N.node.is(selects[i],'.active')){ result = true; break; }
-				this.selectPoolEnd();
-				return result;
-			},
-			isActiveAll:function(){
-				var result;
-				this.selectPoolStart();
-				result = (this.getActiveSelects().length == this.selects().length);
-				this.selectPoolEnd();
-				return result;
-			},
-			resetActiveTargetWithContexts:function(con,sel,pool){	
-				var selects = this.getActiveIndexes();
-				N.CALL(pool);
-				this._initParams[0] = con || this._initParams[0];
-				this._initParams[1] = sel || this._initParams[1];
-				if(selects.length) this.setActiveIndexes(selects,false);
-			},
-			resetActiveTarget:function(sel){
-				this.resetActiveTargetWithContexts(undefined,sel);
-			},
-			resetActiveTargetWithPool:function(sel,pool){
-				this.resetActiveTargetWithContexts(undefined,sel,pool);
-			}
-		},function(cSel,sSel,selectEvent,willActive,shouldActiveIndex,allowMultiActive,allowInactive){
-			this._super(cSel,sSel);
-			this.ContextsEvents = {};
-			this.ContextsEventName = (typeof selectEvent === "string") ? selectEvent : "click";
-			this.preventDefault   = true;
-			this.allowAutoActive  = true;
-			this.allowMultiActive = (typeof allowMultiActive === "boolean") ? allowMultiActive : false;
-			this.allowInactive    = (typeof allowInactive === "boolean")    ? allowInactive    : this.allowMultiActive;
-			//
-			var _ = this;
-			this.on(this.ContextsEventName,function(e,i){
-				var yesEvent = e.arguments ? !(e.arguments[0] === false) : true;
-			
-				var currentSelects = _.selects();
-			
-				if(_.preventDefault) e.preventDefault();
-			
-				//액티브가 실행될시
-				if(yesEvent) if( N.CALL(_.ContextsEvents.willActive,this,e,i) === false ) return false;
-			
-				//자동으로 액티브 실행
-				if(_.allowAutoActive) {
-					//이미 액티브 된 상태의 아이템의 경우 
-					if(N.node.hasClass(this,"active")) {
-						if(_.allowInactive) {
-							//인액티브가 가능한 경우
-							if(yesEvent) N.CALL(_.ContextsEvents.willChange,this,i);
-							N.node.removeClass(this,"active");
-							if(yesEvent) N.CALL(_.ContextsEvents.didChange,this,i);
-							if(yesEvent) if( N.find(".active",currentSelects).length == 0 ) N.CALL(_.ContextsEvents.activeEnd,this,i);
-							return false;
-						} else {
-							//인액티브가 불가능한 경우
-							return false;
-						}
-					}
-					//새로운 액티브를 만들기 위한 순서
-					//액티브 Item들을 찾아냄
-					var activeItems = N.find(".active",currentSelects);
-				
-					if(_.allowMultiActive) {
-						//다중 Active를 허용하는 경우
-						if(yesEvent) N.CALL(_.ContextsEvents.willChange,this,i);
-						N.node.addClass(this,"active");
-						if(yesEvent) if(activeItems.length === 0) N.CALL(_.ContextsEvents.activeStart,this,i);
-						if(yesEvent) N.CALL(_.ContextsEvents.didActive,this,i);
-						if(yesEvent) N.CALL(_.ContextsEvents.didChange,this,i);
-						//deactive를 실행하지 않음
-						return false;
-					} else {
-						//다중 Active를 허용하지 않는 경우
-						//인액티브 대상을 찾아 인액티브 시킵니다.
-						(new N.Array(currentSelects)).remove(this).each(function(node){
-							if(_.allowAutoActive) {
-								N.node.removeClass(node,"active");
-								if(yesEvent) N.CALL(_.ContextsEvents.didInactive,node);
-							}
-						});
-					
-						//액티브를 시작합니다.
-						if(yesEvent) N.CALL(_.ContextsEvents.willChange,this,i);
-						N.node.addClass(this,"active");
-						if(yesEvent) if(activeItems.length === 0) N.CALL(_.ContextsEvents.activeStart,this,i);
-						if(yesEvent) N.CALL(_.ContextsEvents.didActive,this,i);
-						if(yesEvent) N.CALL(_.ContextsEvents.didChange,this,i);
-						return false;
-					}
-				} 
-			});
-		
-			//whenWillActiveSet
-			if(willActive) this.whenWillActive(willActive);
-			//shouldActiveSet
-			if(typeof shouldActiveIndex === "function") shouldActiveIndex = shouldActiveIndex.call(this);
-			if(typeof shouldActiveIndex === "number") this.shouldActive(shouldActiveIndex,1);
-		});
-	
-	
-		N.MODULE('ActiveContextsGroup',{
-			getActiveIndexes:function(sourceIndex){
-				var selectSource = this.Source[sourceIndex || (this.Source.length - 1) ];
-				if(selectSource) return selectSource.getActiveIndexes();return [];
-			},
-			setActiveIndexes:function(indexes,withEvent,sender){
-				(new N.Array(this.Source)).remove(sender).each(function(ac, i){ 
-					ac.setActiveIndexes( indexes, (i === 0) ? (withEvent && true) : false ); });
-				return this;
-			},
-			shouldInactive:function(index,withEvent,sender){
-				(new N.Array(this.Source)).remove(sender).each(function(ac, i){
-					//첫번째만 무조건 이벤트 발생
-					ac.shouldInactive( index, (i === 0) ? (withEvent && true) : false ); 
-				});
-				return this;
-			},
-			shouldActive:function(index,withEvent,unique){
-				N.dataEach(this.Source,function(ac,i){
-					//첫번째만 무조건 이벤트 발생
-					ac.shouldActive( index, (i === 0) ? (withEvent && true) : false, unique); 
-				});
-				return this;
-			},
-			activeAll:function(withEvent, sourceIndex){
-				var lastSource = this.Source[ sourceIndex || (this.Source.length - 1) ];
-				if(lastSource) this.setActiveIndexes(N.dataMap(lastSource.selects(),function(n,i){
-					return i;
-				}),withEvent && true);	
-				return this;
-			},
-			inactiveAll:function(withEvent){
-				this.setActiveIndexes([],withEvent && true);
-			},
-		
-			getActiveSelects:function(sourceIndex){
-				var selectSource = this.Source[sourceIndex || (this.Source.length - 1)];
-				return selectSource.getActiveSelects();
-			},
-			hasActive:function(sourceIndex){
-				var selectSource = this.Source[sourceIndex || (this.Source.length - 1)];
-				return selectSource.hasActive();
-			},
-			syncActiveContexts:function(sender,syncPrevIndexes){
-				this.Source.push(sender);
-				var rootManager = this;
-				sender.whenWillActive(
-					function(i){ 
-						var who=this; 
-						return N.CALL(rootManager.ContextsEvents.willActive,who,i); 
-					}
-				);
-				sender.whenDidActive(
-					function(i){ 
-						var who=this;
-						rootManager.setActiveIndexes(sender.getActiveIndexes(),false,sender);
-						return N.CALL(rootManager.ContextsEvents.didActive,who,i);
-					}
-				);
-				sender.whenDidInactive(
-					function(i){
-						rootManager.setActiveIndexes(sender.getActiveIndexes(),false,sender);
-						var who=this; 
-						return N.CALL(rootManager.ContextsEvents.didInactive,who,i);
-					}
-				);
-				sender.whenWillChange(
-					function(){ 
-						var who=this; 
-						return N.CALL(rootManager.ContextsEvents.willChange,who);
-					}
-				);
-				sender.whenDidChange(
-					function(i){ 
-						var who=this; 
-						rootManager.setActiveIndexes(sender.getActiveIndexes(),false,sender);
-						return N.CALL(rootManager.ContextsEvents.didChange,who,i);
-					}
-				);
-				sender.whenActiveStart(
-					function(i){ 
-						var who=this;
-						return N.CALL(rootManager.ContextsEvents.activeStart,who,i);
-					}
-				);
-				sender.whenActiveEnd(
-					function(i){ 
-						var who=this;
-						return N.CALL(rootManager.ContextsEvents.activeEnd,who,i);
-					}
-				);
-			
-				if(syncPrevIndexes === true) {
-					var lastSource = this.Source[this.Source.length - 1];
-					if(lastSource) sender.setActiveIndexes(lastSource.getActiveIndexes(),false);
-				}
-				return sender;
-			},
-			makeActiveContexts:function(){
-				return this.syncActiveContexts(_ActiveContexts.apply(ActiveContexts,Array.prototype.slice.call(arguments)));
-			},
-			whenWillActive:function(method){ this.ContextsEvents.willActive = method; return this; },
-			whenDidActive:function(method){ this.ContextsEvents.didActive = method; return this;},
-			whenDidInactive:function(method){ this.ContextsEvents.didInactive = method; return this; },
-			whenWillChange:function(method){ this.ContextsEvents.willChange = method; return this;},
-			whenDidChange:function(method){ this.ContextsEvents.didChange = method; return this;},
-			whenActiveToggle:function(am,im){ this.whenDidActive(am); return this.whenDidInactive(im); },
-			whenActiveStart:function(method){ this.ContextsEvents.activeStart = method; return this; },
-			whenActiveEnd:function(method){this.ContextsEvents.activeEnd = method; return this;}
-		},function(controller){ 
-			this.ContextsEvents = {};
-			this.Source = []; 
-		});
-		
-		N.EXTEND_MODULE("ActiveStatus","ViewAndStatus",{
-			addViewStatus:function(statusName,active,inactive){
-				if(typeof statusName === 'string'){
-					if(typeof active === 'function'){
-						this.whenActive(statusName,active);
-					}
-					if(typeof inactive === 'function'){
-						this.whenInactive(statusName,inactive);
-					}
-				}
-			},
-			viewStatusTo:function(status){
-				if(typeof name === 'string') this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
-			},
-			node:function(innerKey){
-				if(arguments.length === 0) return new N.NodeHandler(this.view);
-				if(innerKey in this) innerKey = this[innerKey];
-				return new N.NodeHandler(N.find.apply(undefined,N.ownerMap(this,[innerKey,this.view].concat(Array.prototype.slice.call(arguments,1)))));
-			},
-			find:function(query){
-				return N.find.apply(undefined,N.ownerMap(this,[query,this.view].concat(Array.prototype.slice.call(arguments,1))));
-			}
-		},function(targetView,allowMulti,allowInactive){			
-			this.view = N.findLite(targetView)[0];
-			if(!this.view) return console.error("ViewAndStatus::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",targetView);
-			this._super(allowMulti,allowInactive);
-			return true;
-		});
-		
-		
-		N.EXTEND_MODULE("ViewAndStatus","FormController",{
-			setFormData:function(data,v2){
-				return this.Form.checkin(data,v2);
-			},
-			getFormData:function(){
-				return this.Form.checkout();
-			},
-			controlEach:function(h,f){
-				this.Form.selectEach(h,f);
-			},
-			getFormControl:function(){
-				return this.Form.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
-			}
-		},function(targetForm,viewStatus,methodHelper){
-			if( this._super(targetForm,false,true) === true ) {
-				this.Form = new N.Form(this.view);
-				
-				var _self = this;
-				
-				if(viewStatus && (typeof viewStatus === "object")) {
-					N.propEach(viewStatus,function(handle,key){
-						_self.addViewStatus(key,handle);
-					});
-				};
-				
-				if(typeof methodHelper === 'function') methodHelper = {init:methodHelper};
-				
-				N.propEach(methodHelper,function(fn,key){
-					if(!(key in _self.constructor.prototype)) {
-						if(key === 'init') {
-							if(typeof fn === 'function') fn.apply(_self,Array.prototype.slice.call(arguments));
-						} else {
-							_self[key] = (typeof fn === 'function') ? function(){fn.apply(_self,Array.prototype.slice.call(arguments));} : fn;
-						}
-					}
-				});
-			}
-		});
-		
 		N.MODULE("EventListener",{
 			triggerWithOwner:function(owner,triggerName){
 				var args = Array.prototype.slice.call(arguments,2);
@@ -5886,6 +5339,348 @@
 			//{eventName:{aroundName:[handlers..]}}
 			this.ManageModuleAroundEvents = new N.HashSource();
 			var _self = this;
+		});
+		
+		// 컨텍스트 컨트롤러
+		N.MODULE("Contexts",{
+			"+_selectPoolCount":0,
+			selectPoolStart:function(proc){
+				if(this._selectPoolCount === 0) this._selectPoolList = this.selects(false);
+				this._selectPoolCount = this._selectPoolCount + 1;
+				
+				//console.log('pool ++',this._selectPoolCount);
+			},
+			selectPoolEnd:function(){
+				this._selectPoolCount = this._selectPoolCount - 1;
+				if(this._selectPoolCount === 0) this._selectPoolList = null;
+				//console.log('pool --',this._selectPoolCount);
+			},
+			contexts:function(callback){ 
+				var contexts = N.findLite(this._initParams[0]);
+				if(typeof callback === "function"){
+					return callback.apply(undefined,[contexts].concat(Array.prototype.slice.call(arguments,1)));
+				}
+				return contexts;
+			},
+			selects:function(usePool){
+				if(usePool == false && this._selectPoolCount > 0) { 
+					return N.cloneArray(this._selectPoolList);
+				}
+				
+				var selects;
+				switch(typeof this._initParams[1]) {
+					case 'function':
+						selects = this._initParams[1]();
+						break;
+					default:
+						var selectQuery = N.isNothing(this._initParams[1]) ? ">*" : this._initParams[1];
+						if(selectQuery == "self") return this.contexts();
+						if(selectQuery.charAt(0) == ">"){
+							selects = N.findOn(this.contexts(),selectQuery.substr(1));
+						} else {
+							selects = N.findIn(this.contexts(),selectQuery);
+						}
+						break;
+				}
+				if(selects && typeof usePool === "function") {
+					return usePool.apply(undefined,[selects].concat(Array.prototype.slice.call(arguments,1)));
+				}
+				return selects;
+			},
+			getContext:function(eq){ return this.contexts()[eq]; },
+			getSelect :function(eq){ return this.selects()[eq]; },
+			on:function(event,func){
+				var _ = this;
+				// 이벤트와 번호가 들어오면
+				if(typeof event=="string" && typeof func === "number"){
+					this.selectPoolStart();
+					//캐쉬를 사용함 단 트리깅에서만
+					var selNode = this.getSelect(func);
+				
+					if(N.isNode(selNode)) {
+						N.node.trigger(selNode,event, (arguments.length > 2)  ? {'arguments':Array.prototype.slice.call(arguments,2)} : undefined ); 
+					} else {
+						console.warn("Contexts::on::트리깅할 대상이 없습니다.");
+					} 
+					this.selectPoolEnd();
+					return this;
+				}
+				if(typeof event=="string" && typeof func === "function"){
+					N.node.on(this.contexts(),event,function(e){
+					
+						var curSel = new N.Array( _.selects() );
+						if(curSel.has(e.target)){
+							//버블이 잘 왔을때
+							var curfuncindex  = curSel.indexOf(e.target);
+							var curfuncresult = func.call(e.target,e,curfuncindex,_);
+						
+							if(curfuncresult == false) return false;
+							
+							return curfuncresult;
+						} else {
+							//버블링이 중간에 멈췄을때
+							var eventCapture; 
+							curSel.each(function(sel){
+								if(N.find(e.target,sel,0)){
+									eventCapture = sel;
+									return false;
+								}
+							});
+							if(eventCapture){
+								//이벤트를 다시 발생시킴
+								N.node.trigger(eventCapture,e.type);
+								return false;
+							}
+						}
+					});
+				} else {
+					console.error("onSelect::초기화 할수 없습니다. 글자함수필요",event,func);
+				}
+				return this;
+			}
+		},function(contextSelector,selectsSelector){
+			this._initParams = [contextSelector,selectsSelector];
+		});
+	
+		N.EXTEND_MODULE('Contexts','FilterContexts',{
+			needFiltering:function(filterData){
+				var selectNodes = this.selects();
+				var fm          = this.filterMethod;
+				var filteringDataIndexes = [];
+				if(this.hiddenClass) {
+					var fc = this.hiddenClass;
+					N.dataEach(this.selects(),function(sNode,i){
+						if( fm.call(sNode,sNode,i,filterData) === true ){
+							N.node.removeClass(sNode,fc)
+						} else {
+							N.node.addClass(sNode,fc);
+							filteringDataIndexes.push(i);
+						}
+					});
+				} else {
+					N.dataEach(this.selects(),function(sNode,i){
+						if( fm.call(sNode,sNode,i,filterData) === true ){
+							N.node.style(sNode,'display',null)
+						} else {
+							N.node.style(sNode,'display','none')
+							filteringDataIndexes.push(i)
+						}
+					});
+				}
+				return filteringDataIndexes;
+			}
+		},function(c,s,filterMethod,hiddenClass){
+			this._super(c,s);
+			if(typeof filterMethod !== 'function') console.error('Filter::세번째 파라메터는 반드시 함수를 넣어주세요',filterMethod);
+			this.filterMethod = filterMethod;
+		
+			if(typeof hiddenClass === 'string') this.hiddenClass = hiddenClass;
+			if(hiddenClass === true) this.hiddenClass = 'hidden';
+		});
+		
+		
+		N.EXTEND_MODULE("Contexts","ActiveContexts",{
+			inactiveItems:function(){
+				return nd.node.filter(this.selects(),"*:not(."+this.activeClass+")");
+			},
+			activeItems:function(){
+				return items = nd.node.filter(this.selects(),"."+this.activeClass);
+			},
+			activeWithSelectItem:function(selectItem){
+				//이미 active이면 시작하지 않음
+				if(N.node.is(selectItem,"."+this.activeClass) === true) return;
+				
+				this.selectPoolStart();
+				var selects     = this.selects();
+				var activeItems = this.activeItems();
+				
+				//acceptance가 부정할때는 시작하지 않음
+				if(N.CALL(this.acceptance,undefined,selectItem,true) === false) return;
+				
+				if(activeItems.length === 0){
+					N.node.addClass(selectItem,this.activeClass);
+					this.EventListener.triggerWithOwner(selectItem,"active",this);
+					this.EventListener.triggerWithOwner(selectItem,"change",this,true);
+					this.EventListener.triggerWithOwner(selectItem,"activeStart",this);
+				} else {
+					//중복된 active를 허용하면
+					if(!this.allowMultiActive){
+						for(var i=0,l=activeItems.length;i<l;i++)
+							this.inactiveWithSelectItem(activeItems[i],"activeWithSelectItem");
+					}
+					N.node.addClass(selectItem,this.activeClass);
+					this.EventListener.triggerWithOwner(selectItem,"active",this);
+					this.EventListener.triggerWithOwner(selectItem,"change",this,true);
+				}
+				this.selectPoolEnd();
+			},
+			inactiveWithSelectItem:function(selectItem,sender){
+				//이미 inactive이면 시작하지 않음
+				if(N.node.is(selectItem,"."+this.activeClass) === false) return;
+				
+				if(sender === "activeWithSelectItem"){
+					N.node.removeClass(selectItem,this.activeClass);
+					this.EventListener.triggerWithOwner(selectItem,"inactive",this);
+					return;
+				}
+				
+				this.selectPoolStart();
+				var selects     = this.selects();
+				var activeItems = this.activeItems();
+				this.selectPoolEnd();
+				
+				//selectItem이 active일때 // inactive 조건을 확인합니다.
+				if(activeItems.length === 1){
+					//이 아이탬만 액티브일때 //옵션의 모든 인액티브가 허용치 않으면 취소합니다.
+					if(!this.allowInactiveAll){
+						return;
+					}
+				}
+				
+				//acceptance가 부정할때는 취소함
+				if(N.CALL(this.acceptance,undefined,selectItem,false) === false) return;
+				
+				N.node.removeClass(selectItem,this.activeClass);
+				this.EventListener.triggerWithOwner(selectItem,"inactive",this);
+				this.EventListener.triggerWithOwner(selectItem,"change",this,false);
+				if(activeItems.length - 1) 
+				this.EventListener.triggerWithOwner(selectItem,"activeEnd",this);
+				
+			},
+			activeAll:function(){
+				this.selectPoolStart();
+				if(this.allowMultiActive === false){
+					var item = this.selects()[0];
+					if(item) this.activeWithSelectItem(item);
+				} else {
+					var module = this;
+					N.dataEach(this.inactiveItems(),function(item){ module.activeWithSelectItem(item); });
+				}
+				this.selectPoolEnd();
+			},
+			inactiveAll:function(){
+				this.selectPoolStart();
+				var module = this;
+				N.dataReverseEach(this.activeItems(),function(item){ module.inactiveWithSelectItem(item); });
+				this.selectPoolEnd();
+			},
+			active:function(indexes){
+				this.selectPoolStart();
+				var module  = this, selects = this.selects();
+				N.dataEach(indexes,function(index){
+					if (typeof index === "number"){
+						var item = selects[index];
+						if(item) module.activeWithSelectItem(item);
+					}
+				});
+				this.selectPoolEnd();
+			},
+			inactive:function(index){
+				this.selectPoolStart();
+				var module  = this, selects = this.selects();
+				N.dataEach(indexes,function(index){
+					if (typeof index === "number"){
+						var item = selects[index];
+						if(item) module.inactiveWithSelectItem(item);
+					}
+				});
+				this.selectPoolEnd();
+			},
+			toggleWithSelectItem:function(selectItem){
+				return N.node.is(selectItem,"."+this.activeClass) ? this.inactiveWithSelectItem(selectItem) : this.activeWithSelectItem(selectItem);
+			}
+		},function(c,s,callback){
+			this._super(c,s);
+			//event listener
+			this.EventListener = new N.EventListener(this);
+			this.EventListener.addEventRegister(["activeStart","activeEnd"]);
+			this.EventListener.addEventRegister(["active","inactive","change"],true);
+			
+			//options
+			//lock => api호출이 아닌이상 토글되지 않도록 합니다.
+			this.activeClass = "active";
+			this.acceptance  = undefined;
+			this.allowInactiveAll = false;
+			this.allowMultiActive = false;
+			this.lock = false;
+			
+			//active executor
+			var module = this;
+			this.on("click",function(){ 
+				module.lock === false && module.toggleWithSelectItem(this); 
+			});
+			//
+			N.CALL(callback,this,this);
+			if(this.allowInactiveAll === false && !this.activeItems().length) this.active(0);
+		});
+
+		N.EXTEND_MODULE("ActiveStatus","ViewAndStatus",{
+			addViewStatus:function(statusName,active,inactive){
+				if(typeof statusName === 'string'){
+					if(typeof active === 'function'){
+						this.whenActive(statusName,active);
+					}
+					if(typeof inactive === 'function'){
+						this.whenInactive(statusName,inactive);
+					}
+				}
+			},
+			viewStatusTo:function(status){
+				if(typeof name === 'string') this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
+			},
+			node:function(innerKey){
+				if(arguments.length === 0) return new N.NodeHandler(this.view);
+				if(innerKey in this) innerKey = this[innerKey];
+				return new N.NodeHandler(N.find.apply(undefined,N.ownerMap(this,[innerKey,this.view].concat(Array.prototype.slice.call(arguments,1)))));
+			},
+			find:function(query){
+				return N.find.apply(undefined,N.ownerMap(this,[query,this.view].concat(Array.prototype.slice.call(arguments,1))));
+			}
+		},function(targetView,allowMulti,allowInactive){			
+			this.view = N.findLite(targetView)[0];
+			if(!this.view) return console.error("ViewAndStatus::다음셀렉터를 찾을수 없습니다. 이와 관련된 컨트롤러는 모두 정상적으로 작동되지 않을것입니다. => ",targetView);
+			this._super(allowMulti,allowInactive);
+			return true;
+		});
+		
+		
+		N.EXTEND_MODULE("ViewAndStatus","FormController",{
+			setFormData:function(data,v2){
+				return this.Form.checkin(data,v2);
+			},
+			getFormData:function(){
+				return this.Form.checkout();
+			},
+			controlEach:function(h,f){
+				this.Form.selectEach(h,f);
+			},
+			getFormControl:function(){
+				return this.Form.find.apply(this.FormControl,Array.prototype.slice.call(arguments));
+			}
+		},function(targetForm,viewStatus,methodHelper){
+			if( this._super(targetForm,false,true) === true ) {
+				this.Form = new N.Form(this.view);
+				
+				var _self = this;
+				
+				if(viewStatus && (typeof viewStatus === "object")) {
+					N.propEach(viewStatus,function(handle,key){
+						_self.addViewStatus(key,handle);
+					});
+				};
+				
+				if(typeof methodHelper === 'function') methodHelper = {init:methodHelper};
+				
+				N.propEach(methodHelper,function(fn,key){
+					if(!(key in _self.constructor.prototype)) {
+						if(key === 'init') {
+							if(typeof fn === 'function') fn.apply(_self,Array.prototype.slice.call(arguments));
+						} else {
+							_self[key] = (typeof fn === 'function') ? function(){fn.apply(_self,Array.prototype.slice.call(arguments));} : fn;
+						}
+					}
+				});
+			}
 		});
 		
 		N.EXTEND_MODULE("ViewAndStatus","RoleController",{

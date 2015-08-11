@@ -87,18 +87,21 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   
 ## Update history #
 
-#### 0.29 업데이트
+#### 0.29.1 업데이트
   - [x] Adobe Air의 스토리지 관련 지원을 제거하였습니다.
   - [x] 내부에서 STORE 모듈 영역이 분리되었습니다.
-  - [x] 인스턴스 데이터를 취급하는 FLASH 모듈이 추가되었습니다. Rails의 FLASH와 비슷한 작동방식입니다.
+  - [x] 인스턴트 데이터를 취급하는 FLASH 모듈이 추가되었습니다.
   - [x] LocalStorage와 SessionStorage의 기능을 모두 지원합니다.
+  - [x] LocalStorage와 SessionStorage의 기능을 모두 지원합니다.
+  - [x] Contexts 모듈의 기능을 좀 더 최소화함
+  - [x] ActiveContexts 모듈을 완전히 다시 작성함.
   - [ ] 다중 Partial모듈 셋팅시 하위 Partial모듈의 셋팅을 가져오는것을 검토합니다.
   - [ ] 코어:모든 모듈에 공통적으로 release를 추가하는것을 검토.
   - [ ] 코어:Source관리 모듈이 아닌 모듈이 훨씬 많아 Source관리 메서드 제거 검토.
   - [ ] LinkData에 behavior 추가에 대한 검토.
   - [ ] 테스트페이지의 컨텐츠가 모두 version2labs.github.io로 옮겨집니다.
   - [ ] Contexts와 ActiveContexts의 API가 재설계 됩니다.
-  - ( 코드가 증가함 ㅠㅠ : \[source:311\] \[min:175\])
+  - ( 코드량이 이전과 동일함 ^____^ : \[source:311\] \[min:175\])
   
 #### 0.28 업데이트
   - [x] Partial모듈의 파셜노드들의 재사용성이 강화되었습니다.
