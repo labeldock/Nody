@@ -8,7 +8,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.29.1", N.BUILD = "1252";
+		N.VERSION = "0.29.2", N.BUILD = "1255";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -4734,6 +4734,10 @@
 			text:function(){
 				return N.FLATTENCALL(NODE_METHODS.text,NODE_METHODS,this,arguments);
 			},
+			expval:function(exp){
+				if(arguments.length > 0)
+					N.CALL(NODE_METHODS.value,NODE_METHODS,this,N.exp.apply(undefined,Array.prototype.slice.call(arguments)));
+			},
 			value  :function(nodeValue){ 
 				if(arguments.length > 0){
 					N.CALL(NODE_METHODS.value,NODE_METHODS,this,nodeValue);
@@ -4840,6 +4844,11 @@
 			return new N.NodeHandler(N.makes.apply(undefined,Array.prototype.slice.call(arguments)));
 		});
 		
+		//partial module
+		//성능의 가속을 위해 존재하는 값들입니다.
+		var PARTIAL_DATA_KEYS = ['dataset','val','href','put','display','for'];
+		var PARTIAL_ATTR_KEYS = ["nd-dataset","nd-val","nd-href","nd-put","nd-display","nd-for"];
+		var PARTIAL_SEL_KEYS  = ["[nd-dataset]","[nd-val]","[nd-href]","[nd-put]","[nd-display]","[nd-for]"];
 		N.EXTEND_MODULE("NodeHandler","Partial",{
 			findPartial:function(partialCase,partialKey){
 				if(arguments.length === 0) return N.clone(this.__partialPointer);
@@ -4848,10 +4857,10 @@
 				if(arguments.length === 1) return N.clone(this.__partialPointer[partialCase]);
 				return new N.NodeHandler(this.__partialPointer[partialCase][partialKey]);
 			},
-			group:function(key){
+			"for":function(key){
 				return this.findPartial("group",key);
 			},
-			value:function(key,value){
+			val:function(key,value){
 				if(arguments.length === 2){
 					if(value !== undefined || value !== null){
 						this.findPartial("value",key).each(function(node){
@@ -4886,20 +4895,16 @@
 					}
 				}
 			},
-			//성능의 가속을 위해 존재하는 값들입니다. 이것을 건드리면 엄청난 문제를 초례할 가능성이 있습니다.
-			defaultPartialDataKeys:['dataset','value','href','put','display','group'],
-			defaultPartialAttrKeys:["nd-dataset","nd-value","nd-href","nd-put","nd-display","nd-group"],
-			defaultPartialSelectorKeys:["[nd-dataset]","[nd-value]","[nd-href]","[nd-put]","[nd-display]","[nd-group]"],
 			setPartialProperties:function(data,dataFilter){
 				if(!data)data={};
 				var pointer = this.__partialPointer;
-				this.partialSetup(this.defaultPartialDataKeys,function(name,node,nodeAlias){
+				this.partialSetup(PARTIAL_DATA_KEYS,function(name,node,nodeAlias){
 						if(!(nodeAlias in pointer)) pointer[nodeAlias] = {};
 						name.replace(/\S+/g,function(s){
 							if(!pointer[nodeAlias][s]) pointer[nodeAlias][s] = [];
 							pointer[nodeAlias][s].push(node);
 						});
-					},{pKeys:this.defaultPartialAttrKeys,sKeys:this.defaultPartialSelectorKeys}
+					},{pKeys:PARTIAL_ATTR_KEYS,sKeys:PARTIAL_SEL_KEYS}
 				);
 			
 				if(typeof dataFilter === 'object') {
@@ -4915,6 +4920,7 @@
 						}
 					});
 				}
+				
 				//퍼포먼스 중심 코딩
 				for(var partialCase in pointer) {
 					for(var attrValue in pointer[partialCase]) {
@@ -4923,7 +4929,7 @@
 							for(var i=0,l=nodelist.length;i<l;i++) {
 								var node = nodelist[i];
 								switch(partialCase){
-									case "value":N.node.value(node,data[attrValue]);break;
+									case "val":N.node.value(node,data[attrValue]);break;
 									case "html":node.innerHTML = data[attrValue];break;
 									case "href" :node.setAttribute("href",data[attrValue]);break;
 									case "class":N.node.addClass(node,data[attrValue]);break;
@@ -4932,7 +4938,9 @@
 									//case "prepend": N.node.prepend(node,data[attrValue]);break;
 									case "display": if(!data[attrValue]){N.node.style(node,'display','none');}  break;
 									case "dataset": N.propEach(data[attrValue],function(key,value){ node.dataset[value] = key; });break;
-									case "group" : if(typeof data[attrValue] === 'function') data[attrValue].call(node,node,attrValue); break;
+									case "for" : 
+										if(typeof data[attrValue] === 'function') data[attrValue].call(node,node,attrValue);
+										break;
 								}
 							}
 						}
