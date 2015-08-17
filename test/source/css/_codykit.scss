@@ -1,0 +1,1742 @@
+//CSS Toolkit :: Codykit version : 0.4.2
+//auther : hojugn ahn (https://github.com/labeldock/nody)
+
+$codykit-hack : false;
+//media default option
+$codykit-tablet-width:768px;
+$codykit-desktop-width:1024px;
+//media detail option
+$codykit-mobile-landscape-width:480px;
+$codykit-tablet-landscape-width:992px;
+$codykit-desktop-landscape-width:1200px;
+$codykit-custom-elements:"content";
+$codykit-preload-images:"" !global;
+$codykit-standard-empx:16px !global;
+$codykit-relative-empx:16px !global;
+
+@mixin codykit-standard-fontsize($base-size:false){
+	@if $base-size != false {
+		$codykit-standard-empx:$base-size !global;
+	}
+}
+@mixin root-fontsize-variant($relative-size:false) {
+	@if $relative-size != false {
+		$codykit-relative-empx:$relative-size !global;
+	}
+	font-size:$codykit-relative-empx * ($codykit-relative-empx / $codykit-standard-empx);
+}
+@mixin rem-variant($font-size:false) {
+	@if $font-size == false {
+		font-size:1rem;
+	} @else {
+		a:$font-size;
+		b:$codykit-relative-empx;
+		font-size:#{$font-size / $codykit-standard-empx}rem;
+	}
+}
+
+//margin-padding ok
+@mixin mp($margin:0px,$padding:false){
+    margin:$margin;
+    @if $margin == 0px and $padding == false {
+        padding:$margin;
+    } @elseif $padding != false {
+        padding:$padding;
+    }
+}
+//padding-margin ok
+@mixin pm($padding:0px,$margin:false){
+	padding:$padding;
+    @if $padding == 0px and $padding {
+		margin:$padding;
+    } @elseif $margin != false {
+        margin:$margin;
+    }
+}
+//width-height ok
+@mixin wh($width:false,$height:false) {
+    @if $width != false  { width:$width; }
+    @if $height != false { height:$height; }
+}
+//ok
+@mixin align-block($align:left, $width:false, $height:false){
+    display:block;
+    @if $align == left {
+        margin-left:0;
+        margin-right:auto;
+    }
+    @if $align == right {
+        margin-left:auto;
+        margin-right:0;
+    }
+    @if $align == center {
+        margin-left:auto;
+        margin-right:auto;
+    }
+    @include wh($width,$height);
+}
+//ok
+@mixin block($width:false, $height:false, $align:false, $line-height:false){
+    @include align-block($align, $width, $height);
+	
+	@if $line-height {
+		line-height:$line-height;
+	}
+	
+	@content;
+}
+//ok
+@mixin inline-block($width:false, $height:false,$vertical-align:false,$line-height:false){
+    @if $codykit-hack == true {
+        display:inline;
+		zoom:1;
+    }
+    display:inline-block;
+	@include wh($width,$height);
+	
+	@if $vertical-align == false {
+		vertical-align:middle;
+	} @else {
+		vertical-align:$vertical-align;
+	}
+	
+	@if $line-height {
+		line-height:$line-height;
+	}
+	
+	@content;
+}
+//nok
+@mixin sticky($main-pos:0px, $position:top){
+    @include css3v(position,sticky);
+    @if $position == top {
+        top:$main-pos;
+    } @else if $position == left {
+
+    } @else if $position == right {
+
+    } @else if $position == bottom {
+
+    }
+}
+//ok
+@mixin clearfix {
+    &:after {
+        content:"";
+        display:block;
+        height:0px;
+		width:0px;
+        clear:both;
+    }
+}
+@mixin word-wrap-variant($flag:true,$overflow:false,$text-overflow:clip) {
+	@if $flag == true{
+	    white-space: normal;
+		word-break:keep-all;
+	    //word-wrap:normal;
+		@if $overflow == false {
+			overflow: visible;
+		} @else {
+			overflow: $overflow;
+		}
+        text-overflow: none;
+        -o-text-overflow: none;
+        -ms-text-overflow: none;
+	}
+	@if $flag == false{
+		white-space: nowrap;
+		//word-wrap:normal;
+		@if $overflow == false {
+			overflow: hidden;
+		} @else {
+			overflow: $overflow;
+		}
+	    text-overflow: $text-overflow;
+	    -o-text-overflow: $text-overflow;
+	    -ms-text-overflow: $text-overflow;
+	}
+}
+@mixin ellipsis-variant($flag:true,$line-height:false){
+	@if $flag == true {
+		@include word-wrap-variant(false,false,ellipsis);
+	} 
+	@if $flag == false {
+		@include word-wrap-variant(true);
+	}
+	@if $line-height {
+		line-height:$line-height;
+	}
+}
+//ok
+@mixin select-variant($flag:true) {
+	@if $flag == true {
+		-webkit-touch-callout: auto;
+		@include css3f(user-select, auto);
+	} @else {
+		-webkit-touch-callout: none;
+		@include css3f(user-select, none);
+	}
+}
+// not complete
+@mixin appearance-variant($flag:true){
+	@if $flag == true {
+	    @include css3f(appearance,normal);
+	    &::-ms-expand { display:normal; }
+	} @elseif $flag == false {
+	    @include css3f(appearance,none);
+	    &::-ms-expand { display:none; }
+	} @else {
+	    @include css3f(appearance,$flag);
+	    &::-ms-expand { display:$flag; }
+	}
+	@content;
+}
+@mixin event-variant($flag:true){
+    @include select-variant($flag);
+    @if $flag == false {
+        pointer-events: none;
+    } @else {
+        pointer-events: auto;
+    }
+}
+//ok
+@mixin css3v($name,$value,$fallback:false){
+    @if $fallback { #{$name}:#{$fallback}; }
+    #{$name} : #{"-webkit-"}$value;
+    #{$name} : #{"-moz-"}$value;
+    #{$name} : #{"-ms-"}$value;
+    #{$name} : $value;
+}
+//ok
+@mixin css3f($name,$value){
+    -webkit-#{$name} : $value;
+    -moz-#{$name}    : $value;
+    -ms-#{$name}     : $value;
+    #{$name}         : $value;
+}
+//ok
+@mixin calc-plus($prop,$value:0px,$fallback:false,$initial-value:100%){
+	@if $value < 0px {
+		@include css3v($prop,calc(#{$initial-value} - #{$value * -1}),$fallback);
+	} @else {
+		@include css3v($prop,calc(#{$initial-value} + #{$value}),$fallback);
+	}   
+}
+//ok
+@mixin calc-minus($prop,$value:0px,$fallback:false,$initial-value:100%){
+	@if $value < 0px {
+		@include css3v($prop,calc(#{$initial-value} + #{$value * -1}),$fallback);
+	} @else {
+		@include css3v($prop,calc(#{$initial-value} - #{$value}),$fallback);
+	}
+}
+@mixin calc($prop,$initial-value:100%,$value:0px,$fallback:false){
+	@include calc-plus($prop,$value,$fallback,$initial-value);
+}
+//ok
+@mixin transform($value){
+    @include css3f(transform, $value);
+}
+//ok
+@mixin transition($props:"all 0.3s",$timing-function:cubic-bezier(.4,.99,.4,.99),$webkit-props:false){
+	@if $props {
+		transition:#{$props};
+		transition-timing-function:$timing-function;
+	}
+	@if $webkit-props {
+		-webkit-transition:#{$webkit-props};
+	} @else {
+		-webkit-transition:#{$props};
+	}
+	-webkit-transition-timing-function:$timing-function;
+}
+//ok
+@mixin delay-transition($delay:0.3s,$props:"all 0.3s",$timing-function:ease-in-out,$webkit-props:false){
+	@include transition($props,$timing-function,$webkit-props);
+	transition-delay:$delay;
+	-webkit-transition-delay:$delay;
+}
+@mixin keyframes($name,$with-webkit:true) {
+	@keyframes #{$name} {
+		@content;
+	}
+	@-webkit-keyframes #{$name} {
+		@content;
+	}
+}
+@mixin animation($name,$sec:0.3s,$timing-function:false,$repeat:1){
+	@if $timing-function == false {
+		$timing-function:ease-in-out;
+	}
+	animation-name: $name;
+	animation-duration: $sec;
+	animation-timing-function: $timing-function;
+	animation-iteration-count: $repeat;
+	-webkit-animation-name: $name;
+	-webkit-animation-duration: $sec;
+	-webkit-animation-timing-function: $timing-function;
+	-webkit-animation-iteration-count: $repeat;
+}
+@mixin animation-to($name,$sec:0.3s,$timing-function:ease-in-out,$repeat:1) {
+	@include animation($name,$sec,$timing-function,$repeat);
+	animation-fill-mode:forwards;
+	-webkit-animation-fill-mode:forwards;
+}
+@mixin delay-animation($delay:0.3s,$name:false,$sec:0.3s,$timing-function:ease-in-out,$repeat:1){
+	@if $name {
+		@include animation($name,$sec,$timing-function,$repeat);
+		animation-delay: $delay;
+		-webkit-animation-delay: $delay;
+	}
+}
+@mixin repeat-animation($name:false,$sec:2s,$timing-function:linear){
+	@if $name {
+		@include animation($name,$sec,$timing-function,infinite);
+	}
+}
+@mixin animation-reverse($name,$sec:0.3s,$timing-function:false,$repeat:1){
+	@include animation($name,$sec,$timing-function,$repeat);
+	-webkit-animation-direction: alternate;
+	animation-direction: alternate;
+	
+}
+@mixin animation-reverse-to($name,$sec:0.3s,$timing-function:ease-in-out,$repeat:1) {
+	@include animation-to($name,$sec,$timing-function,$repeat);
+	-webkit-animation-direction: alternate;
+	animation-direction: alternate;
+}
+@mixin delay-animation-reverse($delay:0.3s,$name:false,$sec:0.3s,$timing-function:ease-in-out,$repeat:1){
+	@include delay-animation($delay,$name,$sec,$timing-function,$repeat);
+	-webkit-animation-direction: alternate;
+	animation-direction: alternate;
+}
+//ok
+@mixin opacity($opacity:1){
+  opacity: $opacity;
+  // IE8 filter
+  filter: alpha(opacity=#{$opacity * 100});
+}
+//ok
+@mixin matrix($a:1, $c:0, $b:0, $d:1, $tx:0, $ty:0){
+    @include css3f(transform, matrix($a,$c,$b,$d,$tx,$ty));
+}
+//ok
+@mixin translateX($x){
+    @include css3f(transform, translateX(#{$x}));
+}
+//ok
+@mixin translateY($y){
+    @include css3f(transform, translateY(#{$y}));
+}
+//ok
+@mixin translate($x:false,$y:false){
+    @if ($x == false and $y == false) {
+        @include css3f(transform, translate(0px,0px));
+    } @else if ($x != false and $y != false){
+        @include css3f(transform, translate(#{$x},#{$y}));
+    } @else if($x == false) {
+        @include translateY($y);
+    } @else {
+        @include translateX($x);
+    }
+}
+//ok
+@mixin flipH($flip:true){
+    @if $flip == true {
+        @include css3f(transform, scaleX(-1));
+        filter: FlipH;
+        -ms-filter: "FlipH";
+    } @else {
+        @include css3f(transform, scaleX(1));
+        filter: none;
+        -ms-filter: none;
+    }
+}
+//ok
+@mixin flipV($flip:true){
+    @if $flip == true {
+        @include css3f(transform, scaleY(-1));
+        filter: FlipV;
+        -ms-filter: "FlipV";
+    } @else {
+        @include css3f(transform, scaleY(1));
+        filter: none;
+        -ms-filter: none;
+    }
+}
+@mixin translate3d($x:0,$y:0,$z:0){
+    @include css3f(transform, translate3d(#{$x},#{$y},#{$z}));
+}
+@mixin rotate($rotate:0) {
+    @include css3f(transform, rotate(#{$rotate}));
+    //filter: progid:DXImageTransform.Microsoft.BasicImage(rotation = 3);
+}
+@mixin scale($p1:1,$p2:false){
+    @if $p2 == false {$p2:$p1}
+    @include css3f(transform, scale($p1,$p2));
+}
+//ok
+@mixin translate-center($offset-x:false,$offset-y:false,$position:absolute) {
+    position: $position;
+    @if $offset-x {
+        @include calc-plus(left,$offset-x,50%,50%);
+    } @else {
+        left: 50%;
+    }
+    @if $offset-y {
+        @include calc-plus(top,$offset-y,50%,50%);
+    } @else {
+        top: 50%;
+    }
+    @include translate(-50%,-50%);
+}
+//ok
+@mixin translate-center-horizontal($offset-x:false,$position:absolute) {
+    position: $position;
+    @if $offset-x {
+        @include calc-plus(left,$offset-x,50%,50%);
+    } @else {
+        left: 50%;
+    }
+    @include translateX(-50%);
+}
+//ok
+@mixin translate-center-vertical($offset-y:false,$position:absolute) {
+    position: $position;
+    @if $offset-y {
+        @include calc-plus(top,$offset-y,50%,50%);
+    } @else {
+        top: 50%;
+    }
+    @include translateY(-50%);
+}
+//ok
+@mixin relative($x:false,$y:false){
+	position:relative;
+	@if $x { left:$x; }
+	@if $y { top:$y; }
+}
+//ok
+@mixin relativeX($x){
+    @include relative($x);
+}
+//ok
+@mixin relativeY($y){
+    @include relative(false,$y);
+}
+//ok
+@mixin relative-center($offset-x:false) {
+    @include translate-center-horizontal($offset-x,relative);
+}
+//ok
+@mixin absolute($x:false,$y:false,$r:false,$b:false){
+	position:absolute;
+	@if $x { left:$x; }
+	@if $y { top:$y; }
+	@if $r { right:$r; }
+	@if $b { bottom:$b; }
+	@if $x != false and $r != false {
+		width:auto;
+	}
+	@if $y != false and $b != false {
+		height:auto;
+	}
+	
+}
+//ok
+@mixin absoluteX($x){
+    @include absolute($x);
+}
+//ok
+@mixin absoluteY($y){
+    @include absolute(false,$y);
+}
+@mixin visibility($flag:true){
+	@if $flag == true {
+		visibility:visible;
+	}
+	@if $flag == false {
+		visibility:hidden;
+	}
+}
+@mixin visibility-switch($default-visible:false,$switch-selector:".active") {
+	@if $default-visible == true  { @include visibility(true); }
+	@if $default-visible == false { @include visibility(false); }
+	&#{$switch-selector}{
+		@if $default-visible == true  { @include visibility(false); }
+		@if $default-visible == false { @include visibility(true); }
+	}
+}
+@mixin display-block-switch($default-visible:false,$switch-selector:".active") {
+	@if $default-visible == true  { display:block; }
+	@if $default-visible == false { display:none; }
+	&#{$switch-selector}{
+		@if $default-visible == true  { display:none; }
+		@if $default-visible == false { display:block; }
+	}
+}
+@mixin display-inline-block-switch($default-visible:false,$switch-selector:".active") {
+	@if $default-visible == true  { @include inline-block; }
+	@if $default-visible == false { display:none; }
+	&#{$switch-selector}{
+		@if $default-visible == true  { display:none; }
+		@if $default-visible == false { @include inline-block; }
+	}
+}
+//ok
+@mixin shadow-blur-variant($blur:0px,$color:silver,$spread:false){
+	@if $spread {
+		@include css3f(box-shadow, 0px 0px #{$blur} #{$spread} #{$color});
+	} @else {
+		@include css3f(box-shadow, 0px 0px #{$blur} #{$color});
+	}
+}
+@mixin shadow-variant($x-shadow:0px,$y-shadow:0px,$blur:false,$color:silver,$spread:false){
+	@if $blur == false { $blur : (($x-shadow + $y-shadow) / 2); }
+	@if $spread {
+		@include css3f(box-shadow, #{$x-shadow} #{$y-shadow} #{$blur} #{$spread} #{$color});
+	} @else {
+		@include css3f(box-shadow, #{$x-shadow} #{$y-shadow} #{$blur} #{$color});
+	}
+}
+//ok
+@mixin shadow-inset-variant($x-shadow:0px,$y-shadow:0px,$blur:false,$color:gray,$spread:false){
+    @if $blur == false { $blur : (($x-shadow + $y-shadow) / 2); }
+    @if $spread {
+        @include css3f(box-shadow, inset #{$x-shadow} #{$y-shadow} #{$blur} #{$spread} #{$color});
+    } @else {
+        @include css3f(box-shadow, inset #{$x-shadow} #{$y-shadow} #{$blur} #{$color});
+    }
+}
+//ok
+@mixin shadow-border($border-width:1px,$color:#000,$direction:false,$blur:0px){
+    @if $direction == left {
+		@if $border-width < 0px {
+			@include shadow-inset-variant(-$border-width,0px,$blur,$color);
+		} @else {
+			@include shadow-variant(-$border-width,0px,$blur,$color);
+		}
+    }
+    @if $direction == right {
+		@if $border-width < 0px {
+			@include shadow-inset-variant($border-width,0px,$blur,$color);
+		} @else {
+			@include shadow-variant($border-width,0px,$blur,$color);
+		}
+    }
+    @if $direction == top {
+		@if $border-width < 0px {
+			@include shadow-inset-variant(0px,-$border-width,$blur,$color);
+		} @else {
+			@include shadow-variant(0px,-$border-width,$blur,$color);
+		}
+    }
+    @if $direction == bottom {
+		@if $border-width < 0px {
+			@include shadow-inset-variant(0px,$border-width,$blur,$color);
+		} @else {
+			@include shadow-variant(0px,$border-width,$blur,$color);
+		}
+    }
+    @if $direction == false {
+		@if $border-width < 0px {
+			@include shadow-inset-variant(0px,0px,$blur,$color,$border-width);
+		} @else {
+			@include shadow-variant(0px,0px,$blur,$color,$border-width);
+		}
+    }
+    @if $direction == inset {
+		@if $border-width < 0px {
+			@include shadow-variant(0px,0px,$blur,$color,$border-width);
+		} @else {
+			@include shadow-inset-variant(0px,0px,$blur,$color,$border-width);
+		}
+        
+    }
+}
+//ok
+@mixin hr-variant($color:gray,$width:1px){
+	display:block;
+	height:$width;
+	margin:0;
+	padding:0;
+	border-width:0;
+	background-color:$color;
+	@content;
+}
+//ok
+@mixin break-variant($height:10px,$margin:5px,$color:gray,$line-width:1px){
+    @include inline-block;
+    vertical-align:middle;
+    height:20px;
+    width:$line-width;
+    height:$height;
+    margin-left:$margin;
+    margin-right:$margin;
+    background-color:$color;
+}
+@mixin background-image-variant($url,$x:false,$y:false,$repeat:no-repeat){
+	background-image:$url;
+	background-repeat:$repeat;
+	@if $x and $y {
+		background-position:#{$x} #{$y};
+	} @else {
+		@if $x {
+			background-position:#{$x} top;
+		}
+		@if $y {
+			background-position:left #{$y};
+	}
+	}
+	@content;
+}
+@mixin inner-image-variant($url:false,$icon-align:left,$icon-offset:false,$icon-offset2:false) {
+	background-image:$url;
+	background-repeat:no-repeat;
+	@if $icon-align == left {
+		@if $icon-offset {
+			$apply-offset:left #{$icon-offset} !global;
+		} @else {
+			$apply-offset:left !global;
+		}
+		@if $icon-offset2 {
+			$apply-offset2:center #{$icon-offset2};
+		} @else {
+			$apply-offset2:center;
+		}
+		background-position:#{$apply-offset} #{$apply-offset2};
+	}
+	@if $icon-align == right {
+		@if $icon-offset {
+			$apply-offset:right #{$icon-offset} !global;
+		} @else {
+			$apply-offset:right !global;
+		}
+		@if $icon-offset2 {
+			$apply-offset2:center #{$icon-offset2} !global;
+		} @else {
+			$apply-offset2:center !global;
+		}
+		background-position:#{$apply-offset} #{$apply-offset2};
+	}
+	@if $icon-align == top {
+		@if $icon-offset2 {
+			$apply-offset:center #{$icon-offset} !global;
+		} @else {
+			$apply-offset:center !global;
+		}
+		@if $icon-offset {
+			$apply-offset2:top #{$icon-offset2} !global;
+		} @else {
+			$apply-offset2:top !global;
+		}
+		background-position:#{$apply-offset} #{$apply-offset2};
+	}
+	@if $icon-align == bottom {
+		@if $icon-offset2 {
+			$apply-offset:center #{$icon-offset2} !global;
+		} @else {
+			$apply-offset:center !global;
+		}
+		@if $icon-offset {
+			$apply-offset2:bottom #{$icon-offset} !global;
+		} @else {
+			$apply-offset2:bottom !global;
+		}
+		background-position:#{$apply-offset} #{$apply-offset2};
+	}
+	@if $icon-align == center {
+		@if $icon-offset {
+			$apply-offset:center #{$icon-offset} !global;
+		} @else {
+			$apply-offset:center !global;
+		}
+		@if $icon-offset2 {
+			$apply-offset2:center #{$icon-offset2} !global;
+		} @else {
+			$apply-offset2:center !global;
+		}
+		background-position:#{$apply-offset} #{$apply-offset2};
+	}
+	
+	@content;
+}
+@mixin block-image-variant($url:false,$width:false,$height:false,$icon-align:left,$icon-offset:false,$icon-offset2:false){
+	@include block($width,$height);
+	@include inner-image-variant($url,$icon-align,$icon-offset,$icon-offset2);
+}
+@mixin inline-block-image-variant($url:false,$width:false,$height:false,$icon-align:left,$icon-offset:false,$icon-offset2:false){
+	@include inline-block($width,$height);
+	@include inner-image-variant($url,$icon-align,$icon-offset,$icon-offset2);
+}
+@mixin outer-image-variant($url:false,$icon-align:left,$icon-size:false,$icon-offset:false,$icon-offset2:false){
+	@include inner-image-variant($url,$icon-align,$icon-offset,$icon-offset2);
+	@if $icon-align == left {
+		@if $icon-size {
+			@if $icon-offset {
+				padding-left:$icon-size + $icon-offset;
+			} @else {
+				padding-left:$icon-size;
+			}
+		}
+	}
+	@if $icon-align == right {
+		@if $icon-size {
+			@if $icon-offset {
+				padding-right:$icon-size + $icon-offset;
+			} @else {
+				padding-right:$icon-size;
+			}
+		}
+	}
+	@if $icon-align == top {
+		@if $icon-size {
+			@if $icon-offset {
+				padding-top:$icon-size + $icon-offset;
+			} @else {
+				padding-top:$icon-size;
+			}
+		}
+	}
+	@if $icon-align == bottom {
+		@if $icon-size {
+			@if $icon-offset {
+				padding-bottom:$icon-size + $icon-offset;
+			} @else {
+				padding-bottom:$icon-size;
+			}
+		}
+	}
+	@content;
+}
+//ok
+@mixin icon-variant($url:false,$icon-width:auto,$icon-height:auto,$icon-position:false,$line-height:false){
+    @include inline-block;
+    background-image:$url;
+	background-repeat:no-repeat;
+	@if $icon-position {
+		background-position:$icon-position;
+	} @else {
+		background-position:left center;
+	}
+    padding-left:$icon-width;
+    min-width:$icon-width;
+	min-height:$icon-height;
+    @if $line-height == false {
+        line-height:$icon-height;
+    } @else {
+        line-height:$line-height;
+    }
+	//with content
+	@content;
+}
+//ok
+@mixin icon-right-variant($url:false,$icon-width:auto,$icon-height:auto,$icon-position:false,$line-height:false){
+    @include inline-block;
+    background:$url;
+	background-repeat:no-repeat;
+	@if $icon-position {
+		background-position:$icon-position;
+	} @else {
+		background-position:right center;
+	}
+    padding-right:$icon-width;
+    min-width:$icon-width;
+    min-height:$icon-height;
+    @if $line-height == false {
+        line-height:$icon-height;
+    } @else {
+        line-height:$line-height;
+    }
+	//with content
+	@content;
+}
+//ok
+@mixin icon-top-variant($url:false,$icon-width:auto,$icon-height:auto,$icon-top:top){
+    @include inline-block;
+    background:$url;
+	background-repeat:no-repeat;
+    background-position:center $icon-top;
+    padding-top:$icon-height;
+    width:$icon-width;
+    min-height:$icon-height;
+    text-align:center;
+	//with content
+	@content;
+}
+
+//ok
+@mixin label-select-container-variant($url-select-arrow:false,$width:auto,$height:25px,$arrow-position:right center,$border:1px solid silver) {
+    @include inline-block;
+    @if $url-select-arrow {
+        background-image:url($url-select-arrow);
+        background-repeat:no-repeat;
+        background-position:$arrow-position;
+    }
+    width:$width;
+    height:$height;
+    line-height:$height;
+    border:$border;
+    margin:0;
+    vertical-align:middle;
+    overflow:hidden;
+    select {
+        @include no-appearance;
+        background:transparent;
+        width:100%;
+        height:$height;
+        line-height:1;
+        font-size:inherit;
+        border:0;
+        border-radius:0;
+        padding-left:5px;
+    }
+}
+@mixin item-group-variant($item-selector:"*",$display:false,$item-width:false,$item-height:false){
+    & > #{$item-selector} {
+        @if $display {
+            @include display($display);
+        }
+        @if $item-width {
+            width:$item-width;
+        }
+        @if $item-height {
+            height:$item-height;
+        }
+    }
+}
+@mixin list-variant($list-height:false,$display:false,$list-style:none){
+    margin:0px;
+    padding:0px;
+    li{
+        margin:0px;
+        @if $list-height {
+            height:$list-height;
+            @if $list-style != false {
+                line-height:$list-height;
+            }
+        }
+        @if $display == inline-block {
+            @include inline-block;
+        } @else {
+            display:$display;
+        }
+        @if $list-style {
+            list-style:$list-style;
+        }
+    }
+	@content;
+}
+//table cell에 의해 테이블 크기가 결정됩니다.
+@mixin cellbase-table-variant($spacing:0px,$border:false,$table-width:false,$table-layout:auto) {
+    display:table;
+    @if $table-width { width:$table-width; }
+    table-layout:$table-layout;
+    @if $spacing > 0px {
+        border-spacing:$spacing;
+        border-collapse:separate;
+    } @else {
+        border-spacing:0px;
+        border-collapse:collapse;
+    }
+    @if $border {
+        border:$border;
+    }
+}
+
+//table 크기안에서 셀크기가 결정됩니다.
+@mixin table-variant($spacing:0px,$border:false) {
+    @include cellbase-table-variant($spacing,$border,100%,fixed);
+}
+//td, th안에서
+@mixin table-cell-variant ($vertical:middle,$align:left,$height:false,$padding:false,$hBorder:false,$vBorder:false,$hBorderTop:false,$hBorderBottom:false){
+    @if $vertical{ vertical-align:$vertical } @else {vertical-align:middle;}
+    @if $align   { text-align:$align; } @else {text-align:left;}
+    @if $height  { height: $height;min-height: $height; }
+    @if $padding { padding:$padding; }
+    @if $hBorder {
+        border-top:$hBorder;
+        border-bottom:$hBorder;
+    }
+    @if $vBorder {
+        border-left:$vBorder;
+        border-right:$vBorder;
+    }
+}
+@mixin border-radius($dirction,$radius){
+	@if $dirction == "top" {
+	    border-top-right-radius: $radius;
+	     border-top-left-radius: $radius;
+	}
+	@if $dirction == "right" {
+	    border-bottom-right-radius: $radius;
+	       border-top-right-radius: $radius;
+	}
+	@if $dirction == "bottom" {
+	    border-bottom-right-radius: $radius;
+	     border-bottom-left-radius: $radius;
+	}
+	@if $dirction == "left" {
+	    border-bottom-left-radius: $radius;
+	       border-top-left-radius: $radius;
+	}
+}
+@mixin layout-variant($container-name:false) {
+    position:relative;
+    width:100%;
+    @include heightfix;
+
+    @if $container-name == false {
+        $container-name:#{&};
+    } @else {
+        $container-name:"." + $container-name;
+    }
+    #{$container-name}-center {
+        @include inline-block;margin-left:auto !important;margin-right:auto !important;text-align:center;
+        >* { vertical-align:middle; }
+    }
+    #{$container-name}-left   {
+        @include inline-block;
+        float:left;
+        >* { vertical-align:middle; }
+    }
+    #{$container-name}-right {
+        @include inline-block;
+        float:right;
+        position:relative;
+        >* { vertical-align:middle; }
+    }
+}
+
+//layout-variant는 컨텐츠 높이에 반응하지만 list-cell은 정의된 높이에서만 동작한다.
+@mixin cell-layout-variant($container-name:false,$height:false,$cell-side-padding:0px,$cell-top-offset:0px){
+    position:relative;
+    width:100%;
+
+    @if $height {
+        height:$height;
+        line-height:$height;
+    }
+
+    @if $container-name == false {
+        $container-name:#{&};
+    } @else {
+        $container-name:"." + $container-name;
+    }
+
+    #{$container-name}-left   {
+        position:absolute;
+        top:$cell-top-offset;
+        left:$cell-side-padding;
+        height:$height;
+    }
+    #{$container-name}-right {
+        position:absolute;
+        top:$cell-top-offset;
+        right:$cell-side-padding;
+        height:$height;
+    }
+}
+//ok
+@mixin paragraph-variant($font-size:false,$font-color:false,$font-weight:false,$line-height:false){
+	display:block;
+	padding:0;
+	
+	@if $font-size {
+		font-size:$font-size;
+	}
+	@if $font-color {
+		color:$font-color;
+	}
+	@if $font-weight {
+		font-weight: $font-weight;
+	} 
+    @if $line-height {
+        line-height: $line-height;
+    } @else {
+    	line-height: 1.3;
+    }
+	vertical-align: baseline;
+	@content;
+}
+//nok
+@mixin text-variant($font-size:false,$text-align:false,$line-height:false){
+	@if $font-size {
+		font-size:$font-size;
+	}
+    @if $text-align {
+        text-align: $text-align;
+    }
+    @if $line-height {
+        line-height: $line-height;
+    }
+	@content;
+}
+//nok
+@mixin disabled-variant($font-size:false,$text-align:false,$line-height:false,$vertical-align:middle) {
+    cursor: not-allowed;
+    pointer-events: none;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+@mixin block-variant($width:false,$height:false,$vertical-align:middle,$align-block:false){
+	@if $align-block {
+		@include block($width,$height,$align-block);
+	} @else {
+		@include inline-block($width,$height,$vertical-align);
+	}
+	@content;
+}
+@mixin image-block-variant($url:false,$width:false,$height:false,$vertical-align:middle,$align-block:false) {
+	background-image:$url;
+	background-repeat:no-repeat;
+	@include block-variant($width,$height,$vertical-align,$align-block);
+	@content;
+}
+//ok
+@mixin text-block-variant($width:false,$height:false,$vertical-align:middle,$align-block:false,$font-size:false,$font-color:false,$bg-color:false,$border-width:false,$border-color:false,$border-style:solid){
+	@include block-variant($width,$height,$vertical-align,$align-block);
+	@if $font-size {
+		@include text-variant($font-size);
+	}
+	@if $font-color {
+		color:$font-color;
+	}
+	@if $bg-color {
+		background:$bg-color;
+	}
+	@if $border-width {
+		border-style:$border-style;
+		border-width:$border-width;
+	}
+	@if $border-color {
+		border-color:$border-color;
+	}
+	@content;
+}
+//nok
+@mixin anker-variant($width:false,$height:false,$vertical-align:middle,$align-block:false,$font-size:false,$font-color:inherit,$bg-color:false,$border-width:false,$border-color:false,$border-style:solid){
+	@include text-block-variant($width,$height,$vertical-align,$align-block,$font-size,$font-color,$bg-color,$border-width,$border-color);
+    cursor:pointer;
+    text-decoration:inherit;
+    &:hover { text-decoration:inherit;color:inherit; }
+	@content;
+}
+//ok
+@mixin label-variant($width:false,$height:false,$vertical-align:middle,$align-block:false,$font-size:false,$font-color:false,$bg-color:false,$border-width:false,$border-color:false,$border-style:solid){
+	@include text-block-variant($width,$height,$vertical-align,$align-block,$font-size,$font-color,$bg-color,$border-width,$border-color);
+	@if $height {		
+		@if $border-width {
+			line-height: ($height - $border-width);
+		} @else {
+			line-height:$height;
+		}
+	} @else {
+		line-height:1;
+	}
+	margin:0;
+	padding:0;
+	> * {
+		vertical-align:middle;
+	}
+	@content;
+}
+@mixin menuitem-block-variant($width:false,$height:false,$vertical-align:middle,$align-block:false,$font-size:false,$font-color:false,$bg-color:false,$border-width:false,$border-color:false,$border-style:solid){
+	@include text-block-variant($width,$height,$vertical-align,$align-block,$font-size,$font-color,$bg-color,$border-width,$border-color);
+	@if $height {		
+		@if $border-width {
+			line-height: ($height - $border-width);
+		} @else {
+			line-height:$height;
+		}
+	} @else {
+		line-height:1;
+	}
+	cursor:pointer;
+	padding:0;
+	@content;
+}
+//ok
+@mixin background-block-variant($url,$width:false,$height:false,$bg-position:left center,$bg-size:false,$bg-repeat:false,$vertical-align:middle,$align-block:false){
+	@include text-block-variant($width,$height,$vertical-align,$align-block);
+    background-image:$url;
+	@if $bg-position {
+		background-position:$bg-position;
+	}
+	@if $bg-size {
+		//cover,contain
+		background-size:$bg-size;
+	} @else {
+		background-size:auto;
+	}
+	@if $bg-repeat {
+		background-repeat:$bg-repeat;
+	} @else {
+		background-repeat:no-repeat;
+	}
+	@content;
+}
+@mixin image-text-variant($url,$width:false,$height:false,$vertical-align:middle,$align-block:false,$bg-position:left center){
+	@include background-block-variant($url,$width,$height,$bg-position,auto,no-repeat,$vertical-align,$align-block);
+    text-indent:-99999px;
+	@content;
+}
+@mixin nody-button-base($appearance-flag:false) {
+	@if $appearance-flag == false {
+		@include appearance-variant(false);
+		border:none;
+	}
+	@if $appearance-flag == true {
+		@include appearance-variant(button);
+	}
+	cursor:pointer;
+	text-align:center;
+	@include select-variant(false);
+	@include ellipsis-variant(true);
+    &:hover{ text-decoration:none; };
+    &:active{ text-decoration:none; };
+}
+//ok
+@mixin button-variant($width:false,$height:false,$vertical-align:middle,$align-block:false,$font-size:false,$font-color:false,$bg-color:false,$border-width:false,$border-color:false,$border-style:false){
+	@include nody-button-base;
+	@include label-variant($width,$height,$vertical-align,$align-block,$font-size,$font-color,$bg-color,$border-width,$border-color);
+	@content;
+}
+//ok
+@mixin padding-button-variant($padding:3px 3px 3px 3px,$vertical-align:middle,$align-block:false,$font-size:false,$font-color:false,$bg-color:false,$border-width:false,$border-color:false,$border-style:false){
+	@include nody-button-base;
+	@include label-variant(false,false,$vertical-align,$align-block,$font-size,$font-color,$bg-color,$border-width,$border-color);
+	padding:$padding;
+	@content;
+}
+//nok
+@mixin image-button-variant($url,$width:false,$height:false,$vertical-align:middle,$align-block:false){
+	@include nody-button-base;
+	@include text-block-variant($width,$height,$vertical-align,$align-block);
+	background-image:$url;
+	background-repeat:no-repeat;
+    background-position:center center;
+    text-indent:-99999px;
+	@content;
+}
+//ok
+@mixin input-variant($width:false,$height:false,$vertical-align:middle,$align-block:false,$font-size:false,$font-color:false,$bg-color:false,$border-width:false,$border-color:false,$border-style:false){
+	@include label-variant($width,$height,$vertical-align,$align-block,$font-size,$font-color,$bg-color,$border-width,$border-color);
+	//webkit cursor fix
+	line-height:100%;
+	@content;
+}
+//nok
+@mixin image-input-variant($url:false,$width:false,$height:false,$vertical-align:middle,$align-block:false,$font-size:false,$font-color:false,$bg-color:false,$border-width:false,$border-color:false,$border-style:false){
+	@include appearance-variant(false);
+	@include label-variant($width,$height,$vertical-align,$align-block,$font-size,$font-color,$bg-color,$border-width,$border-color);
+	@content;
+}
+//ok
+@mixin checkbox-variant($square-size:false,$vertical-align:middle,$align-block:false,$bg-color:false,$border-width:false,$border-color:false,$border-style:false) {
+	@if $square-size != false {
+		@include appearance-variant(false);
+		@include text-block-variant($square-size,$square-size,$vertical-align,$align-block,false,false,$bg-color,$border-width,$border-color);    
+		cursor:pointer;
+	}
+	@content;
+}
+//ok
+@mixin image-checkbox-variant($url,$width,$height) {
+    @include no-appearance;
+    @include inline-block;
+    background-color:transparent;
+    background-image:url(#{$url});
+    width:$width;
+    height:$height;
+}
+//ok
+@mixin label-checkbox-container-variant($url-default,$url-checked,$width,$height,$gap:5px,$imageTop:center,$line-height:false) {
+    @include inline-block;
+    vertical-align:middle;
+    margin:0;
+    input[type                                                      = checkbox], input[type=radio] {
+        @include no-appearance;
+        position: absolute;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        height:1px;
+        width:1px;
+        margin:-1px;
+        padding:0;
+        border:0;
+    }
+    input[type                                                      = checkbox], input[type=radio] {
+        + span {
+            @include icon-variant($url-default,$width + $gap,$height, left, $imageTop, $line-height);
+        }
+        &:checked + span {
+            @include icon-variant($url-checked,$width + $gap,$height, left, $imageTop, $line-height);
+        }
+    }
+    span {
+        @include select-variant(false);
+        @include inline-block;
+        cursor:pointer;
+    }
+}
+@mixin position-variant($axis:false,$width:auto,$height:auto,$offset-x:false,$offset-y:false){
+    position: absolute;
+    @if $offset-x == false { $offset-x : 0; }
+    @if $offset-y == false { $offset-y : 0; }
+    @if $axis == left {
+        left: $offset-x;
+        top: $offset-y;
+        @if $height == false or $height == auto {
+            bottom: 0;
+        }
+    } @else if $axis == right {
+        right: -$offset-x;
+        top: $offset-y;
+        @if $height == false or $height == auto {
+            bottom: 0;
+        }
+    } @else if $axis == top {
+        left: $offset-x;
+        top: $offset-y;
+        @if $width == false or $width == auto {
+            right: 0;
+        }
+    } @else if $axis == bottom {
+        left: $offset-x;
+        bottom: -$offset-y;
+        @if $width == false or $width == auto {
+            right: 0;
+        }
+    } @else {
+        top: $offset-x;
+        left: $offset-y;
+        @if $height == false or $height == auto {
+            bottom: -$offset-y;
+        }
+        @if $width == false or $width== auto {
+            right: -$offset-x;
+        }
+    }
+    @if $width { width:$width; }
+    @if $height { height:$height; }
+}
+//test not complete
+@mixin outside-position-variant($side,$start,$width,$height,$offset-x:false,$offset-y:false){
+    position: absolute;
+    @if $offset-x == false { $offset-x : 0px; }
+    @if $offset-y == false { $offset-y : 0px; }
+	//side
+    @if $side == left {
+		left: (-$width + $offset-x);
+    } @else if $side == right {
+		right: (-$width - $offset-x);
+    } @else if $side == top {
+		top: (-$height + $offset-y);
+    } @else if $side == bottom {
+        bottom: (-$height - $offset-y);;
+    }
+	//start position
+	@if $side == left or $side == right {
+		@if $start == bottom {
+			bottom:(0px - $height - $offset-y);
+			@include translateY(0%);
+		} @else if $start == center {
+			@if $offset-y != 0px {
+				@include css3v(top,calc(50% + #{$offset-y}));
+			} @else {
+				top:50%;
+			}
+			@include translateY(-50%);
+		} @else {
+			@if $offset-y != 0px {
+				@include css3v(top,calc(0% - #{$offset-y}),0%);
+			} @else {
+				top:0%;
+			}
+			@include translateY(0%);
+		}
+	}
+	@if $side == top or $side == bottom {
+		@if $start == right {
+			right:(0px - $offset-x);
+		} @else if $start == center {
+			@if $offset-x != 0px {
+				@include css3v(left,calc(50% + #{$offset-y}));
+			} @else {
+				left:50%;
+			}
+			@include translateX(-50%);
+		} @else {
+			@if $offset-x != 0px {
+				@include css3v(left,calc(0% - #{$offset-y}));
+			} @else {
+				left:0%;
+			}
+			@include translateX(0%);
+		}
+	}
+	width:$width;
+	height:$height;
+}
+
+@mixin presudo-position-variant($axis:false,$width:auto,$height:auto,$offset-x:false,$offset-y:false){
+    content:"";
+    @include position-variant($axis,$width,$height,$offset-x,$offset-y);
+	@content;
+}
+@mixin presudo-outside-position-variant($side,$start,$width,$height,$offset-x:false,$offset-y:false){
+    content:"";
+    @include outside-position-variant($side,$start,$width,$height,$offset-x,$offset-y);
+	@content;
+}
+@mixin presudo-image-variant($url,$axis:false,$width:auto,$height:auto,$offset-x:false,$offset-y:false,$bg-position-left:false,$bg-position-right:false){
+    @include presudo-position-variant($axis,$width,$height,$offset-x,$offset-y) {
+		@include background-image-variant($url,$bg-position-left,$bg-position-right);
+		@content;
+    };
+}
+@mixin presudo-outside-image-variant($url,$side,$start,$width,$height,$offset-x:false,$offset-y:false,$bg-position-left:false,$bg-position-right:false){
+    @include presudo-outside-position-variant($side,$start,$width,$height,$offset-x,$offset-y) {
+		@include background-image-variant($url,$bg-position-left,$bg-position-right);
+		@content;
+	}
+}
+
+//ok
+@mixin image-frame-variant($width:auto,$height:auto) {
+    position:relative;
+    width:$width;
+    height:$height;
+    overflow:hidden;
+    img {
+        @include translate-center;
+        min-width: 100%;
+        min-height: 100%;
+        margin: auto;
+    }
+}
+//ok
+@mixin placeholder-variant {
+        &::-webkit-input-placeholder { /* WebKit browsers */
+		@content;
+        }
+        &:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+           opacity:  1;
+	   @content;
+        }
+        &::-moz-placeholder { /* Mozilla Firefox 19+ */
+           opacity:  1;
+	   @content;
+        }
+        &:-ms-input-placeholder { /* Internet Explorer 10+ */
+	   @content;
+        }
+    }
+@mixin arrow-base-variant{
+	
+}
+//ok
+@mixin arrow-variant($direction:left,$arrow-size:10px,$arrow-color:#ccc,$arrow-length:false){
+	border-style:solid;
+    width :0;
+    height:0;
+    @if $arrow-length == false{
+        $arrow-length:$arrow-size;
+    }
+	@if $direction == left {
+	    border-width: #{$arrow-size / 2} $arrow-length #{$arrow-size / 2} 0;
+	    border-color: transparent $arrow-color transparent transparent;
+	}
+	@if $direction == right {
+	    border-width: #{$arrow-size / 2} 0 #{$arrow-size / 2} $arrow-length;
+	    border-color: transparent transparent transparent $arrow-color;
+	}
+	@if $direction == top or $direction == up {
+	    border-width: 0 #{$arrow-size / 2} $arrow-length #{$arrow-size / 2};
+	    border-color: transparent transparent $arrow-color transparent;
+	}
+	@if $direction == bottom or $direction == down {
+	    border-width: $arrow-length #{$arrow-size / 2} 0 #{$arrow-size / 2};
+	    border-color: $arrow-color transparent transparent transparent;
+	}
+	@content;
+}
+
+@mixin media-over-width($over:false) {
+	@if $over {
+		@media (min-width: #{$over}) {
+			@content;
+		}
+	}
+}
+@mixin media-less-width($less:false) {
+	@if $less {
+		@media (max-width: #{$less - 1}) {
+			@content;
+		}
+	}
+}
+@mixin media-inner-width($less:false, $over:false) {
+	@if $less and $over {
+		@media (min-width: #{$less - 1}) and (max-width: #{$over}) {
+			@content;
+		}
+	}
+}
+@mixin media-over-height($over:false) {
+	@if $over {
+		@media (min-height: #{$over}) {
+			@content;
+		}
+	}
+}
+@mixin media-less-height($less:false) {
+	@if $less {
+		@media (max-height: #{$less - 1}) {
+			@content;
+		}
+	}
+}
+@mixin media-inner-height($less:false, $over:false) {
+	@if $less and $over {
+		@media (min-height: #{$less - 1}) and (max-height: #{$over}) {
+			@content;
+		}
+	}
+}
+//coding style helper
+@mixin media-default {
+	@content;
+}
+//ok
+@mixin media-mobile-portrait {
+	@include media-less-width($codykit-mobile-landscape-width){ @content; };
+}
+@mixin media-mobile-landscape {
+	@include media-inner-width($codykit-mobile-landscape-width,$codykit-tablet-width){ @content; };
+}
+@mixin media-mobile {
+	@include media-less-width($codykit-tablet-width){ @content; };
+}
+@mixin media-mobile-gt {
+	@include media-over-width($codykit-tablet-width){ @content; };
+}
+@mixin media-tablet-portrait {
+	@include media-inner-width($codykit-tablet-width,$codykit-tablet-landscape-width){ @content; };
+}
+@mixin media-tablet-landscape {
+	@include media-inner-width($codykit-tablet-landscape-width,$codykit-desktop-width){ @content; };
+}
+@mixin media-tablet {
+	@include media-inner-width($codykit-tablet-width,$codykit-desktop-width){ @content; };
+}
+@mixin media-tablet-portrait-gt {
+	@include media-over-width($codykit-tablet-landscape-width){ @content; };
+}
+@mixin media-tablet-landscape-lt {
+    @include media-less-width($codykit-tablet-landscape-width){ @content; };
+}
+@mixin media-desktop {
+	@include media-over-width($codykit-desktop-width){ @content; };
+}
+@mixin media-desktop-lt {
+	@include media-less-width($codykit-desktop-width){ @content; };
+}
+@mixin media-desktop-landscape {
+	@include media-over-width($codykit-desktop-landscape-width){ @content; };
+}
+@mixin pt-variant($photoshop-pt:0, $origin:72){
+    font-size:(($photoshop-pt / $origin) * 96)px;
+}
+@mixin scroll-y-variant($overflow:auto) {
+    @if $overflow == true or $overflow == auto or $overflow == scroll{
+        overflow-y:$overflow;
+		-webkit-overflow-scrolling:touch;
+		-ms-overflow-style:scroll;
+        overflow-scrolling:touch;
+    } @else {
+        overflow-y:$overflow;
+		-webkit-overflow-scrolling:none;
+		-ms-overflow-style:none;
+        overflow-scrolling:none;
+    }
+}
+@mixin scroll-x-variant($overflow:auto) {
+    @if $overflow == true or $overflow == auto or $overflow == scroll{
+        overflow-x:$overflow;
+		-webkit-overflow-scrolling:touch;
+		-ms-overflow-style:scroll;
+        overflow-scrolling:touch;
+		
+    } @else if $overflow == false {
+        overflow-x:$overflow;
+		-webkit-overflow-scrolling:none;
+		-ms-overflow-style:none;
+        overflow-scrolling:none;
+    }
+}
+@mixin scroll-variant($y:auto,$x:false) {
+    @include scroll-x-variant($x);
+    @include scroll-y-variant($y);
+}
+@mixin grab-variant {
+    cursor: -webkit-grab;
+    cursor: -moz-grab;
+    &:active {
+        cursor: -webkit-grabbing;
+        cursor: -moz-grabbing;
+    }
+}
+@mixin response-section($inner-padding:10px,$width:auto){
+	@include clearfix;
+	display:block;
+	width:$width;
+	box-sizing:border-box !important;
+	margin-left: -($inner-padding/2);
+	margin-right: -($inner-padding/2);
+	$inner-padding:$inner-padding !global;
+	@content;
+}
+@mixin response-column($width:100%,$main-content:false){
+	position:relative;
+	display:block;
+	float:left;
+	list-style:none;
+	box-sizing:border-box !important;
+	min-height:1px;
+	width:$width;
+	margin-left:0;
+	margin-right:0;
+	padding-left: ($inner-padding / 2);
+	padding-right: ($inner-padding / 2);
+	@if $main-content {
+		> #{$main-content} {
+			//@include absolute(($inner-padding / 2),0,($inner-padding / 2),0);
+			position:relative;
+			@content;
+		}
+	} @else {
+		@content;
+	}
+}
+@mixin response-column-count($count:1,$main-content:false){
+	@include response-column( (100% / $count) ,$main-content){
+		@content;
+	}
+}
+@mixin codykit-box-sizing($target:"*") {
+    #{$target}{
+        &,&:before,&:after {
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+    }
+}
+@mixin codykit-font-smooth($target:"html,body") {
+    #{$target}{
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        font-smoothing: antialiased;
+        font-smooth: always;
+    }
+}
+@mixin codykit-text-basic($vertical-align:middle) {
+	@if $vertical-align == false {
+		$vertical-align:baseline;
+	}
+	//block text
+    h1,h2,h3,h4,h5,h6,p { 
+		margin:0px; 
+		font-size:inherit; 
+		vertical-align:$vertical-align;
+	}
+	//inline text
+    img {
+		vertical-align:$vertical-align;
+    }
+    span, tt, code, kbd, samp, var, em, s, q, b, strong, cite, dfn, i, time, mark, address {
+        display:inline;
+        font-family:inherit;
+        font-style: inherit;
+		color:inherit;
+        text-decoration:inherit;
+        font-weight:inherit;
+        padding:0;
+        margin:0;
+		vertical-align:$vertical-align;
+		&:after, &:before { content:none; };
+    }
+	a, a:link, a:visited, a:hover, a:active {
+        display:inline;
+        font-family:inherit;
+        font-style: inherit;
+		color:inherit;
+        font-weight:inherit;
+		cursor:pointer;
+		vertical-align:$vertical-align;
+	}
+}
+
+@mixin codykit-document-basic($min-width:360px) {
+    html,body {
+        margin:0px;
+        padding:0px;
+        min-width:$min-width;
+		font-family: Sans-Serif;
+    }
+	script, style {
+		display:none !important;
+	}
+    img {
+        border:none;
+    }
+    article, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary, command, fieldset {
+        display:block;
+		margin:0;
+    }
+	@if $codykit-custom-elements {
+		#{$codykit-custom-elements} {
+	        display:block;
+			margin:0;
+			width:auto;
+	    }
+	}
+    audio,canvas,progress,video {
+        @include inline-block;
+		margin:0;
+    }
+	template,.hidden,[hidden] {
+		display:none;
+	}
+	[disabled] {
+		@include disabled-variant;
+	}
+    input,button,select,textarea {
+        font-family: inherit;  font-size: inherit;  line-height: inherit;
+    }
+	ul, menu, ol {
+		display:block;
+		padding:0;
+		margin:0;
+		> li {
+			list-style-position:inside;
+		}
+	}
+	ol {
+		> li {
+			list-style-type:decimal;
+		}
+	}
+	menu > li {
+		list-style:none;
+		cursor:pointer;
+	}
+	dl,dd {
+		margin:0;
+	}
+    label {
+        cursor:inherit;
+    }
+	.no-transition {
+		transition-duration:0.001s !important;
+		transition-delay:0.001s !important;
+		*, *:before, *:after {
+			transition-duration:0.001s !important;
+			transition-delay:0.001s !important;
+		}
+	}
+	.no-animation {
+		-webkit-animation-duration:0.001s !important;
+		animation-duration:0.001s !important;
+		*, *:before, *:after {
+			-webkit-animation-duration:0.001s !important;
+			animation-duration:0.001s !important;
+		}
+	}
+	table {
+		@include table-variant;
+		td,th{
+			font-weight:normal;
+			padding:0;
+			vertical-align:middle;
+		}
+	}
+}
+@mixin codykit-document-basic-all($hack:true, $min-width:360px) {
+    @include codykit-document-basic($min-width);
+    @include codykit-text-basic;
+    @include codykit-box-sizing;
+    $codykit-hack:$hack !global;
+}
+@mixin codykit-document-basic-advence($hack:true, $min-width:360px) {
+    @include codykit-document-basic-all($hack, $min-width);
+    @include codykit-font-smooth;
+}
+@mixin codykit-document-vertical($main-wrapper:false,$min-width:false){
+	html,body {
+		width:100%;
+		height:100%;
+	}
+	html {
+		overflow-y:auto;
+		@if $min-width {
+			min-width:$min-width;
+			overflow-x:auto;
+		} @else {
+			max-width:100%;
+			overflow-x:hidden;
+		}
+	}
+	body {
+		@if $min-width {
+			min-width:$min-width;
+		}
+	}
+	@if $main-wrapper {
+		#{$main-wrapper} {
+			overflow-x:auto;
+		}
+	}
+}
+@mixin codykit-document-fullscreen($main-wrapper:false) {
+	html,body {
+        width:100%;
+        height:100%;
+	}
+    html {
+		@include scroll-variant(false,false);
+		max-width:100%;
+		max-height:100%;
+    }
+	body {
+		@include scroll-variant(auto,false);
+	}
+    @if $main-wrapper {
+        #{$main-wrapper} {
+			position:absolute;
+			top:0;
+			left:0;
+			right:0;
+			bottom:0;
+            overflow-x:hidden;
+            overflow-y:auto;
+        }
+    }
+}
+
+@function preload-url($url){	
+	$codykit-preload-images:#{$codykit-preload-images} url(#{$url}) !global;
+	@return url($url);
+}
+@mixin codykit-preload-image {
+	body:after {
+		content:$codykit-preload-images;
+		display:block;
+		visibility:hidden;
+		overflow:hidden;
+		height:0px;
+		width:0px;
+	}
+}
