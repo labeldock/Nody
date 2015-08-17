@@ -87,7 +87,7 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   
 ## Update history #
 
-#### 0.29.2 업데이트
+#### 0.29.3 업데이트
   - [x] Adobe Air의 스토리지 관련 지원을 제거하였습니다.
   - [x] 내부에서 STORE 모듈 영역이 분리되었습니다.
   - [x] 인스턴트 데이터를 취급하는 FLASH 모듈이 추가되었습니다.
@@ -96,9 +96,9 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
   - [x] ActiveContexts 모듈을 완전히 다시 작성함.
   - [x] 노드 쿼리 핸들러에 expval이 추가됨.
   - [x] Partial 모듈의 "group", "value"키워드가 "for", "val"로 변경됨.
+  - [x] 테스트 페이지 변경 및 웹페이지 컨텐츠를 version2labs.github.io로 옮깁니다.
   - [ ] 메모리 자동 해제를 위해 모든 모듈에 release를 추가함.
   - [ ] 모듈의 Source관리 메서드 제거.
-  - [ ] 모든 테스트 컨텐츠를 version2labs.github.io로 옮깁니다.
   - ( 코드량이 이전과 동일함 ^____^ : \[source:303\] \[min:276\])
   
 #### 0.28 업데이트
