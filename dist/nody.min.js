@@ -8,7 +8,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.29.3", N.BUILD = "1256";
+		N.VERSION = "0.29.3", N.BUILD = "1257";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
@@ -3559,7 +3559,7 @@
 					//[[key=]]
 					if((s.length - 1) === pipeIndex) return '[nd-' + s.substring(0,s.length - 1) + ']';
 					//[[key]], [[key=value]]
-					return (pipeIndex > 0) ? '[nd-'+s.substr(0,pipeIndex)+'='+s.substr(pipeIndex+1)+']' : '[nd-value='+s+']';
+					return (pipeIndex > 0) ? '[nd-'+s.substr(0,pipeIndex)+'='+s.substr(pipeIndex+1)+']' : '[nd-val='+s+']';
 				});
 				var dataset,htmlvalue,cacheName=name,cacheEnable=false;
 			
