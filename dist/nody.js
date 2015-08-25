@@ -1,5 +1,5 @@
-/* Nody js
- * GIT         // https://github.com/labeldock/Nody
+/* 
+ * Nody js (https://github.com/labeldock/Nody)
  * Copyright HOJUNG-AHN. and other contributors
  * Released under the MIT license
  */
@@ -8,27 +8,27 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.29.3", N.BUILD = "1257";
+		N.VERSION = "0.29.7", N.BUILD = "1260";
 	
 		// Core verison
-		N.CORE_VERSION = "2.0.4", N.CORE_BUILD = "90";
+		N.CORE_VERSION = "2.0.5", N.CORE_BUILD = "91";
   
-		// Pollyfill : console object
+		// Pollyfill IE Console error fix
 		if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(N.toString(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
-	
+		
 		// Bechmark : two times call the MARK('name');
 		var MARKO = {}; W.MARK = function(name){ if(typeof name === "string" || typeof name === "number") { name = name+""; if(typeof MARKO[name] === "number") { var time = (+new Date() - MARKO[name]);console.info("MARK::"+name+" => "+time) ; delete MARKO[name]; return time  } else { console.info("MARK START::"+name); MARKO[name] = +new Date(); } } };
-	
+		
 		// Pollyfill : Trim 
 		if(!String.prototype.trim) String.prototype.trim = function() { return this.replace(/(^\s*)|(\s*$)/gi, ""); };
 	 
 		// Pollyfill : JSON
 		if(typeof W.JSON === "undefined"){ W.JSON = { 'parse' : function(s) { var r; try { r = eval('(' + s + ')'); } catch(e) { r = N.toObject(s); } return r; }, 'stringify' : function(o) { return W.N.toString(obj,Number.POSITIVE_INFINITY,true); } };}
 		
-		// Pollyfill : function bind
+		// Pollyfill : bind
 		if (!Function.prototype.bind) { Function.prototype.bind = function (oThis) { if (typeof this !== "function") { throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable"); } var aArgs = Array.prototype.slice.call(arguments, 1), fToBind = this, fNOP = function () {}, fBound = function () { return fToBind.apply(this instanceof fNOP && oThis ? this : oThis, aArgs.concat(Array.prototype.slice.call(arguments))); }; fNOP.prototype = this.prototype; fBound.prototype = new fNOP(); return fBound; }; }
-	
-		// BrowserFix : IE8 Success fix
+		
+		// IE8 Success fix
 		if (typeof W.success === "function"){W.success = "success";}
 		
 		var IS_MODULE = function(obj,moduleName){
@@ -650,11 +650,11 @@
 				return false;
 			},
 			//배열의 하나추출
-			"dataFirst"   :function(t){ return typeof t === "object" ? typeof t[0] === "undefined" ? undefined : t[0] : t; },
+			"dataFirst":N.CONTINUE_FUNCTION(function(t){return typeof t === "object" ? typeof t[0] === "undefined" ? undefined : t[0] : t;},1),
 			//배열의 뒤
-			"dataLast"   :function(t){ return N.isArray(t) ? t[t.length-1] : t; },
+			"dataLast":N.CONTINUE_FUNCTION(function(t){ return N.isArray(t) ? t[t.length-1] : t; },1),
 			// 각각의 값의 function실행
-			"dataEach"    :N.CONTINUE_FUNCTION(function(v,f){ 
+			"dataEach":N.CONTINUE_FUNCTION(function(v,f){ 
 				var ev=N.toArray(v); 
 				for(var i=0,l=ev.length;i<l;i++) 
 					if(f.call(ev[i],ev[i],i) === false) return false;
@@ -673,7 +673,7 @@
 				for(var i=0,l=ev.length;i<l;i++) rv.push(f.call(ev[i],ev[i],i)); return rv; 
 			},2),
 			"arrayMap":N.CONTINUE_FUNCTION(function(v,f){ 
-				if( isArray(v) ) for(var i=0,l=v.length;i<l;i++) v[i] = f.call(v[i],v[i],i);
+				if( N.isArray(v) ) for(var i=0,l=v.length;i<l;i++) v[i] = f.call(v[i],v[i],i);
 				return v; 
 			},2),
 			"defineMap":N.CONTINUE_FUNCTION(function(v,f,infinity){ 
@@ -690,6 +690,10 @@
 					return (typeof arg === "function") ? function(){ return arg.apply(owner,Array.prototype.slice.call(arguments)); } : arg;
 				});
 			},
+			"dataReverseMap":N.CONTINUE_FUNCTION(function(v,f){
+				var rv=[],ev=N.toArray(v); 
+				for(var i=ev.length-1;i>-1;i--) rv.push(f.call(ev[i],ev[i],i)); return rv; 
+			 },2),
 			"arrayRemoveIndex":function(array,indexes){
 				if(N.isArray(array)){
 					var removeCount = 0;
@@ -711,7 +715,6 @@
 					array.splice(index,0,target);
 				}
 			},
-			"dataReverseMap":N.CONTINUE_FUNCTION(function(v,f){ var rv=[],ev=N.toArray(v); for(var i=this.length-1;i>-1;i--) rv.push(f.call(ev[i],ev[i],i)); return rv; },2),
 			//
 			"inject":function(v,f,d){ d=(typeof d=="object"?d:{});v=N.toArray(v); for(var i=0,l=v.length;i<l;i++)f(d,v[i],i);return d;},
 			// false를 호출하면 배열에서 제거합니다.
@@ -725,6 +728,29 @@
 				}
 				return [];
 			},2),
+			"arrayInsert":function(data,v,a){
+				if(N.isArray(data)) Array.prototype.splice.call(data,a,typeof a === "number"?a:0,v);
+				return data;
+			},
+			"dataInsert":function(data,v,a){
+				return N.arrayInsert(Array.prototype.slice.call(N.toArray(data)),v,a);
+			},
+			"arrayShift":function(data,len,rep){
+				Array.prototype.splice.apply(data,[0,typeof len==="number"?len:1].concat(Array.prototype.slice.call(arguments,2)));
+				return data;
+			},
+			"dataShift":function(data,len,rep){
+				return N.arrayShift(Array.prototype.slice.call(N.toArray(data)),len,rep);
+			},
+			"arrayUnshift":function(data,index,rep){
+				//todo:behind와 통합
+				index = typeof index !== "number" ? data.length - 1 : index;
+				Array.prototype.splice.apply(data,[index,data.length-index].concat(Array.prototype.slice.call(arguments,2)));
+				return data;
+			},
+			"dataUnshift":function(data,index,rep){
+				return N.arrayReplace(Array.prototype.slice.call(N.toArray(data)),index,rep);
+			},
 			"dataAny":DATA_ANY_PROC,
 			"dataAll":DATA_ANY_PROC,
 			"arrayAny":function(arr,filter){
@@ -738,7 +764,7 @@
 				return DATA_ANY_PROC(arr,filter)
 			},
 			//중복되는 값 제거
-			"dataUnique" :function() {
+			"dataUnique" :function(){
 				var value  = [],result = [];
 				for(var ai=0,li=arguments.length;ai<li;ai++){
 					var mvArray = N.cloneArray(arguments[ai]);
@@ -750,7 +776,65 @@
 								break;
 							}
 						}
-						if(unique==true)result.push(mvArray[i]);
+						if(unique==true) result.push(mvArray[i]);
+					}
+				}
+				return result;
+			},
+			"dataEqual":function(data1,data2){
+				var firstType  = typeof data1;
+				if(firstType === typeof data2) {
+					if(firstType === "object") {
+						var firstArray = N.isArray(data1);
+						if(firstArray === N.isArray(data2)){
+							if(firstArray){
+								//둘다 array일 경우
+								if(data1.length === data2.length) {
+									var equal = true;
+									for(var i=0,l=data1.length;i<l;i++){
+										if(data1[i] !== data2[i]){
+											equal = false;
+											break;
+										}
+									}
+									return equal;
+								} else {
+									return false;
+								}
+							} else {
+								var allkeys = N.dataFlatten(N.propKey(data1),N.propKey(data2),N.dataUnique);
+								var equal = true;
+								for(var i=0,l=allkeys.length;i<l;i++){
+									if(data1[allkeys[i]] !== data2[allkeys[i]]){
+										equal = false;
+										break;
+									}
+								}
+								return equal;
+							}
+						} else {
+							return false;
+						}
+					} else {
+						return (data1 === data2);
+					}
+				}
+				return false;
+			},
+			"dataEqualUnique":function(){
+				var value=[],result=[];
+				for(var ai=0,li=arguments.length;ai<li;ai++){
+					var mvArray = N.cloneArray(arguments[ai]);
+					for(var i=0,l=mvArray.length;i<l;i++){
+						var unique = true;
+						for(var i2=0,l2=result.length;i2<l2;i2++){
+							//console.log("mvArray[i],result[i2]",mvArray[i],result[i2],N.dataEqual(mvArray[i],result[i2]));
+							if(N.dataEqual(mvArray[i],result[i2])){
+								unique = false;
+								break;
+							}
+						}
+						if(unique==true) result.push(mvArray[i]);
 					}
 				}
 				return result;
@@ -828,7 +912,6 @@
 				for(var i=(typeof s === 'number')?s:0;i<l;i++) r.push(f(i)); 
 				return r; 
 			},2),
-
 			//확률적으로 나옵니다. 0~1 true 가 나올 확률
 			"flagRandom":function(probabilityOfTrue){
 				if(typeof probabilityOfTrue !== 'number') probabilityOfTrue = 0.5;
@@ -902,8 +985,6 @@
 				var numberInfo = [0,0];
 	            var parseString = "";
 	            (value+"").replace(/\d|\./g,function(s){ parseString += s; });
-
-	            // test exsist number
 	            if(/\d/.test(parseString)){
 	                var dotIndex = parseString.indexOf(".");
 	                switch(dotIndex) {
@@ -1044,8 +1125,7 @@
 				} 
 				return N.extend.apply(undefined,[N.clone(data,true)].concat(Array.prototype.slice.call(arguments,1)));
 			},
-			//fill은 존재하지 않는 키값에 대해서만 적용함
-			//첫번째 소스에 두번째 부터 시작하는 소스를 반영
+			//fill은 존재하지 않는 키값에 대해서만 적용함 첫번째 소스에 두번째 부터 시작하는 소스를 반영
 			"extendFill":function(data,fillData,forceFill){
 				if(typeof data !== "object") {
 					if(data === undefined) data = {};
@@ -1660,9 +1740,7 @@
 				return [radius - radius * Math.sin(radian),radius - radius * Math.cos(radian)];
 			},
 			"arcPoint":function(radius,deg){
-				return N.arrayMap(N.arcPointf(radius,deg),function(n){
-					return Math.round(n);
-				});
+				return N.arrayMap(N.arcPointf(radius,deg),function(n){ return Math.round(n); });
 			},
 			"toPx":function(v){ if( /(\%|px)$/.test(v) ) return v; return N.toNumber(v)+"px"; },
 			//래핑된 텍스트를 제거
@@ -2050,29 +2128,20 @@
 		//******************
 		// NodyArray
 		N.ARRAY_MODULE("Array",{
-			// 요소 각각에 형식인수를 넘기며 한번씩 호출한다.
 			each     : function(block) { for ( var i=0,l=this.length;i<l;i++) { if( block(this[i],i) == false ) break; } return this; },
-			// each의 반대 동작
 			reverseEach : function(block) { for ( var i=this.length-1;i>-1;i--) { if( block(this[i],i) == false ) break; } return this; },
-			// key배열 습득
 			keys  : function(rule){ return N.propKey(this,rule); },
-			//첫번째 요소 반환.
 			zero  :function(){ return N.dataFirst(this); },
 			first :function(){ return N.dataFirst(this); },
-			//마지막 요소 반환.
 			last :function(){ return N.dataLast(this); },
-			//
 			has:function(v){ for(var i=0,l=this.length;i<l;i++) if(this[i] === v) return true; return false; },
-			// 값을 추가한다.
 			push : function(v,i){ switch(typeof i){ case "string": case "number": this[i] = v; break; default: Array.prototype.push.call(this,v); break; } return this; },
-			// 존재하지 않는 값만 추가한다
 			add :function(v,i){ if( !this.has(v) ) this.push(v,i); return this; },
 			marge:function(array){
 				var _self = this;
 				N.dataEach(array,function(v){ _self.add(v); });
 				return this;
 			},
-			//해당 값을 당 배열로 바꾼다
 			setSource : function(v){
 				if( N.isArray(v) ) {
 					if("toArray" in v){
@@ -2103,7 +2172,10 @@
 			max:function(length) { this.length = length > this.length ? this.length : length; return this; },
 			min:function(length,undefTo){var count=parseInt(length);if(typeof count=="number")if(this.length<count)for(var i=this.length;i<count;i++)this.push(undefTo);return this;},
 			//원하는 위치에 대상을 삽입합니다.
-			insert: function(v,a){ this.min(a); var pull=[],a=a?a:0; for(var i=a,l=this.length;i<l;i++)pull.push(this[i]); return this.max(a).push(v).setConcat(pull); },
+			insert: function(v,a){ 
+				N.arrayInsert(this,v,a);
+				return this;
+			},
 			// 순수 Array로 반환
 			toArray  : function() { return Array.prototype.slice.call(this); },
 			//내부요소 모두 지우기
@@ -2517,21 +2589,13 @@
 					return this;
 				}
 			},
-			//inject 
 			inject:function(o,f,ksel){ if(typeof f === "function") { this.map(function(v,k){ var or = f(v,o,k); if(typeof or !== "undefined") { o=or; } },ksel); return o; } },
-			
-			//
-			join:function(a,b){ a = typeof a === "string" ? a : ":"; b = typeof b === "string" ? b : ","; return this.inject([],function(v,i,k){ i.push(k+a+N.toString(v)); }).join(b); },
-			
-			//toParam
+			join:function(a,b){ a = typeof a === "string" ? a : ":"; b = typeof b === "string" ? b : ","; return this.inject([],function(v,i,k){ i.push(k+a+N.toString(v)); }).join(b); },			
 			toParameter : function(useEncode){ return this.inject({},function(val,inj,key){ inj[ (useEncode == false ? key : (new N.StringSource(key)).encode()) ] = (useEncode == false ? val : (new N.StringSource(val)).encode()); }); },
-			
-			//jsonString으로 반환
 			stringify:function(){ return JSON.stringify(this.getDataPropFix()); },
-			//jsonString으로 반환
 			toString:function(){ return JSON.stringify(this.getDataPropFix()); },
-			//키이름을 변경
-			change:function(original, change){ 
+			change:function(original, change){
+				//change key name
 				N.propChange(this.Source,original,change); 
 				return this.Source;
 			},
@@ -2552,7 +2616,6 @@
 				return this; 
 			},
 			//다른 오브젝트와 함칠때 이미 있는 값은 오버라이드 하지 않음
-			//todo:marge extend 확인
 			safeConcat:function(){ 
 				var result = this.clone(); 
 				for(var i=0,l=arguments.length;i<l;i++){ 
@@ -3012,7 +3075,7 @@
 					var tagprop = matches.concat(N.safeSplit(rest,":","()",true));
 					for(var i=0,l=tagprop.length;i<l;i++){
 						var sinfo = /(.?)((.?).*)/.exec(tagprop[i]);
-						// div ["div","d","iv","i"]
+						
 						switch(sinfo[1]){
 							//id
 							case "#" :
@@ -3036,7 +3099,7 @@
 									//metaAttribute
 									if(!result[":"]) result[":"] = {};
 									var attrInfo = /(:([\w\-\_]+))(\((.*)\)$|)/.exec(sinfo[0]);
-									//"hello(world)" => [":hello(world)", ":hello", "hello", "(world)", "world"]
+									
 									switch(attrInfo[1]){
 										case ":disabled": case ":readonly": case ":checked":
 											result[":"][attrInfo[2]] = true;
@@ -3063,7 +3126,6 @@
 							//attr
 							case "[" :
 								var attr = /\[([\"\'\w\-\_]+)(=|~=|)(.*|)\]$/.exec(sinfo[0]);
-								//"['tag-is'=my_any value  ]" => ["['tag-is'=my_any value  ]", "'tag-is'", "=", "my_any value  "]
 								result[N.unwrap(attr[1],["''",'""'])] = (attr[3])? N.unwrap(attr[3],["''",'""']) : null;
 							break;
 							//tagname
@@ -3404,14 +3466,14 @@
 					   (typeof eq === "number")   ? N.findBySeveralPlaces(find,root)[eq] :
 					   N.findBySeveralPlaces(find,root);
 			}),
-			"findMember":function(sel,offset){
+			"findMember":N.CONTINUE_FUNCTION(function(sel,offset){
 				var target = N.findLite(sel)[0];
 				if(!N.isNode(target)) return;
 				if(typeof offset !== "number") return N.toArray(target.parentElement.children);
 				var currentIndex = -1;
 				N.dataEach(target.parentNode.children,function(node,i){ if(target == node) { currentIndex = i; return false; } });
 				return target.parentNode.children[currentIndex+offset];
-			},
+			},1),
 			// 하위루트의 모든 노드를 검색함 (Continutiltiy에서 중요함)
 			"findIn" : N.CONTINUE_FUNCTION(function(root,find,index){
 				return (typeof index === 'number') ? N.findBySeveralPlaces(find || '*',N.dataMap(N.findBySeveralPlaces(root),function(node){ return node.children },N.argumentsFlatten))[index] :
@@ -4591,7 +4653,7 @@
 			},
 			"html":function(node,html){
 				var findNode = N.findLite(node)[0];
-				if(findNode.length === 0) return undefined;
+				if(!findNode) return undefined;
 				if(typeof html === "string" || typeof html === "number"){
 					return findNode.innerHTML = html;
 				} else {
@@ -4732,8 +4794,12 @@
 			is     :function(exp){
 				return NODE_METHODS.is(this,exp); 
 			},
-			filter :function(){ 
-				this.setSource(N.FLATTENCALL(NODE_METHODS.filter,NODE_METHODS,this,arguments));
+			filter :function(f){ 
+				if(typeof f === "function"){
+					this.setSource(this._super(f));
+				} else {
+					this.setSource(N.FLATTENCALL(NODE_METHODS.filter,NODE_METHODS,this,arguments));
+				}
 				return this;
 			},
 			content:function(){
@@ -4754,9 +4820,16 @@
 					return N.FLATTENCALL(NODE_METHODS.value,NODE_METHODS,this,arguments);
 				}
 			},
+			prop:function(key,value){
+				if(arguments.length > 0){
+					this.each(function(){ this[key] = value; }); return this;
+				} else {
+					if(this[0]) return this[0][key];
+				}
+			},
 			trace    :function(){ return N.FLATTENCALL(NODE_METHODS.trace,NODE_METHODS,this,arguments); },
 			//index
-			currentIndex:function(){ 
+			index:function(){ 
 				return NODE_METHODS.index(this);
 			},
 			append   :function(targets){ NODE_METHODS.append(this,targets);return this; },
@@ -4828,6 +4901,12 @@
 				N.FLATTENCALL(NODE_METHODS.prependHTML,NODE_METHODS,this,arguments);
 				return this;
 			},
+			focus:function(){
+				this.each(function(node){
+					if(typeof node.focus === "function"){ return node.focus(); }
+				});
+				return this;
+			},
 			unique:function(){
 				N.FLATTENCALL(NODE_METHODS.unique,NODE_METHODS,this,arguments);
 				return this;
@@ -4866,18 +4945,18 @@
 				return new N.NodeHandler(this.__partialPointer[partialCase][partialKey]);
 			},
 			"for":function(key){
-				return this.findPartial("group",key);
+				return this.findPartial("for",key);
 			},
 			val:function(key,value){
 				if(arguments.length === 2){
 					if(value !== undefined || value !== null){
-						this.findPartial("value",key).each(function(node){
+						this.findPartial("val",key).each(function(node){
 							return N.node.value(node,value);
 						});
 					}
 					return this;
 				} else {
-					return this.findPartial("value",key).value();
+					return this.findPartial("val",key).value();
 				}
 			},
 			put:function(key,value){
@@ -4942,8 +5021,6 @@
 									case "href" :node.setAttribute("href",data[attrValue]);break;
 									case "class":N.node.addClass(node,data[attrValue]);break;
 									case "put"    : N.node.put(node,data[attrValue]); break;
-									//case "append" : N.node.append(node,data[attrValue]);break;
-									//case "prepend": N.node.prepend(node,data[attrValue]);break;
 									case "display": if(!data[attrValue]){N.node.style(node,'display','none');}  break;
 									case "dataset": N.propEach(data[attrValue],function(key,value){ node.dataset[value] = key; });break;
 									case "for" : 
@@ -5100,7 +5177,6 @@
 				}
 				return this;
 			},
-			//checkin, checkout이 의미가 모호한것 같아 새로 API추가
 			clearFormData:function(){
 				return this.empty();
 			},
@@ -5199,6 +5275,12 @@
 					}
 				}
 			},
+			getActive:function(){
+				return this.ActiveKeys.join(" ");
+			},
+			isActive:function(k){
+				return this.ActiveKeys.has(k);
+			},
 			activeTo:function(status){
 				return this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this,false);
 			},
@@ -5208,20 +5290,10 @@
 			reactTo:function(status){
 				return this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this,true);
 			},
-			toggleTo:function(status,flag){
-				if(typeof flag === "boolean"){
-					if(flag){
-						this.reactTo.apply(this,[status].concat(Array.prototype.slice.call(arguments,2)));
-					} else {
-						this.inactTo.apply(this,[status].concat(Array.prototype.slice.call(arguments,2)));
-					}
-				}
-			},
-			getActiveStatus:function(){
-				return this.ActiveKeys.join(" ");
-			},
-			isActiveStatus:function(k){
-				return this.ActiveKeys.has(k);
+			toggleTo:function(status){
+				this.isActive(status) ? 
+				this.inactTo.apply(this,[status].concat(Array.prototype.slice.call(arguments,1))):
+				this.reactTo.apply(this,[status].concat(Array.prototype.slice.call(arguments,1)));
 			}
 		},function(allowMulti,allowInactive){
 			lastll = this;
@@ -5363,8 +5435,6 @@
 			selectPoolStart:function(proc){
 				if(this._selectPoolCount === 0) this._selectPoolList = this.selects(false);
 				this._selectPoolCount = this._selectPoolCount + 1;
-				
-				//console.log('pool ++',this._selectPoolCount);
 			},
 			selectPoolEnd:function(){
 				this._selectPoolCount = this._selectPoolCount - 1;
@@ -5709,7 +5779,7 @@
 				}
 				return N.find("[data-role~="+activeRolename+"]",findwhere);
 			},
-			"++activeDataRole":function(findwhere,props,data,rolename){
+			"++newDataRole":function(findwhere,props,data,rolename){
 				var _self=this;
 				var findedRoles = this.findRole(findwhere,rolename),resultController = [];
 				for(var i=0,l=findedRoles.length;i<l;i++){
@@ -5718,17 +5788,17 @@
 				return resultController;
 			},
 			hasProp:function(key){
-				return this.ManageProp.has(key);
+				return this.HashSource.has(key);
 			},
 			prop:function(key,filter){
 				if(arguments.length === 0){
-					return this.ManageProp.get();
+					return this.HashSource.get();
 				} else {
-					return this.ManageProp.prop(key,filter);
+					return this.HashSource.prop(key,filter);
 				}
 			},
 			setProp:function(key,value){
-				this.ManageProp.setProp(key,value);
+				this.HashSource.setProp(key,value);
 				return this;
 			},
 			data:function(){
@@ -5759,7 +5829,7 @@
 				return finded.roleController;
 			},
 			findRoleByProp:function(prop,proc){
-				var props = this.ManageProp.prop(prop);
+				var props = this.HashSource.prop(prop);
 				var roles = N.isModule(props,"RoleController") ? [props] : this.findRole(props);
 				if(typeof proc === "function"){
 					N.dataEach(roles,proc);	
@@ -5773,24 +5843,24 @@
 		},function(targetRole,props,data,initViewProc){
 			if( this._super(targetRole,true,true) === true ) {
 				if(N.isModule(props,"Binder")){
-					this.ManageProp = props.beforeProperty;
-					this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+					this.HashSource = props.beforeProperty;
+					this.HashSource.pushDataProp(this.__NativeModule__(),this);
 					this.Binder = props;
 				} else if(N.isModule(props,"HashSource")) {
-					this.ManageProp  = props;
-					this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+					this.HashSource = props;
+					this.HashSource.pushDataProp(this.__NativeModule__(),this);
 				} else {
-					this.ManageProp  = new N.HashSource(props);
-					this.ManageProp.pushDataProp(this.__NativeModule__(),this);
+					this.HashSource = new N.HashSource(props);
+					this.HashSource.pushDataProp(this.__NativeModule__(),this);
 				}
-				this.ManageData  = new N.Array(data);
-				this.ManageEvent = new N.EventListener(this);
+				this.ManageData    = new N.Array(data);
+				this.EventListener = new N.EventListener(this);
 				
 				var _self = this;
 				
 				N.find('script[type*=json]', this.view ,N.dataEach ,function(scriptTag){
 					var jsonData = N.node.value(scriptTag);
-					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self.ManageData.append(jsonData) : _self.ManageProp.extend(jsonData);
+					if(nd.is(jsonData,"object")) N.is(jsonData,"array") ? _self.ManageData.append(jsonData) : _self.HashSource.extend(jsonData);
 					N.node.remove(scriptTag);
 				});
 				this.view.roleController = this;
@@ -6028,7 +6098,7 @@
 							"dataType":"dom",
 							"success":function(doms){
 								_self.ManageLoadNode.setProp(loadKey,doms);
-								_self.ManageEvent.trigger("load",loadKey,doms);
+								_self.EventListener.trigger("load",loadKey,doms);
 								success = true;
 							},
 							"error":function(){
@@ -6044,7 +6114,7 @@
 							console.error("ContentLoader:: not found of the loadObject => "+loadPath);
 						} else {
 							_self.ManageLoadNode.setProp(loadKey,doms);
-							_self.ManageEvent.trigger("load",loadKey,doms);
+							_self.EventListener.trigger("load",loadKey,doms);
 							success = true;
 						}
 					break;
@@ -6071,8 +6141,8 @@
 		},function(){
 			//key node
 			this.ManageLoadNode = new N.HashSource();
-			this.ManageEvent    = new N.EventListener(this);
-			this.ManageEvent.addEventRegister("load");
+			this.EventListener    = new N.EventListener(this);
+			this.EventListener.addEventRegister("load");
 			this._loadkey = "defaultLoadContent";
 		});
 		
@@ -6095,7 +6165,7 @@
 					
 					if(this._activeStatus){
 						var inactiveNodes  = N.findLite(this.view.childNodes);
-						var inactiveResult = this.ManageEvent.trigger("inactive",this._activeStatus,inactiveNodes);
+						var inactiveResult = this.EventListener.trigger("inactive",this._activeStatus,inactiveNodes);
 						if(N.dataHas(inactiveResult,false)){
 							return false;
 						}
@@ -6103,7 +6173,7 @@
 						
 					}
 					var activeNodes  = this.ManageLoadNode.prop(activeName);
-					var activeResult = this.ManageEvent.trigger("active",this._activeStatus,activeNodes);
+					var activeResult = this.EventListener.trigger("active",this._activeStatus,activeNodes);
 					if(N.dataHas(inactiveResult,false)){
 						return false;
 					}
@@ -6116,13 +6186,13 @@
 			this._super();
 			this.view = N.find(view,0);
 			if(this.view) { 
-				this.ManageEvent.addEventRegister(["active","inactive"],true);
-				this.ManageEvent.didInactive(function(keyName,inactiveNodes){
+				this.EventListener.addEventRegister(["active","inactive"],true);
+				this.EventListener.didInactive(function(keyName,inactiveNodes){
 					this.ManageLoadNode.setProp(this._activeStatus,inactiveNodes);
 					N.node.empty(this.view);
 					this._activeStatus = undefined;
 				});
-				this.ManageEvent.didActive(function(keyName,activeNodes){
+				this.EventListener.didActive(function(keyName,activeNodes){
 					this.ManageLoadNode.setProp(keyName,activeNodes);
 					N.node.put(this.view,activeNodes);
 					this._activeStatus = keyName;
@@ -6577,9 +6647,7 @@
 			},
 			bind:function(dataKey,bindElement,optional){
 				if(this.PresentorScope) {
-					//엘리먼트 기본설정값
 					var element = N.isNode(bindElement) ? bindElement : typeof bindElement === "undefined" ? N.create("input!"+bindElement) : N.create(bindElement);
-					//todo:옵셔널값 사용방법이 어디엔거 넣어야함 변경되었음
 					this.PresentorScope.addBindNode(element,this,dataKey);
 					return element;
 				} else {
@@ -6615,7 +6683,7 @@
 	   					return v;
 	   				});
 				}
-				//output partial
+				
 				var partialOutput;
 				if(typeof _template === 'object') { 
 					partialOutput = _template.output(this.prop(),dataFilter);
@@ -6697,9 +6765,7 @@
 					return findID;
 				}
 			},
-			//뷰컨트롤러와 함께 바인딩되는 메서드들입니다.
-			//렌더시 다음 아래의 메서드들은 절대 호출하면 안됩니다.
-			//지정한 인덱스로
+			//뷰컨트롤러와 함께 바인딩되는 메서드들입니다. 렌더시 다음 아래의 메서드들은 절대 호출하면 안됩니다.
 			rerender:function(){
 				this.DataContext.Binder.post(this,"GLOBAL.LinkDataNeedRerender",this);
 			},
@@ -6840,8 +6906,7 @@
 						var parentPlaceHolder = this.placeholderNodes[parentLinkData.getDataID()];
 						var beforeElement     = this.structureNodes[rerenderLinkData.getDataID()];
 						var beforePlaceHolder = this.placeholderNodes[rerenderLinkData.getDataID()];
-						//console.log('parentPlaceHolder,beforeElement,beforePlaceHolder',parentPlaceHolder,beforeElement,beforePlaceHolder)
-
+						
 						if(!beforeElement) console.error('rerender 대상의 데이터를 찾을 수 없습니다.') ;
 						if(parentPlaceHolder) {
 							//바꿔치기 하기
@@ -7116,7 +7181,6 @@
 
 					var x = t, t0, t1, t2, x2, d2, i;
 
-					// First try a few iterations of Newton's method -- normally very fast.
 					for (t2 = x, i = 0; i < 8; i++){
 						x2 = curveX(t2) - x;
 						if (Math.abs(x2) < epsilon) return curveY(t2);
@@ -7130,7 +7194,6 @@
 					if (t2 < t0) return curveY(t0);
 					if (t2 > t1) return curveY(t1);
 
-					// Fallback to the bisection method for reliability.
 					while (t0 < t1){
 						x2 = curveX(t2);
 						if (Math.abs(x2 - x) < epsilon) return curveY(t2);
@@ -7819,9 +7882,9 @@
 			this.stopPropagation = true;
 			this.preventDefault  = true;
 			//touch event
-			this.ManageEvent = new N.EventListener(this);
-			this.ManageEvent.addEventRegister(["gesture","drag","throw","pinch"]);
-			var manageEvent = this.ManageEvent;
+			this.EventListener = new N.EventListener(this);
+			this.EventListener.addEventRegister(["gesture","drag","throw","pinch"]);
+			var EventListener = this.EventListener;
 			var _self = this;
 			var getPinchDistance = function(fx1,fy1,fx2,fy2){
 				return Math.sqrt(
@@ -7830,7 +7893,7 @@
 				);
 			};
 			this._gestureStartHandler = function(e){
-				if(manageEvent.hasListener()){
+				if(EventListener.hasListener()){
 					var pageX = _self._firstPageX = _self._lastPageX = e.touches ? e.touches[0].pageX : e.pageX;
 					var pageY = _self._firstPageY = _self._lastPageY = e.touches ? e.touches[0].pageY : e.pageY;
 					
@@ -7844,7 +7907,7 @@
 						moveY:0
 					};
 					
-					if (manageEvent.hasListener("pinch") && e.touches && e.touches.length === 2) {
+					if (EventListener.hasListener("pinch") && e.touches && e.touches.length === 2) {
 						e.preventDefault();
 						_self._firstPinchValue = getPinchDistance(
 							 pageX,
@@ -7853,9 +7916,9 @@
 							 e.touches[1].pageY
 						);
 						_self._lastGesture.pinch = 1;
-						manageEvent.trigger("pinch",_self._lastGesture,"start");
+						EventListener.trigger("pinch",_self._lastGesture,"start");
 					}
-					manageEvent.trigger("gesture",_self._lastGesture,"start");
+					EventListener.trigger("gesture",_self._lastGesture,"start");
 					
 					if(_self.stopPropagation===true)e.stopPropagation();
 					if(_self.preventDefault===true) e.preventDefault();
@@ -7863,9 +7926,8 @@
 			}
 		
 			this._gestureMoveHandler = function(e){
-				//TouchMoveX를 체크하는 에유는
-				//시작한 터치무브가 존재하지 않을경우에는 작동되지 않음 (바깥쪽 이벤트가 Touch끼리 서로 섞이지 않게 하기 위함)
-				if(manageEvent.hasListener() && _self._firstPageX !== undefined){
+				//TouchMoveX를 체크하는 이유는 시작한 터치무브가 존재하지 않을경우에는 작동되지 않음 (바깥쪽 이벤트가 Touch끼리 서로 섞이지 않게 하기 위함)
+				if(EventListener.hasListener() && _self._firstPageX !== undefined){
 					var pageX = e.touches ? e.touches[0].pageX : e.pageX;
 					var pageY = e.touches ? e.touches[0].pageY : e.pageY;
 					
@@ -7882,7 +7944,7 @@
 					_self._lastPageX = pageX;
 					_self._lastPageY = pageY;
 					
-					if (manageEvent.hasListener("pinch") && (typeof _self._firstPinchValue === "number") && e.touches && e.touches.length === 2) {
+					if (EventListener.hasListener("pinch") && (typeof _self._firstPinchValue === "number") && e.touches && e.touches.length === 2) {
 						e.preventDefault();
 						var pinchDistance = getPinchDistance(
 							 e.touches[0].pageX,
@@ -7891,13 +7953,10 @@
 							 e.touches[1].pageY
 						);
 						_self._lastGesture.pinch = -((_self._firstPinchValue / pinchDistance) - 1);
-						manageEvent.trigger("pinch",_self._lastGesture,"move");
+						EventListener.trigger("pinch",_self._lastGesture,"move");
 						
-						//핀치시에는 이벤트를 초기화함
-						//_self._firstPageX = _self._lastPageX = undefined;
-						//_self._firstPageY = _self._lastPageY = undefined;
 					}
-					manageEvent.trigger("gesture",_self._lastGesture,"move");
+					EventListener.trigger("gesture",_self._lastGesture,"move");
 					
 					if(_self.stopPropagation===true)e.stopPropagation();
 					if(_self.preventDefault===true) e.preventDefault();
@@ -7905,12 +7964,12 @@
 			};
 		
 			this._gestureEndHandler = function(e){
-				if(manageEvent.hasListener() && _self._firstPageX !== undefined){
+				if(EventListener.hasListener() && _self._firstPageX !== undefined){
 					
-					if (manageEvent.hasListener("pinch") && (typeof _self._firstPinchValue === "number") && e.touches && e.touches.length === 2) {
-						this.manageEvent.trigger("pinch",_self._lastGesture,"end");
+					if (EventListener.hasListener("pinch") && (typeof _self._firstPinchValue === "number") && e.touches && e.touches.length === 2) {
+						this.EventListener.trigger("pinch",_self._lastGesture,"end");
 					}
-					manageEvent.trigger("gesture",_self._lastGesture,"end");
+					EventListener.trigger("gesture",_self._lastGesture,"end");
 					
 					_self._firstPageX = _self._lastPageX = undefined;
 					_self._firstPageY = _self._lastPageY = undefined;
@@ -7925,10 +7984,6 @@
 			N.node.punch(this.view,"mousedown",this._gestureStartHandler);
 			N.node.punch(document.body,"mousemove",this._gestureMoveHandler);
 			N.node.punch(document.body,"mouseup",this._gestureEndHandler);
-			//N.node.punch(document.body,"mouseout",function(e){
-			//	console.log("mouseout",e.target.tagName);
-			//	//_self._gestureEndHandler(e);
-			//});
 			
 		});
 		
