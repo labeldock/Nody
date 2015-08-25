@@ -3,13 +3,12 @@
 Nody.js는 데이터 관점에서 표준적인 방법으로 DOM을 쉽게 구성하기 위한 라이브러리입니다. 
 
 ## Feature #
-  - Nody plays well with another library.
-  - Nody helps create node as CSS Style.
-  - 바인딩을 쉽게 구현할수 있습니다.
-  - MVVM모듈이 내장되어있습니다.
+  - 다른 라이브러리와 친근하게 사용할수 있도록 설계하고 있습니다.
+  - 다양한 Enumulator가 존재합니다.
+  - 콘솔에서 손쉽게 사용할수 있게 설계되었습니다.
   - 영향받은 언어나 라이브러리 : Ruby, CoreData, Backbone, jQuery, Emmet
 
-#### Example of create node
+#### Basic example
 ```javascript
 nd.make('button.btn.btn-default#btn-action');
 //=> <button class="btn btn-default" id="btn-action"></button>
@@ -19,63 +18,33 @@ nd.make('div',
 	nd.make('a',nd.make('span','second value'))
 );
 //=> <div><a><span>first value</span></a><a><span>second value</span></a></div>
-```
-```javascript
+
 nd.makes('div>a>span::first value+span::second value');
 //=> [ <div><a><span>first value</span><span>second value</span></a></div> ]
 
 nd.makes('ul>li.item-$*3');
 //=> [ <ul><li class="item-1"></li><li class="item-2"></li><li class="item-3"></li></ul> ]
 
-nd.makes('h1::title+p::subtitle+section>header+.content+footer');
-//=> [ <h1>title</h1>, <p>subtitle</p>, <section><header></header><div class="content"></div><footer></footer></section> ]
+nd.find('div','#wrapper'); 
+//=> [element...]
+
+nd.find('ul li',0); 
+//=> element
+
+//you also using like jquery
+nd.node('#foo').addClass("bar").text("hello");
+//=> [ <div id="foo" class="bar">hello</div> ]
 ```
 
-
-#### Example of selector
-```javascript
-nd.find('div','#wrapper'); //=> [element...]
-nd.find('ul li',0); //=> element
-nd.find('ul li',jQuery).attr('role','list-item');  // => [li[role=list-item]]
-```
-
-#### Example of binding
-```html
-	<input id="bind1">
-	<p>
-		Input value is <span id="bind2"></span>
-	</p>
-```
-```javascript
-var binder = new nd.Binder(10); // initial value
-binder.bindNode("#bind1");
-binder.bindNode("#bind2");
-// That's it! :)
-```
-
-#### Example of template
-```javascript
-var temp = new nd.Template('<li nd-class="index" nd-value="text"></li>');
-	temp.renderTo('#ul',
-		[
-			{'index':'index1','text':'A'},
-			{'index':'index1','text':'B'},
-			{'index':'index1','text':'C'},
-			{'index':'index1','text':'D'}
-		]
-	);
-```
-
-#### Example of partial (and binding)
-```javascript
-var dataContext = new nd.DataContext({name:'hello world'});
-
-new nd.Presentor('#placeholder-1',dataContext,['<input type="text" nd-bind="name">'],true);
-new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name">'],true);
-```
-
-# Live demo #
-<a href="http://version2labs.github.io/build/nodyjs.html">http://version2labs.github.io/build/nodyjs.html</a>
+#### Other 
+   - Data
+   - Binder
+   - Form
+   - Template
+   - Partial
+   - MVVM
+  
+link => <a href="http://version2labs.github.io/build/nodyjs.html">http://version2labs.github.io/build/nodyjs.html</a>
 
 ## Compatibility #
   - IE9+
@@ -117,5 +86,7 @@ new nd.Presentor('#placeholder-2',dataContext,['<input type="text" nd-bind="name
 
   
 ## 프로젝트의 방향 #
-데이터를 쉽게 뷰로 구성하고 반영할 수 있도록 할것입니다.
-타이밍 이벤트, 네트워크에 대한 강화가 이루어질것입니다.
+데이터를 쉽게 뷰로 구성하고 반영할 수 있도록 할것입니다. 타이밍 이벤트, 네트워크에 대한 강화가 이루어질것입니다.
+
+#### 1.0 beta1 까지
+필요없는 메서드 제거, 각 모듈과 메서드 이름이 일관성 유지, 각 모듈별 공통 인터페이스 통합, MVVM 모듈 검토 및 클라우드 데이터 사용 가능성 검토가 끝나면 1.0 넘버링이 붙을 예정입니다.
