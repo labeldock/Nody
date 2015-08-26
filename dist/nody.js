@@ -8,7 +8,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.29.7", N.BUILD = "1260";
+		N.VERSION = "0.29.9", N.BUILD = "1261";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.5", N.CORE_BUILD = "91";
@@ -67,7 +67,7 @@
 			}
 			return name + "is not found";
 		};
-		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "PARTICU": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n MODULE(" + i + ") ::" + N.API(key); i++; } logText.push(moduleText); return logText.join("\n"); };
+		N.ALL = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "ADVKIT": case "ELUT": case "NODY": case "Finder": case "ElementFoundation": case "ElementGenerator": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n MODULE(" + i + ") ::" + N.API(key); i++; } logText.push(moduleText); return logText.join("\n"); };
 	
 	
 		//NativeCore Start
@@ -638,7 +638,7 @@
 		};
 		
 		// Nody Super base
-		N.SINGLETON("KIT",{
+		N.SINGLETON("DATAKIT",{
 			"dataCall":N.CONTINUE_FUNCTION(function(d,alt){ return (typeof d === 'undefined') ? N.cloneArray(alt) : ((alt === true) ? N.cloneArray(d) : N.toArray(d)); },1),
 			"dataHas" :function(d,v){ d=N.toArray(d); for(var i=0,l=d.length;i<l;i++) if(d[i] === v) return true; return false; },
 			"dataMatching" :function(da,ca){ 
@@ -710,12 +710,6 @@
 					if(removeIndexes.length) N.arrayRemoveIndex(array,removeIndexes);
 				}
 			},
-			"arrayInsert":function(array,target,index){
-				if(N.isArray(array)){
-					array.splice(index,0,target);
-				}
-			},
-			//
 			"inject":function(v,f,d){ d=(typeof d=="object"?d:{});v=N.toArray(v); for(var i=0,l=v.length;i<l;i++)f(d,v[i],i);return d;},
 			// false를 호출하면 배열에서 제거합니다.
 			"dataFilter":N.CONTINUE_FUNCTION(function(inData,filterMethod){
@@ -729,7 +723,8 @@
 				return [];
 			},2),
 			"arrayInsert":function(data,v,a){
-				if(N.isArray(data)) Array.prototype.splice.call(data,a,typeof a === "number"?a:0,v);
+				if(N.isArray(data))
+					Array.prototype.splice.call(data,typeof a === "number"?a:0,0,v);
 				return data;
 			},
 			"dataInsert":function(data,v,a){
@@ -1208,6 +1203,9 @@
 				}
 				return target;
 			},
+			"byteSize":function(t){
+				return unescape(escape(t).replace(/%u..../g,function(s){ return "  "; })).length;
+			},
 			"isModule":IS_MODULE,
 			// 참고! : human readable month
 			"dateExp":function(dv,format,pad){
@@ -1289,7 +1287,7 @@
 				return scale;
 			}
 		});
-		N.KIT.EACH_TO_METHOD();
+		N.DATAKIT.EACH_TO_METHOD();
 		
 	})(window,[],{},{},{},N);
 	
@@ -1307,39 +1305,7 @@
 		N.ENV = (function(){
 			var info = {};
 			
-			if(navigator) {
-				//agent test
-				info.agent = (navigator.userAgent||navigator.vendor||window.opera);
-				info.isAgent = function(t){ return info.agent && ((typeof t === "string") ? info.agent.toLowerCase().indexOf(t.toLowerCase()) > -1 : info.agent); };
-				
-				// Operating system
-				info.os = /(win|mac|linux|iphone)/.exec(navigator.platform.toLowerCase());
-				info.os = (info.os !== null) ? info.os[0].replace("sunos", "solaris") : "unknown";
-		
-				// Browser Name
-				//http://stackoverflow.com/questions/5916900/detect-version-of-browser 191
-				info.browser = (function(){
-				    var ua= navigator.userAgent, tem, 
-				    M= ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
-				    if(/trident/i.test(M[1])){
-				        tem=  /\brv[ :]+(\d+)/g.exec(ua) || [];
-				        return 'IE '+(tem[1] || '');
-				    }
-				    if(M[1]=== 'Chrome'){
-				        tem= ua.match(/\bOPR\/(\d+)/)
-				        if(tem!= null) return 'Opera '+tem[1];
-				    }
-				    M= M[2]? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
-				    if((tem= ua.match(/version\/(\d+)/i))!= null) M.splice(1, 1, tem[1]);
-				    return M.join(' ');
-				})();
-		
-				//online
-				info.online = navigator.onLine;
-			} else {
-				info.browser = info.os = 'unknown';
-				info.online  = false; 
-			}
+			info.online = navigator ? navigator.onLine : false;
 			
 			//support LocalStorage
 			info.supportLocalStorage = window ? ('localStorage' in window) ? true : false : false;
@@ -1403,14 +1369,7 @@
 			info.supportGetUserMedia = !!info.getUserMedia;
 		
 			//ie8 fix nodelist slice
-			info.supportNodeListSlice = (function(){
-				try {
-					Array.prototype.slice.call(NodeList)
-					return true;
-				} catch(e) {
-					return false;
-				}
-			})();
+			info.supportNodeListSlice = (function(){try{Array.prototype.slice.call(NodeList);return true;}catch(e){return false;}}());
 		
 			//matches
 			info.querySelectorAllName =
@@ -1434,7 +1393,8 @@
 			info.supportStandardMatches = (info.matchesSelectorName === 'matches');
 			
 			return info;
-		})();
+		}());
+		
 		var QUERY_SELECTOR_NAME = N.ENV.querySelectorAllName;
 		N.QUERY_SELECTOR_ENGINE = N.ENV.supportQuerySelectorAll && N.ENV.supportNodeListSlice ? 
 		function(node,selector){
@@ -1520,7 +1480,6 @@
 	//Nody Foundation
 	(function(W,N){
 		if(W.nodyLoadException==true){ throw new Error("Nody Process Foundation init cancled"); return;}
-		
 		
 		//expireTime default 16h
 		var STORE_DEFAULT_EXPIRE_TIME = 57600000;
@@ -1620,7 +1579,7 @@
 				return function(k){ this.usingCookie(k) };
 			}()),
 			touchSessionData:(function(){
-				if(N.ENV.supportSessionStorage || N.ENV.isAgent("adobeair"))
+				if(N.ENV.supportSessionStorage)
 					return function(k,v){
 						if( !this.usingSessionData(k) ) this.setSessionData(k,v);
 					};
@@ -1704,12 +1663,12 @@
 		})
 		N.FLASH.EACH_TO_METHOD();
 		
-		N.SINGLETON("PARTICU",{
+		N.SINGLETON("ADVKIT",{
 			"scalef":function(scale,value,total){
 				return (typeof value === "number"?value:100) / (typeof total === "number"?total:100) * scale;
 			},
 			"scale":function(scale,value,total){
-				return Math.round(N.PARTICU.scalef(scale,value,total));
+				return Math.round(N.ADVKIT.scalef(scale,value,total));
 			},
 			// nd.ratio(500,10,50,100) => [31, 156, 313]
 			"ratiof":function(ratioTotal){
@@ -1724,7 +1683,7 @@
 			},
 			"ratio":function(ratioTotal){
 				var fixResult = N.toNumber(ratioTotal);
-				var roundResult = N.arrayMap(N.PARTICU.ratiof.apply(this,Array.prototype.slice.call(arguments)),function(n){
+				var roundResult = N.arrayMap(N.ADVKIT.ratiof.apply(this,Array.prototype.slice.call(arguments)),function(n){
 					var round = Math.round(n);
 					fixResult -= round;
 					return round;
@@ -2075,7 +2034,7 @@
 				}
 			}
 		});
-		N.PARTICU.EACH_TO_METHOD();
+		N.ADVKIT.EACH_TO_METHOD();
 	
 	
 	
@@ -2243,13 +2202,11 @@
 				this[leftIndex]  = right;
 				this[rightIndex] = left;
 			},
-			hasIndex:function(index){ if (index < 0) return false; if (this.length - 1 < index) return false; return true; },
 			// 리턴한 요소를 누적하여 차례로 전달함
 			inject:function(firstValue,method) { for(var i = 0,l = this.length;i<l;i++) { var returnValue = method(this[i],firstValue,i); if(typeof returnValue !== "undefined") firstValue = returnValue; } return firstValue; },
 			// 리턴되는 오브젝트로 새 배열은 만들어냅니다.
-			mapUtil: { "&":function(owner,param){ return owner.map(function(a){ if(typeof a === "object") return a[param]; return undefined;}); }},
-			map : function(process,start) { if(typeof process=="function"){var result=[];for(var i=(typeof start === "number" ? start : 0),l=this.length;i<l;i++)result.push(process(this[i],i,this.length));return new N.Array(result);}else if(typeof getOrder=="string"){process=process.trim();for(var key in this.mapUtil)if(process.indexOf(key)==0){var tokenWith=process[key.length]==":"?true:false;var param=tokenWith?process.substr(key.length+1):process.substr(key.length);return new N.Array(this.mapUtil[key](this,param));}}return new N.Array(); },
-			setMap : function(process) { return this.setSource(this.map(process)); },
+			map:function(process)    { return this.__NativeInitializer__(N.dataMap(this,process)); },
+			setMap:function(process) { return N.arrayMap(this,process); },
 			// index가 maxIndex한계값이 넘으면 index가 재귀되어 반환된다.
 			turning:function(maxIndex,method){
 				var NI = parseInt(maxIndex);
@@ -2652,7 +2609,7 @@
 			HTMLSafe:function(){
 				return (new String(this.Source)).replace(/[&<>"'\/]/g, function (s) { return htmlSafeMap[s]; });
 			},
-			byteSize:function(){ return unescape(escape(this.Source).replace(/%u..../g,function(s){ return "uu"; })).length; },
+			byteSize:function(){ return N.byteSize(this.Source); },
 			lines:function(){ return Array.split(this.Source,"\n").toArray(); },
 			lineEach:function(f,j){ if(typeof f === "function") return new N.Array(this.lines()).setMap(function(s,i){ return f(s,i); }).setCompact().join( (j?j:"\n") ); },
 			//한줄의 탭사이즈를 구함
@@ -7823,8 +7780,6 @@
 			this.Delay          = N.toNumber(delay);
 		
 			if(this.Source && this.TriggeringMethod) {
-				//if(setWidth) N.node.style(this.Source,'width',N.toPx(setWidth));
-				//if(setHeight) N.node.style(this.Source,'height',N.toPx(setHeight));
 			
 				if(firstTriggering !== true) {
 					this.lastWidth  = this.Source.offsetWidth;
