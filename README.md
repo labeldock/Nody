@@ -54,10 +54,17 @@ link => <a href="http://version2labs.github.io/build/nodyjs.html">http://version
   - firefox
   - opera
   
-  
 ## Update history #
 
-#### 0.29.7 업데이트
+#### 0.30.0 업데이트
+  - [x] 싱글턴 이름의 케이스가 통일됨
+  - [x] Fire모듈이 제거됨
+  - [ ] 압축 효율을 높이는 방법을 강구
+  - [ ] 메모리 자동 해제를 위해 모든 모듈에 release를 추가함.
+  - [ ] 모듈의 Source관리를 위한 get set 예약어 메서드 제거.
+  - 코드 감소 : \[min:176(-2)kB\])
+
+#### 0.29.9 업데이트
   - [x] Adobe Air의 스토리지 관련 지원을 제거하였습니다.
   - [x] 내부에서 STORE 모듈 영역이 분리되었습니다.
   - [x] 인스턴트 데이터를 취급하는 FLASH 모듈이 추가되었습니다.
@@ -68,22 +75,7 @@ link => <a href="http://version2labs.github.io/build/nodyjs.html">http://version
   - [x] Partial 모듈의 "group", "value"키워드가 "for", "val"로 변경됨.
   - [x] 테스트 페이지 변경 및 웹페이지 컨텐츠를 version2labs.github.io로 옮깁니다.
   - [x] KIT 싱글턴 패키지가 DATAKIT으로 이름 변경, 메서드 업데이트
-  - [ ] 메모리 자동 해제를 위해 모든 모듈에 release를 추가함.
-  - [ ] 모듈의 Source관리 메서드 제거.
-  - ( 코드가 증가함 : \[min:178(+3)kB\])
-  
-#### 0.28 업데이트
-  - [x] Partial모듈의 파셜노드들의 재사용성이 강화되었습니다.
-  - [x] String모듈이 StringSource로 명칭 변경
-  - [x] ZString모듈이 제거됨
-  - [x] Number모듈이 제거됨 추후 NumberSource로 새로 작성할 계획
-  - [x] UID, Meta모듈이 제거됨
-  - [x] Request모듈이 재작성됨
-  - [x] Open모듈이 제거되고 open메서드가 추가됨
-  - [x] HTMLOpen모듈이 제거됨
-  - [x] ManagedData모듈이 LinkData로 명칭 변경
-  - [x] 일대다 DataContext - Presentor의 관계에서 중요한 버그 수정
-  - (\[min:-15kB(175)\])
+  - (\[min:178kB\])
 
   
 ## 프로젝트의 방향 #
