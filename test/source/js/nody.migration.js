@@ -1,5 +1,160 @@
 if(nody){
-
+	
+	nd.MODULE("DrawingObject",{
+		getCurrentProperty:function(){		
+			var property = nd.clone(this.defaultProps);
+			switch(this.type){
+				case "circle":
+					var radius = nd.parseHigh(this.defaultProps.width,this.defaultProps.height)/2;
+					if(!radius && property.radius) radius = property.radius;
+					property.radius = radius;
+					break;
+				case "arc":
+					var radius = nd.parseHigh(this.defaultProps.width,this.defaultProps.height)/2;
+					if(!radius && property.radius) radius = property.radius;
+					property.radius = radius;
+					//property.angle = -90;
+					//property.startAngle = 0;
+					//
+					//
+					//if(!end) end = 30;
+					//property.endAngle =  nd.scalef(2,end,360)*Math.PI;
+					//property.stroke   = "#000";
+					//property.strokeWidth   = 25;
+					//nd.propSet(property,"start",this.defaultProps.start,this.defaultProps.startAngle);
+					//nd.propSet(property,"end",this.defaultProps.end,this.defaultProps.endAngle);
+				
+					break;
+			}
+			if(!("fill" in property)) property.fill = nd.exp("#\\(0~9)\\(0~9)\\(0~9)\\(0~9)\\(0~9)\\(0~9)");
+			return property;
+		},
+		update:function(){
+			switch(this.type){
+				case "circle":
+					this.fabricObject.set(this.getCurrentProperty());
+					break;
+				case "pie":
+					var arcProperty = this.getCurrentProperty();
+					var radius = arcProperty.radius;
+					var arc1   = nd.arcPoint(arcProperty.radius,nd.propShift(arcProperty,"start")||0);
+					var arc2   = nd.arcPoint(arcProperty.radius,nd.propShift(arcProperty,"end")||30);
+					delete arcProperty["radius"];
+					delete arcProperty["width"];
+					delete arcProperty["height"];
+					this.fabricObject.path.splice(0,this.fabricObject.path.length);
+					this.fabricObject.path.push(["M", radius, radius]);
+					this.fabricObject.path.push(["L", arc1[0], arc1[1]]);
+					this.fabricObject.path.push(["A", radius, radius, 0, 0, 1, arc2[0], arc2[1]]);
+					this.fabricObject.path.push(["z"]);
+					this.fabricObject.set(arcProperty);
+					break
+			}
+		}
+	},function(type,defaultProps,coords){
+		this.defaultProps = nd.toObject(defaultProps);
+		this.coords       = coords;
+		this.type = type;
+		switch(type){
+			case "circle":
+				this.fabricObject = new fabric.Circle();
+				this.update();
+				break;
+			case "pie":
+				this.fabricObject = new fabric.Path(nd.exp("M 0 0 L 0 0 A 0 0 0 0 1 0 1 z"));
+				this.update();
+			case "pieText":
+				//this.fabricObject = new fabric.Path(nd.exp("M 0 0 L 0 0 A 0 0 0 0 1 0 1 z"));
+				//this.update();
+			default:
+				this.type = "error";
+				break;
+		}
+	});
+	nd.EXTEND_MODULE("RoleController","FabricRoleController",{
+		minSize:function(w,h){
+			var canvas = nd.node(this.canvas);
+			w=nd.parseInt(w), h=nd.parseInt(h);
+			w && nd.node.style(canvas,"min-width",w+"px")
+			h && nd.node.style(canvas,"min-width",h+"px")
+		},
+		maxSize:function(w,h){
+			var canvas = nd.node(this.canvas);
+			w=nd.parseInt(w), h=nd.parseInt(h);
+			w && nd.node.style(canvas,"max-width",w+"px")
+			h && nd.node.style(canvas,"max-width",h+"px")
+		},
+		size:function(w,h){
+			var canvas = this.canvas;
+			w=nd.parseInt(w), h=nd.parseInt(h);
+			//w && nd.node.style(canvas,"width",w+"px") && nd.node.attr(canvas,"width",w);
+			//h && nd.node.style(canvas,"height",h+"px") && nd.node.attr(canvas,"height",h);
+			w && this.fabricCanvas.setWidth(w);
+			h && this.fabricCanvas.setHeight(h);
+		}, 
+		width:function(){
+			return this.canvas.offsetWidth;
+		},
+		height:function(){
+			return this.canvas.offsetHeight;
+		},
+		bounds:function(){
+			return {x:0,y:0,width:this.width(),height:this.height()};
+		},
+		add:function(drawingObject,newProperty,newCoords){
+			if( typeof drawingObject === "string" ){
+				drawingObject = new nd.DrawingObject(drawingObject,newProperty,newCoords);
+			}
+			if( nd.isModule(drawingObject,"DrawingObject") ){
+				this.drawingObjects.push(drawingObject);
+				this.fabricCanvas.add(drawingObject.fabricObject);
+			}
+			return drawingObject;
+		},
+		update:function(){
+			var canvasBounds = this.bounds();
+			if(canvasBounds.width < 1 || canvasBounds.height < 1){ 
+				this.fabricCanvas.renderAll();
+			}
+		}
+	},function(mainNode,props,fabricProc){
+		this._super(mainNode,props,undefined,function(role){
+	        requirejs(["fabric"],function(fabric){
+				//make canvas
+				role.canvas = nd.make("canvas");
+				role.node().append(role.canvas);
+				//fabric canvas
+				role.fabricCanvas   = new fabric.StaticCanvas(nd.node.uniqueID(role.canvas));
+				role.drawingObjects = [];
+				//resize
+				var lastWidth  = 0;
+				var lastHeight = 0;
+				var resizeCanvas = function(){
+					var resizeChange = false;
+					if(lastWidth !== role.view.offsetWidth) {
+						role.fabricCanvas.setWidth(role.view.offsetWidth);
+						resizeChange = true;
+					}
+					if(lastHeight !== role.view.offsetHeight) {
+						role.fabricCanvas.setHeight(role.view.offsetWidth);
+						resizeChange = true;
+					}
+					(resizeChange && role.update())
+				};
+				nd.node.on(window,"resize",resizeCanvas);
+				resizeCanvas();
+				//check canvas size
+				if(role.width() < 1|| role.height() < 1){
+					console.warn("canvas bound is must be 1px upper",role.canvas);
+				}
+				if(typeof fabricProc === "function"){
+					fabricProc.call(role,role);
+					role.update();
+				}
+	        });
+		});
+	});
+	
 	N.METHOD("iframeRequest",function(url,success,contentType){
 		console.warn("this is devel")
 		this._super(url,requestOption,moduleOption);
