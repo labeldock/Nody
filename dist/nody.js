@@ -8,7 +8,7 @@
 	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.30.0", N.BUILD = "1267";
+		N.VERSION = "0.30.1", N.BUILD = "1271";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.5", N.CORE_BUILD = "91";
@@ -723,9 +723,22 @@
 				}
 				return [];
 			},2),
+			"arrayAdd":function(data,v){
+				var included=false;
+				for(var i=0,l=data.length;i<l;i++){
+					if(data[i]===v){
+						included = true;
+						break;
+					}
+				}
+				if(included===false) data.push(v);
+				return data;
+			},
+			"dataAdd":function(data,v){
+				return N.arrayAdd(N.toArray(data),v);
+			},
 			"arrayInsert":function(data,v,a){
-				if(N.isArray(data))
-					Array.prototype.splice.call(data,typeof a === "number"?a:0,0,v);
+				Array.prototype.splice.call(data,typeof a === "number"?a:0,0,v);	
 				return data;
 			},
 			"dataInsert":function(data,v,a){
@@ -735,6 +748,18 @@
 				Array.prototype.splice.apply(data,[0,typeof len==="number"?len:1].concat(Array.prototype.slice.call(arguments,2)));
 				return data;
 			},
+			"dataEnter":N.CONTINUE_FUNCTION(function(data,index){
+				if(typeof index !== "number" || index === NaN) return [];
+				var r = [], d = N.toArray(data);
+				for(var i=0,l=index < d.length ? index : d.length;i<l;i++) r.push(d[i]);
+				return r;
+			},2),
+			"dataExit":N.CONTINUE_FUNCTION(function(data,index){
+				if(typeof index !== "number" || index === NaN) return [];
+				var r = [], d = N.toArray(data);
+				for(var i=index<0?0:index,l=d.length;i<l;i++) r.push(d[i]);
+				return r;
+			},2),
 			"dataShift":function(data,len,rep){
 				return N.arrayShift(Array.prototype.slice.call(N.toArray(data)),len,rep);
 			},
@@ -6283,7 +6308,6 @@
 			},
 			//자식연쇄 메니지드 데이터를 준비합니다.
 			feedDownDataBinderMake:function(data,parent){
-				
 				if( typeof data === "object" ){
 					var makeDataBinder = N.isArray(data) ? new N.DataBinder(this,this._getDataProps(data),"array") : new N.DataBinder(this,this._getDataProps(data),"object");
 					var childDatas = this._getChildData(data);
@@ -6303,41 +6327,44 @@
 				}
 			},
 			update:function(data,parent,marge){
-				
 				if( typeof data === "object" ){
-					var managedData = parent || this.RootDataBinder;
+					var dataBinder = parent || this.RootDataBinder;
 					
 					//feedDownUpdate
 					var dataProp  = this._getDataProps(data);
-					var diffProps = N.diffKeys(managedData.prop(), dataProp);
+					var diffProps = N.diffKeys(dataBinder.prop(), dataProp);
 					for(var i=0,l=diffProps.length;i<l;i++){
 						if( diffProps[i] in dataProp ){
-							managedData.setProp(diffProps[i],dataProp[diffProps[i]]);
+							dataBinder.setProp(diffProps[i],dataProp[diffProps[i]]);
 						} else if((marge !== true) && !(diffProps[i] in dataProp)) {
-							managedData.removeProp(diffProps[i]);
+							dataBinder.removeProp(diffProps[i]);
 						}
 					}
 					
 					//하위데이터
 					var childData       = this._getChildData(data);
 					var childDataLength = childData.length;
-					var managedChildrens= managedData.Child.toArray();
+					var managedChildrens= dataBinder.Child.toArray();
 					var managedLength   = managedChildrens.length;
 					var removeTargets   = [];
 					for(var i=0,l=((childDataLength > managedLength) ? childDataLength : managedLength);i<l;i++){
 						if(childData[i]&&managedChildrens[i]){
+							//update
 							this.update(childData[i],managedChildrens[i],marge);
 						} else if(!childData[i]&&managedChildrens[i]){
+							//remove
 							removeTargets.push(managedChildrens[i]);
 						} else if(childData[i]&&!managedChildrens[i]){
-							managedData.addChildData(childData[i]);
+							//create
+							dataBinder.addChildData(childData[i]);
 						}
 					}
+					
 					//데이터 지우기
 					N.dataEach(removeTargets,function(removeTarget){
 						removeTarget.removeDataBinder();
 					});
-					return managedData;
+					return dataBinder;
 				} else {
 					console.warn("data초기 값은 반드시 object타입이여야 합니다.",typeof data,data);
 				}
@@ -6345,19 +6372,19 @@
 			margeUpdate:function(data){
 				this.update(data,undefined,true);
 			},
-			//managedData를 string이나 오브젝트로 뽑아넴
-			trace:function(managedData){
+			//dataBinder를 string이나 오브젝트로 뽑아넴
+			trace:function(dataBinder){
 				var _self = this;
-				if (!managedData) managedData = this.RootDataBinder;
-				var ra = managedData.SourceType == "array";
+				if (!dataBinder) dataBinder = this.RootDataBinder;
+				var ra = dataBinder.SourceType == "array";
 				var rs = ra ? "[" : "{";
 				var re = ra ? "]" : "}";
 				var prop = [];
-				managedData.Source.each(function(v,k){ prop.push( '\"' + k + '\":\"' + v + '\"' ) });
+				dataBinder.Source.each(function(v,k){ prop.push( '\"' + k + '\":\"' + v + '\"' ) });
 
-				if(managedData.Child.length > 0) prop.push( 
+				if(dataBinder.Child.length > 0) prop.push( 
 					(ra ? '' : '\"'+this.DefaultDataKey + '\":[' ) + 
-					managedData.Child.map( function(managedData){ return _self.trace(managedData); } ).join(", ") + 
+					dataBinder.Child.map( function(dataBinder){ return _self.trace(dataBinder); } ).join(", ") + 
 					(ra ? "" : "]")
 				);
 				return rs + prop.join(", ") + re;
@@ -6394,12 +6421,12 @@
 					var searchResult = [];
 					if(path == '') return false;
 					if(path == '*'){
-						N.dataEach(searchTarget,function(managedData){
-							searchResult = searchResult.concat(managedData.Child.toArray());
+						N.dataEach(searchTarget,function(dataBinder){
+							searchResult = searchResult.concat(dataBinder.Child.toArray());
 						});
 					} else if(path == '**') {
-						N.dataEach(searchTarget,function(managedData){
-							managedData.feedDownDataBinder(function(){
+						N.dataEach(searchTarget,function(dataBinder){
+							dataBinder.feedDownDataBinder(function(){
 								searchResult.push(this);
 							});
 						});
@@ -6421,8 +6448,8 @@
 						});
 	
 						if(/\[[^\]]+\]\*\*$/.test(path)) {
-							N.dataEach(searchTarget,function(managedData){
-								managedData.feedDownDataBinder(function(){
+							N.dataEach(searchTarget,function(dataBinder){
+								dataBinder.feedDownDataBinder(function(){
 									var md   = this;
 									var pass = true;
 									N.propEach(wantedProps,function(v,k){
@@ -6432,26 +6459,26 @@
 								});
 							});
 						} else {
-							N.dataEach(searchTarget,function(managedData){
+							N.dataEach(searchTarget,function(dataBinder){
 								var passData = [];
-								N.dataEach(managedData.Child,function(managedData){
+								N.dataEach(dataBinder.Child,function(dataBinder){
 									var pass = true;
 									N.propEach(wantedProps,function(v,k){
-										return pass = (v === null || v === '') ? managedData.hasProp(k) : (managedData.prop(k) == v);
+										return pass = (v === null || v === '') ? dataBinder.hasProp(k) : (dataBinder.prop(k) == v);
 									});
-									if(pass === true) searchResult.push(managedData);
+									if(pass === true) searchResult.push(dataBinder);
 								});
 							});
 						}
 					} else if(N.likeNumber(path)){
-						N.dataEach(searchTarget,function(managedData){
-							var ch = managedData.Child[parseInt(path)];
+						N.dataEach(searchTarget,function(dataBinder){
+							var ch = dataBinder.Child[parseInt(path)];
 							if(ch){ searchResult.push(ch); }
 						});
 					} else {
-						N.dataEach(searchTarget,function(managedData){
-							N.dataEach(searchTarget,function(managedData){
-								if( managedData.DataID == path ) searchResult.push(managedData);
+						N.dataEach(searchTarget,function(dataBinder){
+							N.dataEach(searchTarget,function(dataBinder){
+								if( dataBinder.DataID == path ) searchResult.push(dataBinder);
 							});
 						});
 					}
@@ -6482,9 +6509,12 @@
 		});
 
 		N.MODULE("ViewModel",{
-			needRenderView:function(depth,managedData,feedViews,viewController){
+			needRenderView:function(depth,dataBinder,feedViews,viewController){
 				if(this.Renders[depth]){
-					var renderResult = N.isModule(this.Renders[depth],"Template") ? managedData.template(this.Renders[depth]) : this.Renders[depth].call(managedData,managedData,feedViews) ;
+					dataBinder.ViewModelScope = new Object();
+					var renderResult = N.isModule(this.Renders[depth],"Template") ? dataBinder.template(this.Renders[depth]) : this.Renders[depth].call(dataBinder,dataBinder,feedViews) ;
+					dataBinder.ViewModelScope = undefined;
+					
 					if( renderResult !== false) if(typeof renderResult === 'object' && 'nodeName' in renderResult ) {
 						return renderResult;
 					} else {
@@ -6497,7 +6527,7 @@
 						console.error("오류::ViewModel의 렌더값이 올바르지 않습니다. 대체 렌더링이 실시됩니다.=>",renderResult, this.Renders[depth]);
 					}
 				}
-				return N.make("div",{html:N.toString(managedData.prop()),style:'padding-left:10px;'},managedData.placeholder("div"));
+				return N.make("div",{html:N.toString(dataBinder.prop()),style:'padding-left:10px;'},dataBinder.placeholder("div"));
 			},
 			clone:function(){
 				var init = this.Renders.clone();
@@ -6513,7 +6543,7 @@
 				return a; 
 			});
 		});
-
+	
 		N.MODULE("DataBinder",{
 			//노드구조
 			appendChild:function(childrens){
@@ -6679,8 +6709,9 @@
 			},
 			response:function(responseKey,proc){
 				if(typeof responseKey !== "string" && typeof proc !== "function") console.warn("response args must be string & function => ",responseKey,proc);
-				if(!this.__response__) this.__response__ = {};
-				this.DataContext.Binder.listen(this.__response__,this.DataID+"."+responseKey,function(value,beforeValue,key){ proc(value,key); });
+				if(!this.ViewModelScope) console.warn("response runing must be render scope");
+				nd.arrayAdd(this.BindModelScope,this.ViewModelScope);
+				this.DataContext.Binder.listen(this.ViewModelScope,this.DataID+"."+responseKey,function(value,beforeValue,key){ proc(value,key); });
 			},
 			revertData:function(){
 				this.DataContext.getDataWithPath(this.path);
@@ -6731,7 +6762,7 @@
 			rerender:function(){
 				this.DataContext.Binder.post(this,"GLOBAL.DataBinderNeedRerender",this);
 			},
-			managedDataIndexExchange:function(changeTarget){
+			dataBinderIndexExchange:function(changeTarget){
 				if(changeTarget){
 					this.Parent.Child.changeIndex(this.getIndex(),changeTarget.getIndex());
 					this.DataContext.Binder.post(this,"GLOBAL.DataBinderIndexExchange",[this,changeTarget]);
@@ -6740,15 +6771,15 @@
 				return false;
 			},
 			//상위 인덱스로
-			managedDataIncrease:function(){
+			dataBinderIncrease:function(){
 				var nextDataBinder = this.Parent.Child[this.Parent.Child.indexOf(this)+1];
-				if (nextDataBinder) return this.managedDataIndexExchange(nextDataBinder);
+				if (nextDataBinder) return this.dataBinderIndexExchange(nextDataBinder);
 				return false;
 			},
 			//하위 인덱스로
-			managedDataDecrease:function(){
+			dataBinderDecrease:function(){
 				var prevDataBinder = this.Parent.Child[this.Parent.Child.indexOf(this)-1];
-				if (prevDataBinder) return this.managedDataIndexExchange(prevDataBinder);
+				if (prevDataBinder) return this.dataBinderIndexExchange(prevDataBinder);
 				return false;
 			},
 			//현재 데이터를 제거함
@@ -6765,9 +6796,9 @@
 			},
 			release:function(){
 				this.DataContext.Binder.removeListener(this);
-				if(this.__response__) {
-					this.DataContext.Binder.removeListener(this.__response__);
-				}
+				for(var i=0,l=this.BindModelScope.length;i<l;i++){
+					this.DataContext.Binder.removeListener(this.BindModelScope.shift());
+				} 
 				return this.view;
 			},
 			//하위 데이터를 추가함
@@ -6795,6 +6826,8 @@
 			this.Parent      = undefined;        
 			//현재 컨트롤중인 뷰컨트롤입니다.
 			this.PresentorScope = undefined;
+			this.BindModelScope = [];
+			this.ViewModelScope = undefined;
 			//binder setting
 			var binder = this.DataContext.Binder;
 			var binderPrefix = this.DataID+".";
@@ -6820,44 +6853,44 @@
 					this.placeholderNodes[dataID] = placeholderNode;
 				}
 			},
-			addBindNode:function(element,managedData,dataKey){
-				this.managedData.DataContext.Binder.bindNode(element,managedData.DataID+"."+dataKey);
+			addBindNode:function(element,dataBinder,dataKey){
+				this.dataBinder.DataContext.Binder.bindNode(element,dataBinder.DataID+"."+dataKey);
 			},
-			addActionNode:function(actionName,element,managedData,arg){
+			addActionNode:function(actionName,element,dataBinder,arg){
 				var viewController = this;
 				var _self = this;
 				N.node.on(element,"click", function(){
 					if(_self.ManageDataActions.hasListener(actionName)){
-						_self.ManageDataActions.triggerWithOwner(managedData,actionName,arg,element,_self);
+						_self.ManageDataActions.triggerWithOwner(dataBinder,actionName,arg,element,_self);
 					} else {
 						console.warn("MVVM::no had action",actionName);
 					}
 				});
 			},
-			setDataBinder:function(managedData){
+			setDataBinder:function(dataBinder){
 				var findDataBinder;
-				if(N.isModule(managedData,"DataContext")){
-					findDataBinder = managedData.getRootDataBinder();
-				} else if(N.isModule(managedData,"DataBinder")) {
-					findDataBinder = managedData;
-				} else if(typeof managedData === 'object') {
-					findDataBinder = new N.DataContext(managedData).getRootDataBinder();
+				if(N.isModule(dataBinder,"DataContext")){
+					findDataBinder = dataBinder.getRootDataBinder();
+				} else if(N.isModule(dataBinder,"DataBinder")) {
+					findDataBinder = dataBinder;
+				} else if(typeof dataBinder === 'object') {
+					findDataBinder = new N.DataContext(dataBinder).getRootDataBinder();
 				}
 				if(!findDataBinder){
-					console.warn("setDataBinder::managedData 오브젝트가 필요합니다. 들어온 값->", managedData);
+					console.warn("setDataBinder::dataBinder 오브젝트가 필요합니다. 들어온 값->", dataBinder);
 					return false;
 				}
 		
-				if(this.managedData){
-					if(this.managedData.DataContext === findDataBinder.DataContext){
+				if(this.dataBinder){
+					if(this.dataBinder.DataContext === findDataBinder.DataContext){
 						return true;
 					}
-					if(this.managedData.DataContext !== findDataBinder.DataContext){
-						this.managedData.DataContext.Binder.removeListener(this);
+					if(this.dataBinder.DataContext !== findDataBinder.DataContext){
+						this.dataBinder.DataContext.Binder.removeListener(this);
 					}
 				}
 				
-				this.managedData = findDataBinder;
+				this.dataBinder = findDataBinder;
 				var currentBinder = findDataBinder.DataContext.Binder;
 		
 				currentBinder.listen(this,"GLOBAL.DataBinderNeedRerender",function(rerenderDataBinder){
@@ -6909,18 +6942,18 @@
 					}
 				});
 		
-				currentBinder.listen(this,"GLOBAL.DataBinderRemoved",function(managedData){
-					var dataID = managedData.DataID;
+				currentBinder.listen(this,"GLOBAL.DataBinderRemoved",function(dataBinder){
+					var dataID = dataBinder.DataID;
 					if(this.structureNodes[dataID]){
 						var _self = this;
 						//바인드값 삭제
-						managedData.DataContext.Binder.removeListenerWithNode(this.structureNodes[dataID]);
+						dataBinder.DataContext.Binder.removeListenerWithNode(this.structureNodes[dataID]);
 						
 						//스트럭쳐 노드 삭제				
 						N.node.remove(this.structureNodes[dataID])
 						delete this.structureNodes[dataID];
 						//	
-						this.ManagePresentorEvent.trigger("dataChange","remove",managedData);
+						this.ManagePresentorEvent.trigger("dataChange","remove",dataBinder);
 						this.ManagePresentorEvent.trigger("displayChange",this,this.view);
 					}
 					//
@@ -6941,78 +6974,78 @@
 					}
 					
 				});				
-				currentBinder.listen(this,"GLOBAL.DataBinderWasSetValue",function(managedData){
-					this.ManagePresentorEvent.trigger("propChange","bind",managedData,this.structureNodes[managedData.DataID])
+				currentBinder.listen(this,"GLOBAL.DataBinderWasSetValue",function(dataBinder){
+					this.ManagePresentorEvent.trigger("propChange","bind",dataBinder,this.structureNodes[dataBinder.DataID])
 					this.ManagePresentorEvent.trigger("displayChange",this,this.view);
 				});
 		
 				//end
 				return true;		
 			},
-			needDisplay:function(managedData,rootElement,sigleRenderMode){
+			needDisplay:function(dataBinder,rootElement,sigleRenderMode){
 				//기본적으로 존재하지 않는값을 경고해줌
-				if(!this.managedData) console.warn("DataContextViewController:: Must need set DataBinder before needDisplay");
+				if(!this.dataBinder) console.warn("DataContextViewController:: Must need set DataBinder before needDisplay");
 				if(!this.viewModel) console.warn("DataContextViewController:: Must need set ViewModel before needDisplay");
 				//파라메터 두개가 존재하지 않으면 초기화 진행을 한다
-				if( (!managedData) && (!rootElement) ){
+				if( (!dataBinder) && (!rootElement) ){
 					this.view.innerHTML= '';
 					this.bindValueNodes = new N.Array();
 					this.structureNodes = {};
 					this.placeholderNodes = {};
 					this.selectIndexes  = new N.Array();
 				}
-				managedData     = managedData || this.managedData;
+				dataBinder     = dataBinder || this.dataBinder;
 				rootElement     = rootElement || this.view;
 				var viewController = this;
-				var feedCollection = N.arrays(this.managedData.getDepth());
+				var feedCollection = N.arrays(this.dataBinder.getDepth());
 				var lastFeed       = null;
-				var topLevel       = this.managedData.getLevel();
-				var startDepth     = managedData.getLevel();
+				var topLevel       = this.dataBinder.getLevel();
+				var startDepth     = dataBinder.getLevel();
 
 				//후가공
-				var renderPostpress = function(node,managedData,depth){
-					node.setAttribute('data-managed-id',managedData.DataID);
+				var renderPostpress = function(node,dataBinder,depth){
+					node.setAttribute('data-managed-id',dataBinder.DataID);
 					node.setAttribute('data-managed-depth',depth);
 				};
 
 				if (sigleRenderMode == true) {
 					// 메니지드 데이터에 현재 스코프를 등록함
-					managedData.PresentorScope = viewController;
+					dataBinder.PresentorScope = viewController;
 					//slngleRenderMode의 관리는 매우 중요함 else문의 블럭과 동일하게 동작하도록 주의할것
-					var renderResult = viewController.viewModel.needRenderView(startDepth-topLevel,managedData,[],viewController);
-					renderPostpress(renderResult,managedData,startDepth - topLevel);
+					var renderResult = viewController.viewModel.needRenderView(startDepth-topLevel,dataBinder,[],viewController);
+					renderPostpress(renderResult,dataBinder,startDepth - topLevel);
 					// 루트에 추가함
 					rootElement.appendChild(renderResult);
 					// 그린내역을 기록함
-					if(N.isNode(renderResult) || N.isTextNode(renderResult)) viewController.structureNodes[managedData.DataID] = renderResult;
+					if(N.isNode(renderResult) || N.isTextNode(renderResult)) viewController.structureNodes[dataBinder.DataID] = renderResult;
 					// 현재 스코프를 지움
-					managedData.PresentorScope = undefined;
+					dataBinder.PresentorScope = undefined;
 				} else {
-					managedData.feedUpManageData(function(managedData,depth){
+					dataBinder.feedUpManageData(function(dataBinder,depth){
 						// 마지막 피드가 존재하지 않으면 depth값을 초기화함
 						if (lastFeed == null) lastFeed = depth;
 
 						// 메니지드 데이터에 현재 스코프를 등록함
-						managedData.PresentorScope = viewController;
+						dataBinder.PresentorScope = viewController;
 
 						var renderResult;
 
 						if (depth == startDepth) {
 							// 최상위 렌더링
-							renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[depth+1],viewController);
-							renderPostpress(renderResult,managedData,depth);
+							renderResult = viewController.viewModel.needRenderView(depth-topLevel,dataBinder,feedCollection[depth+1],viewController);
+							renderPostpress(renderResult,dataBinder,depth);
 							//루트에 추가
 							rootElement.appendChild(renderResult);
 							//컨테이너에 추가
-							if( viewController.placeholderNodes[managedData.DataID] ) N.node.append(viewController.placeholderNodes[managedData.DataID],feedCollection[depth+1]);
+							if( viewController.placeholderNodes[dataBinder.DataID] ) N.node.append(viewController.placeholderNodes[dataBinder.DataID],feedCollection[depth+1]);
 							feedCollection[depth+1] = [];
 						} else if (depth < lastFeed) {
 							// 렌더 피드가 올라감
-							var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,feedCollection[lastFeed],viewController);
-							renderPostpress(renderResult,managedData,depth);
+							var renderResult = viewController.viewModel.needRenderView(depth-topLevel,dataBinder,feedCollection[lastFeed],viewController);
+							renderPostpress(renderResult,dataBinder,depth);
 							//컨테이너에 추가
-							if( viewController.placeholderNodes[managedData.DataID] ){ 
-								N.node.append(viewController.placeholderNodes[managedData.DataID],feedCollection[lastFeed])
+							if( viewController.placeholderNodes[dataBinder.DataID] ){ 
+								N.node.append(viewController.placeholderNodes[dataBinder.DataID],feedCollection[lastFeed])
 							};
 							//피드 초기화
 							feedCollection[lastFeed] = [];
@@ -7020,18 +7053,18 @@
 						} else {
 							// 최하위 피드모음
 							// 렌더 피드가 내려감
-							var renderResult = viewController.viewModel.needRenderView(depth-topLevel,managedData,[],viewController);
-							renderPostpress(renderResult,managedData,depth);
+							var renderResult = viewController.viewModel.needRenderView(depth-topLevel,dataBinder,[],viewController);
+							renderPostpress(renderResult,dataBinder,depth);
 							feedCollection[depth].push(renderResult);
 						}
 						// 마지막 피드 depth를 기록함
 						lastFeed = depth;
 
 						// 그린내역을 기록함
-						if(N.isNode(renderResult) || N.isTextNode(renderResult)) viewController.structureNodes[managedData.DataID] = renderResult;
+						if(N.isNode(renderResult) || N.isTextNode(renderResult)) viewController.structureNodes[dataBinder.DataID] = renderResult;
 
 						// 현재 스코프를 지움
-						managedData.PresentorScope = undefined;
+						dataBinder.PresentorScope = undefined;
 	
 					},startDepth);
 				}
@@ -7045,11 +7078,11 @@
 			needDisplayWithData:function(data){
 				this.setDataBinder(data) ? this.needDisplay() : console.warn("데이터를 초기화하는데 실패하였습니다. 데이터의 형식이 잘못되었습니다.",data);
 			},
-			findByDataBinder:function(managedData){
-				return this.structureNodes[managedData.getDataID()];
+			findByDataBinder:function(dataBinder){
+				return this.structureNodes[dataBinder.getDataID()];
 			},
-			findByManagedId:function(managedDataID){
-				return this.structureNodes[managedDataID];
+			findByManagedId:function(dataBinderID){
+				return this.structureNodes[dataBinderID];
 			},
 			findByIndex:function(){
 				var selectQuery = N.dataFilter(N.argumentsFlatten(arguments),function(v){ return (typeof v === "number" || v === "*")?true:false; },N.dataMap,function(v,i){
@@ -7059,7 +7092,7 @@
 			},
 			getDataBinderByNode:function(node,strict){
 				if(strict === true) {
-					for(var key in this.structureNodes) if(this.structureNodes[key] === node) return this.managedData.getDataBinderWithID(key);
+					for(var key in this.structureNodes) if(this.structureNodes[key] === node) return this.dataBinder.getDataBinderWithID(key);
 				} else {
 					if( N.node.is(node,'[data-managed-id]') ) return this.getDataBinderByNode(node,true);
 					var parentNode = N.findParent(node,'[data-managed-id]');
@@ -7067,7 +7100,7 @@
 				}
 			},
 			getRootDataBinder:function(){
-				return this.managedData;
+				return this.dataBinder;
 			},
 			getDataBinderByIndex:function(){
 				var _dataContext = this.getRootDataBinder();
@@ -7075,7 +7108,7 @@
 					return _dataContext.getDataBinderWithID(nd.node.data(node,"managed-id"));
 				});
 			}
-		},function(view,managedData,viewModel,needDisplay){
+		},function(view,dataBinder,viewModel,needDisplay){
 			this.view = N.findLite(view)[0];
 			if(!this.view) console.error('초기화 실패 View를 찾을수 없음 => ', view);
 			
@@ -7087,27 +7120,25 @@
 			this.ManagePresentorEvent.addEventRegister(["propChange","dataChange","displayChange"]);
 			this.ManagePresentorEvent.addTriggerRegister(["displayChange"]);
 			this.addActionEvent("up",function(arg,el,vc){
-				console.log("tup")
 				if(typeof arg === "function") {
-					if( arg(this,element) != false ) this.managedDataDecrease();
+					if( arg(this,element) != false ) this.dataBinderDecrease();
 				} else {
-					this.managedDataDecrease();
+					this.dataBinderDecrease();
 				}
 			});
 			this.addActionEvent("down",function(arg,el,vc){
-				console.log("tdow")
 				if(typeof arg === "function") {
-					if( arg(this,element) != false ) this.managedDataIncrease();
+					if( arg(this,element) != false ) this.dataBinderIncrease();
 				} else {
-					this.managedDataIncrease();
+					this.dataBinderIncrease();
 				}
 			});
-			this.addActionEvent("append",function(arg,el,vc){ console.log("ap"); this.addChildData(arg); });
-			this.addActionEvent("delete",function(arg,el,vc){ console.log("de"); this.removeDataBinder(); });
+			this.addActionEvent("append",function(arg,el,vc){ this.addChildData(arg); });
+			this.addActionEvent("delete",function(arg,el,vc){ this.removeDataBinder(); });
 			
 			this.viewModel = viewModel ? N.isArray(viewModel) ? N.ViewModel.new.apply(undefined,N.toArray(viewModel)) : viewModel : new N.ViewModel();
 			
-			if(managedData)this.setDataBinder(managedData);
+			if(dataBinder)this.setDataBinder(dataBinder);
 
 			//needDisplay
 			if(typeof needDisplay === "function") needDisplay = N.CALL(needDisplay,this);
@@ -7238,7 +7269,7 @@
 			},
 			listen:function(listener,propertyName,proc,allowProc,protectLevel,prefixListen){
 				//value inspect
-				if(typeof listener !== "object" || typeof propertyName !== "string" || typeof proc !== "function"){
+				if(!(typeof listener == "object" || typeof listener == "function") || typeof propertyName !== "string" || typeof proc !== "function"){
 					return console.error("BindAdapter::listen arguments must be (listener,propertyName,proc)(object,string,fucntion)=>",arguments);
 				}
 				//duplicate listen & property inspect

@@ -56,9 +56,11 @@ link => <a href="http://version2labs.github.io/build/nodyjs.html">http://version
   
 ## Update history #
 
-#### 0.30.0 업데이트
+#### 0.30.1 업데이트
   - [x] 싱글턴 이름의 케이스가 통일됨
   - [x] Fire모듈이 제거됨
+  - [x] ViewModel읠 response 호출시 DataBinder단위가 아닌 각 proc의 단위로 response가능하게 나뉘었음.
+  - [ ] DATAKIT의 array..문은 타입체크를 하지 않도록 변경
   - [ ] 압축 효율을 높이는 방법을 강구
   - [ ] 메모리 자동 해제를 위해 모든 모듈에 release를 추가함.
   - [ ] 모듈의 Source관리를 위한 get set 예약어 메서드 제거.
