@@ -5,13 +5,13 @@
  */
 (function(){
 	var N=(function(){return N.API.apply(window,Array.prototype.slice.call(arguments))});
-	(function(W,NGetters,NSingletons,NModules,NStructure,nody){
+	(function(W,NMethods,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.30.1", N.BUILD = "1271";
+		N.VERSION = "0.30.3", N.BUILD = "1278";
 	
 		// Core verison
-		N.CORE_VERSION = "2.0.5", N.CORE_BUILD = "91";
+		N.CORE_VERSION = "2.0.6", N.CORE_BUILD = "92";
   
 		// Pollyfill IE Console error fix
 		if (typeof W.console !== "object") W.console = {}; 'log info warn error count assert dir clear profile profileEnd'.replace(/\S+/g,function(n){ if(!(n in W.console)) W.console[n] = function(){ if(typeof air === "object") if("trace" in air){ var args = Array.prototype.slice.call(arguments),traces = []; for(var i=0,l=args.length;i<l;i++){ switch(typeof args[i]){ case "string" : case "number": traces.push(args[i]); break; case "boolean": traces.push(args[i]?"true":"false"); break; default: traces.push(N.toString(args[i])); break; } } air.trace( traces.join(", ") ); } } });	
@@ -64,11 +64,18 @@
 			            }
 			        return result;
 			    }
+				if(typeof N[name] === "function") {
+					if (N[name]["__NativeMethod__"]) {
+						return "NODY_CONTINUE_FUNCTION :: " + name + /\(([^\)]*)\)/.exec(N[name]["__NativeMethod__"])[0];
+					} else {
+						return "NODY_METHOD :: " + name + /\(([^\)]*)\)/.exec(N[name])[0];
+					}
+				}
 			}
-			return name + "is not found";
+			return name + " is not found";
 		};
 		
-		N.ALL     = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NGetters.length;i<l;i++) getterText += "\n" + i + " : " + NGetters[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "ADVKIT": case "ELUT": case "NODY": case "FINDKIT": case "NODEKIT": case "ELKIT": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n MODULE(" + i + ") ::" + N.API(key); i++; } logText.push(moduleText); return logText.join("\n"); };
+		N.ALL     = function(){ var i,key,logText = []; var getterText = "# Native Getter"; for (i=0,l=NMethods.length;i<l;i++) getterText += "\n" + i + " : " + NMethods[i]; logText.push(getterText); var singletonText = "# Native Singleton"; i=0; for (key in NSingletons ) { singletonText += "\n" + i + " : " + key; var protoName,i2=0; switch(key){ case "ADVKIT": case "ELUT": case "NODY": case "FINDKIT": case "NODEKIT": case "ELKIT": var count = 0; for(protoName in NSingletons[key].constructor.prototype) count++; singletonText += "\n [" + count + "]..."; break; default: for(protoName in NSingletons[key].constructor.prototype) singletonText += "\n" + (i2++) + " : " + protoName; break; } i++; } logText.push(singletonText); var moduleText = "# Native Module"; i=0; for (key in NModules ) { moduleText += "\n MODULE(" + i + ") ::" + N.API(key); i++; } logText.push(moduleText); return logText.join("\n"); };
 		N.DEBUGER = false;
 	
 		//NativeCore Start
@@ -267,7 +274,7 @@
 		//Getter:Core
 		N.METHOD = function(n,m,bind){ 
 			N[n]=m;
-			NGetters.push(n); 
+			NMethods.push(n); 
 			if(typeof bind === 'object') for(var key in bind) if(typeof bind[key] === 'function') {
 				m[key] = function(){
 					var binder = (new (function(){var _=this; this.getter = function(){ return m.apply(_,Array.prototype.slice.call(arguments));};})());
@@ -276,7 +283,7 @@
 			}
 			return m;
 		};
-		structruePrototype = {
+		var STRUCTURE_PROTOTYPE = {
 			"get":function(key){ if(key) return this.Source[key]; return this.Source; },
 			"empty":function(){ for(var k in this.Source) delete this.Source[k]; return this.Source; },
 			"setSource":function(data){ this.empty(); for(var k in data) this.Source[k] = data[k]; return this.Source; },
@@ -289,7 +296,7 @@
 			if(typeof n !== "string" || typeof m !== "function") return console.warn("N.STRUCTURE::worng arguments!");
 			NStructure[n]=function(){ this.Source={};m.apply(this,Array.prototype.slice.call(arguments)); };
 			NStructure[n].prototype = {"constructor":m};
-			for(var key in structruePrototype) NStructure[n].prototype[key] = structruePrototype[key];
+			for(var key in STRUCTURE_PROTOTYPE) NStructure[n].prototype[key] = STRUCTURE_PROTOTYPE[key];
 			window[n] = NStructure[n];
 		};
 		N.INIT_STRUCTURE = function(n,o){ return (o instanceof W[n]) ? o : new W[n](o); };
@@ -330,7 +337,7 @@
 		// a(1,b,2); => 3
 		N.CONTINUE_FUNCTION = function(func,over,owner){
 			over = (over || 1);
-			return function(){
+			var f = function(){
 				if(arguments.length >= over){					
 					for(var i=over,l=arguments.length;i<l;i++) if(typeof arguments[i] === "function"){
 						return arguments[i].apply(
@@ -340,6 +347,8 @@
 				}
 				return func.apply(owner,Array.prototype.slice.call(arguments));
 			};
+			f.__NativeMethod__ = func;
+			return f;
 		};
 		//marge function
 		N.BIND_FUNCTION = function(m1,m2,requireReturn){
@@ -363,8 +372,8 @@
 		N.TRY_CATCH = function(t,c,s){try{return t.call(s);}catch(e){if(typeof c === 'function') return c.call(s,e);}};
 		N.url = {
 			info : function(url){
-				if(typeof url === "object") return ( url["ConstructorMark"] === ("ClientURLInfo" + W.nody)) ? url : null;
 				var info;
+				
 				N.TRY_CATCH(
 					function(){
 						info = /([\w]+)(\:[\/]+)([^/]*\@|)([\w\d\.\-\_\+]+)(\:[\d]+|)(\/|)([\w\d\.\/\-\_]+|)(\?[\d\w\=\&\%]+|)(\#[\d\w]*|)/.exec(url?url:window.document.URL.toString());
@@ -379,7 +388,6 @@
 				}
 			
 				return {
-					"ConstructorMark" : "ClientURLInfo" + W.nody,
 					"url"      : window.document.URL.toString(),
 					"protocol" : info[1],
 					"divider"  : info[2],
@@ -3186,7 +3194,7 @@
 					var newValue = "";
 					for(var i=1,l=arguments.length;i<l;i++) if(typeof arguments[i] !== "undefined") newValue += arguments[i];
 					attrValue = newValue;
-				} 
+				}
 				//캐쉬를 이용해 잦은 표현에 대한 오버해드를 줄입니다.
 				var tagInfo,cacheName,enableCache = (typeof attrValue === "string" || typeof attrValue === "undefined") ? true : false;
 				if(enableCache){
@@ -3571,14 +3579,14 @@
 				tree.push( (stringify === true ? N.node.trace(treeNode) : treeNode ) );
 				return tree;
 			},1),
-			"inside":N.CONTINUE_FUNCTION(function(node,target){
-				var inside = N.findLite(node);
+			"inside":N.CONTINUE_FUNCTION(function(placeNode,target){
+				var inside = N.findLite(placeNode);
 				if(!inside.length) return false; 
-				return N.find(target,node).length ? true : false;
+				return N.find(target,placeNode).length ? true : false;
 			},1),
-			"outside":N.CONTINUE_FUNCTION(function(node,target){
+			"outside":N.CONTINUE_FUNCTION(function(placeNode,target){
 				var insideNode = N.findLite(target);
-				return insideNode.length ? (N.find(node,insideNode).length ? false : true) : true;
+				return insideNode.length ? (N.find(placeNode,insideNode).length ? false : true) : true;
 			},1),
 			"findOffset" :function(node,target,debug){
 				var node = N.findLite(node)[0];
@@ -4144,7 +4152,7 @@
 			"append":function(parentIn,childs,needIndex){
 				var parent = N.findLite(parentIn)[0];
 				if(!N.isNode(parent)) return parentIn;
-				var appendTarget  = N.findLite(childs);
+				var appendTarget  = /^<.+>$/.test(childs) ? N.parseHTML(childs) : N.findLite(childs);
 				var parentTagName = parent.tagName.toLowerCase();
 				var insertVariant = (typeof needIndex === "number") ? true : false;
 				var targetIndex   = typeof needIndex === "number" ? needIndex < 0 ? 0 : needIndex : needIndex;
@@ -4216,7 +4224,7 @@
 			},
 			"prepend":function(parentIn,childs){
 				var parent = N.findLite(parentIn)[0];
-				var appendTarget = N.findLite(childs);
+				var appendTarget = /^<.+>$/.test(childs) ? N.parseHTML(childs) : N.findLite(childs);
 				if(N.isOk(parent),N.isOk(appendTarget)){
 					N.node.append(parent,appendTarget);
 					var newParent = N.findParent(appendTarget[0]);
@@ -4908,6 +4916,12 @@
 			uniqueID:function(){
 				return N.FLATTENCALL(ELKIT.uniqueID,ELKIT,this,arguments);
 			},
+			width:function(){
+				return this[0] ? this[0].offsetWidth : -1;
+			},
+			height:function(){
+				return this[0] ? this[0].offsetHeight : -1;
+			},
 			disabled:function(){ N.FLATTENCALL(ELKIT.disabled,ELKIT,this,arguments); return this; },
 			readonly:function(){ N.FLATTENCALL(ELKIT.readOnly,ELKIT,this,arguments); return this; },
 		},function(select,parent,i){
@@ -5193,123 +5207,6 @@
 				default : this.SelectRule = "[name]"; break;
 			}
 		});
-	
-		N.MODULE("ActiveStatus",{
-			whenAnyWillActive  :function(m)  { this.StatusEvents.AnyWillActive = m; },
-			whenAnyDidActive   :function(m)  { this.StatusEvents.AnyDidActive = m; },
-			whenAnyWillInactive:function(m)  { this.StatusEvents.AnyWillInactive = m; },
-			whenAnyDidInactive :function(m)  { this.StatusEvents.AnyDidInactive = m; },
-			whenAllActive      :function(m)  { this.StatusEvents.AllInactive = m; },
-			whenAllInactive    :function(m)  { this.StatusEvents.AllInactive = m; },
-			whenWillActive     :function(n,m){ this.StatusEvents.StatusWillActive[n] = m; },
-			whenDidActive      :function(n,m){ this.StatusEvents.StatusDidActive[n] = m; },
-			whenWillInactive   :function(n,m){ this.StatusEvents.StatusWillInactive[n] = m; },
-			whenDidInactive    :function(n,m){ this.StatusEvents.StatusDidInactive[n] = m; },
-			whenActive         :function(n,m){ this.StatusEvents.StatusActive[n] = m; },
-			whenInactive       :function(n,m){ this.StatusEvents.StatusInactive[n] = m; },
-			toggleInactiveStatus   :function(status,param,owner,react){
-				owner = owner ? owner : this;
-				param = N.toArray(param);
-				
-				if( this.ActiveKeys.has(status) ){
-					//헨들은 없고 키는 제거해야할때
-					if( !this.StatusEvents.StatusInactive[status] ){
-						this.ActiveKeys.remove(status);
-						return true;
-					}
-					//모든 인액트를 허용하지 않을때
-					if(this.ActiveKeys.length === 1 && !this.AllowInactive){
-						return false;
-					}
-					//핸들 스타트
-					if( N.APPLY(this.StatusEvents.AnyWillInactive          ,owner,param) !== false &&
-						N.CALL(this.StatusEvents.StatusWillInactive[status],owner,param) !== false )
-					{
-						if( N.APPLY(this.StatusEvents.StatusInactive[status],owner,param) == false ) return;
-						this.ActiveKeys.remove(status);
-						N.CALL(this.StatusEvents.AnyDidInactive           ,owner,param);
-						N.CALL(this.StatusEvents.StatusDidInactive[status],owner,param);
-						if( this.ActiveKeys.length === 0 ) N.CALL(this.StatusEvents.AnyActive);
-					}
-				}
-			},
-			toggleActiveStatus:function(status,param,owner,react){
-				owner = owner ? owner : this;
-				param = N.toArray(param);
-				// 존재하지 않는 스테이터스 이거나 리액트
-				if( !this.StatusEvents.StatusActive[status] ){
-					return console.warn(this,'에 존재하지 않는 키값을 호출하였습니다.',status,this.StatusEvents.StatusActive);
-				} 
-				if( !this.ActiveKeys.has(status) || (react == true) ){
-					// 멀티가 가능하거나 아무것도 없을땐
-					if( this.AllowMultiStatus || 
-						(this.ActiveKeys.length === 0) || 
-						(react == true && this.ActiveKeys.length === 1 && this.ActiveKeys[0] === status)) 
-					{
-						if( N.APPLY(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
-							N.APPLY(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
-						{
-							if( N.APPLY(this.StatusEvents.StatusActive[status],owner,param) == false ) return;
-							this.ActiveKeys.add(status);
-							N.APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
-							N.APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
-							if( this.ActiveKeys.length === N.propLength(this.Source) ) N.APPLY(this.AllActive,owner,param);
-						}
-					} else  {
-						if( N.APPLY(this.StatusEvents.AnyWillActive           ,owner,param) !== false &&  
-							N.APPLY(this.StatusEvents.StatusWillActive[status],owner,param) !== false ) 
-						{
-							if( N.APPLY(this.StatusEvents.StatusActive[status],owner,param) == false ) return;
-							var _self=this;
-							this.ActiveKeys.each(function(key){ _self.toggleInactiveStatus(key,param,owner); })
-							this.ActiveKeys.add(status);
-							N.APPLY(this.StatusEvents.AnyDidActive           ,owner,param);
-							N.APPLY(this.StatusEvents.StatusDidActive[status],owner,param);
-							if( this.ActiveKeys.length === N.propLength(this.Source) ) N.APPLY(this.AllActive,owner,param);
-						}
-					}
-				}
-			},
-			getActive:function(){
-				return this.ActiveKeys.join(" ");
-			},
-			isActive:function(k){
-				return this.ActiveKeys.has(k);
-			},
-			activeTo:function(status){
-				return this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this,false);
-			},
-			inactTo:function(status){
-				return this.toggleInactiveStatus(status,Array.prototype.slice.call(arguments,1),this,false);
-			},
-			reactTo:function(status){
-				return this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this,true);
-			},
-			toggleTo:function(status){
-				this.isActive(status) ? 
-				this.inactTo.apply(this,[status].concat(Array.prototype.slice.call(arguments,1))):
-				this.reactTo.apply(this,[status].concat(Array.prototype.slice.call(arguments,1)));
-			}
-		},function(allowMulti,allowInactive){
-			lastll = this;
-			this.AllowMultiStatus = !!allowMulti;
-			this.AllowInactive    = !!allowInactive;
-			this.StatusEvents     = {
-				"AnyWillActive":undefined,
-				"AnyDidActive":undefined,
-				"AnyWillInactive":undefined,
-				"AnyDidInactive":undefined,
-				"AllActive":undefined,
-				"AllInactive":undefined,
-				"StatusActive":{},
-				"StatusInactive":{},
-				"StatusWillActive":{},
-				"StatusDidActive":{},
-				"StatusWillInactive":{},
-				"StatusDidInactive":{}
-			}
-			this.ActiveKeys = new N.Array();
-		});
 		
 		N.MODULE("EventListener",{
 			triggerWithOwner:function(owner,triggerName){
@@ -5424,6 +5321,216 @@
 			var _self = this;
 		});
 		
+		N.MODULE("ActiveInterface",{
+			getItems:function(){
+				return N.dataCall(this.procedures.getItems());
+			},
+			getActiveItems:function(){
+				var module = this;
+				return N.dataFilter(this.getItems(),function(item){
+					return module.procedures.isActive.call(module,item);
+				});
+			},
+			getInactiveItems:function(){
+				var module = this;
+				return N.dataFilter(this.getItems(),function(item){
+					return !module.procedures.isActive.call(module,item);
+				});
+			},
+			setActiveItem:function(item,args,triggingEvent){
+				this.procedures.setActive(item,args);
+				if(triggingEvent === true){
+					this.EventListener.triggerWithOwner(item,"active",this);
+				}
+				return this;
+			},
+			setActiveItemWithIndex:function(index,args,triggingEvent){
+				var item = this.getItems()[index];
+				item && this.setActiveItem(item,args,triggingEvent);
+				return this;
+			},
+			setInactiveItem:function(item,args,triggingEvent){
+				this.procedures.setInactive(item,args);
+				if(triggingEvent === true){
+					this.EventListener.triggerWithOwner(item,"inactive",this);
+				}
+				return this;
+			},
+			setInactiveItemWithIndex:function(index,args,triggingEvent){
+				var item = this.getItems()[index];
+				item && this.setInactiveItem(item,args,triggingEvent);
+				return this;
+			},
+			active:function(item,args,react){
+				//이미 active이면 시작하지 않음
+				if(this.procedures.isActive(item) === true && react !== true) return;
+				
+				var selects     = this.getItems();
+				var activeItems = this.getActiveItems();
+				
+				//acceptance가 부정할때는 시작하지 않음
+				if(N.CALL(this.options.acceptance,undefined,item,true) === false) return;
+				
+				if(activeItems.length === 0){
+					this.setActiveItem(item,args,true);
+					this.EventListener.triggerWithOwner(item,"change",this,true);
+					this.EventListener.triggerWithOwner(item,"activeStart",this);
+				} else {
+					//중복된 active를 허용하지 않으면
+					if(!this.options.allowMultiActive){
+						for(var i=0,l=activeItems.length;i<l;i++){
+							this.setInactiveItem(activeItems.length[i],true);	
+						}
+					}
+					this.setActiveItem(item,args,true);
+					this.EventListener.triggerWithOwner(item,"change",this,true);
+				}
+			},
+			activeAll:function(){
+				for(var d=this.getInactiveItems(),i=0,l=d.length;i<l;this.active(d[i]),i++);
+				return this;
+			},
+			inactive:function(item,args){
+				//이미 inactive이면 시작하지 않음
+				if(this.procedures.isActive(item) === false) return;
+				
+				var selects     = this.getItems();
+				var activeItems = this.getActiveItems();
+				
+				//selectItem이 active일때 // inactive 조건을 확인합니다.
+				if(activeItems.length === 1){
+					//이 아이탬만 액티브일때 //옵션의 모든 인액티브가 허용치 않으면 취소합니다.
+					if(!this.options.allowInactiveAll){
+						return;
+					}
+				}
+				
+				//acceptance가 부정할때는 취소함
+				if(N.CALL(this.options.acceptance,undefined,item,false) === false) return;
+				
+				this.setInactiveItem(item,args,true);
+				this.EventListener.triggerWithOwner(item,"change",this,false);
+				if(activeItems.length - 1) this.EventListener.triggerWithOwner(item,"activeEnd",this);
+			},
+			toggle:function(item){
+				this.procedures.isActive(item) ? this.inactive(item) : this.active(item) ;
+			},
+			inactiveAll:function(){
+				for(var d=this.getActiveItems(),i=d.length-1;i>-1;this.inactive(d[i]),i--);
+				return this;
+			},
+			activeWithIndex:function(index){
+				var module=this, items = this.getItems();
+				N.dataEach(index,function(index){ if(typeof index === "number") if(items[index]) module.activeWithIndex(items[index]); });
+				return this;
+			},
+			inactiveWithIndex:function(index){
+				var module=this, items=this.getItems();
+				N.dataReverseEach(index,function(index){ if(typeof index === "number") if(items[index]) module.activeWithIndex(items[index]); });
+				return this;
+			},
+			toggleWithIndex:function(index){
+				var module=this, items = this.getItems();
+				N.dataEach(index,function(index){ if(typeof index === "number") if(items[index]) module.toggleWithIndex(items[index]); });
+				return this;
+			}
+		},function(properties){
+			if(typeof properties === "object"){
+				this.procedures = {};
+				this.options    = {};
+				
+				var requireOptions = ["getItems","isActive","setActive","setInactive","allowInactiveAll","allowMultiActive","acceptance","EventListener"];
+				
+				for(var i=0,l=requireOptions.length;i<l;i++){
+					var optionName = requireOptions[i];
+					switch(optionName){
+						case "getItems":case "isActive":case "setActive":case "setInactive":
+							if(typeof properties[optionName] === "function"){
+								this.procedures[optionName] = properties[optionName];
+							} else {
+								console.error("ActiveItemInterface::"+key+" procedure must be function!",properties);
+							}
+							if(!this.procedures[optionName]){
+								console.error("ActiveItemInterface::"+key+"is must be exsist!",this);
+							}
+							break;
+						case "allowInactiveAll": case "allowMultiActive":
+							this.options[optionName] = (typeof properties[optionName] !== "boolean") ? false : properties[optionName];
+							break;
+						case "acceptance":
+							this.options[optionName] = (typeof properties[optionName] !== "function") ? undefined : properties[optionName];
+							break;
+						case "EventListener":
+							this.EventListener = N.isModule(properties[optionName],"EventListener") ? properties[optionName] : new N.EventListener(this);
+							break;
+					}
+				}
+			} else {
+				console.error("ActiveItemInterface::모듈은 반드시 item을 구하는 함수 집합의 오브젝트를 넣으셔야합니다.",this)
+			}
+		},function(){
+			return this.getItems();
+		});
+		
+		N.MODULE("ActiveStatus",{
+			addActiveAction:function(statusName,active,inactive){
+				if(typeof statusName === 'string'){
+					if(typeof active === 'function'){
+						//this.onActive(active);
+						this.ActiveProcs[statusName] = active;
+					}
+					if(typeof inactive === 'function'){
+						//this.onInactive(inactive);
+						this.InactiveProcs[statusName] = inactive;
+					}
+				}
+			},
+			getActive:function(){
+				return this.ActiveKeys.join(" ");
+			},
+			isActive:function(k){
+				return this.ActiveKeys.has(k);
+			},
+			activeTo:function(key){				
+				this.ActiveInterface.active(key,Array.prototype.slice.call(arguments,1));
+			},
+			inactTo:function(key){
+				this.ActiveInterface.inactive(key,Array.prototype.slice.call(arguments,1));
+			},
+			reactTo:function(key){
+				this.ActiveInterface.active(key,Array.prototype.slice.call(arguments,1),true);
+			},
+			toggleTo:function(key){
+				this.ActiveInterface.toggle(key,Array.prototype.slice.call(arguments,1));
+			}
+		},function(allowMultiActive,allowMultiActive){
+			this.ActiveKeys          = new N.Array();
+			this.ActiveProcs         = {};
+			this.InactiveProcs       = {};
+			
+			var module = this;
+			
+			this.ActiveInterface = new N.ActiveInterface({
+				getItems:function(){
+					return module.ActiveKeys;
+				},
+				isActive:function(key){
+					return module.ActiveKeys.has(key);
+				},
+				setActive:function(key,args){
+					module.ActiveKeys.add(key);
+					module.ActiveProcs[key] && module.ActiveProcs[key].call(module,args);
+				},
+				setInactive:function(key,args){
+					module.ActiveKeys.remove(key);
+					module.InactiveProcs[key] && module.InactiveProcs[key].call(module,args);
+				},
+				allowInactiveAll: (typeof allowInactiveAll === "boolean") ? allowInactiveAll : true,
+				allowMultiActive: (typeof allowMultiActive === "boolean") ? allowMultiActive : true,
+				acceptance:false
+			});
+		});
+		
 		// 컨텍스트 컨트롤러
 		N.MODULE("Contexts",{
 			"+_selectPoolCount":0,
@@ -5488,7 +5595,6 @@
 				}
 				if(typeof event=="string" && typeof func === "function"){
 					N.node.on(this.contexts(),event,function(e){
-					
 						var curSel = new N.Array( _.selects() );
 						if(curSel.has(e.target)){
 							//버블이 잘 왔을때
@@ -5522,7 +5628,7 @@
 		},function(contextSelector,selectsSelector){
 			this._initParams = [contextSelector,selectsSelector];
 		});
-	
+		
 		N.EXTEND_MODULE('Contexts','FilterContexts',{
 			needFiltering:function(filterData){
 				var selectNodes = this.selects();
@@ -5559,156 +5665,91 @@
 			if(hiddenClass === true) this.hiddenClass = 'hidden';
 		});
 		
-		
 		N.EXTEND_MODULE("Contexts","ActiveContexts",{
 			inactiveItems:function(){
-				return nd.node.filter(this.selects(),"*:not(."+this.activeClass+")");
+				return this.ActiveInterface.getInactiveItems();
 			},
 			activeItems:function(){
-				return items = nd.node.filter(this.selects(),"."+this.activeClass);
+				return this.ActiveInterface.getActiveItems();
 			},
-			activeWithSelectItem:function(selectItem){
-				//이미 active이면 시작하지 않음
-				if(N.node.is(selectItem,"."+this.activeClass) === true) return;
-				
+			activeWithItem:function(selectItem){
 				this.selectPoolStart();
-				var selects     = this.selects();
-				var activeItems = this.activeItems();
-				
-				//acceptance가 부정할때는 시작하지 않음
-				if(N.CALL(this.acceptance,undefined,selectItem,true) === false) return;
-				
-				if(activeItems.length === 0){
-					N.node.addClass(selectItem,this.activeClass);
-					this.EventListener.triggerWithOwner(selectItem,"active",this);
-					this.EventListener.triggerWithOwner(selectItem,"change",this,true);
-					this.EventListener.triggerWithOwner(selectItem,"activeStart",this);
-				} else {
-					//중복된 active를 허용하면
-					if(!this.allowMultiActive){
-						for(var i=0,l=activeItems.length;i<l;i++)
-							this.inactiveWithSelectItem(activeItems[i],"activeWithSelectItem");
-					}
-					N.node.addClass(selectItem,this.activeClass);
-					this.EventListener.triggerWithOwner(selectItem,"active",this);
-					this.EventListener.triggerWithOwner(selectItem,"change",this,true);
-				}
+				this.ActiveInterface.active(selectItem);
 				this.selectPoolEnd();
 			},
-			inactiveWithSelectItem:function(selectItem,sender){
-				//이미 inactive이면 시작하지 않음
-				if(N.node.is(selectItem,"."+this.activeClass) === false) return;
-				
-				if(sender === "activeWithSelectItem"){
-					N.node.removeClass(selectItem,this.activeClass);
-					this.EventListener.triggerWithOwner(selectItem,"inactive",this);
-					return;
-				}
-				
+			inactiveWithItem:function(selectItem){
 				this.selectPoolStart();
-				var selects     = this.selects();
-				var activeItems = this.activeItems();
+				this.ActiveInterface.inactive(selectItem);
 				this.selectPoolEnd();
-				
-				//selectItem이 active일때 // inactive 조건을 확인합니다.
-				if(activeItems.length === 1){
-					//이 아이탬만 액티브일때 //옵션의 모든 인액티브가 허용치 않으면 취소합니다.
-					if(!this.allowInactiveAll){
-						return;
-					}
-				}
-				
-				//acceptance가 부정할때는 취소함
-				if(N.CALL(this.acceptance,undefined,selectItem,false) === false) return;
-				
-				N.node.removeClass(selectItem,this.activeClass);
-				this.EventListener.triggerWithOwner(selectItem,"inactive",this);
-				this.EventListener.triggerWithOwner(selectItem,"change",this,false);
-				if(activeItems.length - 1) 
-				this.EventListener.triggerWithOwner(selectItem,"activeEnd",this);
-				
 			},
 			activeAll:function(){
 				this.selectPoolStart();
-				if(this.allowMultiActive === false){
-					var item = this.selects()[0];
-					if(item) this.activeWithSelectItem(item);
-				} else {
-					var module = this;
-					N.dataEach(this.inactiveItems(),function(item){ module.activeWithSelectItem(item); });
-				}
+				this.ActiveInterface.activeAll();
 				this.selectPoolEnd();
 			},
 			inactiveAll:function(){
 				this.selectPoolStart();
-				var module = this;
-				N.dataReverseEach(this.activeItems(),function(item){ module.inactiveWithSelectItem(item); });
+				this.ActiveInterface.inactiveAll();
 				this.selectPoolEnd();
 			},
 			active:function(indexes){
 				this.selectPoolStart();
-				var module  = this, selects = this.selects();
-				N.dataEach(indexes,function(index){
-					if (typeof index === "number"){
-						var item = selects[index];
-						if(item) module.activeWithSelectItem(item);
-					}
-				});
+				this.ActiveInterface.activeWithIndex(indexes);
 				this.selectPoolEnd();
 			},
-			inactive:function(index){
+			inactive:function(indexes){
 				this.selectPoolStart();
-				var module  = this, selects = this.selects();
-				N.dataEach(indexes,function(index){
-					if (typeof index === "number"){
-						var item = selects[index];
-						if(item) module.inactiveWithSelectItem(item);
-					}
-				});
+				this.ActiveInterface.inactiveWithIndex(indexes);
 				this.selectPoolEnd();
 			},
 			toggleWithSelectItem:function(selectItem){
-				return N.node.is(selectItem,"."+this.activeClass) ? this.inactiveWithSelectItem(selectItem) : this.activeWithSelectItem(selectItem);
+				return N.node.is(selectItem,"."+this.activeClass) ? this.inactiveWithItem(selectItem) : this.activeWithItem(selectItem);
 			}
 		},function(c,s,callback){
 			this._super(c,s);
+			
 			//event listener
 			this.EventListener = new N.EventListener(this);
 			this.EventListener.addEventRegister(["activeStart","activeEnd"]);
 			this.EventListener.addEventRegister(["active","inactive","change"],true);
 			
-			//options
-			//lock => api호출이 아닌이상 토글되지 않도록 합니다.
 			this.activeClass = "active";
-			this.acceptance  = undefined;
-			this.allowInactiveAll = false;
-			this.allowMultiActive = false;
+			
+			var module = this;
+			
+			this.ActiveInterface = new N.ActiveInterface({
+				getItems:function(){
+					return module.selects();
+				},
+				isActive:function(node){
+					return nd.node.hasClass(node,module.activeClass);
+				},
+				setActive:function(node){
+					nd.node.addClass(node,module.activeClass);
+				},
+				setInactive:function(node){
+					nd.node.removeClass(node,module.activeClass);
+				},
+				allowInactiveAll:false,
+				allowMultiActive:false,
+				acceptance:false,
+				EventListener:this.EventListener
+			});
+			
+			//lock => api호출이 아닌이상 토글되지 않도록 합니다.
 			this.lock = false;
 			
 			//active executor
-			var module = this;
 			this.on("click",function(){ 
 				module.lock === false && module.toggleWithSelectItem(this); 
 			});
-			//
+			
 			N.CALL(callback,this,this);
-			if(this.allowInactiveAll === false && !this.activeItems().length) this.active(0);
+			
+			if(this.ActiveInterface.options.allowInactiveAll === false && !this.activeItems().length) this.active(0);
 		});
 
 		N.EXTEND_MODULE("ActiveStatus","ViewAndStatus",{
-			addViewStatus:function(statusName,active,inactive){
-				if(typeof statusName === 'string'){
-					if(typeof active === 'function'){
-						this.whenActive(statusName,active);
-					}
-					if(typeof inactive === 'function'){
-						this.whenInactive(statusName,inactive);
-					}
-				}
-			},
-			viewStatusTo:function(status){
-				if(typeof name === 'string') this.toggleActiveStatus(status,Array.prototype.slice.call(arguments,1),this);
-			},
 			node:function(innerKey){
 				if(arguments.length === 0) return new N.NodeHandler(this.view);
 				if(innerKey in this) innerKey = this[innerKey];
@@ -5746,7 +5787,7 @@
 				
 				if(viewStatus && (typeof viewStatus === "object")) {
 					N.propEach(viewStatus,function(handle,key){
-						_self.addViewStatus(key,handle);
+						_self.addActiveAction(key,handle);
 					});
 				};
 				
@@ -5810,8 +5851,14 @@
 			data:function(){
 				return this.ManageData;
 			},
+			setData:function(v){
+				this.ManageData.setSource();
+				this.EventListener.trigger("changedata");
+				return this;
+			},
 			pushData:function(v){
 				this.ManageData.push(v);
+				this.EventListener.trigger("changedata");
 				return this;
 			},
 			findRole:function(find,proc){
@@ -5853,6 +5900,8 @@
 				for(var key in this) this[key] = null;
 			}
 		},function(targetRole,props,data,initViewProc){
+			var detectData = !!data;
+			
 			if( this._super(targetRole,true,true) === true ) {
 				if(N.isModule(props,"Binder")){
 					this.HashSource = props.beforeProperty;
@@ -5867,6 +5916,7 @@
 				}
 				this.ManageData    = new N.Array(data);
 				this.EventListener = new N.EventListener(this);
+				this.EventListener.addEventRegister(["changedata"]);
 				
 				var role       = this;
 				var moduleName = this.__NativeModule__();
@@ -5885,11 +5935,12 @@
 					this.view.roleController[moduleName] = this;
 				}
 				
-				
 				if(typeof initViewProc === "function" && this.view){
 					N.node.addAttr(this.view,"data-role",N.kebabCase(moduleName));
 					initViewProc.call(this,this);
 				}
+				
+				detectData && this.EventListener.trigger("changedata");
 			}
 		});
 	
@@ -7004,8 +7055,8 @@
 
 				//후가공
 				var renderPostpress = function(node,dataBinder,depth){
-					node.setAttribute('data-managed-id',dataBinder.DataID);
-					node.setAttribute('data-managed-depth',depth);
+					node.setAttribute('data-databinder-id',dataBinder.DataID);
+					node.setAttribute('data-databinder-depth',depth);
 				};
 
 				if (sigleRenderMode == true) {
@@ -7086,7 +7137,7 @@
 			},
 			findByIndex:function(){
 				var selectQuery = N.dataFilter(N.argumentsFlatten(arguments),function(v){ return (typeof v === "number" || v === "*")?true:false; },N.dataMap,function(v,i){
-					return v === "*" ? "[data-managed-depth=\""+i+"\"]" : "[data-managed-depth=\""+i+"\"]:nth-child("+(v+1)+")";
+					return v === "*" ? "[data-databinder-depth=\""+i+"\"]" : "[data-databinder-depth=\""+i+"\"]:nth-child("+(v+1)+")";
 				}).join(" ");
 				return new nd.NodeHandler(selectQuery,this.view);
 			},
@@ -7094,8 +7145,8 @@
 				if(strict === true) {
 					for(var key in this.structureNodes) if(this.structureNodes[key] === node) return this.dataBinder.getDataBinderWithID(key);
 				} else {
-					if( N.node.is(node,'[data-managed-id]') ) return this.getDataBinderByNode(node,true);
-					var parentNode = N.findParent(node,'[data-managed-id]');
+					if( N.node.is(node,'[data-databinder-id]') ) return this.getDataBinderByNode(node,true);
+					var parentNode = N.findParent(node,'[data-databinder-id]');
 					if(parentNode) return this.getDataBinderByNode(parentNode,true);
 				}
 			},
@@ -7105,7 +7156,7 @@
 			getDataBinderByIndex:function(){
 				var _dataContext = this.getRootDataBinder();
 				return N.dataMap(this.findByIndex.apply(this,Array.prototype.slice.call(arguments)),function(node){
-					return _dataContext.getDataBinderWithID(nd.node.data(node,"managed-id"));
+					return _dataContext.getDataBinderWithID(nd.node.data(node,"databinder-id"));
 				});
 			}
 		},function(view,dataBinder,viewModel,needDisplay){
