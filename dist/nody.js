@@ -8,7 +8,7 @@
 	(function(W,NMethods,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.30.3", N.BUILD = "1278";
+		N.VERSION = "0.30.5", N.BUILD = "1282";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.6", N.CORE_BUILD = "92";
@@ -664,16 +664,14 @@
 			"dataLast":N.CONTINUE_FUNCTION(function(t){ return N.isArray(t) ? t[t.length-1] : t; },1),
 			// 각각의 값의 function실행
 			"dataEach":N.CONTINUE_FUNCTION(function(v,f){ 
-				var ev=N.toArray(v); 
-				for(var i=0,l=ev.length;i<l;i++) 
-					if(f.call(ev[i],ev[i],i) === false) return false;
+				var ev=N.toArray(v);
+				for(var i=0,l=ev.length;i<l;i++) if(f.call(ev[i],ev[i],i) === false) return false;
 				return ev; 
 			},2),
 			// 각각의 값의 function실행
 			"dataReverseEach":N.CONTINUE_FUNCTION(function(v,f){ 
 				var ev=N.toArray(v); 
-				for(var i=ev.length-1;i>-1;i--) 
-					if(f.call(ev[i],ev[i],i) === false) return false; 
+				for(var i=ev.length-1;i>-1;i--) if(f.call(ev[i],ev[i],i) === false) return false; 
 				return ev; 
 			},2),
 			// 각각의 값을 배열로 다시 구해오기
@@ -882,13 +880,13 @@
 				return r;
 			},
 			//데이터를 섞는다
-			"dataShuffle":function(v){
+			"dataShuffle":N.CONTINUE_FUNCTION(function(v){
 				v = N.cloneArray(v);
 				//+ Jonas Raoni Soares Silva
 				//@ http://jsfromhell.com/array/shuffle [rev. #1]
 			    for(var j, x, i = v.length; i; j = parseInt(Math.random() * i), x = v[--i], v[i] = v[j], v[j] = x);
 			    return v;
-			},
+			},1),
 			"dataIndex":function(data,compare){ var v = N.toArray(data); for(var i in v) if(compare == v[i]) return N.toNumber(i); },
 			"arrayIndex":function(array,compare){ if(N.isArray(array))for(var i=0,l=array.length;i<l;i++)if(array[i] === compare)return i; return -1;},
 			// 배열안의 배열을 풀어냅니다.
@@ -2138,6 +2136,7 @@
 			zero  :function(){ return N.dataFirst(this); },
 			first :function(){ return N.dataFirst(this); },
 			last :function(){ return N.dataLast(this); },
+			from :function(index){ return this[index]; },
 			has:function(v){ for(var i=0,l=this.length;i<l;i++) if(this[i] === v) return true; return false; },
 			push : function(v,i){ switch(typeof i){ case "string": case "number": this[i] = v; break; default: Array.prototype.push.call(this,v); break; } return this; },
 			add :function(v,i){ if( !this.has(v) ) this.push(v,i); return this; },
@@ -4538,26 +4537,6 @@
 				});
 				return nodes;
 			},
-			//한번만 발생하는 이벤트입니다.
-			"onetime":function(node, eventName, eventHandler, time){
-				if(typeof eventHandler === "function"){
-					console.error("ELTIME:: eventHandler는 만드시 존재해야 합니다");
-				} else {
-					var timeManager = (function(time){ this.time = time; })( isNaN(time) ? 1 : parseInt(time) );
-					timeManager.events = eventName.split(" ");
-					timeManager.handler = function(e){
-						if(timeManager.time > 0){
-							timeCounter.time = timeCounter.time - 1;
-							N.CALL(handler,node,e);
-						}
-						if(timeManager.time < 1){
-							for(var i=0,l=this.events.length;i<l;i++) N.node.off(node,events[i],timeCounter.handler)
-						}
-					};
-					for(var i=0,l=this.events.length;i<l;i++) N.node.on(node,eventName,timeManager.handler);
-				}
-				return node;
-			},
 			"data":function(node,key,value){
 				var nodes = N.findLite(node);
 				if(nodes.length == 0) return undefined;
@@ -4881,7 +4860,6 @@
 			off    :function(e,h,c,x){ 
 				ELKIT.off.call(ELKIT,this,e,h,c,x); return this; 
 			},
-			onetime:function(){ N.FLATTENCALL(ELKIT.onetime,ELKIT,this,arguments); return this; },
 			data   :function(name){
 				if(arguments.length > 1){
 					N.FLATTENCALL(ELKIT.data,ELKIT,this,arguments);
@@ -5291,16 +5269,16 @@
 						var willUpperCase = "will"+upperCaseName;
 						var didUpperCase  = "did"+upperCaseName; 
 						this.ManageModule[willUpperCase] = function(proc){
-							if(typeof proc !== "function") return console.error("missing method from",willUpperCase);
+							if(typeof proc !== "function") return console.error("missing method from",willUpperCase,proc);
 							_self.listenBefore(eventName,proc);
 						};
 						this.ManageModule[didUpperCase] = function(proc){
-							if(typeof proc !== "function") return console.error("missing method from",didUpperCase);
+							if(typeof proc !== "function") return console.error("missing method from",didUpperCase,proc);
 							_self.listenAfter(eventName,proc);
 						};
 					}
 					this.ManageModule[onCaseName] = function(proc){
-						if(typeof proc !== "function") return console.error("missing method from",onCaseName);
+						if(typeof proc !== "function") return console.error("missing method from",onCaseName,proc);
 						_self.listen(eventName,proc);
 					};
 				} else {
@@ -5338,21 +5316,18 @@
 				});
 			},
 			setActiveItem:function(item,args,triggingEvent){
-				this.procedures.setActive(item,args);
+				var responder = this.Responder || this;
+				this.procedures.setActive.call(responder,item,args);
 				if(triggingEvent === true){
-					this.EventListener.triggerWithOwner(item,"active",this);
+					this.EventListener.triggerWithOwner(responder,"active",item);
 				}
 				return this;
 			},
-			setActiveItemWithIndex:function(index,args,triggingEvent){
-				var item = this.getItems()[index];
-				item && this.setActiveItem(item,args,triggingEvent);
-				return this;
-			},
 			setInactiveItem:function(item,args,triggingEvent){
-				this.procedures.setInactive(item,args);
+				var responder = this.Responder || this;
+				this.procedures.setInactive.call(responder,item,args);
 				if(triggingEvent === true){
-					this.EventListener.triggerWithOwner(item,"inactive",this);
+					this.EventListener.triggerWithOwner(responder,"inactive",item);
 				}
 				return this;
 			},
@@ -5373,17 +5348,17 @@
 				
 				if(activeItems.length === 0){
 					this.setActiveItem(item,args,true);
-					this.EventListener.triggerWithOwner(item,"change",this,true);
-					this.EventListener.triggerWithOwner(item,"activeStart",this);
+					this.EventListener.triggerWithOwner(this.Responder || this,"change",item,true);
+					this.EventListener.triggerWithOwner(this.Responder || this,"activeStart",selects);
 				} else {
 					//중복된 active를 허용하지 않으면
 					if(!this.options.allowMultiActive){
 						for(var i=0,l=activeItems.length;i<l;i++){
-							this.setInactiveItem(activeItems.length[i],true);	
+							this.setInactiveItem(activeItems[i],args,true);	
 						}
 					}
 					this.setActiveItem(item,args,true);
-					this.EventListener.triggerWithOwner(item,"change",this,true);
+					this.EventListener.triggerWithOwner(this.Responder || this,"change",item,true);
 				}
 			},
 			activeAll:function(){
@@ -5409,8 +5384,8 @@
 				if(N.CALL(this.options.acceptance,undefined,item,false) === false) return;
 				
 				this.setInactiveItem(item,args,true);
-				this.EventListener.triggerWithOwner(item,"change",this,false);
-				if(activeItems.length - 1) this.EventListener.triggerWithOwner(item,"activeEnd",this);
+				this.EventListener.triggerWithOwner(this.Responder || this,"change",item,false);
+				if(activeItems.length - 1) this.EventListener.triggerWithOwner(this.Responder || this,"activeEnd",selects);
 			},
 			toggle:function(item){
 				this.procedures.isActive(item) ? this.inactive(item) : this.active(item) ;
@@ -5421,17 +5396,17 @@
 			},
 			activeWithIndex:function(index){
 				var module=this, items = this.getItems();
-				N.dataEach(index,function(index){ if(typeof index === "number") if(items[index]) module.activeWithIndex(items[index]); });
+				N.dataEach(index,function(index){ if(typeof index === "number") if(items[index]) module.active(items[index]); });
 				return this;
 			},
 			inactiveWithIndex:function(index){
 				var module=this, items=this.getItems();
-				N.dataReverseEach(index,function(index){ if(typeof index === "number") if(items[index]) module.activeWithIndex(items[index]); });
+				N.dataReverseEach(index,function(index){ if(typeof index === "number") if(items[index]) module.inactive(items[index]); });
 				return this;
 			},
 			toggleWithIndex:function(index){
 				var module=this, items = this.getItems();
-				N.dataEach(index,function(index){ if(typeof index === "number") if(items[index]) module.toggleWithIndex(items[index]); });
+				N.dataEach(index,function(index){ if(typeof index === "number") if(items[index]) module.toggle(items[index]); });
 				return this;
 			}
 		},function(properties){
@@ -5439,7 +5414,7 @@
 				this.procedures = {};
 				this.options    = {};
 				
-				var requireOptions = ["getItems","isActive","setActive","setInactive","allowInactiveAll","allowMultiActive","acceptance","EventListener"];
+				var requireOptions = ["getItems","isActive","setActive","setInactive","allowInactiveAll","allowMultiActive","acceptance","EventListener","Responder"];
 				
 				for(var i=0,l=requireOptions.length;i<l;i++){
 					var optionName = requireOptions[i];
@@ -5463,6 +5438,9 @@
 						case "EventListener":
 							this.EventListener = N.isModule(properties[optionName],"EventListener") ? properties[optionName] : new N.EventListener(this);
 							break;
+						case "Responder":
+							this.Responder = properties[optionName] ? properties[optionName] : undefined;
+							break;
 					}
 				}
 			} else {
@@ -5476,11 +5454,9 @@
 			addActiveAction:function(statusName,active,inactive){
 				if(typeof statusName === 'string'){
 					if(typeof active === 'function'){
-						//this.onActive(active);
 						this.ActiveProcs[statusName] = active;
 					}
 					if(typeof inactive === 'function'){
-						//this.onInactive(inactive);
 						this.InactiveProcs[statusName] = inactive;
 					}
 				}
@@ -5704,6 +5680,9 @@
 			},
 			toggleWithSelectItem:function(selectItem){
 				return N.node.is(selectItem,"."+this.activeClass) ? this.inactiveWithItem(selectItem) : this.activeWithItem(selectItem);
+			},
+			option:function(key,value){
+				this.ActiveInterface.options[key] = value;
 			}
 		},function(c,s,callback){
 			this._super(c,s);
@@ -5717,10 +5696,7 @@
 			
 			var module = this;
 			
-			this.ActiveInterface = new N.ActiveInterface({
-				getItems:function(){
-					return module.selects();
-				},
+			var defaultBehavior = {
 				isActive:function(node){
 					return nd.node.hasClass(node,module.activeClass);
 				},
@@ -5729,12 +5705,40 @@
 				},
 				setInactive:function(node){
 					nd.node.removeClass(node,module.activeClass);
-				},
+				}
+			};
+			
+			var activeInterfaceOptions = {
+				getItems:function(){ return module.selects(); },
+				isActive:defaultBehavior.isActive,
+				setActive:defaultBehavior.setActive,
+				setInactive:defaultBehavior.setInactive,
 				allowInactiveAll:false,
 				allowMultiActive:false,
 				acceptance:false,
-				EventListener:this.EventListener
-			});
+				EventListener:this.EventListener,
+				Responder:this
+			};
+			
+			if(typeof callback === "object"){
+				for(var key in activeInterfaceOptions){
+					if(callback.hasOwnProperty(key)){
+						if(key === "getItems"){
+							console.warn("이 옵션은 바꿀 수 없습니다");
+						} else if (defaultBehavior[key]){
+							var behaviorKey = key;
+							activeInterfaceOptions[key] = function(){
+								defaultBehavior[behaviorKey].apply(this,Array.prototype.slice.call(arguments));
+								callback[behaviorKey].apply(this,Array.prototype.slice.call(arguments));
+							};
+						} else {
+							activeInterfaceOptions[key] = callback[key];
+						}
+					}
+				}
+			}
+			
+			this.ActiveInterface = new N.ActiveInterface(activeInterfaceOptions);
 			
 			//lock => api호출이 아닌이상 토글되지 않도록 합니다.
 			this.lock = false;
@@ -5748,6 +5752,7 @@
 			
 			if(this.ActiveInterface.options.allowInactiveAll === false && !this.activeItems().length) this.active(0);
 		});
+		
 
 		N.EXTEND_MODULE("ActiveStatus","ViewAndStatus",{
 			node:function(innerKey){
@@ -7013,7 +7018,6 @@
 				currentBinder.listen(this,"GLOBAL.DataBinderAddedChild",function(params){
 					try {
 						if(this.placeholderNodes[params.dataID]) {
-						
 							this.needDisplay(params.newDataBinder,this.placeholderNodes[params.dataID]);
 							this.ManagePresentorEvent.trigger("dataChange","append",params.newDataBinder,this.structureNodes[params.newDataBinder.DataID]);
 							this.ManagePresentorEvent.trigger("displayChange",this,this.view);
@@ -7021,7 +7025,6 @@
 					} catch(e) {
 						console.log(e);
 						console.log(this.placeholderNodes);
-						debugger;
 					}
 					
 				});				
@@ -7732,7 +7735,6 @@
 			},
 			getPropWithTime:function(time){
 				var aroundData = this.getAroundPropWithTime(time);
-				
 				if(typeof aroundData[1] === "undefined"){
 					return aroundData[0];
 				} else {
@@ -7761,7 +7763,6 @@
 					}).get();
 				}
 			},
-			
 			timeStart:function(){
 				var timeProps = this.Source.first();
 				return timeProps ? timeProps.time : null;
@@ -7774,6 +7775,14 @@
 				return this.Source.isNone() ? null :
 						this.Source.isOne() ? 0 :
 						this.timeStart() - this.timeEnd();
+			},
+			getPropWithIndex:function(index){
+				var data = this.get(index);
+				return data ? data["prop"] : undefined;
+			},
+			getTimeWithIndex:function(index){
+				var data = this.get(index);
+				return data ? data["time"] : undefined;
 			}
 		},function(attr,interval,startTime,defaultKey){
 			this.Source    = new N.Array();
@@ -7781,6 +7790,8 @@
 			this.defaultKey = (typeof defaultKey === "string") ? defaultKey : "value"
 			this.defaultStartTime = startTime ? N.timestampExp(startTime): N.timestampExp();
 			this.defaultInertval  = interval  ? N.timescaleExp(interval) : N.timescaleExp("2s");
+		},function(index){
+			return this.Source[index];
 		});
 	
 		N.EXTEND_MODULE("Counter","BezierCounter",{
@@ -7797,50 +7808,39 @@
 			this._super(ms,counting,finish,rate,now);
 		});
 	
-		N.MODULE("TimeFire",{
-			cancel:function(withEvent){
-				if(withEvent !== false) N.CALL(this._whenCancle,this);
+		N.MODULE("Timefire",{
+			isProgress:function(){
+				return this._timeout !== null;
+			},
+			cancel:function(finish){
 				clearTimeout(this._timeout);
 				this._timeout = null;
+				if(finish !== true){
+					this.EventListener.trigger("cancle");
+				}
 			},
-			trigger:function(withEvent){
-				if(withEvent !== false) {
-					if( N.CALL(this.whenTriggering,this) === false ) {
-						return;
-					}
-				} 
-				if( this._timeout ) clearTimeout(this._timeout);
-				var _ = this;
+			trigger:function(){
+				if( this._timeout ){
+					clearTimeout(this._timeout);
+				} else {
+					this.EventListener.trigger("start");
+				}
+				this.EventListener.trigger("trigger");
+				
+				var timefire = this;
+				
 				this._timeout = setTimeout(function(){
-					if( N.CALL(_._whenWillFire,_) !== false ) {
-						N.CALL(_._whenFire,_);
-						N.CALL(_._whenDidFire,_);
-					}
-					_.cancel(false);
+					timefire.cancel(true);
+					timefire.EventListener.trigger("fire");
 				},this.initFireTime);
-			},		
-			whenTriggering:function(m){
-				this._whenTriggering = m;
-			},
-			whenCancle:function(m){
-				this._whenCancel = m;
-			},
-			whenWillFire:function(m){
-				this._whenWillFire = m;
-			},
-			whenFire:function(m){
-				if(typeof m !== 'function') console.error('TimeFire:: Fire시 메서드가 들어오지 않았습니다.');
-				this._whenFire = m;
-			},
-			whenDidFire:function(m){
-				this._whenDidFire = m;
 			}
-		},function(fireTime,finish,triggerNow,rate){
-			this.initFireTime = typeof fireTime === 'number' ? fireTime : 300;
-			this.rate         = typeof rate     === 'number' ? rate     : 50;
-			this.whenFire(finish);
-			this._timeout   = null;
-			if(triggerNow === true) this.trigger();
+		},function(fireTime,finish){
+			this.initFireTime  = typeof fireTime === 'number' ? fireTime : 300;
+			this.rate          = typeof rate     === 'number' ? rate     : 50;
+			this.EventListener = new N.EventListener(this);
+			this.EventListener.addEventRegister(["start","trigger","cancle","fire"]);
+			if(typeof finish === "function") this.onFire(finish);
+			this._timeout = null;
 		});
 	
 		N.MODULE("ResizeNode",{
@@ -8016,9 +8016,7 @@
 			
 			N.node.punch(this.view,"mousedown",this._gestureStartHandler);
 			N.node.punch(document.body,"mousemove",this._gestureMoveHandler);
-			N.node.punch(document.body,"mouseup",this._gestureEndHandler);
-			
+			N.node.punch(document.body,"mouseup",this._gestureEndHandler);		
 		});
-		
 	})(window,N,N.ENV);
 })();
