@@ -8,7 +8,7 @@
 	(function(W,NMethods,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.30.5", N.BUILD = "1282";
+		N.VERSION = "0.30.9", N.BUILD = "1291";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.6", N.CORE_BUILD = "92";
@@ -1009,7 +1009,8 @@
 				return r;
 			},1),
 			"divideNumber":function(value,padRigth){
-				var numberInfo = [0,0];
+				//[int value, float value, float length]
+				var numberInfo = [0,"0",0];
 	            var parseString = "";
 	            (value+"").replace(/\d|\./g,function(s){ parseString += s; });
 	            if(/\d/.test(parseString)){
@@ -1025,8 +1026,13 @@
 	                        numberInfo[0] = intValue.substr(0,intValue.length - 1) * 1;
             
 	                        numberInfo[1] = /\.[\d]+/.exec(parseString);
-	                        numberInfo[1] = numberInfo[1] === null ? 0 : numberInfo[1][0].substr(1);
-            
+							if(numberInfo[1] === null){
+								numberInfo[1] = "0";
+								numberInfo[2] = 0;
+							} else {
+								numberInfo[1] = numberInfo[1][0].substr(1);
+								numberInfo[2] = numberInfo[1].length;
+							}
 	                        break;
 	                }
 	            }
@@ -1052,7 +1058,7 @@
 				var padLeft="", numberInfo = N.divideNumber(value);
 				var requirePad = padLength-(numberInfo[0]+"").length;
 				for(var i=0,l=requirePad>0?requirePad:0;i<l;i++){ padLeft += "0"; }
-				return padLeft + (useFloat === false || !numberInfo[1] ? numberInfo[0] : numberInfo[0] + "." + numberInfo[1] )
+				return padLeft + (useFloat === false || !numberInfo[2] ? numberInfo[0] : numberInfo[0] + "." + numberInfo[1] )
 			},
 			"padRight":function(value,padRight){
 	            if(typeof padRight == "number") {
@@ -2166,6 +2172,8 @@
 			isNone:function(){ return (this.length === 0) ? true : false },
 			isOne:function(){ return (this.length === 1) ? true : false },
 			isMany:function(){ return (this.length > 1) ? true : false },
+			isOk:function(){ return (this.length > 0) ? true : false },
+			isNok:function(){ return (this.length === 0) ? true : false},
 			//선택된 값으로 배열이 재정렬 됩니다.
 			selectValue:function(value){ var selects = []; N.dataEach(this,function(v){ if(v == value) selects.push(v); }); this.setSource(selects); },
 			selectIndex:function(index){ return this.setSource(this[index]); },
@@ -4931,10 +4939,18 @@
 				return new N.NodeHandler(this.__partialPointer[partialCase][partialKey]);
 			},
 			"for":function(key,proc){
+				if(typeof key === "object"){
+					var r=[]; for(var k in key) r.push(this.for(k,key[k])); return r;
+				}
+				
 				var ff = this.findPartial("for",key);
 				return (typeof proc === "function") ? ff.each(proc) : ff;
 			},
 			val:function(key,value){
+				if(typeof key === "object"){
+					var r=[]; for(var k in key) r.push(this.val(k,key[k])); return r;
+				}
+				
 				if(arguments.length === 2){
 					if(value !== undefined || value !== null){
 						this.findPartial("val",key).each(function(node){
@@ -4947,6 +4963,10 @@
 				}
 			},
 			put:function(key,value){
+				if(typeof key === "object"){
+					var r=[]; for(var k in key) r.push(this.put(k,key[k])); return r;
+				}
+				
 				var puts = nd.findLite(value);
 				if(!puts.length) return this;
 				this.findPartial("put",key).each(function(node){
@@ -5187,18 +5207,9 @@
 		});
 		
 		N.MODULE("EventListener",{
-			triggerWithOwner:function(owner,triggerName){
-				var args = Array.prototype.slice.call(arguments,2);
-				var arounds = this.ManageModuleAroundEvents.prop(triggerName);
-				if(arounds){
-					var beforeHandlers = arounds.prop("before");
-					if(beforeHandlers && beforeHandlers.isAny(function(beforeCallback){
-						return beforeCallback.apply(owner,args) == false;
-					})) {
-						return false;
-					}
-				}
-				var results = this.ManageModuleEvents.dataProp(triggerName).map(function(handler){	
+			dispatchEvent:function(owner,triggerName){
+				var args = Array.prototype.slice.call(arguments,2),arounds=this.ManageModuleAroundEvents.prop(triggerName);
+				var result = this.ManageModuleEvents.dataProp(triggerName).map(function(handler){	
 					return handler.apply(owner,args);
 				});
 				if(arounds){
@@ -5207,7 +5218,22 @@
 						return afterCallback.apply(owner,args);
 					});
 				}
-				return results;
+				return result;
+			},
+			dispatchWill:function(owner,triggerName){
+				var args=Array.prototype.slice.call(arguments,2),arounds=this.ManageModuleAroundEvents.prop(triggerName);
+				if(arounds){
+					var beforeHandlers = arounds.prop("before");
+					if(beforeHandlers && beforeHandlers.isAny(function(beforeCallback){ return beforeCallback.apply(owner,args) == false; })) {
+						return false;
+					}
+				}
+			},
+			triggerWithOwner:function(owner,triggerName){
+				var params = Array.prototype.slice.call(arguments);
+				
+				if(this.dispatchWill.apply(this,params) === false) return false;
+				return this.dispatchEvent.apply(this,params);
 			},
 			trigger:function(triggerName){
 				this.triggerWithOwner.apply(this,[this.ManageModule,triggerName].concat(Array.prototype.slice.call(arguments,1)));
@@ -5303,6 +5329,21 @@
 			getItems:function(){
 				return N.dataCall(this.procedures.getItems());
 			},
+			isActiveItem:function(item){
+				return this.procedures.isActive(item);
+			},
+			isActiveAll:function(){
+				var module = this;
+				return N.dataAll(this.getItems(),function(item){
+					return module.procedures.isActive(item); 
+				});
+			},
+			isInactiveAll:function(){
+				var module = this;
+				return N.dataAll(this.getItems(),function(item){
+					return !module.procedures.isActive(item); 
+				});
+			},
 			getActiveItems:function(){
 				var module = this;
 				return N.dataFilter(this.getItems(),function(item){
@@ -5347,18 +5388,23 @@
 				if(N.CALL(this.options.acceptance,undefined,item,true) === false) return;
 				
 				if(activeItems.length === 0){
-					this.setActiveItem(item,args,true);
-					this.EventListener.triggerWithOwner(this.Responder || this,"change",item,true);
-					this.EventListener.triggerWithOwner(this.Responder || this,"activeStart",selects);
-				} else {
-					//중복된 active를 허용하지 않으면
-					if(!this.options.allowMultiActive){
-						for(var i=0,l=activeItems.length;i<l;i++){
-							this.setInactiveItem(activeItems[i],args,true);	
-						}
+					if( this.EventListener.dispatchWill(this.Responder || this,"change",item,true) !== false && 
+					    this.EventListener.dispatchWill(this.Responder || this,"activeStart",item,true) !== false ){
+						this.setActiveItem(item,args,true);
+						this.EventListener.dispatchEvent(this.Responder || this,"change",item,true);
+						this.EventListener.dispatchEvent(this.Responder || this,"activeStart",selects);
 					}
-					this.setActiveItem(item,args,true);
-					this.EventListener.triggerWithOwner(this.Responder || this,"change",item,true);
+				} else {
+					if(this.EventListener.dispatchWill(this.Responder || this,"change",item,true) !== false){
+						//중복된 active를 허용하지 않으면
+						if(!this.options.allowMultiActive){
+							for(var i=0,l=activeItems.length;i<l;i++){
+								this.setInactiveItem(activeItems[i],args,true);	
+							}
+						}
+						this.setActiveItem(item,args,true);
+						this.EventListener.dispatchEvent(this.Responder || this,"change",item,true);
+					}
 				}
 			},
 			activeAll:function(){
@@ -5383,9 +5429,19 @@
 				//acceptance가 부정할때는 취소함
 				if(N.CALL(this.options.acceptance,undefined,item,false) === false) return;
 				
-				this.setInactiveItem(item,args,true);
-				this.EventListener.triggerWithOwner(this.Responder || this,"change",item,false);
-				if(activeItems.length - 1) this.EventListener.triggerWithOwner(this.Responder || this,"activeEnd",selects);
+				if(!(activeItems.length - 1)) {
+					if(this.EventListener.dispatchWill(this.Responder || this,"change",item,false) !== false){
+						this.setInactiveItem(item,args,true);
+						this.EventListener.dispatchEvent(this.Responder || this,"change",item,false);
+					}
+				} else {
+					if(this.EventListener.dispatchWill(this.Responder || this,"change",item,false) !== false && 
+					   this.EventListener.dispatchWill(this.Responder || this,"activeEnd",item,false) !== false){
+						this.setInactiveItem(item,args,true);
+						this.EventListener.dispatchEvent(this.Responder || this,"change",item,false);
+						this.EventListener.dispatchEvent(this.Responder || this,"activeEnd",selects);
+					}
+				}
 			},
 			toggle:function(item){
 				this.procedures.isActive(item) ? this.inactive(item) : this.active(item) ;
@@ -5682,7 +5738,12 @@
 				return N.node.is(selectItem,"."+this.activeClass) ? this.inactiveWithItem(selectItem) : this.activeWithItem(selectItem);
 			},
 			option:function(key,value){
-				this.ActiveInterface.options[key] = value;
+				if(key === "free"){
+					this.ActiveInterface.options["allowInactiveAll"] = this.ActiveInterface.options["allowMultiActive"] = true;
+				} else {
+					this.ActiveInterface.options[key] = value;
+				}
+				
 			}
 		},function(c,s,callback){
 			this._super(c,s);
@@ -5950,18 +6011,13 @@
 		});
 	
 		N.MODULE("Request",{
-			send:function(param,callback,method){
-				if(typeof this.defaultURL !== "string"){
-					return console.error("Requst::send => not exesist request url");
-				}
-				this.relativeSend("",param,callback);
-			},
 			relativeSend:function(url,param,callback,method){
-				var _self=this,sender=new (function(){
+				var _self=this;
+				var sender=new (function(){
 					//url
-					this.url       = this.defaultURL + url;
+					this.url       = _self.defaultURL + url;
 					//method
-					this.method    = method && _self.option.prop("method") && "GET";
+					this.method    = method && _self.option.prop("method") || "GET";
 					if (typeof this.method === "string"){
 						this.method = this.method.toUpperCase();
 					} else {
@@ -5971,19 +6027,23 @@
 					//parameter
 					var parameterSource = (new N.HashSource(_self.option.prop("parameter"))).extend(param);
 					this.parameter       = parameterSource.get();
-					this.parameterString = parameterSource.toParameter().join("=","&");
+					this.parameterString = parameterSource.join("=","&");
 					//callback
 					this.callback  = (typeof callback === "function") ? callback : _self.option.prop("callback");
+					
+					this.asynchronous = (typeof _self.option.prop("asynchronous") === "boolean") ? _self.option.prop("asynchronous") : true;
+					//TODO: 적합성 판정이 필요함
 					_self.option.each(function(value,key){
 						switch(key){ 
-							case "url":case "parameter":case "parameterString":case "method":case "callback":break;
+							case "url":case "parameter":case "parameterString":case "method":case "callback":case "asynchronous":break;
 							default:this[key] = value;
 						}
 					});
+					
+					this.onreadystatechange = function(){
+						this.callback.apply(this,Array.prototype.slice.call(arguments));
+					}
 				})();
-				sender.prototype = {
-					"onreadystatechange":function(){ this.callback.apply(this,Array.prototype.slice.call(arguments)); }
-				};
 				
 				if( !("callback" in sender) ) return console.error("Request :: callback is undefined. this must exsist");
 				
@@ -5994,19 +6054,19 @@
 				if (!xhr) return;
 				
 				xhr.onreadystatechange = function(){ 
-					switch(xhr.readyStatus){
+					switch(xhr.readyState){
 						case 1: 
-							if(sender.option.debug) console.info("Request::("+sender.url+")server connection established");
+							if(sender.debug) console.info("Request::("+sender.url+")server connection established");
 							break;
 						case 2: 
-							if(sender.option.debug) console.info("Request::("+sender.url+")request recived");
+							if(sender.debug) console.info("Request::("+sender.url+")request recived");
 							break;
 						case 3: 
-							if(sender.option.debug) console.info("Request::("+sender.url+")processing request");
+							if(sender.debug) console.info("Request::("+sender.url+")processing request");
 							break;
 						case 4:
 							if(xhr.status < 400){
-								if(sender.option.debug === "true"){
+								if(sender.debug === "true"){
 					 				var debugObject = {
 					 					method:sender.method,
 					 					url:sender.url,
@@ -6025,7 +6085,7 @@
 					 				return debugObject;
 								}
 							} else {
-								console.error("Request::load : '"+ this.url +"' 호출이 실패되었습니다. JSON 파라메터와 에러코드를 출력합니다. ==> \n------\n" ,N.tos(this.option) ,"\n------\n", textError, N.tos(this.option.data))
+								console.error("Request::load : '"+ sender.url +"' 호출이 실패되었습니다. JSON 파라메터와 에러코드를 출력합니다. ==> \n------\n" ,N.tos(sender) ,"\n------\n", xhr.textError)
 								if(xhr.status<500){
 									//4xx error
 									console.warn("Request::send::error => ["+xhr.status+"] page not found",sender.url);
@@ -6037,7 +6097,7 @@
 									console.warn("Request::send::error => ["+xhr.status+"] error",sender.url);
 								}
 							}
-							sender.onreadystatechange(xhr.responseText,xhr.status,sender,xhr);
+							sender.onreadystatechange(xhr.responseText,/^(2\d\d|3\d\d|0)$/.test(xhr.status),xhr.status,sender,xhr);
 						break;
 					}
 				};
@@ -6045,11 +6105,8 @@
 				N.TRY_CATCH(function(){
 					switch(sender.method){
 						case "GET":
-							xhr.open(
-								"GET", 
-								sender.url + (senderparameterString.length ? sender.parameterString : "?"+sender.parameterString), 
-								true 
-							);
+							var parameterText = (sender.parameterString.length ? sender.parameterString : "?" + sender.parameterString);
+							xhr.open("GET", sender.url + parameterText, typeof sender.asynchronous === "boolean" ? sender.asynchronous : true);
 							xhr.send();
 							break;
 						case "POST":
@@ -6057,7 +6114,7 @@
 							if(!this.sender.method.length){
 								return console.error("Requst::send => method name is worng", sender.method);
 							}
-							xhr.open("POST", this.url, true );
+							xhr.open("POST", this.url, typeof sender.asynchronous === "boolean" ? sender.asynchronous : true );
 							N.TRY_CATCH(
 								function(){
 									xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
@@ -6077,15 +6134,39 @@
 						throw e;
 					}
 				},this);
-			}
+				
+				return sender;
+			},
+			send:function(param,callback,method){
+				if(typeof this.defaultURL !== "string"){
+					return console.error("Requst::send => not exesist request url");
+				}
+				return this.relativeSend("",param,callback);
+			},
 		},function(url,option){
 			//option
 			//parameter => default parameter
 			//callback  => default callbck
 			//method    => default callbck
 			this.defaultURL = url;
-			this.option     = new N.HashSource(option);
+			this.option = new N.HashSource(typeof option === "boolean" ? {asynchronous:option} : option);
 		});
+		
+		N.METHOD("load",function(url){
+			var responseText;
+			return (new nd.Request("/",{asynchronous:false})).relativeSend(url,null,function(text,success,status){ 
+				responseText = success ? text : "";
+			}), responseText;
+		});
+		
+		N.METHOD("loadNodes",function(url,all){
+			var preg = document.createElement("div");
+			preg.innerHTML = N.load(url);
+			return all === true ? N.toArray(preg.children) : N.dataFilter(preg.children,function(node){
+				return !/^(script|link|title|meta)$/i.test(node.tagName);
+			});
+		});
+		
 		
 		N.METHOD("open",function(url,option){
 			if(typeof option === "function") option = {success:option};

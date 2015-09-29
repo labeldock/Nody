@@ -56,13 +56,17 @@ link => <a href="http://version2labs.github.io/build/nodyjs.html">http://version
   
 ## Update history #
 
-#### 0.30.3 업데이트
+#### 0.30.9 업데이트
   - [x] 싱글턴 이름의 케이스가 통일됨
   - [x] Fire모듈이 제거됨
   - [x] ViewModel읠 response 호출시 DataBinder단위가 아닌 각 proc의 단위로 response가능하게 나뉘었음.
   - [x] nd.node의 append와 prepend에 문자 태그를 입력해도 append되도록 변경
   - [x] ActiveInterface 모듈이 생겼으며, ActiveStatus와 ActiveContexts모듈의 공통 부분이 통합하였습니다.
-  - [ ] DATAKIT의 array..문은 타입체크를 하지 않도록 변경
+  - [x] 소수 숫자 처리가 좀 더 유연해졌습니다.
+  - [x] EventListener의 will,did 이벤트를 좀 더 디테일하게 트리깅할 수 있도록 변경되었습니다.
+  - [x] Request 모듈을 정상화 하였습니다. 동기 통신이 가능하도록 업데이트하였습니다.
+  - [x] 동기통신이 가능한 load, loadNodes 메서드가 추가되었습니다.
+  - [ ] DATAKIT의 array..문은 타입체크를 하지 않도록 변경.
   - [ ] 메모리 자동 해제를 위해 모든 모듈에 release를 추가함.
   - [ ] 모듈의 Source관리를 위한 Souce get set 예약어 제거.
   - 코드 감소 : \[min:177(-1)kB\])
