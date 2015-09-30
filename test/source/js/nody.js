@@ -8,7 +8,7 @@
 	(function(W,NMethods,NSingletons,NModules,NStructure,nody){
 	
 		// Nody version
-		N.VERSION = "0.30.9", N.BUILD = "1291";
+		N.VERSION = "0.30.10", N.BUILD = "1292";
 	
 		// Core verison
 		N.CORE_VERSION = "2.0.6", N.CORE_BUILD = "92";
@@ -3891,7 +3891,7 @@
 			"importNodes":function(node){
 				if(typeof node === "string") {
 					node = node.trim();
-					if(/^<.+>$/.test(node)){
+					if(/^</.test(node) && />$/.test(node)){
 						node = N.parseHTML(node);
 					} else if(/^\#[\w\-]+$/.test(node)) {
 						node = N.findLite(node);
@@ -4159,7 +4159,8 @@
 			"append":function(parentIn,childs,needIndex){
 				var parent = N.findLite(parentIn)[0];
 				if(!N.isNode(parent)) return parentIn;
-				var appendTarget  = /^<.+>$/.test(childs) ? N.parseHTML(childs) : N.findLite(childs);
+				
+				var appendTarget  = (/^</.test(childs) && />$/.test(childs)) ? N.parseHTML(childs) : N.findLite(childs);
 				var parentTagName = parent.tagName.toLowerCase();
 				var insertVariant = (typeof needIndex === "number") ? true : false;
 				var targetIndex   = typeof needIndex === "number" ? needIndex < 0 ? 0 : needIndex : needIndex;
@@ -4231,7 +4232,7 @@
 			},
 			"prepend":function(parentIn,childs){
 				var parent = N.findLite(parentIn)[0];
-				var appendTarget = /^<.+>$/.test(childs) ? N.parseHTML(childs) : N.findLite(childs);
+				var appendTarget = (/^</.test(childs) && />$/.test(childs)) ? N.parseHTML(childs) : N.findLite(childs);
 				if(N.isOk(parent),N.isOk(appendTarget)){
 					N.node.append(parent,appendTarget);
 					var newParent = N.findParent(appendTarget[0]);
@@ -4667,7 +4668,7 @@
 				N.dataEach( N.argumentsFlatten(params) ,function(content){
 					if(N.isNode(content)){
 						newContents.push(content);
-					} else if(/^<.+>$/.test(content)){
+					} else if((/^</.test(content) && />$/.test(content))){
 						newContents.push(N.parseHTML(content));
 					} else {
 						content = N.toString(content);
@@ -5059,7 +5060,10 @@
 				return finalData;
 			}
 		},function(node,nodeProp,dataFilter){ 
-			if(typeof node === "string") node = (/^<.+>$/.test(node)) ? N.parseHTML(node) : N.makes(node);
+			if(typeof node === "string"){
+				node = node.trim();
+				node = (/^</.test(node) && />$/.test(node)) ? N.parseHTML(node) : N.makes(node);
+			} 
 			this.setSource(N.findLite(node));
 			this.__partialPointer = {};
 			this.setPartialProperties(nodeProp,dataFilter);
@@ -6154,7 +6158,7 @@
 		
 		N.METHOD("load",function(url){
 			var responseText;
-			return (new nd.Request("/",{asynchronous:false})).relativeSend(url,null,function(text,success,status){ 
+			return (new nd.Request("",{asynchronous:false})).relativeSend(url,null,function(text,success,status){ 
 				responseText = success ? text : "";
 			}), responseText;
 		});
